@@ -4,12 +4,13 @@
 
 Real-time Toronto Transit alerts with biometric authentication.
 
-| Stack    | Details                                                     |
-| -------- | ----------------------------------------------------------- |
-| Frontend | Svelte 5 + TypeScript + Tailwind + shadcn-svelte            |
-| Backend  | Supabase (DB, Edge Functions, Realtime)                     |
-| Auth     | Custom WebAuthn (displayName + biometrics + recovery codes) |
-| Hosting  | Cloudflare Pages                                            |
+| Stack      | Details                                                     |
+| ---------- | ----------------------------------------------------------- |
+| Frontend   | Svelte 5 + TypeScript + Tailwind + shadcn-svelte            |
+| Typography | Lexend (dyslexic-friendly) via Google Fonts                 |
+| Backend    | Supabase (DB, Edge Functions, Realtime)                     |
+| Auth       | Custom WebAuthn (displayName + biometrics + recovery codes) |
+| Hosting    | Cloudflare Pages                                            |
 
 ---
 
@@ -97,6 +98,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `sw.js`         | ✅     | Service worker           |
 | `icons/*`       | ✅     | All PWA icons (72-512px) |
 
+### Configuration (`src/`)
+
+| File       | Status | Purpose                                       |
+| ---------- | ------ | --------------------------------------------- |
+| `app.html` | ✅     | HTML template, Lexend font via Google Fonts   |
+| `app.d.ts` | ✅     | SvelteKit app type declarations               |
+
 ---
 
 ## Auth System
@@ -175,6 +183,44 @@ For local development, use `localhost` and `http://localhost:5173`.
 ---
 
 ## Changelog
+
+### Dec 4, 2025 - Lexend Font + Typography Hierarchy
+
+**Font System:**
+- ✅ Switched to Lexend (dyslexic-friendly) from Google Fonts
+- ✅ Variable weights 300-700 for flexible hierarchy
+- ✅ Latin subset only (~50KB) for optimal performance
+- ✅ Preconnect hints for faster font loading
+
+**Typography Hierarchy (weight → meaning):**
+| Weight | Usage | Purpose |
+|--------|-------|---------|
+| 700 (Bold) | Route numbers, brand, user initials | High scannability |
+| 600 (Semibold) | Section headings, dates, badges | Important info |
+| 500 (Medium) | Nav items, tabs, station names | Interactive elements |
+| 400 (Regular) | Body text, descriptions, timestamps | Readability |
+
+**Size Scale:**
+| Size | Element |
+|------|---------|
+| 17px | Card titles |
+| 15px | Primary content (alerts, body) |
+| 13px | Secondary (tabs, filters, routes) |
+| 12px | Tertiary (timestamps, links) |
+| 11px | Micro (status badges) |
+| 10px | Tiny (count bubbles) |
+
+**Letter-spacing:**
+- Tighter (-0.02em): Large headings
+- Slightly tight (-0.01em): Body text, nav
+- Wider (0.02-0.04em): Uppercase badges, numbers
+
+**Files Updated:**
+- `src/app.html` - Google Fonts link with preconnect
+- `src/routes/layout.css` - Complete typography system
+- `src/lib/components/layout/Header.svelte` - Font weight classes
+- `src/lib/components/layout/Sidebar.svelte` - Font weight classes
+- `src/lib/components/alerts/AlertCard.svelte` - Font weight classes
 
 ### Dec 4, 2025 - Edge Function Alert Parsing Fix
 
