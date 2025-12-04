@@ -904,6 +904,7 @@ body {
   border: 1px solid rgb(139 92 246 / 0.3);
   background-color: hsl(var(--card));
   box-shadow: 0 0 0 1px rgb(139 92 246 / 0.1);
+  overflow: hidden;
 }
 
 .maintenance-toggle {
@@ -961,24 +962,29 @@ body {
   border-top: 1px solid rgb(139 92 246 / 0.2);
 }
 
-.maintenance-tabs {
-  display: flex;
-  gap: 0;
+.maintenance-tabs-wrapper {
   overflow-x: auto;
   overflow-y: hidden;
-  border-bottom: 1px solid rgb(139 92 246 / 0.15);
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  border-bottom: 1px solid rgb(139 92 246 / 0.15);
 }
 
-.maintenance-tabs::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+.maintenance-tabs-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.maintenance-tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 0;
+  width: max-content;
+  min-width: 100%;
 }
 
 .maintenance-tab {
-  flex: 0 0 auto; /* Don't shrink or grow - use natural width */
-  min-width: max-content;
   padding: 0.625rem 0.75rem;
   font-size: 0.8125rem; /* 13px */
   font-weight: 500; /* Medium for tabs */
@@ -992,7 +998,6 @@ body {
   border-top: none;
   cursor: pointer;
   transition: all 0.2s;
-  margin-bottom: -1px;
 }
 
 .maintenance-tab.active {

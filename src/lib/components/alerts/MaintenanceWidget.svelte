@@ -257,27 +257,29 @@
     {#if isExpanded}
       <div class="maintenance-content" id="maintenance-content">
         <!-- Maintenance Tabs -->
-        <div 
-          class="maintenance-tabs scrollbar-hide" 
-          role="tablist" 
-          aria-label="Maintenance timeframe"
-        >
-          {#each tabs as tab}
-            {@const count = tabCounts()[tab.id]}
-            <button 
-              class={cn('maintenance-tab', activeTab === tab.id && 'active')}
-              onclick={() => activeTab = tab.id}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              aria-controls="maintenance-panel-{tab.id}"
-              id="maintenance-tab-{tab.id}"
-              aria-label="{tab.ariaLabel} ({count} items)"
-              type="button"
-            >
-              <span>{tab.label}</span>
-              <span class="maintenance-tab-count">{count}</span>
-            </button>
-          {/each}
+        <div class="maintenance-tabs-wrapper">
+          <div 
+            class="maintenance-tabs" 
+            role="tablist" 
+            aria-label="Maintenance timeframe"
+          >
+            {#each tabs as tab}
+              {@const count = tabCounts()[tab.id]}
+              <button 
+                class={cn('maintenance-tab', activeTab === tab.id && 'active')}
+                onclick={() => activeTab = tab.id}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                aria-controls="maintenance-panel-{tab.id}"
+                id="maintenance-tab-{tab.id}"
+                aria-label="{tab.ariaLabel} ({count} items)"
+                type="button"
+              >
+                <span>{tab.label}</span>
+                <span class="maintenance-tab-count">{count}</span>
+              </button>
+            {/each}
+          </div>
         </div>
         
         <!-- Maintenance Items -->
