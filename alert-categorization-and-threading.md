@@ -1,7 +1,7 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.0  
-**Date:** December 2025  
+**Version:** 3.1  
+**Date:** December 4, 2025  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
@@ -82,7 +82,7 @@ This document describes the alert categorization and threading system designed t
 - **Non-exclusive categories** - Alert can be `SERVICE_DISRUPTION` + `SUBWAY`
 - **Simple threading** - 80% text similarity for general matching, 25% for SERVICE_RESUMED
 - **Latest first** - Most recent update at top of thread
-- **Route overlap required** - Threading requires matching routes
+- **Exact route number matching** - Threading uses route NUMBER comparison (e.g., "46" ≠ "996")
 
 ---
 
@@ -162,6 +162,30 @@ function categorizeAlert(text: string): { category: string; priority: number } {
 
 **Note:** Current implementation returns single category (first match by priority order).
 
+### Route Number Matching
+
+To prevent cross-route threading (e.g., route 46 matching with 996), exact route number comparison is used:
+
+```typescript
+// Extract route NUMBER only (for comparison)
+function extractRouteNumber(route: string): string {
+  const match = route.match(/^(\d+)/);
+  return match ? match[1] : route;
+}
+
+// Check if two routes have the same route number
+function routesMatch(route1: string, route2: string): boolean {
+  const num1 = extractRouteNumber(route1);
+  const num2 = extractRouteNumber(route2);
+  return num1 === num2;
+}
+```
+
+**Examples:**
+- `routesMatch("46 Martin Grove", "46")` → `true` (both have route number 46)
+- `routesMatch("996 Wilson Express", "96")` → `false` (996 ≠ 96)
+- `routesMatch("39 Finch East", "939 Finch Express")` → `false` (39 ≠ 939)
+
 ### Route Extraction
 
 Routes are extracted from alert text using regex patterns:
@@ -227,12 +251,17 @@ Incident threading groups related alerts over time to:
 // Thread matching logic
 let matchedThread = null;
 
-for (const thread of unresolvedThreads) {
-  const threadRoutes = thread.affected_routes || [];
-  const hasRouteOverlap = routes.some((r) => threadRoutes.includes(r));
+for (const thread of unresolvedThreads || []) {
+  const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+  
+  // Use exact route number matching to prevent 46 matching 996, etc.
+  const hasRouteOverlap = routes.some(alertRoute => 
+    threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))
+  );
 
   if (hasRouteOverlap) {
-    const similarity = jaccardSimilarity(text, thread.title);
+    const threadTitle = thread.title || '';
+    const similarity = jaccardSimilarity(text, threadTitle);
 
     // High similarity (80%) for general matching
     if (similarity >= 0.8) {
@@ -251,7 +280,7 @@ for (const thread of unresolvedThreads) {
 
 ### Threading Rules
 
-1. **Route overlap required** - Alerts must share at least one route
+1. **Exact route number match required** - Route NUMBERS must match (e.g., "46" = "46 Martin Grove", but "46" ≠ "996")
 2. **High similarity (≥80%)** - For general alert matching
 3. **Low similarity (≥25%)** - For SERVICE_RESUMED (different vocabulary)
 4. **6-hour window** - Only match unresolved threads updated within 6 hours
@@ -502,7 +531,8 @@ This system provides:
 
 ✅ **Single source (Bluesky)** - @ttcalerts.bsky.social via AT Protocol  
 ✅ **Keyword-based categorization** - 6 categories with priority ordering  
-✅ **Incident threading** - Jaccard similarity + route overlap  
+✅ **Incident threading** - Jaccard similarity + exact route number matching  
+✅ **Cross-route prevention** - Route 46 cannot match with 996, 39 cannot match with 939  
 ✅ **Smart SERVICE_RESUMED** - Lower threshold (25%) for different vocabulary  
 ✅ **Auto-resolve** - SERVICE_RESUMED closes threads  
 ✅ **Mutually exclusive filters** - One category filter at a time  

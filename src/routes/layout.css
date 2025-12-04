@@ -384,7 +384,7 @@ body {
 
 /* Ensure background extends behind safe area on iOS */
 .mobile-bottom-nav::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;

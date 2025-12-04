@@ -2,7 +2,7 @@
 
 **Purpose:** Documentation of route number conflicts that could cause threading issues
 
-**Last Updated:** November 20, 2025
+**Last Updated:** December 4, 2025
 
 ---
 
@@ -184,41 +184,30 @@ Alert 3 (11:30 AM):
 
 The alert threading system implements exact route number matching to prevent these conflicts:
 
-### Route Extraction (alert-threader.js)
+### Route Number Extraction (poll-alerts/index.ts)
 
-```javascript
-// Extract route numbers for exact comparison
-const threadRouteNum = threadRoute.match(/^\d+[A-Z]?/i)?.[0] || threadRoute;
-const alertRouteNum = alertRoute.match(/^\d+[A-Z]?/i)?.[0] || alertRoute;
+```typescript
+// Extract route NUMBER only (for comparison)
+function extractRouteNumber(route: string): string {
+  const match = route.match(/^(\d+)/);
+  return match ? match[1] : route;
+}
 
-// Exact match on route number
-return threadRouteNum.toLowerCase() === alertRouteNum.toLowerCase();
+// Check if two routes have the same route number
+function routesMatch(route1: string, route2: string): boolean {
+  const num1 = extractRouteNumber(route1);
+  const num2 = extractRouteNumber(route2);
+  return num1 === num2;
+}
 ```
 
-### Route Validation (alert-threader.js:330-387)
+### Thread Matching (poll-alerts/index.ts)
 
-```javascript
-// FIXED: Validate routes before merging to prevent cross-contamination
-// Only merge routes that have the same route number as existing routes
-const validatedRoutes = [];
-
-// Extract route numbers from existing routes to validate against
-const existingRouteNumbers = existingRoutes.map(route => {
-  const match = route.match(/^\d+[A-Z]?/i);
-  return match ? match[0].toLowerCase() : route.toLowerCase();
-});
-
-// Only add new routes if they match existing route numbers
-for (const newRoute of alert.affectedRoutes) {
-  const newRouteNum = newRoute.match(/^\d+[A-Z]?/i)?.[0]?.toLowerCase() || newRoute.toLowerCase();
-  const isValidRoute = existingRouteNumbers.includes(newRouteNum);
-
-  if (isValidRoute && !validatedRoutes.includes(newRoute)) {
-    validatedRoutes.push(newRoute);
-  } else if (!isValidRoute) {
-    console.warn(`⚠️ BLOCKED: Route "${newRoute}" does not match thread routes`);
-  }
-}
+```typescript
+// Use exact route number matching to prevent 46 matching 996, etc.
+const hasRouteOverlap = routes.some(alertRoute => 
+  threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))
+);
 ```
 
 ---
@@ -228,22 +217,23 @@ for (const newRoute of alert.affectedRoutes) {
 ### Correct Threading
 
 ✅ **Route 39 alerts thread together:**
-- "39 Finch East" + "39 Finch" → MATCH (same route number: 39)
+- `routesMatch("39 Finch East", "39 Finch")` → `true` (both have route number: 39)
 
 ✅ **Route 939 alerts thread together:**
-- "939 Finch Express" + "939" → MATCH (same route number: 939)
+- `routesMatch("939 Finch Express", "939")` → `true` (both have route number: 939)
 
 ✅ **Different routes stay separate:**
-- "86 Scarborough" + "986 Scarborough Express" → NO MATCH (different: 86 ≠ 986)
-- "39 Finch East" + "339 Finch East Night" → NO MATCH (different: 39 ≠ 339)
+- `routesMatch("86 Scarborough", "986 Scarborough Express")` → `false` (86 ≠ 986)
+- `routesMatch("39 Finch East", "339 Finch East Night")` → `false` (39 ≠ 339)
+- `routesMatch("46 Martin Grove", "996 Wilson Express")` → `false` (46 ≠ 996)
 
 ### Incorrect Threading (Prevented)
 
 ❌ **Cross-route contamination blocked:**
-- "39" thread + "939" alert → BLOCKED (different route numbers)
-- "86" thread + "986" alert → BLOCKED (different route numbers)
-- "29" thread + "329" alert → BLOCKED (different route numbers)
-- "35" thread + "935" alert → BLOCKED (different route numbers)
+- "39" thread + "939" alert → BLOCKED (39 ≠ 939)
+- "86" thread + "986" alert → BLOCKED (86 ≠ 986)
+- "46" thread + "996" alert → BLOCKED (46 ≠ 996)
+- "96" thread + "996" alert → BLOCKED (96 ≠ 996)
 
 ---
 
@@ -251,43 +241,39 @@ for (const newRoute of alert.affectedRoutes) {
 
 ### Critical Test Scenarios
 
-**Test Case 1: Route 39 vs 939 vs 339**
+**Test Case 1: Route 46 vs 996 (Real Bug - Fixed Dec 4, 2025)**
+```
+Thread: Route 996 (affected_routes: ["996 Wilson Express"])
+Alert: Route 46 (affected_routes: ["46 Martin Grove"])
+Expected: BLOCKED - Different route numbers (996 ≠ 46)
+```
+
+**Test Case 2: Route 39 vs 939 vs 339**
 ```
 Thread: Route 39 (affected_routes: ["39 Finch East"])
-Alert: Route 939 (affectedRoutes: ["939 Finch Express"])
+Alert: Route 939 (affected_routes: ["939 Finch Express"])
 Expected: BLOCKED - Different route numbers (39 ≠ 939)
 
 Thread: Route 39 (affected_routes: ["39 Finch East"])
-Alert: Route 339 (affectedRoutes: ["339 Finch East Night"])
+Alert: Route 339 (affected_routes: ["339 Finch East Night"])
 Expected: BLOCKED - Different route numbers (39 ≠ 339)
 ```
 
-**Test Case 2: Route 86 vs 986 vs 386**
+**Test Case 3: Route 86 vs 986 vs 386**
 ```
 Thread: Route 86 (affected_routes: ["86 Scarborough"])
-Alert: Route 986 (affectedRoutes: ["986 Scarborough Express"])
+Alert: Route 986 (affected_routes: ["986 Scarborough Express"])
 Expected: BLOCKED - Different route numbers (86 ≠ 986)
 
 Thread: Route 86 (affected_routes: ["86 Scarborough"])
-Alert: Route 386 (affectedRoutes: ["386 Scarborough Night"])
+Alert: Route 386 (affected_routes: ["386 Scarborough Night"])
 Expected: BLOCKED - Different route numbers (86 ≠ 386)
-```
-
-**Test Case 3: Route 29 vs 929 vs 329**
-```
-Thread: Route 29 (affected_routes: ["29 Dufferin"])
-Alert: Route 929 (affectedRoutes: ["929 Dufferin Express"])
-Expected: BLOCKED - Different route numbers (29 ≠ 929)
-
-Thread: Route 29 (affected_routes: ["29 Dufferin"])
-Alert: Route 329 (affectedRoutes: ["329 Dufferin Night"])
-Expected: BLOCKED - Different route numbers (29 ≠ 329)
 ```
 
 **Test Case 4: Same route, different names**
 ```
 Thread: Route 39 (affected_routes: ["39 Finch East"])
-Alert: Route 39 (affectedRoutes: ["39 Finch"])
+Alert: Route 39 (affected_routes: ["39 Finch"])
 Expected: ALLOWED - Same route number (39 = 39)
 ```
 
@@ -295,25 +281,7 @@ Expected: ALLOWED - Same route number (39 = 39)
 
 ## Monitoring
 
-### Debug Logging
-
-The system logs all route comparisons for SERVICE_RESUMED alerts:
-
-```
-[SERVICE_RESUMED Threading] Comparing routes for thread thread-xxxxx:
-  Alert routes: ["939"]
-  Thread routes: ["39"]
-  Comparing: thread="39" vs alert="939"
-  Routes overlap: false
-```
-
-### Blocked Route Warnings
-
-When incompatible routes are blocked:
-
-```
-[updateThread] ⚠️ BLOCKED: Route "939" (939) does not match thread thread-xxxxx routes (39)
-```
+The Edge Function logs route comparisons when debugging is needed. Check Supabase Edge Function logs for threading decisions.
 
 ---
 
@@ -321,10 +289,11 @@ When incompatible routes are blocked:
 
 - **[TTC-BUS-ROUTES.md](TTC-BUS-ROUTES.md)** - Complete list of all TTC bus routes
 - **[alert-categorization-and-threading.md](alert-categorization-and-threading.md)** - Threading algorithm documentation
-- **[server/services/alert-threader.js](server/services/alert-threader.js)** - Threading implementation
+- **[supabase/functions/poll-alerts/index.ts](supabase/functions/poll-alerts/index.ts)** - Edge Function implementation
 
 ---
 
-**Version:** 1.0
+**Version:** 1.1
 **Created:** November 20, 2025
+**Updated:** December 4, 2025
 **Purpose:** Route conflict reference for alert threading system
