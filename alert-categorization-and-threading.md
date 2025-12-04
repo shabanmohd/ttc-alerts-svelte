@@ -561,17 +561,18 @@ Bluesky API → poll-alerts Edge Function → Supabase PostgreSQL
 
 ### Supabase Free Tier Limits
 
-| Resource                      | Limit   | Period  |
-| ----------------------------- | ------- | ------- |
-| **Egress (Data Transfer)**    | 5 GB    | Monthly |
-| **Database Size**             | 500 MB  | Total   |
-| **Edge Function Invocations** | 500,000 | Monthly |
+| Resource                      | Limit   | Period     |
+| ----------------------------- | ------- | ---------- |
+| **Egress (Data Transfer)**    | 5 GB    | Monthly    |
+| **Database Size**             | 500 MB  | Total      |
+| **Edge Function Invocations** | 500,000 | Monthly    |
 | **Realtime Connections**      | 200     | Concurrent |
-| **Realtime Messages**         | 2M      | Monthly |
+| **Realtime Messages**         | 2M      | Monthly    |
 
 ### Realtime-First Architecture (Current)
 
 **How it works:**
+
 - Initial page load fetches alerts once (~50 KB)
 - Supabase Realtime pushes only new/changed alerts (~500 bytes each)
 - No polling - updates arrive instantly
@@ -579,33 +580,34 @@ Bluesky API → poll-alerts Edge Function → Supabase PostgreSQL
 
 **Data Transfer Per User Session:**
 
-| Activity | Data Transfer |
-|----------|---------------|
-| Initial page load | ~50 KB |
-| Per new alert (pushed) | ~500 bytes |
-| 10-min session (2 alerts) | ~51 KB |
-| 1-hour session (5 alerts) | ~52.5 KB |
+| Activity                  | Data Transfer |
+| ------------------------- | ------------- |
+| Initial page load         | ~50 KB        |
+| Per new alert (pushed)    | ~500 bytes    |
+| 10-min session (2 alerts) | ~51 KB        |
+| 1-hour session (5 alerts) | ~52.5 KB      |
 
 **Comparison with Polling (old approach):**
 
-| Metric | Polling (old) | Realtime (current) | Savings |
-|--------|---------------|-------------------|---------|
-| 10-min session | ~115 KB | ~51 KB | **56%** |
-| 1-hour session | ~350 KB | ~52.5 KB | **85%** |
-| Data per new alert | 2.5 KB poll | 0.5 KB push | **80%** |
+| Metric             | Polling (old) | Realtime (current) | Savings |
+| ------------------ | ------------- | ------------------ | ------- |
+| 10-min session     | ~115 KB       | ~51 KB             | **56%** |
+| 1-hour session     | ~350 KB       | ~52.5 KB           | **85%** |
+| Data per new alert | 2.5 KB poll   | 0.5 KB push        | **80%** |
 
 ### Monthly User Capacity
 
 | User Type             | Sessions/Month | Max Users (Realtime) |
 | --------------------- | -------------- | -------------------- |
-| Casual (2x/week)      | 8              | **~12,500** |
-| Regular (daily)       | 30             | **~3,300** |
-| Power (3x/day)        | 90             | **~1,100** |
-| **Mixed (realistic)** | ~23 avg        | **~4,400** |
+| Casual (2x/week)      | 8              | **~12,500**          |
+| Regular (daily)       | 30             | **~3,300**           |
+| Power (3x/day)        | 90             | **~1,100**           |
+| **Mixed (realistic)** | ~23 avg        | **~4,400**           |
 
 ### Realtime Message Usage
 
 With ~50 alerts/day and estimated concurrent users:
+
 ```
 50 alerts × 100 concurrent users = 5,000 messages/day
 Monthly: 150,000 messages ✅ (well under 2M limit)
@@ -614,19 +616,21 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 ### Edge Function Usage
 
 `poll-alerts` runs every 2 minutes:
+
 ```
 30 days × 24 hours × 30/hour = 21,600 invocations/month
 ```
+
 ✅ Well under 500,000 limit
 
 ### Current Capacity Summary
 
-| Resource | Usage | Limit | Status |
-|----------|-------|-------|--------|
-| Egress | ~1-2 GB | 5 GB | ✅ Safe |
-| Realtime Messages | ~150K | 2M | ✅ Safe |
-| Edge Invocations | ~22K | 500K | ✅ Safe |
-| Concurrent Connections | ~100 | 200 | ✅ Safe |
+| Resource               | Usage   | Limit | Status  |
+| ---------------------- | ------- | ----- | ------- |
+| Egress                 | ~1-2 GB | 5 GB  | ✅ Safe |
+| Realtime Messages      | ~150K   | 2M    | ✅ Safe |
+| Edge Invocations       | ~22K    | 500K  | ✅ Safe |
+| Concurrent Connections | ~100    | 200   | ✅ Safe |
 
 **Current safe capacity:** ~4,000 monthly active users on free tier
 

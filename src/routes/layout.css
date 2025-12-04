@@ -375,23 +375,13 @@ body {
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid hsl(var(--border));
   padding: 0.5rem 0;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 100;
-}
-
-/* Ensure background extends behind safe area on iOS */
-.mobile-bottom-nav::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: env(safe-area-inset-bottom, 0px);
-  background: hsl(var(--background));
-  z-index: -1;
+  /* Extend background color to cover any gap */
+  box-shadow: 0 100px 0 100px hsl(var(--background));
 }
 
 @media (min-width: 1024px) {
