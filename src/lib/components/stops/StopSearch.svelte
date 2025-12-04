@@ -14,13 +14,15 @@
 
 	interface Props {
 		onSelect?: (stop: TTCStop) => void;
+		onClose?: () => void;
 		placeholder?: string;
 		showNearbyButton?: boolean;
 		showBookmarkButton?: boolean;
 	}
 
 	let { 
-		onSelect, 
+		onSelect,
+		onClose,
 		placeholder = 'Search stops...', 
 		showNearbyButton = true,
 		showBookmarkButton = true
@@ -178,8 +180,12 @@
 				break;
 			case 'Escape':
 				event.preventDefault();
-				showResults = false;
-				highlightedIndex = -1;
+				if (showResults) {
+					showResults = false;
+					highlightedIndex = -1;
+				} else if (onClose) {
+					onClose();
+				}
 				break;
 		}
 	}
@@ -203,7 +209,15 @@
 </script>
 
 <div class="relative w-full">
-	<div class="relative flex items-center gap-2">
+	{#if onClose}
+		<div class="flex items-center justify-between mb-3 p-3 pb-0">
+			<h3 class="font-semibold">Add a Stop</h3>
+			<Button variant="ghost" size="icon" class="h-8 w-8" onclick={onClose} aria-label="Close">
+				<X class="h-4 w-4" />
+			</Button>
+		</div>
+	{/if}
+	<div class="relative flex items-center gap-2 {onClose ? 'px-3 pb-3' : ''}">
 		<div class="relative flex-1">
 			<Search
 				class="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"

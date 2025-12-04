@@ -8,14 +8,14 @@ Comprehensive plan for ETA feature, stop search, accessibility enhancements, and
 
 ## 📊 Implementation Progress Summary
 
-| Phase | Name                          | Status         | Progress |
-|-------|-------------------------------|----------------|----------|
-| 0     | Version A/B Deployment Setup  | ✅ Complete    | 100%     |
-| 1     | Foundation & Accessibility    | ✅ Complete    | 100%     |
-| 2     | Stop Database & Search        | ✅ Complete    | 100%     |
-| 3     | ETA Feature                   | ❌ Not Started | 0%       |
-| 4     | i18n & Additional Features    | ❌ Not Started | 0%       |
-| 5     | Polish & Testing              | ❌ Not Started | 0%       |
+| Phase | Name                         | Status         | Progress |
+| ----- | ---------------------------- | -------------- | -------- |
+| 0     | Version A/B Deployment Setup | ✅ Complete    | 100%     |
+| 1     | Foundation & Accessibility   | ✅ Complete    | 100%     |
+| 2     | Stop Database & Search       | ✅ Complete    | 100%     |
+| 3     | ETA Feature                  | ✅ Complete    | 100%     |
+| 4     | i18n & Additional Features   | ❌ Not Started | 0%       |
+| 5     | Polish & Testing             | ❌ Not Started | 0%       |
 
 **Last Updated**: December 4, 2025
 
@@ -845,13 +845,13 @@ export const bookmarks = createBookmarksStore();
 
 ### 3.1 ETA Edge Function
 
-- [ ] Create `supabase/functions/get-eta/index.ts`
-- [ ] Fetch from TTC NextBus API
-- [ ] Parse XML/JSON response
-- [ ] Return next 3 arrivals per route at stop
-- [ ] Add 30-second cache headers
-- [ ] Handle API errors gracefully
-- [ ] Deploy to Supabase
+- [x] Create `supabase/functions/get-eta/index.ts` ✅
+- [x] Fetch from TTC NextBus API ✅
+- [x] Parse XML/JSON response ✅
+- [x] Return next 3 arrivals per route at stop ✅
+- [x] Add 30-second cache headers ✅
+- [x] Handle API errors gracefully ✅
+- [x] Deploy to Supabase ✅
 
 **Implementation:**
 
@@ -944,11 +944,11 @@ serve(async (req) => {
 
 ### 3.2 ETA Store
 
-- [ ] Create `src/lib/stores/eta.ts`
-- [ ] Fetch ETAs for all bookmarked stops
-- [ ] Auto-refresh every 30 seconds (visibility-aware)
-- [ ] Handle loading and error states
-- [ ] Cache last successful response for offline display
+- [x] Create `src/lib/stores/eta.ts` ✅
+- [x] Fetch ETAs for all bookmarked stops ✅
+- [x] Auto-refresh every 30 seconds (visibility-aware) ✅
+- [x] Handle loading and error states ✅
+- [x] Cache last successful response for offline display ✅
 
 **Implementation:**
 
@@ -1048,13 +1048,13 @@ export const etaStore = createETAStore();
 
 ### 3.3 ETA Display Components
 
-- [ ] Create `src/lib/components/eta/ETABadge.svelte` - Inline "5 min" badge
-- [ ] Create `src/lib/components/eta/ETACard.svelte` - Stop card with all predictions
-- [ ] Create `src/lib/components/eta/ETAWidget.svelte` - Homepage widget
-- [ ] Add countdown animation (respects reduced motion)
-- [ ] Add loading skeleton
-- [ ] Add error state with retry button
-- [ ] Add "No predictions" state for late night
+- [x] Create `src/lib/components/eta/ETABadge.svelte` - Inline "5 min" badge ✅
+- [x] Create `src/lib/components/eta/ETACard.svelte` - Stop card with all predictions ✅
+- [x] Create `src/lib/components/eta/ETAWidget.svelte` - Homepage widget ✅
+- [x] Add urgency colors (respects reduced motion) ✅
+- [x] Add loading skeleton ✅
+- [x] Add error state with retry button ✅
+- [x] Add "No predictions" state for late night ✅
 
 **ETACard Design:**
 
@@ -1078,12 +1078,12 @@ export const etaStore = createETAStore();
 
 ### 3.4 ETA Widget on Homepage
 
-- [ ] Add "My Stops" section to `+page.svelte`
-- [ ] Show above alerts when user has bookmarked stops
-- [ ] Horizontal scroll on mobile for multiple stops
-- [ ] Add "Add Stop" button that opens search
-- [ ] Show empty state prompting to add stops
-- [ ] Integrate with visibility-aware auto-refresh
+- [x] Add "Live Arrivals" section to `+page.svelte` ✅
+- [x] Show above alerts when user has bookmarked stops ✅
+- [x] Grid layout for multiple stops ✅
+- [x] Add "Add Stop" button that opens search ✅
+- [x] Show empty state prompting to add stops ✅
+- [x] Integrate with visibility-aware auto-refresh ✅
 
 **Homepage Layout Update:**
 
@@ -1398,21 +1398,21 @@ Settings persist via localStorage
 - [x] `src/lib/stores/visibility.ts` ✅ Phase 1
 - [x] `src/lib/stores/accessibility.ts` ✅ Phase 1
 - [x] `src/lib/stores/bookmarks.ts` ✅ Phase 2
-- [ ] `src/lib/stores/eta.ts`
+- [x] `src/lib/stores/eta.ts` ✅ Phase 3
 - [x] `src/lib/data/stops-db.ts` ✅ Phase 2
 - [x] `static/data/ttc-stops.json` ✅ Phase 2 (9,346 stops)
 - [x] `src/lib/components/stops/StopSearch.svelte` ✅ Phase 2
 - [x] `src/lib/components/stops/BookmarkStopButton.svelte` ✅ Phase 2
 - [x] `src/lib/components/stops/MyStopsWidget.svelte` ✅ Phase 2
-- [ ] `src/lib/components/eta/ETABadge.svelte`
-- [ ] `src/lib/components/eta/ETACard.svelte`
-- [ ] `src/lib/components/eta/ETAWidget.svelte`
+- [x] `src/lib/components/eta/ETABadge.svelte` ✅ Phase 3
+- [x] `src/lib/components/eta/ETACard.svelte` ✅ Phase 3
+- [x] `src/lib/components/eta/ETAWidget.svelte` ✅ Phase 3
 - [ ] `src/lib/components/weather/WeatherWarningBanner.svelte`
 - [ ] `src/lib/i18n/index.ts`
 - [ ] `src/lib/i18n/en.json`
 - [ ] `src/lib/i18n/fr.json`
 - [ ] `src/routes/routes/+page.svelte`
-- [ ] `supabase/functions/get-eta/index.ts`
+- [x] `supabase/functions/get-eta/index.ts` ✅ Phase 3
 - [x] `supabase/migrations/20251204_bookmarked_stops.sql` ✅ Phase 2
 - [x] `scripts/transform-gtfs.js` ✅ Phase 2
 
@@ -1421,11 +1421,11 @@ Settings persist via localStorage
 - [x] `src/lib/stores/alerts.ts` - Add visibility-aware fetching ✅ Phase 1
 - [x] `src/routes/layout.css` - Add text scaling, reduce motion CSS ✅ Phase 1
 - [x] `src/routes/+layout.svelte` - Initialize accessibility ✅ Phase 1
-- [ ] `src/routes/+page.svelte` - Add ETA widget, weather banner
+- [x] `src/routes/+page.svelte` - Add ETA widget ✅ Phase 3
 - [x] `src/routes/preferences/+page.svelte` - Add accessibility section, stop search ✅ Phase 1 & 2
 - [ ] `src/lib/components/layout/Header.svelte` - Add language toggle
 - [ ] `src/lib/components/layout/Sidebar.svelte` - Add Routes nav item
-- [x] `static/sw.js` - Upgrade caching strategies ✅ Phase 0 & 1
+- [x] `static/sw.js` - Upgrade caching strategies ✅ Phase 0, 1 & 3
 - [x] `static/manifest.json` - Beta version name ✅ Phase 0
 - [x] `package.json` - Add dexie dependency ✅ Phase 2
 - [x] `src/lib/types/database.ts` - Add BookmarkedStop type ✅ Phase 2

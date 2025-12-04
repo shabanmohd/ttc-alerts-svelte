@@ -5,6 +5,8 @@
   import AlertCard from '$lib/components/alerts/AlertCard.svelte';
   import FilterChips from '$lib/components/alerts/FilterChips.svelte';
   import MaintenanceWidget from '$lib/components/alerts/MaintenanceWidget.svelte';
+  import ETAWidget from '$lib/components/eta/ETAWidget.svelte';
+  import StopSearch from '$lib/components/stops/StopSearch.svelte';
   import { Skeleton } from '$lib/components/ui/skeleton';
   import { Button } from '$lib/components/ui/button';
   import { 
@@ -20,11 +22,14 @@
   } from '$lib/stores/alerts';
   import { isAuthenticated, userName, signOut } from '$lib/stores/auth';
   import { isVisible } from '$lib/stores/visibility';
+  import { bookmarks } from '$lib/stores/bookmarks';
+  import type { TTCStop } from '$lib/data/stops-db';
   
   // Import dialogs
   import { HowToUseDialog, SignInDialog, InstallPWADialog } from '$lib/components/dialogs';
   
   let activeDialog = $state<string | null>(null);
+  let showStopSearch = $state(false);
   let unsubscribeRealtime: (() => void) | null = null;
   let maintenancePollingInterval: ReturnType<typeof setInterval> | null = null;
   
@@ -89,6 +94,15 @@
   async function handleSignOut() {
     await signOut();
   }
+
+  function handleAddStop() {
+    showStopSearch = true;
+  }
+
+  function handleStopSelect(stop: TTCStop) {
+    bookmarks.add(stop);
+    showStopSearch = false;
+  }
 </script>
 
 <svelte:head>
@@ -105,6 +119,23 @@
 />
 
 <main class="content-area">
+  <!-- Stop Search Overlay -->
+  {#if showStopSearch}
+    <div class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20 px-4">
+      <div class="w-full max-w-lg bg-card rounded-lg border shadow-lg">
+        <StopSearch 
+          onSelect={handleStopSelect} 
+          onClose={() => showStopSearch = false}
+        />
+      </div>
+    </div>
+  {/if}
+
+  <!-- ETA Widget - Live Arrivals for Bookmarked Stops -->
+  <div class="mb-4">
+    <ETAWidget onAddStop={handleAddStop} />
+  </div>
+
   <!-- Planned Maintenance Widget -->
   <div class="mb-4">
     <MaintenanceWidget items={$maintenanceItems} />

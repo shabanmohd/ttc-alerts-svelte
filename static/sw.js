@@ -2,6 +2,7 @@ const CACHE_NAME = 'ttc-alerts-beta-v1';
 const STATIC_CACHE = 'ttc-static-beta-v1';
 const DYNAMIC_CACHE = 'ttc-dynamic-beta-v1';
 const ALERTS_CACHE = 'ttc-alerts-cache-v1';
+const ETA_CACHE = 'ttc-eta-cache-v1';
 
 const STATIC_ASSETS = [
   '/',
@@ -21,6 +22,7 @@ const STATIC_ASSETS = [
 const DYNAMIC_CACHE_LIMIT = 50;
 const ALERTS_CACHE_MAX_AGE = 60 * 60 * 1000; // 1 hour
 const MAINTENANCE_CACHE_MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours
+const ETA_CACHE_MAX_AGE = 30 * 1000; // 30 seconds (ETAs are time-sensitive)
 
 // Trim cache to limit
 async function trimCache(cacheName, maxItems) {
@@ -81,7 +83,7 @@ self.addEventListener('install', (event) => {
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating service worker...');
-  const validCaches = [STATIC_CACHE, DYNAMIC_CACHE, CACHE_NAME, ALERTS_CACHE];
+  const validCaches = [STATIC_CACHE, DYNAMIC_CACHE, CACHE_NAME, ALERTS_CACHE, ETA_CACHE];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -142,6 +144,23 @@ self.addEventListener('fetch', (event) => {
     if (url.pathname.includes('/rest/v1/planned_maintenance')) {
       event.respondWith(
         networkFirstWithTimeout(request, ALERTS_CACHE, MAINTENANCE_CACHE_MAX_AGE)
+          .catch(() => {
+            return new Response(
+              JSON.stringify({ error: 'You are offline', offline: true }),
+              { 
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+              }
+            );
+          })
+      );
+      return;
+    }
+
+    // ETA cache - 30 second max age (very time-sensitive)
+    if (url.pathname.includes('/functions/v1/get-eta')) {
+      event.respondWith(
+        networkFirstWithTimeout(request, ETA_CACHE, ETA_CACHE_MAX_AGE)
           .catch(() => {
             return new Response(
               JSON.stringify({ error: 'You are offline', offline: true }),
