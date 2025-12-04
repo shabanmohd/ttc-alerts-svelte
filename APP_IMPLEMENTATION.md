@@ -176,6 +176,29 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 4, 2025 - Edge Function Alert Parsing Fix
+
+**poll-alerts Edge Function:**
+
+- ✅ Fixed table names: `alerts` → `alert_cache`, `alert_threads` → `incident_threads`
+- ✅ Improved route extraction: preserves full names like "306 Carlton" instead of just "306"
+- ✅ Updated schema fields: `header` → `header_text`, `body` → `description_text`
+- ✅ JSONB arrays for `categories` and `affected_routes` (was scalar fields)
+- ✅ Proper thread matching with correct field names (`header_text` vs `initial_header`)
+- ✅ `is_latest` flag management: marks old alerts as not latest when adding new ones
+- ✅ SERVICE_RESUMED threading: uses route overlap + 25% similarity threshold
+
+**Impact:**
+
+- Alerts from Bluesky API now properly stored in correct database tables
+- Routes displayed with full names (e.g., "306 Carlton" not just "306")
+- Thread continuity maintained across multiple updates
+- SERVICE_RESUMED alerts correctly close their threads
+
+**Files Updated:**
+
+- `supabase/functions/poll-alerts/index.ts` - Complete refactor to match database schema
+
 ### Dec 4, 2025 - Header & Sidebar Layout Refinement
 
 **Header Responsive Layout:**
