@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { RefreshCw, Sun, Moon, User, Menu, HelpCircle, LogOut, ChevronDown, Settings, Wifi, WifiOff } from 'lucide-svelte';
+  import { RefreshCw, Sun, Moon, User, Menu, HelpCircle, LogOut, ChevronDown, Settings, Wifi, WifiOff, Globe } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
   import { lastUpdated, refreshAlerts, isConnected } from '$lib/stores/alerts';
+  import { locale, setLocale, getSupportedLocales } from '$lib/i18n';
   import { onMount } from 'svelte';
   
   let { 
@@ -124,6 +125,32 @@
           <Moon class="w-5 h-5" aria-hidden="true" />
         {/if}
       </button>
+
+      <!-- Language toggle (hidden on mobile) -->
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild let:builder>
+          <button
+            use:builder.action
+            {...builder}
+            class="hidden sm:flex p-2 rounded-md hover:bg-accent transition-colors items-center gap-1"
+            title="Change language"
+            aria-label="Change language"
+          >
+            <Globe class="w-5 h-5" aria-hidden="true" />
+            <span class="text-xs uppercase font-medium">{$locale?.slice(0, 2) || 'EN'}</span>
+          </button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content align="end" class="w-36">
+          {#each getSupportedLocales() as lang}
+            <DropdownMenu.Item 
+              onclick={() => setLocale(lang.code)}
+              class={$locale === lang.code ? 'bg-accent' : ''}
+            >
+              {lang.name}
+            </DropdownMenu.Item>
+          {/each}
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
       
       <!-- Sign In / User Menu (hidden on mobile) -->
       {#if isAuthenticated}
@@ -229,6 +256,21 @@
             <span class="text-sm">Dark Mode</span>
           {/if}
         </button>
+
+        <!-- Language toggle (mobile) -->
+        <div class="px-3 py-2">
+          <p class="text-xs text-muted-foreground mb-2 font-normal">Language</p>
+          <div class="flex gap-2">
+            {#each getSupportedLocales() as lang}
+              <button
+                onclick={() => { setLocale(lang.code); }}
+                class="flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors {$locale === lang.code ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'}"
+              >
+                {lang.name}
+              </button>
+            {/each}
+          </div>
+        </div>
         
         {#if isAuthenticated}
           <a

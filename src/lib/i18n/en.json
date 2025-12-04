@@ -1,0 +1,157 @@
+{
+  "app": {
+    "title": "TTC Service Alerts",
+    "description": "Real-time TTC transit service alerts for Toronto"
+  },
+  "nav": {
+    "home": "Home",
+    "routes": "Routes",
+    "preferences": "Preferences",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "howToUse": "How to Use",
+    "install": "Install App"
+  },
+  "alerts": {
+    "title": "Service Alerts",
+    "loading": "Loading alerts...",
+    "error": "Failed to load alerts",
+    "tryAgain": "Try again",
+    "noAlerts": "No active service alerts",
+    "allClear": "All Clear",
+    "updated": "Updated",
+    "lastUpdate": "Last updated",
+    "liveUpdates": "Live updates active",
+    "viewThread": "View thread",
+    "updates": "updates",
+    "filter": {
+      "all": "All",
+      "subway": "Subway",
+      "streetcar": "Streetcar",
+      "bus": "Bus",
+      "clearAll": "Clear all"
+    },
+    "status": {
+      "active": "Active",
+      "resolved": "Resolved",
+      "scheduled": "Scheduled"
+    },
+    "category": {
+      "delay": "Delay",
+      "closure": "Closure",
+      "diversion": "Diversion",
+      "elevator": "Elevator",
+      "general": "General"
+    }
+  },
+  "maintenance": {
+    "title": "Planned Maintenance",
+    "noItems": "No planned maintenance",
+    "from": "From",
+    "to": "to",
+    "dates": "Dates",
+    "viewDetails": "View details"
+  },
+  "eta": {
+    "title": "Live Arrivals",
+    "noStops": "No bookmarked stops",
+    "addStop": "Add Stop",
+    "addYourFirst": "Add your first stop to see live arrival times",
+    "loading": "Loading...",
+    "error": "Unable to load",
+    "noService": "No service",
+    "min": "min",
+    "arriving": "Arriving",
+    "due": "Due",
+    "lastUpdated": "Last updated",
+    "refresh": "Refresh",
+    "remove": "Remove"
+  },
+  "weather": {
+    "title": "Weather Warning",
+    "dismiss": "Dismiss",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "updated": "Updated"
+  },
+  "routes": {
+    "title": "Browse Routes",
+    "search": "Search routes...",
+    "noResults": "No routes match your search",
+    "categories": {
+      "subway": "Subway",
+      "streetcar": "Streetcars",
+      "express": "Express",
+      "night": "Night",
+      "community": "Community",
+      "bus": "Popular Bus"
+    },
+    "viewAlerts": "View alerts"
+  },
+  "stops": {
+    "title": "Stop Search",
+    "search": "Search stops...",
+    "searching": "Searching...",
+    "noResults": "No stops found",
+    "recentSearches": "Recent Searches",
+    "nearbyStops": "Nearby Stops",
+    "addToBookmarks": "Add to bookmarks"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "saved": "Preferences saved",
+    "theme": {
+      "title": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "enable": "Enable notifications",
+      "routes": "Routes to monitor",
+      "quietHours": "Quiet hours"
+    },
+    "accessibility": {
+      "title": "Accessibility",
+      "reduceMotion": "Reduce motion",
+      "highContrast": "High contrast",
+      "largeText": "Large text"
+    }
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "username": "Username",
+    "usernameHint": "Letters, numbers, underscores (3-20 characters)",
+    "createAccount": "Create Account",
+    "setupBiometrics": "Set Up Biometrics",
+    "useBiometrics": "Use Biometrics",
+    "recoveryCode": "Recovery Code",
+    "enterRecoveryCode": "Enter recovery code",
+    "saveRecoveryCodes": "Save Recovery Codes",
+    "recoveryCodesWarning": "Save these codes in a safe place. You'll need them to recover your account.",
+    "error": {
+      "invalidUsername": "Invalid username",
+      "usernameTaken": "Username already taken",
+      "biometricsFailed": "Biometric authentication failed",
+      "invalidRecoveryCode": "Invalid recovery code",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "settings": "Settings",
+    "language": "Language"
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "app": {
+    "title": "Alertes de service TTC",
+    "description": "Alertes de service en temps réel pour le transport en commun de Toronto"
+  },
+  "nav": {
+    "home": "Accueil",
+    "routes": "Lignes",
+    "preferences": "Préférences",
+    "signIn": "Connexion",
+    "signOut": "Déconnexion",
+    "howToUse": "Guide d'utilisation",
+    "install": "Installer l'application"
+  },
+  "alerts": {
+    "title": "Alertes de service",
+    "loading": "Chargement des alertes...",
+    "error": "Échec du chargement des alertes",
+    "tryAgain": "Réessayer",
+    "noAlerts": "Aucune alerte de service active",
+    "allClear": "Tout est normal",
+    "updated": "Mis à jour",
+    "lastUpdate": "Dernière mise à jour",
+    "liveUpdates": "Mises à jour en direct actives",
+    "viewThread": "Voir le fil",
+    "updates": "mises à jour",
+    "filter": {
+      "all": "Tout",
+      "subway": "Métro",
+      "streetcar": "Tramway",
+      "bus": "Autobus",
+      "clearAll": "Effacer tout"
+    },
+    "status": {
+      "active": "Actif",
+      "resolved": "Résolu",
+      "scheduled": "Prévu"
+    },
+    "category": {
+      "delay": "Retard",
+      "closure": "Fermeture",
+      "diversion": "Déviation",
+      "elevator": "Ascenseur",
+      "general": "Général"
+    }
+  },
+  "maintenance": {
+    "title": "Entretien planifié",
+    "noItems": "Aucun entretien planifié",
+    "from": "Du",
+    "to": "au",
+    "dates": "Dates",
+    "viewDetails": "Voir les détails"
+  },
+  "eta": {
+    "title": "Arrivées en direct",
+    "noStops": "Aucun arrêt enregistré",
+    "addStop": "Ajouter un arrêt",
+    "addYourFirst": "Ajoutez votre premier arrêt pour voir les heures d'arrivée en direct",
+    "loading": "Chargement...",
+    "error": "Impossible de charger",
+    "noService": "Pas de service",
+    "min": "min",
+    "arriving": "En approche",
+    "due": "Imminent",
+    "lastUpdated": "Dernière mise à jour",
+    "refresh": "Actualiser",
+    "remove": "Supprimer"
+  },
+  "weather": {
+    "title": "Avertissement météo",
+    "dismiss": "Fermer",
+    "expand": "Développer",
+    "collapse": "Réduire",
+    "updated": "Mis à jour"
+  },
+  "routes": {
+    "title": "Parcourir les lignes",
+    "search": "Rechercher une ligne...",
+    "noResults": "Aucune ligne ne correspond à votre recherche",
+    "categories": {
+      "subway": "Métro",
+      "streetcar": "Tramways",
+      "express": "Express",
+      "night": "Nuit",
+      "community": "Communautaire",
+      "bus": "Autobus populaires"
+    },
+    "viewAlerts": "Voir les alertes"
+  },
+  "stops": {
+    "title": "Recherche d'arrêts",
+    "search": "Rechercher un arrêt...",
+    "searching": "Recherche en cours...",
+    "noResults": "Aucun arrêt trouvé",
+    "recentSearches": "Recherches récentes",
+    "nearbyStops": "Arrêts à proximité",
+    "addToBookmarks": "Ajouter aux favoris"
+  },
+  "preferences": {
+    "title": "Préférences",
+    "saved": "Préférences enregistrées",
+    "theme": {
+      "title": "Thème",
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "enable": "Activer les notifications",
+      "routes": "Lignes à surveiller",
+      "quietHours": "Heures silencieuses"
+    },
+    "accessibility": {
+      "title": "Accessibilité",
+      "reduceMotion": "Réduire les animations",
+      "highContrast": "Contraste élevé",
+      "largeText": "Texte agrandi"
+    }
+  },
+  "auth": {
+    "signIn": "Connexion",
+    "signUp": "Inscription",
+    "signOut": "Déconnexion",
+    "username": "Nom d'utilisateur",
+    "usernameHint": "Lettres, chiffres, soulignement (3-20 caractères)",
+    "createAccount": "Créer un compte",
+    "setupBiometrics": "Configurer la biométrie",
+    "useBiometrics": "Utiliser la biométrie",
+    "recoveryCode": "Code de récupération",
+    "enterRecoveryCode": "Entrer le code de récupération",
+    "saveRecoveryCodes": "Sauvegarder les codes de récupération",
+    "recoveryCodesWarning": "Conservez ces codes dans un endroit sûr. Vous en aurez besoin pour récupérer votre compte.",
+    "error": {
+      "invalidUsername": "Nom d'utilisateur invalide",
+      "usernameTaken": "Nom d'utilisateur déjà pris",
+      "biometricsFailed": "Échec de l'authentification biométrique",
+      "invalidRecoveryCode": "Code de récupération invalide",
+      "generic": "Une erreur s'est produite. Veuillez réessayer."
+    }
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "done": "Terminé",
+    "settings": "Paramètres",
+    "language": "Langue"
+  }
+}

@@ -7,6 +7,7 @@
   import MaintenanceWidget from '$lib/components/alerts/MaintenanceWidget.svelte';
   import ETAWidget from '$lib/components/eta/ETAWidget.svelte';
   import StopSearch from '$lib/components/stops/StopSearch.svelte';
+  import WeatherWarningBanner from '$lib/components/weather/WeatherWarningBanner.svelte';
   import { Skeleton } from '$lib/components/ui/skeleton';
   import { Button } from '$lib/components/ui/button';
   import { 
@@ -130,6 +131,9 @@
       </div>
     </div>
   {/if}
+
+  <!-- Weather Warnings - Transit-relevant alerts from Environment Canada -->
+  <WeatherWarningBanner />
 
   <!-- ETA Widget - Live Arrivals for Bookmarked Stops -->
   <div class="mb-4">

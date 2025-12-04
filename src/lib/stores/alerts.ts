@@ -350,3 +350,8 @@ export function toggleFilter(category: string): void {
     return new Set([category]);
   });
 }
+
+// Set a specific route filter (used from route browser)
+export function setRouteFilter(route: string): void {
+  activeFilters.set(new Set([route]));
+}

@@ -9,6 +9,10 @@
   import { initAuth, subscribeToAuth, isAuthenticated, userName } from '$lib/stores/auth';
   import { subscribeToAlerts, fetchAlerts } from '$lib/stores/alerts';
   import { loadPreferences } from '$lib/stores/preferences';
+  import { setupI18n } from '$lib/i18n';
+  
+  // Initialize i18n
+  setupI18n();
   
   let { children } = $props();
   
