@@ -9,6 +9,9 @@ register('fr', () => import('./fr.json'));
 const DEFAULT_LOCALE = 'en';
 const SUPPORTED_LOCALES = ['en', 'fr'];
 
+// Guard against multiple initialization
+let initialized = false;
+
 /**
  * Get the saved locale from localStorage or browser preference
  */
@@ -35,9 +38,12 @@ function getInitialLocale(): string {
 }
 
 /**
- * Initialize i18n
+ * Initialize i18n - safe to call multiple times, will only init once
  */
 export function setupI18n() {
+  if (initialized) return;
+  initialized = true;
+  
   init({
     fallbackLocale: DEFAULT_LOCALE,
     initialLocale: getInitialLocale()
