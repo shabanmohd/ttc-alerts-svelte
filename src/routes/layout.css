@@ -965,13 +965,21 @@ body {
   display: flex;
   gap: 0;
   overflow-x: auto;
+  overflow-y: hidden;
   border-bottom: 1px solid rgb(139 92 246 / 0.15);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.maintenance-tabs::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .maintenance-tab {
-  flex: 1;
-  min-width: fit-content;
-  padding: 0.625rem 0.875rem;
+  flex: 0 0 auto; /* Don't shrink or grow - use natural width */
+  min-width: max-content;
+  padding: 0.625rem 0.75rem;
   font-size: 0.8125rem; /* 13px */
   font-weight: 500; /* Medium for tabs */
   letter-spacing: -0.01em;
@@ -1348,4 +1356,14 @@ body {
 
 .safe-area-top {
   padding-top: env(safe-area-inset-top);
+}
+
+/* Utility: hide scrollbar but keep scrollable */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
