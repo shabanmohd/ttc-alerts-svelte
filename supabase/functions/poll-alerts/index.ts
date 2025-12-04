@@ -84,6 +84,19 @@ function categorizeAlert(text: string): { category: string; priority: number } {
   return { category: 'OTHER', priority: 10 };
 }
 
+// Extract route NUMBER only (for comparison)
+function extractRouteNumber(route: string): string {
+  const match = route.match(/^(\d+)/);
+  return match ? match[1] : route;
+}
+
+// Check if two routes have the same route number
+function routesMatch(route1: string, route2: string): boolean {
+  const num1 = extractRouteNumber(route1);
+  const num2 = extractRouteNumber(route2);
+  return num1 === num2;
+}
+
 // Calculate Jaccard similarity for threading
 function jaccardSimilarity(text1: string, text2: string): number {
   const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 2));
@@ -181,10 +194,14 @@ serve(async (req) => {
       // Thread matching
       let matchedThread = null;
 
-      // Check for matching thread based on route overlap and similarity
+      // Check for matching thread based on EXACT route number match and similarity
       for (const thread of unresolvedThreads || []) {
         const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
-        const hasRouteOverlap = routes.some(r => threadRoutes.includes(r));
+        
+        // Use exact route number matching to prevent 46 matching 996, etc.
+        const hasRouteOverlap = routes.some(alertRoute => 
+          threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))
+        );
         
         if (hasRouteOverlap) {
           const threadTitle = thread.title || '';
