@@ -6,33 +6,35 @@ export interface Database {
     Tables: {
       alert_cache: {
         Row: {
-          id: number;
           alert_id: string;
           thread_id: string | null;
           header_text: string;
           description_text: string | null;
-          severity: string | null;
-          cause: string | null;
           effect: string | null;
-          url: string | null;
-          routes: string[];
-          stops: string[];
-          categories: string[];
-          is_active: boolean;
+          cause: string | null;
+          severity_level: string | null;
+          affected_routes: string[] | null;
+          affected_stops: string[] | null;
+          active_period_start: string | null;
+          active_period_end: string | null;
+          categories: string[] | null;
+          is_latest: boolean | null;
+          similarity_score: number | null;
+          raw_data: Record<string, unknown> | null;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['alert_cache']['Row'], 'id'>;
+        Insert: Omit<Database['public']['Tables']['alert_cache']['Row'], 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['alert_cache']['Insert']>;
       };
       incident_threads: {
         Row: {
           thread_id: string;
-          first_alert_id: string;
-          alert_ids: string[];
-          routes: string[];
-          categories: string[];
-          is_resolved: boolean;
+          title: string;
+          affected_routes: string[] | null;
+          categories: string[] | null;
+          is_resolved: boolean | null;
+          resolved_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -49,26 +51,28 @@ export interface Database {
           end_date: string;
           start_time: string | null;
           end_time: string | null;
-          reason: string;
-          description: string;
+          reason: string | null;
+          description: string | null;
           details_url: string | null;
-          is_active: boolean;
+          is_active: boolean | null;
           scraped_at: string;
-          created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['planned_maintenance']['Row'], 'id' | 'created_at'>;
+        Insert: Omit<Database['public']['Tables']['planned_maintenance']['Row'], 'id'>;
         Update: Partial<Database['public']['Tables']['planned_maintenance']['Insert']>;
       };
       user_preferences: {
         Row: {
-          id: number;
+          id: string;
           user_id: string;
           preferences: {
             favorites?: { routes: string[] };
             schedules?: { days: string[]; start_time: string; end_time: string }[];
             filters?: Record<string, boolean>;
-          };
-          alert_settings: Record<string, unknown>;
+          } | null;
+          push_subscription: Record<string, unknown> | null;
+          device_id: string | null;
+          device_name: string | null;
+          device_type: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -77,10 +81,14 @@ export interface Database {
       };
       device_preferences: {
         Row: {
-          id: number;
+          id: string;
           device_id: string;
-          preferences: Record<string, unknown>;
-          alert_settings: Record<string, unknown>;
+          preferences: {
+            favorites?: { routes: string[] };
+            schedules?: { days: string[]; start_time: string; end_time: string }[];
+            filters?: Record<string, boolean>;
+          } | null;
+          push_subscription: Record<string, unknown> | null;
           created_at: string;
           updated_at: string;
         };

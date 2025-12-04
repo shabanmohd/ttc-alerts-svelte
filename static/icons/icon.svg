@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- TTC Red Background -->
+  <rect width="512" height="512" rx="64" fill="#C8102E"/>
+  
+  <!-- White circle for contrast -->
+  <circle cx="256" cy="200" r="100" fill="white" opacity="0.95"/>
+  
+  <!-- Alert Bell Icon -->
+  <path d="M256 120c-44.2 0-80 35.8-80 80v40c0 8.8-7.2 16-16 16h-8c-8.8 0-16 7.2-16 16v16c0 8.8 7.2 16 16 16h208c8.8 0 16-7.2 16-16v-16c0-8.8-7.2-16-16-16h-8c-8.8 0-16-7.2-16-16v-40c0-44.2-35.8-80-80-80z" fill="#C8102E"/>
+  <circle cx="256" cy="320" r="24" fill="#C8102E"/>
+  
+  <!-- TTC Text -->
+  <text x="256" y="420" font-family="Arial, Helvetica, sans-serif" font-size="120" font-weight="bold" fill="white" text-anchor="middle">TTC</text>
+</svg>

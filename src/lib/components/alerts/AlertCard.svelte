@@ -19,18 +19,24 @@
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
   
-  function getMainCategory(categories: string[]): string {
+  function getMainCategory(categories: unknown): string {
+    const cats = Array.isArray(categories) ? categories as string[] : [];
     const priority = ['SERVICE_RESUMED', 'SERVICE_DISRUPTION', 'DELAY', 'DETOUR', 'PLANNED_SERVICE_DISRUPTION'];
     for (const cat of priority) {
-      if (categories.includes(cat)) return cat;
+      if (cats.includes(cat)) return cat;
     }
-    return categories[0] || 'OTHER';
+    return cats[0] || 'OTHER';
+  }
+  
+  // Helper to extract array from JSONB
+  function toArray(data: unknown): string[] {
+    return Array.isArray(data) ? data as string[] : [];
   }
   
   const latestAlert = $derived(thread.latestAlert);
   const earlierAlerts = $derived(thread.alerts.slice(1));
-  const routes = $derived(thread.routes || latestAlert?.routes || []);
-  const categories = $derived(thread.categories || latestAlert?.categories || []);
+  const routes = $derived(toArray(thread.affected_routes) || toArray(latestAlert?.affected_routes) || []);
+  const categories = $derived(toArray(thread.categories) || toArray(latestAlert?.categories) || []);
 </script>
 
 <div class="alert-card">

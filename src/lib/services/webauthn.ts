@@ -501,3 +501,11 @@ export function getDisplayNameError(displayName: string): string | null {
   
   return null;
 }
+
+/**
+ * Check if a display name is available (not already taken)
+ */
+export async function checkDisplayNameAvailable(displayName: string): Promise<boolean> {
+  const user = await findUserByDisplayName(displayName);
+  return user === null;
+}
