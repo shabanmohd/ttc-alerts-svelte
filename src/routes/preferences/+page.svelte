@@ -482,8 +482,8 @@
                     
                     <!-- Days -->
                     <div class="mb-4">
-                      <label class="label mb-2 block text-sm font-medium">Days</label>
-                      <div class="flex flex-wrap gap-2" role="group" aria-label="Select days of week">
+                      <span class="label mb-2 block text-sm font-medium" id="days-label-{schedule.id}">Days</span>
+                      <div class="flex flex-wrap gap-2" role="group" aria-labelledby="days-label-{schedule.id}">
                         {#each days as day}
                           {@const isSelected = schedule.days.has(day.id)}
                           <button
@@ -509,16 +509,18 @@
                     <!-- Time Range -->
                     <div class="grid grid-cols-2 gap-4">
                       <div>
-                        <label class="label mb-2 block text-sm font-medium">Start Time</label>
+                        <label for="start-time-{schedule.id}" class="label mb-2 block text-sm font-medium">Start Time</label>
                         <input 
+                          id="start-time-{schedule.id}"
                           type="time" 
                           class="input w-full" 
                           bind:value={schedule.startTime}
                         />
                       </div>
                       <div>
-                        <label class="label mb-2 block text-sm font-medium">End Time</label>
+                        <label for="end-time-{schedule.id}" class="label mb-2 block text-sm font-medium">End Time</label>
                         <input 
+                          id="end-time-{schedule.id}"
                           type="time" 
                           class="input w-full" 
                           bind:value={schedule.endTime}

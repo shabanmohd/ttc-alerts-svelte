@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Bell, Star, Settings } from 'lucide-svelte';
+  import { Bell, Star, Settings, Map } from 'lucide-svelte';
   import { page } from '$app/stores';
   
   function isActive(href: string, tab: string | null): boolean {
@@ -8,6 +8,9 @@
     
     if (href === '/preferences') {
       return currentPath === '/preferences';
+    }
+    if (href === '/routes') {
+      return currentPath === '/routes';
     }
     if (tab === 'my') {
       return currentPath === '/' && currentTab === 'my';
@@ -22,7 +25,7 @@
     class="nav-item {isActive('/', null) ? 'active' : ''}"
   >
     <Bell />
-    <span>All Alerts</span>
+    <span>Alerts</span>
   </a>
   <a 
     href="/?tab=my"
@@ -32,10 +35,17 @@
     <span>My Alerts</span>
   </a>
   <a 
+    href="/routes"
+    class="nav-item {isActive('/routes', null) ? 'active' : ''}"
+  >
+    <Map />
+    <span>Routes</span>
+  </a>
+  <a 
     href="/preferences"
     class="nav-item {isActive('/preferences', null) ? 'active' : ''}"
   >
     <Settings />
-    <span>Preferences</span>
+    <span>Settings</span>
   </a>
 </nav>

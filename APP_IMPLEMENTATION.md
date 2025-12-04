@@ -18,30 +18,32 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## 🔀 Version A/B Deployment
 
-| Attribute        | Version A (Stable)                | Version B (Beta)                          |
-| ---------------- | --------------------------------- | ----------------------------------------- |
-| **Branch**       | `main`                            | `version-b`                               |
-| **URL**          | https://ttc-alerts.pages.dev      | https://version-b.ttc-alerts.pages.dev    |
-| **PWA Name**     | "TTC Alerts"                      | "TTC Alerts Beta"                         |
-| **SW Cache**     | `ttc-alerts-v2`                   | `ttc-alerts-beta-v1`                      |
-| **Status**       | ✅ Production                     | 🚧 Development                            |
+| Attribute    | Version A (Stable)           | Version B (Beta)                       |
+| ------------ | ---------------------------- | -------------------------------------- |
+| **Branch**   | `main`                       | `version-b`                            |
+| **URL**      | https://ttc-alerts.pages.dev | https://version-b.ttc-alerts.pages.dev |
+| **PWA Name** | "TTC Alerts"                 | "TTC Alerts Beta"                      |
+| **SW Cache** | `ttc-alerts-v2`              | `ttc-alerts-beta-v1`                   |
+| **Status**   | ✅ Production                | 🚧 Development                         |
 
 > ⚠️ **This document tracks Version B (`version-b` branch)**. Version A features are a subset.
 
 ### Feature Availability
 
-| Feature                    | Version A | Version B |
-| -------------------------- | --------- | --------- |
-| Real-time alerts           | ✅        | ✅        |
-| WebAuthn authentication    | ✅        | ✅        |
-| Planned maintenance widget | ✅        | ✅        |
-| Accessibility settings     | ❌        | ✅        |
-| Visibility-aware polling   | ❌        | ✅        |
-| Stop search (9,346 stops)  | ❌        | ✅        |
-| Stop bookmarks             | ❌        | ✅        |
-| Nearby stops (geolocation) | ❌        | ✅        |
-| ETA predictions            | ❌        | 🚧 Planned |
-| French language (i18n)     | ❌        | 🚧 Planned |
+| Feature                    | Version A | Version B  |
+| -------------------------- | --------- | ---------- |
+| Real-time alerts           | ✅        | ✅         |
+| WebAuthn authentication    | ✅        | ✅         |
+| Planned maintenance widget | ✅        | ✅         |
+| Accessibility settings     | ❌        | ✅         |
+| Visibility-aware polling   | ❌        | ✅         |
+| Stop search (9,346 stops)  | ❌        | ✅         |
+| Stop bookmarks             | ❌        | ✅         |
+| Nearby stops (geolocation) | ❌        | ✅         |
+| ETA predictions            | ❌        | ✅         |
+| Route Browser              | ❌        | ✅         |
+| Weather warnings           | ❌        | ✅         |
+| French language (i18n)     | ❌        | ✅         |
 
 ---
 
@@ -55,8 +57,9 @@ Real-time Toronto Transit alerts with biometric authentication.
 | Phase 0: Version A/B Setup      | ✅ Complete | 100% |
 | Phase 1: Accessibility          | ✅ Complete | 100% |
 | Phase 2: Stop Database & Search | ✅ Complete | 100% |
-| Phase 3: ETA Feature            | ❌ Pending  | 0%   |
-| Phase 4: i18n & Features        | ❌ Pending  | 0%   |
+| Phase 3: ETA Feature            | ✅ Complete | 100% |
+| Phase 4: i18n & Features        | ✅ Complete | 100% |
+| Phase 5: Polish & Testing       | 🚧 Progress | 50%  |
 
 **Version A URL**: https://ttc-alerts.pages.dev  
 **Version B URL**: https://version-b.ttc-alerts.pages.dev
@@ -94,12 +97,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Pages (`src/routes/`)
 
-| File                         | Status | Purpose                        |
-| ---------------------------- | ------ | ------------------------------ |
-| `+layout.svelte`             | ✅     | App layout, auth init, dialogs |
-| `+page.svelte`               | ✅     | Homepage with alert tabs       |
-| `preferences/+page.svelte`   | ✅     | Route/mode preferences         |
-| `auth/callback/+page.svelte` | ✅     | Auth callback handler          |
+| File                         | Status | Purpose                           |
+| ---------------------------- | ------ | --------------------------------- |
+| `+layout.svelte`             | ✅     | App layout, auth init, dialogs    |
+| `+page.svelte`               | ✅     | Homepage with alert tabs + ETA    |
+| `preferences/+page.svelte`   | ✅     | Route/mode preferences            |
+| `routes/+page.svelte`        | ✅     | Route browser by category 🆕 **B**|
+| `auth/callback/+page.svelte` | ✅     | Auth callback handler             |
 
 ### Backend (`supabase/`)
 
@@ -113,6 +117,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                              |
 | `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v5: fixed schema)            |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                             |
+| `functions/get-eta/index.ts`            | ✅     | Fetch TTC NextBus predictions 🆕 **B**                  |
 
 ### Database (EXISTING in Supabase)
 
@@ -143,12 +148,34 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Stops Components (`src/lib/components/stops/`) 🆕 **Version B Only**
 
-| File                       | Status | Purpose                                     |
-| -------------------------- | ------ | ------------------------------------------- |
-| `StopSearch.svelte`        | ✅     | Stop search with autocomplete & geolocation |
-| `BookmarkStopButton.svelte`| ✅     | Bookmark toggle button for stops            |
-| `MyStopsWidget.svelte`     | ✅     | Display bookmarked stops on homepage        |
-| `index.ts`                 | ✅     | Component exports                           |
+| File                        | Status | Purpose                                     |
+| --------------------------- | ------ | ------------------------------------------- |
+| `StopSearch.svelte`         | ✅     | Stop search with autocomplete & geolocation |
+| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops            |
+| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage        |
+| `index.ts`                  | ✅     | Component exports                           |
+
+### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
+
+| File              | Status | Purpose                                     |
+| ----------------- | ------ | ------------------------------------------- |
+| `ETABadge.svelte` | ✅     | Individual arrival time badge with urgency  |
+| `ETACard.svelte`  | ✅     | Route-grouped ETA card with directions      |
+| `ETAWidget.svelte`| ✅     | Homepage widget showing bookmarked stop ETAs|
+
+### Weather Components (`src/lib/components/weather/`) 🆕 **Version B Only**
+
+| File                        | Status | Purpose                                         |
+| --------------------------- | ------ | ----------------------------------------------- |
+| `WeatherWarningBanner.svelte` | ✅   | Transit-relevant weather alerts from Environment Canada |
+
+### i18n (`src/lib/i18n/`) 🆕 **Version B Only**
+
+| File       | Status | Purpose                                     |
+| ---------- | ------ | ------------------------------------------- |
+| `index.ts` | ✅     | svelte-i18n setup with locale detection     |
+| `en.json`  | ✅     | English translations                        |
+| `fr.json`  | ✅     | French translations                         |
 
 ### Stores (`src/lib/stores/`) 🆕 **Version B additions**
 
@@ -160,6 +187,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `visibility.ts`    | ✅     | Track document visibility for polling control   | **B**   |
 | `accessibility.ts` | ✅     | Text scaling and reduce motion settings         | **B**   |
 | `bookmarks.ts`     | ✅     | Bookmarked stops (localStorage + Supabase sync) | **B**   |
+| `eta.ts`           | ✅     | ETA state with auto-refresh & caching           | **B**   |
 
 ### Configuration (`src/`)
 
@@ -170,17 +198,17 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
-| File                 | Status | Purpose                                          |
-| -------------------- | ------ | ------------------------------------------------ |
-| `transform-gtfs.js`  | ✅     | Transform TTC GTFS data to JSON for stop search  |
-| `generate-icons.js`  | ✅     | Generate PWA icons from source                   |
+| File                | Status | Purpose                                         |
+| ------------------- | ------ | ----------------------------------------------- |
+| `transform-gtfs.js` | ✅     | Transform TTC GTFS data to JSON for stop search |
+| `generate-icons.js` | ✅     | Generate PWA icons from source                  |
 
 ### Migrations (`supabase/migrations/`)
 
-| File                              | Status | Purpose                                    | Version |
-| --------------------------------- | ------ | ------------------------------------------ | ------- |
-| `20241204_auth_tables.sql`        | ✅     | WebAuthn auth tables                       | A & B   |
-| `20251204_bookmarked_stops.sql`   | ✅     | Add bookmarked_stops column to preferences | **B**   |
+| File                            | Status | Purpose                                    | Version |
+| ------------------------------- | ------ | ------------------------------------------ | ------- |
+| `20241204_auth_tables.sql`      | ✅     | WebAuthn auth tables                       | A & B   |
+| `20251204_bookmarked_stops.sql` | ✅     | Add bookmarked_stops column to preferences | **B**   |
 
 ---
 

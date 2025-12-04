@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Bell, Star, Settings, HelpCircle, Bug, Lightbulb, Info, LogOut } from 'lucide-svelte';
+  import { Bell, Star, Settings, HelpCircle, Bug, Lightbulb, Info, LogOut, Map } from 'lucide-svelte';
   import { Separator } from '$lib/components/ui/separator';
   import { Button } from '$lib/components/ui/button';
   import { page } from '$app/stores';
@@ -21,6 +21,9 @@
     
     if (href === '/preferences') {
       return currentPath === '/preferences';
+    }
+    if (href === '/routes') {
+      return currentPath === '/routes';
     }
     if (tab === 'my') {
       return currentPath === '/' && currentTab === 'my';
@@ -49,6 +52,13 @@
     >
       <Star />
       <span>My Alerts</span>
+    </a>
+    <a 
+      href="/routes"
+      class="sidebar-nav-item {isNavActive('/routes', null) ? 'active' : ''}"
+    >
+      <Map />
+      <span>Routes</span>
     </a>
     <a 
       href="/preferences"

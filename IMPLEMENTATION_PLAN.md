@@ -1407,11 +1407,11 @@ Settings persist via localStorage
 - [x] `src/lib/components/eta/ETABadge.svelte` ✅ Phase 3
 - [x] `src/lib/components/eta/ETACard.svelte` ✅ Phase 3
 - [x] `src/lib/components/eta/ETAWidget.svelte` ✅ Phase 3
-- [ ] `src/lib/components/weather/WeatherWarningBanner.svelte`
-- [ ] `src/lib/i18n/index.ts`
-- [ ] `src/lib/i18n/en.json`
-- [ ] `src/lib/i18n/fr.json`
-- [ ] `src/routes/routes/+page.svelte`
+- [x] `src/lib/components/weather/WeatherWarningBanner.svelte` ✅ Phase 4
+- [x] `src/lib/i18n/index.ts` ✅ Phase 4
+- [x] `src/lib/i18n/en.json` ✅ Phase 4
+- [x] `src/lib/i18n/fr.json` ✅ Phase 4
+- [x] `src/routes/routes/+page.svelte` ✅ Phase 4
 - [x] `supabase/functions/get-eta/index.ts` ✅ Phase 3
 - [x] `supabase/migrations/20251204_bookmarked_stops.sql` ✅ Phase 2
 - [x] `scripts/transform-gtfs.js` ✅ Phase 2
@@ -1423,8 +1423,8 @@ Settings persist via localStorage
 - [x] `src/routes/+layout.svelte` - Initialize accessibility ✅ Phase 1
 - [x] `src/routes/+page.svelte` - Add ETA widget ✅ Phase 3
 - [x] `src/routes/preferences/+page.svelte` - Add accessibility section, stop search ✅ Phase 1 & 2
-- [ ] `src/lib/components/layout/Header.svelte` - Add language toggle
-- [ ] `src/lib/components/layout/Sidebar.svelte` - Add Routes nav item
+- [x] `src/lib/components/layout/Header.svelte` - Add language toggle ✅ Phase 4
+- [x] `src/lib/components/layout/Sidebar.svelte` - Add Routes nav item ✅ Phase 5
 - [x] `static/sw.js` - Upgrade caching strategies ✅ Phase 0, 1 & 3
 - [x] `static/manifest.json` - Beta version name ✅ Phase 0
 - [x] `package.json` - Add dexie dependency ✅ Phase 2

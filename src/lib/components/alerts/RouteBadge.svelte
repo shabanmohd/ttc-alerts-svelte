@@ -99,24 +99,37 @@
   );
 </script>
 
-<span 
-  class={cn(
-    'route-badge',
-    getRouteClass(route),
-    size === 'sm' && 'route-badge-sm',
-    selectable && 'route-badge-selectable',
-    selectable && selected && 'selected',
-    className
-  )}
-  role={selectable ? 'checkbox' : 'status'}
-  aria-checked={selectable ? selected : undefined}
-  aria-label={ariaLabel}
-  tabindex={selectable ? 0 : undefined}
->
-  {#if selectable}
+{#if selectable}
+  <button 
+    type="button"
+    class={cn(
+      'route-badge',
+      getRouteClass(route),
+      size === 'sm' && 'route-badge-sm',
+      'route-badge-selectable',
+      selected && 'selected',
+      className
+    )}
+    role="checkbox"
+    aria-checked={selected}
+    aria-label={ariaLabel}
+  >
     <span class="route-check" aria-hidden="true">
       <Check class="check-icon" />
     </span>
-  {/if}
-  {route}
-</span>
+    {route}
+  </button>
+{:else}
+  <span 
+    class={cn(
+      'route-badge',
+      getRouteClass(route),
+      size === 'sm' && 'route-badge-sm',
+      className
+    )}
+    role="status"
+    aria-label={ariaLabel}
+  >
+    {route}
+  </span>
+{/if}
