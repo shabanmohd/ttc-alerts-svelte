@@ -8,21 +8,41 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 
 **Auth**: Custom WebAuthn (username + biometrics + recovery codes) - NOT Supabase Auth
 
-## ⚠️ CRITICAL: Update APP_IMPLEMENTATION.md After EVERY Change
+---
 
-After ANY code change, you MUST update `APP_IMPLEMENTATION.md`:
+## ⚠️ CRITICAL: Documentation Updates
 
-1. **Update file list** - Add new files, mark status (✅/⚠️/❌)
-2. **Update status summary** - Recalculate completion %
-3. **Keep it concise** - Brief descriptions, no verbose explanations
-4. **Maintain context** - Enough detail for any developer to understand the project
+### After ANY Code Change, Update These Files:
 
-### Documentation Standards
+| File | When to Update |
+|------|----------------|
+| `APP_IMPLEMENTATION.md` | New files, status changes, feature completion |
+| `DESIGN_SYSTEM.md` | Colors, typography, spacing, components, layout changes |
+| `alert-categorization-and-threading.md` | Categorization logic, threading algorithm, filtering changes |
 
-- **Be brief**: One-line descriptions per file
-- **Be current**: Remove outdated info, update statuses immediately
-- **Be complete**: Every file must be listed with its purpose
-- **Be clear**: Use status icons consistently (✅ done, ⚠️ needs work, ❌ not started)
+### Update Rules:
+
+1. **Update IMMEDIATELY after changes** - Don't batch updates
+2. **Update when losing context** - Read these files to restore understanding
+3. **Update before ending session** - Ensure all changes are documented
+
+### APP_IMPLEMENTATION.md
+- Add new files with status (✅/⚠️/❌)
+- Update completion percentages
+- Keep descriptions to one line per file
+
+### DESIGN_SYSTEM.md
+- Update color tokens if colors change
+- Update typography if fonts/weights/sizes change
+- Update component patterns if UI components change
+- Update spacing if padding/margins change
+
+### alert-categorization-and-threading.md
+- Update if `poll-alerts/index.ts` changes (categorization, threading)
+- Update if `stores/alerts.ts` changes (filtering logic)
+- Update if category keywords or thresholds change
+
+---
 
 ## Architecture
 
