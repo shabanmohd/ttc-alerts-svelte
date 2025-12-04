@@ -176,6 +176,25 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 4, 2025 - Header & Sidebar Layout Refinement
+
+**Header Responsive Layout:**
+
+- ✅ Mobile (< 640px): Last updated + refresh + hamburger menu only
+- ✅ Non-mobile (≥ 640px): Last updated + refresh + How to Use + Theme toggle + Sign In
+- ✅ Fixed responsive class inconsistencies (`hidden sm:flex` pattern)
+
+**Sidebar Cleanup:**
+
+- ✅ Removed Sign In button from sidebar (now in header for non-mobile)
+- ✅ Removed Dark Mode toggle from sidebar (now in header for non-mobile)
+- ✅ Sidebar now shows: Navigation + Help links (+ User info when authenticated)
+
+**Files Updated:**
+
+- `src/lib/components/layout/Header.svelte` - Fixed responsive visibility classes
+- `src/lib/components/layout/Sidebar.svelte` - Removed redundant Sign In and theme toggle
+
 ### Dec 4, 2025 - Planned Alerts & Filter UX Improvements
 
 **Planned Alerts Widget:**
@@ -186,6 +205,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 - ✅ Neutral gray outline style for closure badges (zinc-400)
 - ✅ Fixed time parsing to handle HH:MM:SS format → displays as "11:59 PM"
 - ✅ Consistent vertical alignment for dates across all cards
+- ✅ Background polling every 5 minutes (data updates without page refresh)
 
 **Filter Improvements:**
 
@@ -203,12 +223,18 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 - ✅ Fixed SW to skip Vite dev server requests (/.svelte-kit/, /@vite/, etc.)
 
+**Polling:**
+
+- ✅ Alerts: 30-second polling interval (existing)
+- ✅ Maintenance: 5-minute polling interval (new - fetches in background, no UI refresh)
+- ✅ "Updated X ago" shows when alerts data was last fetched (not maintenance)
+
 **Files Updated:**
 
 - `src/lib/components/alerts/MaintenanceWidget.svelte` - Closure badge position, time parsing
 - `src/lib/components/alerts/FilterChips.svelte` - Removed Planned filter
 - `src/lib/stores/alerts.ts` - Mutually exclusive filters, exclude planned alerts
-- `src/routes/+page.svelte` - Empty state with icon
+- `src/routes/+page.svelte` - Empty state with icon, maintenance polling interval
 - `src/routes/layout.css` - Footer layout, badge styling, time styling
 - `static/sw.js` - Skip dev server requests
 

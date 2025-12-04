@@ -23,21 +23,30 @@
   import { HowToUseDialog, SignInDialog, InstallPWADialog } from '$lib/components/dialogs';
   
   let activeDialog = $state<string | null>(null);
-  let pollingInterval: ReturnType<typeof setInterval> | null = null;
+  let alertsPollingInterval: ReturnType<typeof setInterval> | null = null;
+  let maintenancePollingInterval: ReturnType<typeof setInterval> | null = null;
   
   onMount(async () => {
     // Fetch maintenance items
     await fetchMaintenance();
     
-    // Set up polling fallback (every 30s)
-    pollingInterval = setInterval(() => {
+    // Set up alerts polling (every 30s)
+    alertsPollingInterval = setInterval(() => {
       pollForUpdates();
     }, 30000);
+    
+    // Set up maintenance polling (every 5 minutes) - fetches in background
+    maintenancePollingInterval = setInterval(() => {
+      fetchMaintenance();
+    }, 300000);
   });
   
   onDestroy(() => {
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
+    if (alertsPollingInterval) {
+      clearInterval(alertsPollingInterval);
+    }
+    if (maintenancePollingInterval) {
+      clearInterval(maintenancePollingInterval);
     }
   });
   

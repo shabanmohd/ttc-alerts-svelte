@@ -1,23 +1,11 @@
 <script lang="ts">
-  import { Bell, Star, Settings, HelpCircle, Bug, Lightbulb, Info, Sun, Moon, User, LogOut } from 'lucide-svelte';
+  import { Bell, Star, Settings, HelpCircle, Bug, Lightbulb, Info, LogOut } from 'lucide-svelte';
   import { Separator } from '$lib/components/ui/separator';
   import { Button } from '$lib/components/ui/button';
   import { page } from '$app/stores';
   import { isAuthenticated, userName, userInitial, signOut } from '$lib/stores/auth';
   
   let { onOpenDialog }: { onOpenDialog?: (dialog: string) => void } = $props();
-  
-  let isDark = $state(false);
-  
-  $effect(() => {
-    isDark = document.documentElement.classList.contains('dark');
-  });
-  
-  function toggleTheme() {
-    isDark = !isDark;
-    document.documentElement.classList.toggle('dark', isDark);
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }
   
   function handleDialog(dialog: string) {
     onOpenDialog?.(dialog);
@@ -72,7 +60,7 @@
   </nav>
   
   <div class="sidebar-footer">
-    <!-- User Section -->
+    <!-- User Section (only show when authenticated) -->
     {#if $isAuthenticated}
       <div class="px-3 py-2 mb-2">
         <div class="flex items-center gap-3">
@@ -93,21 +81,6 @@
           <LogOut class="w-4 h-4 mr-2" aria-hidden="true" />
           Sign Out
         </Button>
-      </div>
-      <Separator class="my-2" />
-    {:else}
-      <div class="px-3 py-2 mb-2">
-        <Button 
-          variant="outline" 
-          class="w-full justify-start"
-          onclick={() => handleDialog('sign-in')}
-        >
-          <User class="w-4 h-4 mr-2" aria-hidden="true" />
-          Sign In
-        </Button>
-        <p class="text-xs text-muted-foreground mt-2 px-1">
-          Sign in to sync preferences across devices
-        </p>
       </div>
       <Separator class="my-2" />
     {/if}
@@ -147,20 +120,5 @@
         <span>About</span>
       </button>
     </div>
-    
-    <Separator class="my-2" />
-    
-    <button 
-      onclick={toggleTheme}
-      class="sidebar-nav-item w-full"
-    >
-      {#if isDark}
-        <Sun class="w-5 h-5" />
-        <span>Light Mode</span>
-      {:else}
-        <Moon class="w-5 h-5" />
-        <span>Dark Mode</span>
-      {/if}
-    </button>
   </div>
 </aside>

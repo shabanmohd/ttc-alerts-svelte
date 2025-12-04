@@ -71,7 +71,7 @@
     
     <!-- Right side actions -->
     <div class="header-right">
-      <!-- Last updated + Refresh -->
+      <!-- Last updated + Refresh (always visible) -->
       <div class="flex items-center gap-1 text-xs text-muted-foreground">
         {#if $lastUpdated}
           <span id="last-updated">Updated {formatLastUpdated($lastUpdated)}</span>
@@ -87,9 +87,9 @@
         </button>
       </div>
       
-      <!-- Help button (tablet only - hidden on mobile and desktop) -->
+      <!-- Help button (hidden on mobile) -->
       <button 
-        class="max-sm:hidden lg:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
+        class="hidden sm:flex p-2 rounded-md hover:bg-accent transition-colors"
         onclick={() => onOpenDialog?.('how-to-use')}
         title="How to Use"
         aria-label="How to use this app"
@@ -97,9 +97,9 @@
         <HelpCircle class="w-5 h-5" aria-hidden="true" />
       </button>
       
-      <!-- Theme toggle (tablet only - hidden on mobile and desktop) -->
+      <!-- Theme toggle (hidden on mobile) -->
       <button 
-        class="max-sm:hidden lg:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
+        class="hidden sm:flex p-2 rounded-md hover:bg-accent transition-colors"
         onclick={toggleTheme}
         title="Toggle theme"
         aria-label="Toggle light or dark mode"
@@ -111,14 +111,14 @@
         {/if}
       </button>
       
-      <!-- Sign In / User Menu (desktop) -->
+      <!-- Sign In / User Menu (hidden on mobile) -->
       {#if isAuthenticated}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild let:builder>
             <button 
               use:builder.action
               {...builder}
-              class="max-sm:hidden lg:hidden inline-flex items-center gap-2 h-9 px-3 py-2 rounded-md hover:bg-accent transition-colors"
+              class="hidden sm:inline-flex items-center gap-2 h-9 px-3 py-2 rounded-md hover:bg-accent transition-colors"
             >
               <div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
                 <span class="text-xs font-semibold text-primary-foreground">{getUserInitial(username)}</span>
@@ -144,7 +144,7 @@
         </DropdownMenu.Root>
       {:else}
         <button
-          class="max-sm:hidden lg:hidden inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border border-border bg-transparent text-sm font-medium hover:bg-accent transition-colors gap-2"
+          class="hidden sm:inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border border-border bg-transparent text-sm font-medium hover:bg-accent transition-colors gap-2"
           onclick={onSignIn}
         >
           <User class="w-4 h-4" aria-hidden="true" />
@@ -152,9 +152,9 @@
         </button>
       {/if}
       
-      <!-- Mobile Menu Button -->
+      <!-- Mobile Menu Button (only on mobile) -->
       <button 
-        class="hidden max-sm:flex p-2 rounded-md hover:bg-accent transition-colors"
+        class="sm:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
         onclick={() => mobileMenuOpen = !mobileMenuOpen}
         title="Menu"
         aria-label="Open menu"
