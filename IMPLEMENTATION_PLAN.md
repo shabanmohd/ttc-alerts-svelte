@@ -28,9 +28,9 @@ Deploy the current stable app as **Version A** (production) while developing new
 
 ### 0.1 Create Version B Branch
 
-- [ ] Create new branch from main: `git checkout -b version-b`
-- [ ] Push branch to remote: `git push -u origin version-b`
-- [ ] Verify Cloudflare Pages auto-deploys to `version-b.ttc-alerts.pages.dev`
+- [x] Create new branch from main: `git checkout -b version-b`
+- [x] Push branch to remote: `git push -u origin version-b`
+- [x] Verify Cloudflare Pages auto-deploys to `version-b.ttc-alerts.pages.dev`
 
 **Commands:**
 
@@ -46,10 +46,10 @@ git push -u origin version-b
 
 ### 0.2 Update PWA Manifest for Version B
 
-- [ ] Modify `static/manifest.json` to distinguish beta version
-- [ ] Change `name` to "TTC Alerts Beta"
-- [ ] Change `short_name` to "TTC Beta"
-- [ ] Optionally add beta indicator to `description`
+- [x] Modify `static/manifest.json` to distinguish beta version
+- [x] Change `name` to "TTC Alerts Beta"
+- [x] Change `short_name` to "TTC Beta"
+- [x] Optionally add beta indicator to `description`
 
 **Changes to `static/manifest.json`:**
 
@@ -70,9 +70,9 @@ git push -u origin version-b
 
 ### 0.3 Update Service Worker Cache Names
 
-- [ ] Modify `static/sw.js` to use beta-specific cache names
-- [ ] Change cache prefix from `ttc-alerts-v2` to `ttc-alerts-beta-v1`
-- [ ] Prevents cache conflicts if user has both versions installed
+- [x] Modify `static/sw.js` to use beta-specific cache names
+- [x] Change cache prefix from `ttc-alerts-v2` to `ttc-alerts-beta-v1`
+- [x] Prevents cache conflicts if user has both versions installed
 
 **Changes to `static/sw.js`:**
 
@@ -111,9 +111,9 @@ const DYNAMIC_CACHE = "ttc-dynamic-beta-v1";
 
 ### 0.5 Add WebAuthn Multi-Origin Support
 
-- [ ] Update Supabase Edge Function secrets to support both origins
-- [ ] Modify `supabase/functions/_shared/auth-utils.ts` to accept multiple origins
-- [ ] Add `version-b.ttc-alerts.pages.dev` to allowed origins
+- [x] Update Supabase Edge Function secrets to support both origins
+- [x] Modify `supabase/functions/_shared/auth-utils.ts` to accept multiple origins
+- [x] Add `version-b.ttc-alerts.pages.dev` to allowed origins
 
 **Option A: Environment-based (Recommended)**
 
@@ -203,11 +203,11 @@ git push origin version-b
 
 ### Phase 0 Checklist Summary
 
-- [ ] Create `version-b` branch from `main`
-- [ ] Update `static/manifest.json` with beta name
-- [ ] Update `static/sw.js` cache names
-- [ ] Verify Cloudflare branch deployment works
-- [ ] Add WebAuthn multi-origin support
+- [x] Create `version-b` branch from `main`
+- [x] Update `static/manifest.json` with beta name
+- [x] Update `static/sw.js` cache names
+- [x] Verify Cloudflare branch deployment works
+- [x] Add WebAuthn multi-origin support
 - [ ] Test beta deployment at `version-b.ttc-alerts.pages.dev`
 - [ ] Document workflow for team (if applicable)
 
@@ -232,11 +232,11 @@ All features designed to stay within **Supabase free tier limits**.
 
 ### 1.1 Visibility-Aware Fetching
 
-- [ ] Create `src/lib/stores/visibility.ts`
-- [ ] Add `document.visibilitychange` listener
-- [ ] Export `isVisible` readable store
-- [ ] Integrate into `alerts.ts` to pause polling when hidden
-- [ ] Test: Verify no API calls when tab is backgrounded
+- [x] Create `src/lib/stores/visibility.ts`
+- [x] Add `document.visibilitychange` listener
+- [x] Export `isVisible` readable store
+- [x] Integrate into `alerts.ts` to pause polling when hidden
+- [x] Test: Verify no API calls when tab is backgrounded
 
 **Implementation:**
 
@@ -263,12 +263,12 @@ export const isVisible = readable(true, (set) => {
 
 ### 1.2 Accessibility Settings Store
 
-- [ ] Create `src/lib/stores/accessibility.ts`
-- [ ] Add `textScale` state: `'normal' | 'medium' | 'large'` (1.0, 1.15, 1.3)
-- [ ] Add `reduceMotion` state: boolean
-- [ ] Persist to localStorage
-- [ ] Apply CSS custom properties to `<html>` element on change
-- [ ] Respect `prefers-reduced-motion` media query as default
+- [x] Create `src/lib/stores/accessibility.ts`
+- [x] Add `textScale` state: `'normal' | 'medium' | 'large'` (1.0, 1.15, 1.3)
+- [x] Add `reduceMotion` state: boolean
+- [x] Persist to localStorage
+- [x] Apply CSS custom properties to `<html>` element on change
+- [x] Respect `prefers-reduced-motion` media query as default
 
 **Implementation:**
 
@@ -335,11 +335,11 @@ export const accessibility = createAccessibilityStore();
 
 ### 1.3 Accessibility CSS
 
-- [ ] Add CSS custom property `--text-scale` to `layout.css`
-- [ ] Add text scale classes (`.text-scale-normal`, `.text-scale-medium`, `.text-scale-large`)
-- [ ] Add `.reduce-motion` class that disables all animations
-- [ ] Add `@media (prefers-reduced-motion)` fallback
-- [ ] Update all `font-size` values to use `calc(Xpx * var(--text-scale))`
+- [x] Add CSS custom property `--text-scale` to `layout.css`
+- [x] Add text scale classes (`.text-scale-normal`, `.text-scale-medium`, `.text-scale-large`)
+- [x] Add `.reduce-motion` class that disables all animations
+- [x] Add `@media (prefers-reduced-motion)` fallback
+- [x] Update all `font-size` values to use `calc(Xpx * var(--text-scale))`
 
 **Implementation:**
 
@@ -402,12 +402,12 @@ html.reduce-motion *::after {
 
 ### 1.4 Accessibility Settings UI
 
-- [ ] Add "Accessibility" section to `preferences/+page.svelte`
-- [ ] Create text size selector with A / A+ / A++ buttons
-- [ ] Create "Reduce motion" toggle switch
-- [ ] Add visual preview of text size change
-- [ ] Ensure settings work WITHOUT authentication (localStorage only)
-- [ ] Add ARIA labels and descriptions
+- [x] Add "Accessibility" section to `preferences/+page.svelte`
+- [x] Create text size selector with A / A+ / A++ buttons
+- [x] Create "Reduce motion" toggle switch
+- [x] Add visual preview of text size change
+- [x] Ensure settings work WITHOUT authentication (localStorage only)
+- [x] Add ARIA labels and descriptions
 
 **UI Design:**
 
@@ -430,11 +430,11 @@ html.reduce-motion *::after {
 
 ### 1.5 Enhanced Service Worker
 
-- [ ] Update `static/sw.js` with Workbox-style caching
-- [ ] NetworkFirst for `/rest/v1/alert_cache` (1 hour max-age)
+- [x] Update `static/sw.js` with Workbox-style caching
+- [x] NetworkFirst for `/rest/v1/alert_cache` (1 hour max-age)
 - [ ] NetworkFirst for `/functions/v1/get-eta` (30 second max-age)
-- [ ] CacheFirst for `/rest/v1/planned_maintenance` (24 hour max-age)
-- [ ] CacheFirst for static assets (`/_app/`, fonts, icons)
+- [x] CacheFirst for `/rest/v1/planned_maintenance` (24 hour max-age)
+- [x] CacheFirst for static assets (`/_app/`, fonts, icons)
 - [ ] Add offline fallback page
 - [ ] Test offline functionality
 
