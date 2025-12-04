@@ -19,6 +19,7 @@
     isConnected
   } from '$lib/stores/alerts';
   import { isAuthenticated, userName, signOut } from '$lib/stores/auth';
+  import { isVisible } from '$lib/stores/visibility';
   
   // Import dialogs
   import { HowToUseDialog, SignInDialog, InstallPWADialog } from '$lib/components/dialogs';
@@ -26,6 +27,28 @@
   let activeDialog = $state<string | null>(null);
   let unsubscribeRealtime: (() => void) | null = null;
   let maintenancePollingInterval: ReturnType<typeof setInterval> | null = null;
+  
+  // Track visibility for polling control
+  let wasHiddenTooLong = false;
+  let hiddenSince: number | null = null;
+  const STALE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+  
+  // React to visibility changes
+  $effect(() => {
+    if ($isVisible) {
+      // Coming back to foreground
+      if (hiddenSince && Date.now() - hiddenSince > STALE_THRESHOLD) {
+        // Data might be stale, refresh
+        console.log('[Visibility] Tab was hidden for too long, refreshing data...');
+        fetchAlerts();
+        fetchMaintenance();
+      }
+      hiddenSince = null;
+    } else {
+      // Going to background
+      hiddenSince = Date.now();
+    }
+  });
   
   onMount(async () => {
     // Initial data fetch
@@ -37,9 +60,11 @@
     // Fetch maintenance items
     await fetchMaintenance();
     
-    // Maintenance still uses polling (every 5 minutes) since it's not real-time critical
+    // Maintenance polling (every 5 minutes) - only when visible
     maintenancePollingInterval = setInterval(() => {
-      fetchMaintenance();
+      if ($isVisible) {
+        fetchMaintenance();
+      }
     }, 300000);
   });
   

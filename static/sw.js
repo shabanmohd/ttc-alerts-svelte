@@ -1,6 +1,7 @@
 const CACHE_NAME = 'ttc-alerts-beta-v1';
 const STATIC_CACHE = 'ttc-static-beta-v1';
 const DYNAMIC_CACHE = 'ttc-dynamic-beta-v1';
+const ALERTS_CACHE = 'ttc-alerts-cache-v1';
 
 const STATIC_ASSETS = [
   '/',
@@ -18,6 +19,8 @@ const STATIC_ASSETS = [
 
 // Cache size limits
 const DYNAMIC_CACHE_LIMIT = 50;
+const ALERTS_CACHE_MAX_AGE = 60 * 60 * 1000; // 1 hour
+const MAINTENANCE_CACHE_MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours
 
 // Trim cache to limit
 async function trimCache(cacheName, maxItems) {
@@ -26,6 +29,40 @@ async function trimCache(cacheName, maxItems) {
   if (keys.length > maxItems) {
     await cache.delete(keys[0]);
     await trimCache(cacheName, maxItems);
+  }
+}
+
+// Network first with timed cache fallback (for API requests)
+async function networkFirstWithTimeout(request, cacheName, maxAge) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(cacheName);
+      // Store with timestamp
+      const responseToCache = response.clone();
+      const headers = new Headers(responseToCache.headers);
+      headers.append('sw-cached-at', Date.now().toString());
+      const newResponse = new Response(await responseToCache.blob(), {
+        status: responseToCache.status,
+        statusText: responseToCache.statusText,
+        headers
+      });
+      cache.put(request, newResponse);
+    }
+    return response;
+  } catch (err) {
+    // Network failed, try cache
+    const cached = await caches.match(request);
+    if (cached) {
+      const cachedAt = parseInt(cached.headers.get('sw-cached-at') || '0', 10);
+      const age = Date.now() - cachedAt;
+      // Return cache if within max age, otherwise throw
+      if (age < maxAge) {
+        console.log('[SW] Serving from cache (age:', Math.round(age / 1000), 's)');
+        return cached;
+      }
+    }
+    throw err;
   }
 }
 
@@ -44,15 +81,12 @@ self.addEventListener('install', (event) => {
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating service worker...');
+  const validCaches = [STATIC_CACHE, DYNAMIC_CACHE, CACHE_NAME, ALERTS_CACHE];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => 
-            name !== STATIC_CACHE && 
-            name !== DYNAMIC_CACHE &&
-            name !== CACHE_NAME
-          )
+          .filter((name) => !validCaches.includes(name))
           .map((name) => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
@@ -84,8 +118,60 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // API and Supabase requests - Network only (don't cache)
-  if (url.hostname.includes('supabase') || url.pathname.startsWith('/api')) {
+  // API and Supabase requests - Network first with cache fallback
+  if (url.hostname.includes('supabase')) {
+    // Alerts cache - 1 hour max age
+    if (url.pathname.includes('/rest/v1/alert_cache') || 
+        url.pathname.includes('/rest/v1/incident_threads')) {
+      event.respondWith(
+        networkFirstWithTimeout(request, ALERTS_CACHE, ALERTS_CACHE_MAX_AGE)
+          .catch(() => {
+            return new Response(
+              JSON.stringify({ error: 'You are offline', offline: true }),
+              { 
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+              }
+            );
+          })
+      );
+      return;
+    }
+    
+    // Maintenance cache - 24 hour max age
+    if (url.pathname.includes('/rest/v1/planned_maintenance')) {
+      event.respondWith(
+        networkFirstWithTimeout(request, ALERTS_CACHE, MAINTENANCE_CACHE_MAX_AGE)
+          .catch(() => {
+            return new Response(
+              JSON.stringify({ error: 'You are offline', offline: true }),
+              { 
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+              }
+            );
+          })
+      );
+      return;
+    }
+
+    // Other Supabase requests - network only
+    event.respondWith(
+      fetch(request).catch(() => {
+        return new Response(
+          JSON.stringify({ error: 'You are offline', offline: true }),
+          { 
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      })
+    );
+    return;
+  }
+  
+  // Non-Supabase API requests - Network only
+  if (url.pathname.startsWith('/api')) {
     event.respondWith(
       fetch(request).catch(() => {
         // Return offline response for API failures
