@@ -14,14 +14,14 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 
 ### 📚 Documentation Files (Single Source of Truth)
 
-| File                                    | Purpose                                          | When to Update                                               |
-| --------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
-| `APP_IMPLEMENTATION.md`                 | File inventory, completion status, architecture  | New files, status changes, feature completion                |
-| `DESIGN_SYSTEM.md`                      | Colors, typography, spacing, components          | Colors, typography, spacing, components, layout changes      |
-| `alert-categorization-and-threading.md` | Edge Function logic, threading algorithm         | Categorization logic, threading algorithm, filtering changes |
-| `TTC-ROUTE-CONFLICTS.md`                | Route number conflicts (39/939, 46/996, etc.)    | Route matching bugs, new conflict patterns                   |
-| `TTC-BUS-ROUTES.md`                     | Complete TTC bus route reference                 | Route additions/removals                                     |
-| `TTC-STREETCAR-ROUTES.md`               | Complete TTC streetcar route reference           | Route additions/removals                                     |
+| File                                    | Purpose                                         | When to Update                                               |
+| --------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| `APP_IMPLEMENTATION.md`                 | File inventory, completion status, architecture | New files, status changes, feature completion                |
+| `DESIGN_SYSTEM.md`                      | Colors, typography, spacing, components         | Colors, typography, spacing, components, layout changes      |
+| `alert-categorization-and-threading.md` | Edge Function logic, threading algorithm        | Categorization logic, threading algorithm, filtering changes |
+| `TTC-ROUTE-CONFLICTS.md`                | Route number conflicts (39/939, 46/996, etc.)   | Route matching bugs, new conflict patterns                   |
+| `TTC-BUS-ROUTES.md`                     | Complete TTC bus route reference                | Route additions/removals                                     |
+| `TTC-STREETCAR-ROUTES.md`               | Complete TTC streetcar route reference          | Route additions/removals                                     |
 
 ### 🔄 Update Rules
 
@@ -43,26 +43,76 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 ### 📝 Documentation Update Checklist
 
 #### APP_IMPLEMENTATION.md
+
 - Add new files with status (✅/⚠️/❌)
 - Update completion percentages
 - Keep descriptions to one line per file
 
 #### DESIGN_SYSTEM.md
+
 - Update color tokens if colors change
 - Update typography if fonts/weights/sizes change
 - Update component patterns if UI components change
 - Update spacing if padding/margins change
 
 #### alert-categorization-and-threading.md
+
 - Update if `poll-alerts/index.ts` changes (categorization, threading)
 - Update if `stores/alerts.ts` changes (filtering logic)
 - Update if category keywords or thresholds change
 - Update threading algorithm when route matching logic changes
 
 #### TTC-ROUTE-CONFLICTS.md
+
 - Update when fixing route threading bugs
 - Add new test cases for discovered edge cases
 - Update code examples to match actual implementation
+
+---
+
+## 🔧 MCP Tools (Model Context Protocol)
+
+### Available MCPs - USE THESE!
+
+| MCP               | Purpose                                    | When to Use                                         |
+| ----------------- | ------------------------------------------ | --------------------------------------------------- |
+| **Supabase**      | Database queries, Edge Function deployment | Deploy functions, run SQL, manage branches          |
+| **Cloudflare**    | Workers, D1, KV, R2 management             | Check worker logs, manage KV storage                |
+| **Playwright**    | Browser automation, testing                | UI testing, screenshots, form automation            |
+| **GitKraken**     | Git operations, PR management              | Commits, branches, pull requests, issue management  |
+
+### When to Use MCPs
+
+1. **Supabase MCP** - Prefer over `supabase` CLI commands:
+   - `mcp_supabase_deploy_edge_function` - Deploy Edge Functions
+   - `mcp_supabase_execute_sql` - Run database queries
+   - `mcp_supabase_list_tables` - Inspect database schema
+   - `mcp_supabase_get_logs` - Debug Edge Function issues
+
+2. **Cloudflare MCP** - For production infrastructure:
+   - Check worker observability/logs
+   - Manage KV namespaces
+   - Deploy and monitor workers
+
+3. **Playwright MCP** - For browser-based tasks:
+   - Take screenshots for verification
+   - Test UI interactions
+   - Automate form submissions
+
+4. **GitKraken MCP** - For Git operations:
+   - `mcp_gitkraken_git_add_or_commit` - Stage and commit
+   - `mcp_gitkraken_git_push` - Push changes
+   - Create/manage pull requests
+
+### MCP vs Terminal
+
+| Task                      | Use MCP                            | Use Terminal           |
+| ------------------------- | ---------------------------------- | ---------------------- |
+| Deploy Edge Function      | ✅ `mcp_supabase_deploy_edge_function` | ❌ `supabase functions deploy` |
+| Run SQL query             | ✅ `mcp_supabase_execute_sql`      | ❌ `psql` commands     |
+| Git commit/push           | Either works                       | Either works           |
+| npm install/build         | ❌                                 | ✅ `run_in_terminal`   |
+| Check Cloudflare logs     | ✅ Cloudflare observability MCP    | ❌                     |
 
 ---
 

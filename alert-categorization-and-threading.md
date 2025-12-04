@@ -182,6 +182,7 @@ function routesMatch(route1: string, route2: string): boolean {
 ```
 
 **Examples:**
+
 - `routesMatch("46 Martin Grove", "46")` → `true` (both have route number 46)
 - `routesMatch("996 Wilson Express", "96")` → `false` (996 ≠ 96)
 - `routesMatch("39 Finch East", "939 Finch Express")` → `false` (39 ≠ 939)
@@ -252,15 +253,17 @@ Incident threading groups related alerts over time to:
 let matchedThread = null;
 
 for (const thread of unresolvedThreads || []) {
-  const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
-  
+  const threadRoutes = Array.isArray(thread.affected_routes)
+    ? thread.affected_routes
+    : [];
+
   // Use exact route number matching to prevent 46 matching 996, etc.
-  const hasRouteOverlap = routes.some(alertRoute => 
-    threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))
+  const hasRouteOverlap = routes.some((alertRoute) =>
+    threadRoutes.some((threadRoute) => routesMatch(alertRoute, threadRoute))
   );
 
   if (hasRouteOverlap) {
-    const threadTitle = thread.title || '';
+    const threadTitle = thread.title || "";
     const similarity = jaccardSimilarity(text, threadTitle);
 
     // High similarity (80%) for general matching
