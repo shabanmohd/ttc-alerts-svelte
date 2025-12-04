@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TTC Alert Preferences - shadcn/ui Test</title>
+  
+  <!-- Inter Font (shadcn default) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Design System CSS - Single Source of Truth -->
+  <link rel="stylesheet" href="client/src/css/design-system.css">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            border: "hsl(var(--border))",
+            input: "hsl(var(--input))",
+            ring: "hsl(var(--ring))",
+            background: "hsl(var(--background))",
+            foreground: "hsl(var(--foreground))",
+            primary: {
+              DEFAULT: "hsl(var(--primary))",
+              foreground: "hsl(var(--primary-foreground))",
+            },
+            secondary: {
+              DEFAULT: "hsl(var(--secondary))",
+              foreground: "hsl(var(--secondary-foreground))",
+            },
+            destructive: {
+              DEFAULT: "hsl(var(--destructive))",
+              foreground: "hsl(var(--destructive-foreground))",
+            },
+            muted: {
+              DEFAULT: "hsl(var(--muted))",
+              foreground: "hsl(var(--muted-foreground))",
+            },
+            accent: {
+              DEFAULT: "hsl(var(--accent))",
+              foreground: "hsl(var(--accent-foreground))",
+            },
+            popover: {
+              DEFAULT: "hsl(var(--popover))",
+              foreground: "hsl(var(--popover-foreground))",
+            },
+            card: {
+              DEFAULT: "hsl(var(--card))",
+              foreground: "hsl(var(--card-foreground))",
+            },
+          },
+          borderRadius: {
+            lg: "var(--radius)",
+            md: "calc(var(--radius) - 2px)",
+            sm: "calc(var(--radius) - 4px)",
+          },
+        },
+      },
+    }
+  </script>
+</head>
+<body class="min-h-screen">
+  
+  <!-- Desktop Sidebar -->
+  <aside class="sidebar">
+    <a href="test-shadcn-homepage.html" class="sidebar-header">
+      <span class="sidebar-logo">🚇</span>
+      <span class="sidebar-title">TTC Alerts</span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="test-shadcn-homepage.html" class="sidebar-nav-item">
+        <i data-lucide="bell"></i>
+        <span>All Alerts</span>
+      </a>
+      <a href="test-shadcn-homepage.html#my-alerts" class="sidebar-nav-item" id="sidebar-my-alerts">
+        <i data-lucide="star"></i>
+        <span>My Alerts</span>
+      </a>
+      <a href="#" class="sidebar-nav-item active">
+        <i data-lucide="settings"></i>
+        <span>Preferences</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <!-- Help & Info Links -->
+      <div class="sidebar-footer-links">
+        <button class="sidebar-footer-link" id="sidebar-how-to-use" title="How to Use">
+          <i data-lucide="help-circle"></i>
+          <span>How to Use</span>
+        </button>
+        <button class="sidebar-footer-link" id="sidebar-report-bug" title="Report a Bug">
+          <i data-lucide="bug"></i>
+          <span>Report Bug</span>
+        </button>
+        <button class="sidebar-footer-link" id="sidebar-feature-request" title="Feature Request">
+          <i data-lucide="lightbulb"></i>
+          <span>Feature Request</span>
+        </button>
+        <button class="sidebar-footer-link" id="sidebar-about" title="About">
+          <i data-lucide="info"></i>
+          <span>About</span>
+        </button>
+      </div>
+      <div class="separator-horizontal my-2"></div>
+      <button id="sidebar-theme-toggle" class="sidebar-nav-item w-full">
+        <i data-lucide="sun" class="hidden dark:block"></i>
+        <i data-lucide="moon" class="block dark:hidden"></i>
+        <span class="dark:hidden">Dark Mode</span>
+        <span class="hidden dark:block">Light Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main wrapper -->
+  <div class="main-wrapper">
+    <!-- Header (mobile: full header, desktop: just actions) -->
+    <header class="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background))] backdrop-blur relative">
+      <div class="header-container">
+        <!-- Logo (mobile only) -->
+        <a href="test-shadcn-homepage.html" class="header-left">
+          <span class="text-xl">🚇</span>
+          <span class="font-semibold">TTC Alerts</span>
+        </a>
+        
+        <!-- Right side actions -->
+        <div class="header-right">
+          <!-- Help button (desktop only) -->
+          <button id="header-help-btn" class="hidden sm:flex p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors" title="How to Use">
+            <i data-lucide="help-circle" class="w-5 h-5"></i>
+          </button>
+          <!-- Theme Toggle (desktop only) -->
+          <button id="theme-toggle" class="hidden sm:flex p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors" aria-label="Toggle theme">
+            <i data-lucide="sun" class="h-5 w-5 hidden dark:block"></i>
+            <i data-lucide="moon" class="h-5 w-5 block dark:hidden"></i>
+          </button>
+          <!-- Sign In button (desktop only) -->
+          <button class="hidden sm:inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-transparent text-sm font-medium hover:bg-[hsl(var(--accent))] transition-colors gap-2" id="header-sign-in-btn">
+            <i data-lucide="user" class="w-4 h-4"></i>
+            <span>Sign In</span>
+          </button>
+          <!-- User Menu (desktop, shown when signed in) -->
+          <div class="relative auth-hidden" id="user-menu-container">
+            <button class="hidden sm:inline-flex items-center gap-2 h-9 px-3 py-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors" id="user-menu-btn">
+              <div class="w-7 h-7 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center">
+                <span class="text-xs font-semibold text-[hsl(var(--primary-foreground))]" id="user-avatar-initial">U</span>
+              </div>
+              <span class="text-sm font-medium max-w-[100px] truncate" id="user-display-name">Username</span>
+              <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </button>
+            <!-- Dropdown Menu -->
+            <div class="absolute right-0 top-full mt-1 w-48 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-lg py-1 hidden" id="user-dropdown">
+              <div class="px-3 py-2 border-b border-[hsl(var(--border))]">
+                <p class="text-sm font-medium" id="dropdown-username">Username</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
+              </div>
+              <a href="test-shadcn-homepage.html" class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-[hsl(var(--accent))] transition-colors">
+                <i data-lucide="bell" class="w-4 h-4"></i>
+                View Alerts
+              </a>
+              <button class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-[hsl(var(--accent))] transition-colors w-full text-left text-[hsl(var(--destructive))]" id="sign-out-btn">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                Sign Out
+              </button>
+            </div>
+          </div>
+          <!-- Mobile Menu Button -->
+          <button class="sm:hidden p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors" id="mobile-menu-btn" title="Menu">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+      <!-- Mobile Menu Dropdown (overlay) -->
+      <div class="sm:hidden hidden absolute left-0 right-0 top-full border-t border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-lg z-50" id="mobile-menu">
+        <div class="px-4 py-3 space-y-1">
+          <!-- Sign In (shown when signed out) -->
+          <button class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left" id="mobile-sign-in-btn">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span class="text-sm font-medium">Sign In</span>
+          </button>
+          <!-- User Info (shown when signed in) -->
+          <div class="hidden px-3 py-2.5 border-b border-[hsl(var(--border))] mb-2" id="mobile-user-info">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center">
+                <span class="text-sm font-semibold text-[hsl(var(--primary-foreground))]" id="mobile-user-avatar">U</span>
+              </div>
+              <div>
+                <p class="text-sm font-medium" id="mobile-user-name">Username</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
+              </div>
+            </div>
+          </div>
+          <!-- How to Use -->
+          <button class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left" id="mobile-help-btn">
+            <i data-lucide="help-circle" class="w-5 h-5"></i>
+            <span class="text-sm">How to Use</span>
+          </button>
+          <!-- Theme Toggle -->
+          <button class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left" id="mobile-theme-btn">
+            <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+            <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+            <span class="text-sm dark:hidden">Dark Mode</span>
+            <span class="text-sm hidden dark:inline">Light Mode</span>
+          </button>
+          <!-- View Alerts (shown when signed in) -->
+          <a href="test-shadcn-homepage.html" class="hidden items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left" id="mobile-alerts-link">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span class="text-sm">View Alerts</span>
+          </a>
+          <!-- Sign Out (shown when signed in) -->
+          <button class="hidden items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left text-[hsl(var(--destructive))]" id="mobile-sign-out-btn">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+            <span class="text-sm">Sign Out</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-2xl mx-auto px-4 py-6 pb-24 lg:pb-6 w-full">
+    
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">My Alert Preferences</h1>
+      <p class="text-[hsl(var(--muted-foreground))] mt-2">
+        Set up personalized alerts for your commute. Your preferences are saved to this device.
+      </p>
+      
+      <!-- Device ID Card (hidden) -->
+      <div class="card mt-4 hidden">
+        <div class="p-4 flex justify-between items-center">
+          <div class="flex-1 min-w-0">
+            <div class="text-xs text-[hsl(var(--muted-foreground))] mb-1">Device ID</div>
+            <div class="font-mono text-xs sm:text-sm truncate" id="device-id">a1b2c3d4-e5f6-7890</div>
+          </div>
+          <button class="btn btn-ghost btn-icon" title="Copy Device ID">
+            <i data-lucide="copy" class="h-4 w-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress indicator (hidden) -->
+    <div class="mb-6 hidden">
+      <div class="flex justify-between text-sm text-[hsl(var(--muted-foreground))] mb-2">
+        <span>Setup Progress</span>
+        <span id="progress-text">0 of 5 complete</span>
+      </div>
+      <div class="progress">
+        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form id="preferences-form" class="space-y-4">
+
+      <!-- Step 1: Transport Mode -->
+      <div class="card">
+        <div class="accordion-item border-0">
+          <button type="button" class="accordion-trigger px-4 sm:px-6" data-accordion="step-1" data-state="open">
+            <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-xs sm:text-sm font-semibold">1</div>
+              <div class="text-left min-w-0">
+                <div class="font-semibold text-sm sm:text-base">Select Transport Modes</div>
+                <div class="text-xs text-[hsl(var(--muted-foreground))] hidden sm:block">Choose which TTC services you use</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+              <span class="badge badge-secondary text-xs" id="step-1-status">Required</span>
+              <i data-lucide="chevron-down" class="accordion-chevron"></i>
+            </div>
+          </button>
+          <div class="accordion-content" data-state="open" id="content-step-1">
+            <div class="accordion-content-inner px-4 sm:px-6">
+              <div class="grid grid-cols-1 gap-3 mt-4">
+                <!-- Subway Card -->
+                <div class="mode-card flex items-center gap-3 sm:gap-4" data-mode="subway" data-selected="false" role="checkbox" tabindex="0">
+                  <div class="text-2xl sm:text-3xl shrink-0">🚇</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold">Subway</div>
+                    <div class="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">Lines 1, 2, 4</div>
+                  </div>
+                  <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                    <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                  </div>
+                </div>
+                <!-- Bus Card -->
+                <div class="mode-card flex items-center gap-3 sm:gap-4" data-mode="bus" data-selected="false" role="checkbox" tabindex="0">
+                  <div class="text-2xl sm:text-3xl shrink-0">🚌</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold">Bus</div>
+                    <div class="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">All bus routes</div>
+                  </div>
+                  <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                    <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                  </div>
+                </div>
+                <!-- Streetcar Card -->
+                <div class="mode-card flex items-center gap-3 sm:gap-4" data-mode="streetcar" data-selected="false" role="checkbox" tabindex="0">
+                  <div class="text-2xl sm:text-3xl shrink-0">🚋</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold">Streetcar</div>
+                    <div class="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">All streetcar routes</div>
+                  </div>
+                  <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                    <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Route Selection -->
+      <div class="card">
+        <div class="accordion-item border-0">
+          <button type="button" class="accordion-trigger px-4 sm:px-6" data-accordion="step-2" data-state="closed">
+            <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] text-xs sm:text-sm font-semibold">2</div>
+              <div class="text-left min-w-0">
+                <div class="font-semibold text-sm sm:text-base">Select Your Routes</div>
+                <div class="text-xs text-[hsl(var(--muted-foreground))] hidden sm:block">Choose specific routes for alerts</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+              <span class="badge badge-secondary text-xs" id="step-2-status">Required</span>
+              <i data-lucide="chevron-down" class="accordion-chevron"></i>
+            </div>
+          </button>
+          <div class="accordion-content" data-state="closed" id="content-step-2">
+            <div class="accordion-content-inner px-6">
+              <!-- Search -->
+              <div class="mt-4 mb-4">
+                <div class="relative">
+                  <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]"></i>
+                  <input type="text" placeholder="Search routes..." class="input pl-10" id="route-search">
+                </div>
+              </div>
+              <!-- Select All -->
+              <div class="flex gap-2 mb-4">
+                <button type="button" class="btn btn-outline btn-sm gap-1" id="select-all-routes">
+                  <i data-lucide="check-circle" class="h-4 w-4"></i>
+                  Select All
+                </button>
+                <button type="button" class="btn btn-outline btn-sm gap-1" id="deselect-all-routes">
+                  <i data-lucide="x-circle" class="h-4 w-4"></i>
+                  Deselect All
+                </button>
+              </div>
+              <!-- Routes Container -->
+              <div class="max-h-64 overflow-y-auto space-y-2 p-1" id="routes-container">
+                <!-- Skeleton loading -->
+                <div class="flex flex-wrap gap-2" id="routes-skeleton">
+                  <div class="skeleton h-8 w-20"></div>
+                  <div class="skeleton h-8 w-24"></div>
+                  <div class="skeleton h-8 w-16"></div>
+                  <div class="skeleton h-8 w-28"></div>
+                  <div class="skeleton h-8 w-20"></div>
+                  <div class="skeleton h-8 w-24"></div>
+                </div>
+                <!-- Actual routes (will be populated) -->
+                <div class="flex flex-wrap gap-3 hidden" id="routes-list">
+                  <!-- SUBWAY LINES -->
+                  <span class="route-badge route-line-1" data-route="1" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>Line 1</span>
+                  <span class="route-badge route-line-2" data-route="2" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>Line 2</span>
+                  <span class="route-badge route-line-4" data-route="4" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>Line 4</span>
+                  
+                  <!-- REGULAR BUS ROUTES (Red) -->
+                  <span class="route-badge route-bus" data-route="7" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>7 Bathurst</span>
+                  <span class="route-badge route-bus" data-route="29" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>29 Dufferin</span>
+                  <span class="route-badge route-bus" data-route="35" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>35 Jane</span>
+                  <span class="route-badge route-bus" data-route="52" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>52 Lawrence West</span>
+                  <span class="route-badge route-bus" data-route="96" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>96 Wilson</span>
+                  
+                  <!-- LIMITED SERVICE BUS ROUTES (White with Red border) -->
+                  <span class="route-badge route-limited" data-route="10" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>10 Van Horne</span>
+                  <span class="route-badge route-limited" data-route="99" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>99 Arrow Rd</span>
+                  <span class="route-badge route-limited" data-route="115" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>115 Silver Hills</span>
+                  
+                  <!-- NIGHT SERVICE ROUTES (White with Blue border) -->
+                  <span class="route-badge route-night" data-route="300" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>300 Bloor-Danforth</span>
+                  <span class="route-badge route-night" data-route="320" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>320 Yonge</span>
+                  <span class="route-badge route-night" data-route="329" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>329 Dufferin</span>
+                  
+                  <!-- COMMUNITY ROUTES (White with Gray border) -->
+                  <span class="route-badge route-community" data-route="400" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>400 Lawrence Manor</span>
+                  <span class="route-badge route-community" data-route="402" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>402 Parkdale</span>
+                  
+                  <!-- EXPRESS ROUTES (Green) -->
+                  <span class="route-badge route-express" data-route="900" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>900 Airport Express</span>
+                  <span class="route-badge route-express" data-route="925" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>925 Don Mills Express</span>
+                  <span class="route-badge route-express" data-route="952" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>952 Lawrence West Express</span>
+                  
+                  <!-- REGULAR STREETCAR ROUTES (Red) -->
+                  <span class="route-badge route-streetcar" data-route="501" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>501 Queen</span>
+                  <span class="route-badge route-streetcar" data-route="504" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>504 King</span>
+                  <span class="route-badge route-streetcar" data-route="506" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>506 Carlton</span>
+                  <span class="route-badge route-streetcar" data-route="510" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>510 Spadina</span>
+                  <span class="route-badge route-streetcar" data-route="512" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>512 St Clair</span>
+                  
+                  <!-- LIMITED SERVICE STREETCAR ROUTES (White with Red border) -->
+                  <span class="route-badge route-limited" data-route="507" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>507 Long Branch</span>
+                  <span class="route-badge route-limited" data-route="508" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>508 Lake Shore</span>
+                  
+                  <!-- NIGHT STREETCAR ROUTES (White with Blue border) -->
+                  <span class="route-badge route-night" data-route="301" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>301 Queen</span>
+                  <span class="route-badge route-night" data-route="304" data-selected="false"><span class="route-check"><i data-lucide="check" class="check-icon"></i></span>304 King</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Schedule -->
+      <div class="card">
+        <div class="accordion-item border-0">
+          <button type="button" class="accordion-trigger px-4 sm:px-6" data-accordion="step-3" data-state="closed">
+            <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] text-xs sm:text-sm font-semibold">3</div>
+              <div class="text-left min-w-0">
+                <div class="font-semibold text-sm sm:text-base">Set Your Schedule</div>
+                <div class="text-xs text-[hsl(var(--muted-foreground))] hidden sm:block">When do you want alerts?</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+              <span class="badge badge-secondary text-xs" id="step-3-status">Required</span>
+              <i data-lucide="chevron-down" class="accordion-chevron"></i>
+            </div>
+          </button>
+          <div class="accordion-content" data-state="closed" id="content-step-3">
+            <div class="accordion-content-inner px-6">
+              <p class="text-sm text-[hsl(var(--muted-foreground))] mt-4 mb-4">
+                Add one or more schedules for when you want to receive alerts.
+              </p>
+              
+              <!-- Schedules Container -->
+              <div id="schedules-container">
+                <!-- Schedule Card -->
+                <div class="schedule-card card mb-4" id="schedule-1">
+                  <div class="p-4">
+                  <div class="flex justify-between items-center mb-4">
+                    <span class="font-medium">Schedule 1</span>
+                    <button type="button" class="btn btn-ghost btn-icon h-8 w-8 delete-schedule-btn">
+                      <i data-lucide="trash-2" class="h-4 w-4 text-[hsl(var(--destructive))]"></i>
+                    </button>
+                  </div>
+                  
+                  <!-- Days -->
+                  <div class="mb-4">
+                    <label class="label mb-2 block">Days</label>
+                    <div class="flex flex-wrap gap-2">
+                      <div class="day-card mode-card flex items-center gap-2 px-3 py-2" data-day="mon" data-selected="true" role="checkbox" tabindex="0">
+                        <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                          <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                        </div>
+                        <span class="font-medium text-sm">Mon</span>
+                      </div>
+                      <div class="day-card mode-card flex items-center gap-2 px-3 py-2" data-day="tue" data-selected="true" role="checkbox" tabindex="0">
+                        <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                          <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                        </div>
+                        <span class="font-medium text-sm">Tue</span>
+                      </div>
+                      <div class="day-card mode-card flex items-center gap-2 px-3 py-2" data-day="wed" data-selected="true" role="checkbox" tabindex="0">
+                        <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                          <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                        </div>
+                        <span class="font-medium text-sm">Wed</span>
+                      </div>
+                      <div class="day-card mode-card flex items-center gap-2 px-3 py-2" data-day="thu" data-selected="true" role="checkbox" tabindex="0">
+                        <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                          <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                        </div>
+                        <span class="font-medium text-sm">Thu</span>
+                      </div>
+                      <div class="day-card mode-card flex items-center gap-2 px-3 py-2" data-day="fri" data-selected="true" role="checkbox" tabindex="0">
+                        <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                          <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                        </div>
+                        <span class="font-medium text-sm">Fri</span>
+                      </div>
+                      <div class="day-card mode-card flex items-center gap-2 px-3 py-2" data-day="sat" data-selected="false" role="checkbox" tabindex="0">
+                        <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                          <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                        </div>
+                        <span class="font-medium text-sm">Sat</span>
+                      </div>
+                      <div class="day-card mode-card flex items-center gap-2 px-3 py-2" data-day="sun" data-selected="false" role="checkbox" tabindex="0">
+                        <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                          <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                        </div>
+                        <span class="font-medium text-sm">Sun</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Time Range -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="label mb-2 block">Start Time</label>
+                      <input type="time" class="input" value="07:00">
+                    </div>
+                    <div>
+                      <label class="label mb-2 block">End Time</label>
+                      <input type="time" class="input" value="09:00">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+
+              <!-- Add Schedule Button -->
+              <button type="button" class="btn btn-outline w-full gap-2" id="add-schedule-btn">
+                <i data-lucide="plus" class="h-4 w-4"></i>
+                Add Another Schedule
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Alert Types -->
+      <div class="card">
+        <div class="accordion-item border-0">
+          <button type="button" class="accordion-trigger px-4 sm:px-6" data-accordion="step-4" data-state="closed">
+            <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] text-xs sm:text-sm font-semibold">4</div>
+              <div class="text-left min-w-0">
+                <div class="font-semibold text-sm sm:text-base">Choose Alert Types</div>
+                <div class="text-xs text-[hsl(var(--muted-foreground))] hidden sm:block">What alerts do you want?</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+              <span class="badge badge-secondary text-xs" id="step-4-status">Required</span>
+              <i data-lucide="chevron-down" class="accordion-chevron"></i>
+            </div>
+          </button>
+          <div class="accordion-content" data-state="closed" id="content-step-4">
+            <div class="accordion-content-inner px-4 sm:px-6">
+              <div class="grid grid-cols-1 gap-3 mt-4">
+                <!-- Service Disruptions -->
+                <div class="mode-card flex items-center gap-3 sm:gap-4" data-alert-type="disruption" data-selected="false" role="checkbox" tabindex="0">
+                  <div class="text-2xl sm:text-3xl shrink-0">🚫</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold">Service Disruptions</div>
+                    <div class="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">No service or major outages</div>
+                  </div>
+                  <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                    <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                  </div>
+                </div>
+                <!-- Delays -->
+                <div class="mode-card flex items-center gap-3 sm:gap-4" data-alert-type="delay" data-selected="false" role="checkbox" tabindex="0">
+                  <div class="text-2xl sm:text-3xl shrink-0">⏱️</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold">Delays</div>
+                    <div class="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">Service delays and slowdowns</div>
+                  </div>
+                  <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                    <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                  </div>
+                </div>
+                <!-- Detours -->
+                <div class="mode-card flex items-center gap-3 sm:gap-4" data-alert-type="detour" data-selected="false" role="checkbox" tabindex="0">
+                  <div class="text-2xl sm:text-3xl shrink-0">↩️</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold">Detours</div>
+                    <div class="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">Route changes and detours</div>
+                  </div>
+                  <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                    <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                  </div>
+                </div>
+                <!-- Planned Work -->
+                <div class="mode-card flex items-center gap-3 sm:gap-4" data-alert-type="planned" data-selected="false" role="checkbox" tabindex="0">
+                  <div class="text-2xl sm:text-3xl shrink-0">🛠️</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold">Planned Work</div>
+                    <div class="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">Scheduled maintenance</div>
+                  </div>
+                  <div class="mode-check w-5 h-5 rounded-full border-2 border-[hsl(var(--muted-foreground))] flex items-center justify-center transition-all shrink-0">
+                    <i data-lucide="check" class="h-3 w-3 hidden check-icon"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Save Button -->
+    <div class="mt-6">
+      <button type="submit" form="preferences-form" class="btn btn-primary w-full btn-lg gap-2">
+        <i data-lucide="save" class="h-5 w-5"></i>
+        Save Preferences
+      </button>
+    </div>
+
+    <!-- Auth Section -->
+    <div class="mt-6">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title text-base">Sync Across Devices</div>
+          <div class="card-description">Create an account to access your alerts anywhere.</div>
+        </div>
+        <div class="card-content">
+          <div class="flex flex-col sm:flex-row gap-2">
+            <button type="button" class="btn btn-primary flex-1 gap-2" id="create-account-btn">
+              <i data-lucide="user-plus" class="h-4 w-4"></i>
+              Create Account
+            </button>
+            <button type="button" class="btn btn-outline flex-1 gap-2" id="sign-in-btn">
+              <i data-lucide="log-in" class="h-4 w-4"></i>
+              Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Return Home -->
+    <div class="mt-6 mb-6">
+      <a href="test-shadcn-homepage.html" class="btn btn-ghost w-full gap-2">
+        <i data-lucide="home" class="h-4 w-4"></i>
+        Return to Homepage
+      </a>
+    </div>
+
+    <!-- Help & Feedback Section (mobile only - hidden on desktop where sidebar has these links) -->
+    <div class="card mb-6 lg:hidden">
+      <div class="card-header">
+        <div class="card-title text-base">Help & Feedback</div>
+        <div class="card-description">Get help or share your thoughts with us.</div>
+      </div>
+      <div class="card-content space-y-2">
+        <button type="button" class="btn btn-ghost w-full justify-start gap-3" id="help-how-to-use">
+          <i data-lucide="help-circle" class="h-5 w-5 opacity-70"></i>
+          <div class="text-left">
+            <div class="font-medium">How to Use</div>
+            <div class="text-xs text-[hsl(var(--muted-foreground))]">Step-by-step guide</div>
+          </div>
+        </button>
+        <button type="button" class="btn btn-ghost w-full justify-start gap-3" id="help-report-bug">
+          <i data-lucide="bug" class="h-5 w-5 opacity-70"></i>
+          <div class="text-left">
+            <div class="font-medium">Report a Bug</div>
+            <div class="text-xs text-[hsl(var(--muted-foreground))]">Something not working?</div>
+          </div>
+        </button>
+        <button type="button" class="btn btn-ghost w-full justify-start gap-3" id="help-feature-request">
+          <i data-lucide="lightbulb" class="h-5 w-5 opacity-70"></i>
+          <div class="text-left">
+            <div class="font-medium">Request a Feature</div>
+            <div class="text-xs text-[hsl(var(--muted-foreground))]">Have an idea?</div>
+          </div>
+        </button>
+        <button type="button" class="btn btn-ghost w-full justify-start gap-3" id="help-about">
+          <i data-lucide="info" class="h-5 w-5 opacity-70"></i>
+          <div class="text-left">
+            <div class="font-medium">About</div>
+            <div class="text-xs text-[hsl(var(--muted-foreground))]">Version & credits</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Reset All Preferences -->
+    <div class="mb-20 text-center">
+      <button type="button" class="text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] transition-colors underline-offset-4 hover:underline" id="reset-all-btn">
+        Reset All Preferences
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Reset Confirmation Dialog -->
+  <div class="dialog-overlay hidden" id="reset-dialog">
+    <div class="dialog-content">
+      <button type="button" class="dialog-close" onclick="document.getElementById('reset-dialog').classList.add('hidden')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center justify-center sm:justify-start gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--destructive)/0.1)] flex items-center justify-center">
+            <i data-lucide="alert-triangle" class="h-5 w-5 text-[hsl(var(--destructive))]"></i>
+          </div>
+          <h3 class="dialog-title">Reset All Preferences?</h3>
+        </div>
+        <p class="dialog-description">This will clear all your transport modes, routes, and schedule settings. This action cannot be undone.</p>
+      </div>
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-outline" id="reset-cancel-btn">Cancel</button>
+        <button type="button" class="btn btn-destructive" id="reset-confirm-btn">
+          <i data-lucide="trash-2" class="h-4 w-4 mr-2"></i>
+          Reset Everything
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Account Dialog -->
+  <div class="dialog-overlay hidden" id="create-account-dialog">
+    <div class="dialog-content">
+      <button type="button" class="dialog-close" onclick="document.getElementById('create-account-dialog').classList.add('hidden')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center justify-center sm:justify-start gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--primary)/0.1)] flex items-center justify-center">
+            <i data-lucide="fingerprint" class="h-5 w-5 text-[hsl(var(--primary))]"></i>
+          </div>
+          <h3 class="dialog-title">Create Account</h3>
+        </div>
+        <p class="dialog-description">Use your device's biometrics (Face ID, Touch ID, or fingerprint) to create a secure passwordless account.</p>
+      </div>
+      
+      <div class="space-y-4">
+        <!-- Username input -->
+        <div class="space-y-2">
+          <label for="create-username" class="text-sm font-medium">Username</label>
+          <input 
+            type="text" 
+            id="create-username" 
+            class="input w-full" 
+            placeholder="Enter a username"
+            autocomplete="username"
+            required
+          />
+          <p class="text-xs text-[hsl(var(--muted-foreground))]">This will be your unique identifier for signing in.</p>
+        </div>
+        
+        <!-- WebAuthn info -->
+        <div class="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.3)] p-3">
+          <div class="flex gap-3">
+            <i data-lucide="shield-check" class="h-5 w-5 text-[hsl(var(--primary))] flex-shrink-0 mt-0.5"></i>
+            <div class="text-sm">
+              <p class="font-medium text-[hsl(var(--foreground))]">Passwordless & Secure</p>
+              <p class="text-[hsl(var(--muted-foreground))] mt-1">Your biometric data never leaves your device. We only store a secure key to verify it's you.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-outline" id="create-account-cancel-btn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="create-account-confirm-btn">
+          <i data-lucide="fingerprint" class="h-4 w-4 mr-2"></i>
+          Register with Biometrics
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sign In Dialog -->
+  <div class="dialog-overlay hidden" id="sign-in-dialog">
+    <div class="dialog-content">
+      <button type="button" class="dialog-close" onclick="document.getElementById('sign-in-dialog').classList.add('hidden')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center justify-center sm:justify-start gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--primary)/0.1)] flex items-center justify-center">
+            <i data-lucide="scan-face" class="h-5 w-5 text-[hsl(var(--primary))]"></i>
+          </div>
+          <h3 class="dialog-title">Sign In</h3>
+        </div>
+        <p class="dialog-description">Use your registered biometrics to sign in securely.</p>
+      </div>
+      
+      <div class="space-y-4">
+        <!-- Username input -->
+        <div class="space-y-2">
+          <label for="sign-in-username" class="text-sm font-medium">Username</label>
+          <input 
+            type="text" 
+            id="sign-in-username" 
+            class="input w-full" 
+            placeholder="Enter your username"
+            autocomplete="username"
+            required
+          />
+        </div>
+        
+        <!-- Recovery link -->
+        <div class="text-center space-y-2">
+          <button type="button" class="text-sm text-[hsl(var(--primary))] hover:underline" id="recovery-link-btn">
+            Lost access? Use recovery code
+          </button>
+          <div class="text-sm text-[hsl(var(--muted-foreground))] hidden" id="create-account-link-row">
+            Don't have an account? 
+            <button type="button" class="text-[hsl(var(--primary))] hover:underline" id="switch-to-create-btn">
+              Create one
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-outline" id="sign-in-cancel-btn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="sign-in-confirm-btn">
+          <i data-lucide="scan-face" class="h-4 w-4 mr-2"></i>
+          Authenticate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Preferences Auth Prompt Modal -->
+  <div class="dialog-overlay hidden" id="save-auth-prompt-dialog">
+    <div class="dialog-content max-w-md">
+      <button type="button" class="dialog-close" onclick="document.getElementById('save-auth-prompt-dialog').classList.add('hidden')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center justify-center sm:justify-start gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--primary)/0.1)] flex items-center justify-center">
+            <i data-lucide="save" class="h-5 w-5 text-[hsl(var(--primary))]"></i>
+          </div>
+          <h3 class="dialog-title">Save Your Preferences</h3>
+        </div>
+        <p class="dialog-description">Create an account to save your preferences and access them across all your devices.</p>
+      </div>
+      
+      <div class="space-y-3 py-2">
+        <div class="flex items-start gap-3 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+          <i data-lucide="fingerprint" class="h-5 w-5 text-[hsl(var(--primary))] mt-0.5 shrink-0"></i>
+          <div>
+            <p class="font-medium text-sm">Quick & Secure</p>
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">Sign in with device biometrics - no passwords to remember</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+          <i data-lucide="shield-check" class="h-5 w-5 text-[hsl(var(--primary))] mt-0.5 shrink-0"></i>
+          <div>
+            <p class="font-medium text-sm">No Email Required</p>
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">Create an account instantly without sharing personal info</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+          <i data-lucide="cloud" class="h-5 w-5 text-[hsl(var(--primary))] mt-0.5 shrink-0"></i>
+          <div>
+            <p class="font-medium text-sm">Sync Everywhere</p>
+            <p class="text-xs text-[hsl(var(--muted-foreground))]">Access your personalized alerts on any device</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dialog-footer flex-col sm:flex-row gap-2">
+        <button type="button" class="btn btn-outline w-full sm:w-auto" id="save-auth-cancel-btn">Cancel</button>
+        <button type="button" class="btn btn-outline w-full sm:w-auto" id="save-auth-signin-btn">
+          <i data-lucide="log-in" class="h-4 w-4 mr-2"></i>
+          Sign In
+        </button>
+        <button type="button" class="btn btn-primary w-full sm:w-auto" id="save-auth-create-btn">
+          <i data-lucide="user-plus" class="h-4 w-4 mr-2"></i>
+          Create Account
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recovery Code Dialog -->
+  <div class="dialog-overlay hidden" id="recovery-dialog">
+    <div class="dialog-content">
+      <button type="button" class="dialog-close" onclick="document.getElementById('recovery-dialog').classList.add('hidden')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center justify-center sm:justify-start gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+            <i data-lucide="key" class="h-5 w-5 text-amber-500"></i>
+          </div>
+          <h3 class="dialog-title">Account Recovery</h3>
+        </div>
+        <p class="dialog-description">Enter your recovery code to regain access to your account.</p>
+      </div>
+      
+      <div class="space-y-4">
+        <!-- Recovery code input -->
+        <div class="space-y-2">
+          <label for="recovery-code" class="text-sm font-medium">Recovery Code</label>
+          <input 
+            type="text" 
+            id="recovery-code" 
+            class="input w-full font-mono text-center tracking-widest" 
+            placeholder="XXXX-XXXX-XXXX"
+            maxlength="14"
+          />
+          <p class="text-xs text-[hsl(var(--muted-foreground))]">Enter the 12-character recovery code you saved when creating your account.</p>
+        </div>
+      </div>
+      
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-outline" id="recovery-cancel-btn">Back to Sign In</button>
+        <button type="button" class="btn btn-primary" id="recovery-confirm-btn">
+          <i data-lucide="unlock" class="h-4 w-4 mr-2"></i>
+          Recover Account
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- How to Use Dialog (Multi-step) -->
+  <div class="dialog-overlay hidden" id="how-to-use-dialog" aria-hidden="true">
+    <div class="dialog-content max-w-md">
+      <button type="button" class="dialog-close" onclick="closeDialog('how-to-use-dialog')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <!-- Step indicators -->
+      <div class="flex justify-center gap-2 mb-4">
+        <div class="h-1.5 w-8 rounded-full bg-[hsl(var(--primary))] transition-colors" id="how-to-step-1-indicator"></div>
+        <div class="h-1.5 w-8 rounded-full bg-[hsl(var(--muted))] transition-colors" id="how-to-step-2-indicator"></div>
+        <div class="h-1.5 w-8 rounded-full bg-[hsl(var(--muted))] transition-colors" id="how-to-step-3-indicator"></div>
+      </div>
+      
+      <!-- Step 1: Welcome -->
+      <div id="how-to-step-1" class="how-to-step">
+        <div class="dialog-header text-center">
+          <div class="flex justify-center mb-3">
+            <div class="w-16 h-16 rounded-full bg-[hsl(var(--primary)/0.1)] flex items-center justify-center">
+              <i data-lucide="bell-ring" class="h-8 w-8 text-[hsl(var(--primary))]"></i>
+            </div>
+          </div>
+          <h3 class="dialog-title text-xl">Welcome to TTC Alerts</h3>
+          <p class="dialog-description mt-2">Get real-time transit alerts for the Toronto Transit Commission.</p>
+        </div>
+        <div class="dialog-body space-y-3 py-4">
+          <div class="flex items-center gap-3 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+            <i data-lucide="globe" class="h-5 w-5 text-[hsl(var(--muted-foreground))] shrink-0"></i>
+            <div>
+              <p class="font-medium text-sm">All Alerts</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">View all TTC alerts — no account needed</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+            <i data-lucide="user-check" class="h-5 w-5 text-[hsl(var(--muted-foreground))] shrink-0"></i>
+            <div>
+              <p class="font-medium text-sm">My Alerts</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Personalized alerts for your routes — requires account</p>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-footer justify-between">
+          <button type="button" class="btn btn-ghost text-[hsl(var(--muted-foreground))]" onclick="closeDialog('how-to-use-dialog')">Skip</button>
+          <button type="button" class="btn btn-primary" onclick="goToHowToStep(2)">
+            Next
+            <i data-lucide="arrow-right" class="h-4 w-4 ml-1"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Step 2: Setting Preferences -->
+      <div id="how-to-step-2" class="how-to-step hidden">
+        <div class="dialog-header text-center">
+          <div class="flex justify-center mb-3">
+            <div class="w-16 h-16 rounded-full bg-[hsl(var(--primary)/0.1)] flex items-center justify-center">
+              <i data-lucide="sliders-horizontal" class="h-8 w-8 text-[hsl(var(--primary))]"></i>
+            </div>
+          </div>
+          <h3 class="dialog-title text-xl">Set Your Preferences</h3>
+          <p class="dialog-description mt-2">Customize alerts for your commute in 4 easy steps.</p>
+        </div>
+        <div class="dialog-body space-y-3 py-4">
+          <div class="flex gap-3">
+            <div class="flex-shrink-0 w-7 h-7 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] flex items-center justify-center text-xs font-bold">1</div>
+            <div>
+              <p class="font-medium text-sm">Choose Transport Modes</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Subway, streetcar, or bus</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex-shrink-0 w-7 h-7 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] flex items-center justify-center text-xs font-bold">2</div>
+            <div>
+              <p class="font-medium text-sm">Select Your Routes</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Pick the lines you regularly use</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex-shrink-0 w-7 h-7 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] flex items-center justify-center text-xs font-bold">3</div>
+            <div>
+              <p class="font-medium text-sm">Set Your Schedule</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Define your commute times</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex-shrink-0 w-7 h-7 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] flex items-center justify-center text-xs font-bold">4</div>
+            <div>
+              <p class="font-medium text-sm">Save Preferences</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Create an account to save & sync</p>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-footer justify-between">
+          <button type="button" class="btn btn-ghost" onclick="goToHowToStep(1)">
+            <i data-lucide="arrow-left" class="h-4 w-4 mr-1"></i>
+            Back
+          </button>
+          <button type="button" class="btn btn-primary" onclick="goToHowToStep(3)">
+            Next
+            <i data-lucide="arrow-right" class="h-4 w-4 ml-1"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Step 3: Create Account -->
+      <div id="how-to-step-3" class="how-to-step hidden">
+        <div class="dialog-header text-center">
+          <div class="flex justify-center mb-3">
+            <div class="w-16 h-16 rounded-full bg-[hsl(var(--primary)/0.1)] flex items-center justify-center">
+              <i data-lucide="fingerprint" class="h-8 w-8 text-[hsl(var(--primary))]"></i>
+            </div>
+          </div>
+          <h3 class="dialog-title text-xl">Save Your Preferences</h3>
+          <p class="dialog-description mt-2">Create an account to save preferences and access them anywhere.</p>
+        </div>
+        <div class="dialog-body space-y-3 py-4">
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+            <i data-lucide="zap" class="h-5 w-5 text-[hsl(var(--primary))] mt-0.5 shrink-0"></i>
+            <div>
+              <p class="font-medium text-sm">Quick & Easy</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Sign up instantly with device biometrics — no passwords</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+            <i data-lucide="shield-check" class="h-5 w-5 text-[hsl(var(--primary))] mt-0.5 shrink-0"></i>
+            <div>
+              <p class="font-medium text-sm">Private & Secure</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">No email required — your data stays on your device</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+            <i data-lucide="cloud" class="h-5 w-5 text-[hsl(var(--primary))] mt-0.5 shrink-0"></i>
+            <div>
+              <p class="font-medium text-sm">Sync Everywhere</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Access your personalized alerts on any device</p>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-footer justify-between">
+          <button type="button" class="btn btn-ghost" onclick="goToHowToStep(2)">
+            <i data-lucide="arrow-left" class="h-4 w-4 mr-1"></i>
+            Back
+          </button>
+          <button type="button" class="btn btn-primary" onclick="closeDialog('how-to-use-dialog')">
+            Got it!
+            <i data-lucide="check" class="h-4 w-4 ml-1"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Bug Dialog -->
+  <div class="dialog-overlay hidden" id="report-bug-dialog" aria-hidden="true">
+    <div class="dialog-content max-w-md">
+      <button type="button" class="dialog-close" onclick="closeDialog('report-bug-dialog')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--destructive)/0.1)] flex items-center justify-center">
+            <i data-lucide="bug" class="h-5 w-5 text-[hsl(var(--destructive))]"></i>
+          </div>
+          <h3 class="dialog-title">Report a Bug</h3>
+        </div>
+        <p class="dialog-description">Found something that's not working? Let us know!</p>
+      </div>
+      <form id="report-bug-form" class="dialog-body space-y-4">
+        <div>
+          <label for="bug-title" class="label">Title <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <input type="text" id="bug-title" class="input w-full" placeholder="Brief description of the issue" required>
+        </div>
+        <div>
+          <label for="bug-description" class="label">Description <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <textarea id="bug-description" class="input w-full" rows="4" placeholder="Please describe what happened and what you expected to happen..." required></textarea>
+        </div>
+        <div>
+          <label for="bug-steps" class="label">Steps to Reproduce</label>
+          <textarea id="bug-steps" class="input w-full" rows="3" placeholder="1. Go to...&#10;2. Click on...&#10;3. See error"></textarea>
+        </div>
+        <!-- reCAPTCHA placeholder -->
+        <div class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY"></div>
+        <div class="dialog-footer">
+          <button type="button" class="btn btn-outline" onclick="closeDialog('report-bug-dialog')">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="send" class="h-4 w-4 mr-2"></i>
+            Submit Report
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Feature Request Dialog -->
+  <div class="dialog-overlay hidden" id="feature-request-dialog" aria-hidden="true">
+    <div class="dialog-content max-w-md">
+      <button type="button" class="dialog-close" onclick="closeDialog('feature-request-dialog')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--warning)/0.2)] flex items-center justify-center">
+            <i data-lucide="lightbulb" class="h-5 w-5 text-[hsl(var(--warning))]"></i>
+          </div>
+          <h3 class="dialog-title">Request a Feature</h3>
+        </div>
+        <p class="dialog-description">Have an idea to make TTC Alerts better? We'd love to hear it!</p>
+      </div>
+      <form id="feature-request-form" class="dialog-body space-y-4">
+        <div>
+          <label for="feature-title" class="label">Feature Title <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <input type="text" id="feature-title" class="input w-full" placeholder="What would you like to see?" required>
+        </div>
+        <div>
+          <label for="feature-description" class="label">Description <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <textarea id="feature-description" class="input w-full" rows="4" placeholder="Describe how this feature would work and why it would be useful..." required></textarea>
+        </div>
+        <!-- reCAPTCHA placeholder -->
+        <div class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY"></div>
+        <div class="dialog-footer">
+          <button type="button" class="btn btn-outline" onclick="closeDialog('feature-request-dialog')">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="send" class="h-4 w-4 mr-2"></i>
+            Submit Request
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- About Dialog -->
+  <div class="dialog-overlay hidden" id="about-dialog" aria-hidden="true">
+    <div class="dialog-content max-w-md">
+      <button type="button" class="dialog-close" onclick="closeDialog('about-dialog')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--muted))] flex items-center justify-center">
+            <i data-lucide="info" class="h-5 w-5 text-[hsl(var(--muted-foreground))]"></i>
+          </div>
+          <h3 class="dialog-title">About TTC Alerts</h3>
+        </div>
+      </div>
+      <div class="dialog-body space-y-4">
+        <div class="text-center py-2">
+          <div class="text-2xl font-bold text-[hsl(var(--foreground))]">TTC Alerts</div>
+          <div class="text-sm text-[hsl(var(--muted-foreground))]">Version 1.0.0</div>
+        </div>
+        <div class="rounded-lg border border-[hsl(var(--border))] p-4 space-y-2">
+          <h4 class="font-medium flex items-center gap-2">
+            <i data-lucide="database" class="h-4 w-4"></i>
+            Data Source
+          </h4>
+          <p class="text-sm text-[hsl(var(--muted-foreground))]">Real-time service alerts are sourced from the official TTC GTFS-RT feed and service announcements.</p>
+        </div>
+        <div class="rounded-lg border border-[hsl(var(--border))] p-4 space-y-2">
+          <h4 class="font-medium flex items-center gap-2">
+            <i data-lucide="user" class="h-4 w-4"></i>
+            Developer
+          </h4>
+          <p class="text-sm text-[hsl(var(--muted-foreground))]">Built with ❤️ for Toronto transit riders. This is an independent project and is not affiliated with the Toronto Transit Commission.</p>
+          <div class="flex gap-2 mt-2">
+            <a href="#" class="btn btn-ghost btn-sm gap-1">
+              <i data-lucide="github" class="h-4 w-4"></i>
+              GitHub
+            </a>
+            <a href="#" class="btn btn-ghost btn-sm gap-1">
+              <i data-lucide="twitter" class="h-4 w-4"></i>
+              Twitter
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-primary" onclick="closeDialog('about-dialog')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav">
+    <a href="test-shadcn-homepage.html" class="nav-item" data-nav="all">
+      <i data-lucide="bell"></i>
+      <span>All Alerts</span>
+    </a>
+    <a href="test-shadcn-homepage.html#my-alerts" class="nav-item" data-nav="my" id="nav-my">
+      <i data-lucide="star"></i>
+      <span>My Alerts</span>
+    </a>
+    <a href="#" class="nav-item active" data-nav="preferences">
+      <i data-lucide="settings"></i>
+      <span>Preferences</span>
+    </a>
+  </nav>
+
+  </div> <!-- End main-wrapper -->
+
+  <!-- Toast Container (hidden by default) -->
+  <div class="toast-container" id="toast-container">
+    <div class="toast toast-success hidden" id="save-toast">
+      <i data-lucide="check-circle" class="toast-icon"></i>
+      <div class="toast-content">
+        <span class="toast-title">Preferences saved</span>
+        <span class="toast-description">Your changes have been saved successfully.</span>
+      </div>
+      <button type="button" class="toast-close" onclick="this.parentElement.classList.add('hidden')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+    </div>
+    <div class="toast toast-destructive hidden" id="reset-toast">
+      <i data-lucide="rotate-ccw" class="toast-icon"></i>
+      <div class="toast-content">
+        <span class="toast-title">Preferences reset</span>
+        <span class="toast-description">All settings have been restored to defaults.</span>
+      </div>
+      <button type="button" class="toast-close" onclick="this.parentElement.classList.add('hidden')">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- External Scripts -->
+  <script src="client/src/js/api-client.iife.js"></script>
+  <script src="client/src/js/components/theme.iife.js"></script>
+  <script src="client/src/js/components/toast.iife.js"></script>
+  <script src="client/src/js/components/dialogs.iife.js"></script>
+  <script src="client/src/js/preferences-page.iife.js"></script>
+  
+  <!-- How to Use Multi-step Dialog Script -->
+  <script>
+    function goToHowToStep(step) {
+      // Hide all steps
+      document.querySelectorAll('.how-to-step').forEach(function(el) {
+        el.classList.add('hidden');
+      });
+      
+      // Show target step
+      var targetStep = document.getElementById('how-to-step-' + step);
+      if (targetStep) {
+        targetStep.classList.remove('hidden');
+      }
+      
+      // Update indicators
+      for (var i = 1; i <= 3; i++) {
+        var indicator = document.getElementById('how-to-step-' + i + '-indicator');
+        if (indicator) {
+          if (i <= step) {
+            indicator.classList.remove('bg-[hsl(var(--muted))]');
+            indicator.classList.add('bg-[hsl(var(--primary))]');
+          } else {
+            indicator.classList.remove('bg-[hsl(var(--primary))]');
+            indicator.classList.add('bg-[hsl(var(--muted))]');
+          }
+        }
+      }
+      
+      // Re-init icons
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+    
+    function closeDialog(dialogId) {
+      var dialog = document.getElementById(dialogId);
+      if (dialog) {
+        dialog.classList.add('hidden');
+        // Reset to step 1 when closing how-to dialog
+        if (dialogId === 'how-to-use-dialog') {
+          goToHowToStep(1);
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>

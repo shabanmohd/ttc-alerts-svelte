@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { Badge } from '$lib/components/ui/badge';
-  
   let { category }: { category: string } = $props();
   
   function getStatusClass(category: string): string {
@@ -29,6 +27,6 @@
   }
 </script>
 
-<Badge variant="secondary" class="rounded-full text-xs font-medium {getStatusClass(category)}">
+<span class="status-badge {getStatusClass(category)}">
   {formatCategory(category)}
-</Badge>
+</span>

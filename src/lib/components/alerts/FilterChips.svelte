@@ -1,27 +1,25 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button';
   import { activeFilters, toggleFilter } from '$lib/stores/alerts';
   
   const filters = [
     { id: 'ALL', label: 'All' },
-    { id: 'SERVICE_DISRUPTION', label: 'Disruption' },
-    { id: 'SERVICE_RESUMED', label: 'Resumed' },
+    { id: 'SERVICE_DISRUPTION', label: 'Service Disruption' },
+    { id: 'SERVICE_RESUMED', label: 'Service Resumed' },
     { id: 'DELAY', label: 'Delay' },
     { id: 'DETOUR', label: 'Detour' },
     { id: 'PLANNED_SERVICE_DISRUPTION', label: 'Planned' }
   ];
 </script>
 
-<div class="flex gap-2 flex-wrap">
+<div class="flex flex-wrap gap-2">
   {#each filters as filter}
     {@const isActive = $activeFilters.has(filter.id)}
-    <Button
-      variant={isActive ? 'default' : 'outline'}
-      size="sm"
-      class="rounded-full h-8 px-3 text-sm font-medium"
+    <button
+      class="filter-chip {isActive ? 'active' : ''}"
+      data-filter={filter.id.toLowerCase()}
       onclick={() => toggleFilter(filter.id)}
     >
       {filter.label}
-    </Button>
+    </button>
   {/each}
 </div>

@@ -1,7 +1,17 @@
 <script lang="ts">
-  import { Badge } from '$lib/components/ui/badge';
+  import { Check } from 'lucide-svelte';
   
-  let { route, size = 'default' }: { route: string; size?: 'sm' | 'default' } = $props();
+  let { 
+    route, 
+    size = 'default',
+    selectable = false,
+    selected = false
+  }: { 
+    route: string; 
+    size?: 'sm' | 'default';
+    selectable?: boolean;
+    selected?: boolean;
+  } = $props();
   
   // Determine route type and style class
   function getRouteClass(route: string): string {
@@ -65,8 +75,16 @@
   }
 </script>
 
-<Badge 
-  class="rounded-md font-semibold {getRouteClass(route)} {size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm'}"
+<span 
+  class="route-badge {getRouteClass(route)}" 
+  class:route-badge-sm={size === 'sm'}
+  class:route-badge-selectable={selectable}
+  class:selected={selectable && selected}
 >
+  {#if selectable}
+    <span class="route-check">
+      <Check class="check-icon" />
+    </span>
+  {/if}
   {formatRoute(route)}
-</Badge>
+</span>

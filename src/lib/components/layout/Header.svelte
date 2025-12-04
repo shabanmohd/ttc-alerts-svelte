@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { RefreshCw, Sun, Moon, User, Menu, HelpCircle, LogOut, ChevronDown } from 'lucide-svelte';
+  import { RefreshCw, Sun, Moon, User, Menu, HelpCircle, LogOut, ChevronDown, Settings } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
   import { hasUpdates, updateCount, lastUpdated, applyPendingUpdates, fetchAlerts } from '$lib/stores/alerts';
@@ -21,10 +21,6 @@
   let isDark = $state(false);
   let isRefreshing = $state(false);
   let mobileMenuOpen = $state(false);
-  
-  // Derived classes to avoid quoted attribute warning
-  const refreshButtonClass = $derived($hasUpdates ? 'refresh-pulse text-primary' : '');
-  const refreshIconClass = $derived(`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`);
   
   $effect(() => {
     isDark = document.documentElement.classList.contains('dark');
@@ -65,163 +61,174 @@
   }
 </script>
 
-<header class="sticky top-0 z-50 w-full border-b border-border bg-background backdrop-blur">
-  <div class="flex h-14 items-center justify-between px-4">
+<header class="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background))] backdrop-blur relative">
+  <div class="header-container">
     <!-- Logo (mobile only) -->
-    <a href="/" class="lg:hidden flex items-center gap-2">
+    <a href="/" class="header-left">
       <span class="text-xl">🚇</span>
       <span class="font-semibold">TTC Alerts</span>
     </a>
     
-    <!-- Desktop: spacer to push right content -->
-    <div class="hidden lg:block"></div>
-    
     <!-- Right side actions -->
-    <div class="flex items-center gap-2">
+    <div class="header-right">
       <!-- Last updated + Refresh -->
-      <div class="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+      <div class="flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))]">
         {#if $lastUpdated}
-          <span>{formatLastUpdated($lastUpdated)}</span>
+          <span id="last-updated">Updated {formatLastUpdated($lastUpdated)}</span>
         {/if}
+        <button 
+          class="p-1.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors {$hasUpdates ? 'refresh-pulse' : ''}"
+          onclick={handleRefresh}
+          title="Refresh"
+          disabled={isRefreshing}
+        >
+          <RefreshCw class="w-4 h-4 {isRefreshing ? 'animate-spin' : ''}" />
+        </button>
       </div>
       
-      <Button
-        variant="ghost"
-        size="icon"
-        onclick={handleRefresh}
-        class={refreshButtonClass}
-        disabled={isRefreshing}
-      >
-        <RefreshCw class={refreshIconClass} />
-        {#if $hasUpdates && $updateCount > 0}
-          <span class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
-            {$updateCount}
-          </span>
-        {/if}
-      </Button>
-      
-      <!-- Help button (desktop) -->
-      <Button
-        variant="ghost"
-        size="icon"
-        class="hidden sm:flex"
+      <!-- Help button (tablet only - hidden on mobile and desktop) -->
+      <button 
+        class="max-sm:hidden lg:hidden flex p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors"
         onclick={() => onOpenDialog?.('how-to-use')}
+        title="How to Use"
       >
-        <HelpCircle class="h-5 w-5" />
-      </Button>
+        <HelpCircle class="w-5 h-5" />
+      </button>
       
-      <!-- Theme toggle (desktop) -->
-      <Button
-        variant="ghost"
-        size="icon"
-        class="hidden sm:flex"
+      <!-- Theme toggle (tablet only - hidden on mobile and desktop) -->
+      <button 
+        class="max-sm:hidden lg:hidden flex p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors"
         onclick={toggleTheme}
+        title="Toggle theme"
       >
         {#if isDark}
-          <Sun class="h-5 w-5" />
+          <Sun class="w-5 h-5" />
         {:else}
-          <Moon class="h-5 w-5" />
+          <Moon class="w-5 h-5" />
         {/if}
-      </Button>
+      </button>
       
       <!-- Sign In / User Menu (desktop) -->
       {#if isAuthenticated}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild let:builder>
-            <Button builders={[builder]} variant="ghost" class="hidden sm:flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
-                <span class="text-xs font-semibold text-primary-foreground">{getUserInitial(username)}</span>
+            <button 
+              use:builder.action
+              {...builder}
+              class="max-sm:hidden lg:hidden inline-flex items-center gap-2 h-9 px-3 py-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors"
+            >
+              <div class="w-7 h-7 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center">
+                <span class="text-xs font-semibold text-[hsl(var(--primary-foreground))]">{getUserInitial(username)}</span>
               </div>
               <span class="text-sm font-medium max-w-[100px] truncate">{username}</span>
-              <ChevronDown class="h-4 w-4" />
-            </Button>
+              <ChevronDown class="w-4 h-4" />
+            </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Content align="end" class="w-48">
-            <DropdownMenu.Label>
-              <p class="font-medium">{username}</p>
-              <p class="text-xs text-muted-foreground">Signed in</p>
-            </DropdownMenu.Label>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item onclick={onSignOut} class="text-destructive">
-              <LogOut class="h-4 w-4 mr-2" />
+            <div class="px-3 py-2 border-b border-[hsl(var(--border))]">
+              <p class="text-sm font-medium">{username}</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
+            </div>
+            <DropdownMenu.Item href="/preferences">
+              <Settings class="w-4 h-4 mr-2" />
+              Preferences
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onclick={onSignOut} class="text-[hsl(var(--destructive))]">
+              <LogOut class="w-4 h-4 mr-2" />
               Sign Out
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Root>
       {:else}
-        <Button
-          variant="outline"
-          class="hidden sm:flex gap-2"
+        <button
+          class="max-sm:hidden lg:hidden inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-transparent text-sm font-medium hover:bg-[hsl(var(--accent))] transition-colors gap-2"
           onclick={onSignIn}
         >
-          <User class="h-4 w-4" />
-          Sign In
-        </Button>
+          <User class="w-4 h-4" />
+          <span>Sign In</span>
+        </button>
       {/if}
       
-      <!-- Mobile menu button -->
-      <Button
-        variant="ghost"
-        size="icon"
-        class="sm:hidden"
+      <!-- Set up alerts button (desktop only, when not authenticated) -->
+      {#if !isAuthenticated}
+        <a 
+          href="/preferences"
+          class="max-sm:hidden lg:hidden inline-flex h-9 px-4 py-2 rounded-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-medium hover:opacity-90 transition-colors"
+        >
+          Set up alerts
+        </a>
+      {/if}
+      
+      <!-- Mobile Menu Button -->
+      <button 
+        class="hidden max-sm:flex p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors"
         onclick={() => mobileMenuOpen = !mobileMenuOpen}
+        title="Menu"
       >
-        <Menu class="h-5 w-5" />
-      </Button>
+        <Menu class="w-5 h-5" />
+      </button>
     </div>
   </div>
   
-  <!-- Mobile menu dropdown -->
+  <!-- Mobile Menu Dropdown (overlay) -->
   {#if mobileMenuOpen}
-    <div class="sm:hidden absolute left-0 right-0 top-full border-t border-border bg-background shadow-lg z-50">
+    <div class="sm:hidden absolute left-0 right-0 top-full border-t border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-lg z-50">
       <div class="px-4 py-3 space-y-1">
         {#if isAuthenticated}
-          <div class="flex items-center gap-3 px-3 py-2.5 border-b border-border mb-2">
-            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span class="text-sm font-semibold text-primary-foreground">{getUserInitial(username)}</span>
+          <div class="flex items-center gap-3 px-3 py-2.5 border-b border-[hsl(var(--border))] mb-2">
+            <div class="w-8 h-8 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center">
+              <span class="text-sm font-semibold text-[hsl(var(--primary-foreground))]">{getUserInitial(username)}</span>
             </div>
             <div>
               <p class="text-sm font-medium">{username}</p>
-              <p class="text-xs text-muted-foreground">Signed in</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
             </div>
           </div>
         {:else}
           <button
             onclick={() => { mobileMenuOpen = false; onSignIn?.(); }}
-            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
+            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left"
           >
-            <User class="h-5 w-5" />
+            <User class="w-5 h-5" />
             <span class="text-sm font-medium">Sign In</span>
           </button>
         {/if}
         
         <button
           onclick={() => { mobileMenuOpen = false; onOpenDialog?.('how-to-use'); }}
-          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
+          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left"
         >
-          <HelpCircle class="h-5 w-5" />
+          <HelpCircle class="w-5 h-5" />
           <span class="text-sm">How to Use</span>
         </button>
         
         <button
           onclick={() => { mobileMenuOpen = false; toggleTheme(); }}
-          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
+          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left"
         >
           {#if isDark}
-            <Sun class="h-5 w-5" />
+            <Sun class="w-5 h-5" />
             <span class="text-sm">Light Mode</span>
           {:else}
-            <Moon class="h-5 w-5" />
+            <Moon class="w-5 h-5" />
             <span class="text-sm">Dark Mode</span>
           {/if}
         </button>
         
         {#if isAuthenticated}
+          <a
+            href="/preferences"
+            onclick={() => mobileMenuOpen = false}
+            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left"
+          >
+            <Settings class="w-5 h-5" />
+            <span class="text-sm">Preferences</span>
+          </a>
           <button
             onclick={() => { mobileMenuOpen = false; onSignOut?.(); }}
-            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left text-destructive"
+            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left text-[hsl(var(--destructive))]"
           >
-            <LogOut class="h-5 w-5" />
+            <LogOut class="w-5 h-5" />
             <span class="text-sm">Sign Out</span>
           </button>
         {/if}

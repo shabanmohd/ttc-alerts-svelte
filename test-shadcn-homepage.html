@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TTC Service Alerts</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Design System CSS - Single Source of Truth -->
+  <link rel="stylesheet" href="client/src/css/design-system.css">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: {
+              DEFAULT: 'hsl(var(--primary))',
+              foreground: 'hsl(var(--primary-foreground))',
+            },
+            secondary: {
+              DEFAULT: 'hsl(var(--secondary))',
+              foreground: 'hsl(var(--secondary-foreground))',
+            },
+            destructive: {
+              DEFAULT: 'hsl(var(--destructive))',
+              foreground: 'hsl(var(--destructive-foreground))',
+            },
+            muted: {
+              DEFAULT: 'hsl(var(--muted))',
+              foreground: 'hsl(var(--muted-foreground))',
+            },
+            accent: {
+              DEFAULT: 'hsl(var(--accent))',
+              foreground: 'hsl(var(--accent-foreground))',
+            },
+            card: {
+              DEFAULT: 'hsl(var(--card))',
+              foreground: 'hsl(var(--card-foreground))',
+            },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
+</head>
+<body class="min-h-screen">
+
+  <!-- Desktop Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-logo">🚇</span>
+      <span class="sidebar-title">TTC Alerts</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="sidebar-nav-item active" data-nav="all" id="sidebar-all-alerts">
+        <i data-lucide="bell"></i>
+        <span>All Alerts</span>
+      </a>
+      <a href="#" class="sidebar-nav-item" data-nav="my" id="sidebar-my-alerts">
+        <i data-lucide="star"></i>
+        <span>My Alerts</span>
+      </a>
+      <a href="test-shadcn-preferences.html" class="sidebar-nav-item">
+        <i data-lucide="settings"></i>
+        <span>Preferences</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <!-- Help & Info Links -->
+      <div class="sidebar-footer-links">
+        <button class="sidebar-footer-link" id="sidebar-how-to-use" title="How to Use">
+          <i data-lucide="help-circle"></i>
+          <span>How to Use</span>
+        </button>
+        <button class="sidebar-footer-link" id="sidebar-report-bug" title="Report a Bug">
+          <i data-lucide="bug"></i>
+          <span>Report Bug</span>
+        </button>
+        <button class="sidebar-footer-link" id="sidebar-feature-request" title="Feature Request">
+          <i data-lucide="lightbulb"></i>
+          <span>Feature Request</span>
+        </button>
+        <button class="sidebar-footer-link" id="sidebar-about" title="About">
+          <i data-lucide="info"></i>
+          <span>About</span>
+        </button>
+      </div>
+      <div class="separator-horizontal my-2"></div>
+      <button id="sidebar-theme-toggle" class="sidebar-nav-item w-full">
+        <i data-lucide="moon"></i>
+        <span>Dark Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main wrapper -->
+  <div class="main-wrapper">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background))] backdrop-blur relative">
+      <div class="header-container">
+        <!-- Logo (mobile only) -->
+        <a href="test-shadcn-homepage.html" class="header-left">
+          <span class="text-xl">🚇</span>
+          <span class="font-semibold">TTC Alerts</span>
+        </a>
+        <div class="header-right">
+          <!-- Last updated -->
+          <div class="flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))]">
+            <span id="last-updated">Updated 2 min ago</span>
+            <button class="p-1.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors" id="refresh-btn" title="Refresh">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <!-- Help button (desktop only) -->
+          <button id="header-help-btn" class="hidden sm:flex p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors" title="How to Use">
+            <i data-lucide="help-circle" class="w-5 h-5"></i>
+          </button>
+          <!-- Theme toggle (desktop only) -->
+          <button id="theme-toggle" class="hidden sm:flex p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors" title="Toggle theme">
+            <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+            <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+          </button>
+          <!-- Sign In button (desktop only) -->
+          <button class="hidden sm:inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-transparent text-sm font-medium hover:bg-[hsl(var(--accent))] transition-colors gap-2" id="header-sign-in-btn">
+            <i data-lucide="user" class="w-4 h-4"></i>
+            <span>Sign In</span>
+          </button>
+          <!-- User Menu (desktop, shown when signed in) -->
+          <div class="relative auth-hidden" id="user-menu-container">
+            <button class="hidden sm:inline-flex items-center gap-2 h-9 px-3 py-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors" id="user-menu-btn">
+              <div class="w-7 h-7 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center">
+                <span class="text-xs font-semibold text-[hsl(var(--primary-foreground))]" id="user-avatar-initial">U</span>
+              </div>
+              <span class="text-sm font-medium max-w-[100px] truncate" id="user-display-name">Username</span>
+              <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </button>
+            <!-- Dropdown Menu -->
+            <div class="absolute right-0 top-full mt-1 w-48 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-lg py-1 hidden" id="user-dropdown">
+              <div class="px-3 py-2 border-b border-[hsl(var(--border))]">
+                <p class="text-sm font-medium" id="dropdown-username">Username</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
+              </div>
+              <a href="test-shadcn-preferences.html" class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-[hsl(var(--accent))] transition-colors">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+                Preferences
+              </a>
+              <button class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-[hsl(var(--accent))] transition-colors w-full text-left text-[hsl(var(--destructive))]" id="sign-out-btn">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                Sign Out
+              </button>
+            </div>
+          </div>
+          <!-- Set up alerts button (desktop only) -->
+          <a href="test-shadcn-preferences.html" class="hidden sm:inline-flex h-9 px-4 py-2 rounded-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-medium hover:opacity-90 transition-colors" id="setup-btn">
+            Set up alerts
+          </a>
+          <!-- Mobile Menu Button -->
+          <button class="sm:hidden p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors" id="mobile-menu-btn" title="Menu">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+      <!-- Mobile Menu Dropdown (overlay) -->
+      <div class="sm:hidden hidden absolute left-0 right-0 top-full border-t border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-lg z-50" id="mobile-menu">
+        <div class="px-4 py-3 space-y-1">
+          <!-- Sign In (shown when signed out) -->
+          <button class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left" id="mobile-sign-in-btn">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span class="text-sm font-medium">Sign In</span>
+          </button>
+          <!-- User Info (shown when signed in) -->
+          <div class="hidden px-3 py-2.5 border-b border-[hsl(var(--border))] mb-2" id="mobile-user-info">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center">
+                <span class="text-sm font-semibold text-[hsl(var(--primary-foreground))]" id="mobile-user-avatar">U</span>
+              </div>
+              <div>
+                <p class="text-sm font-medium" id="mobile-user-name">Username</p>
+                <p class="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
+              </div>
+            </div>
+          </div>
+          <!-- How to Use -->
+          <button class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left" id="mobile-help-btn">
+            <i data-lucide="help-circle" class="w-5 h-5"></i>
+            <span class="text-sm">How to Use</span>
+          </button>
+          <!-- Theme Toggle -->
+          <button class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left" id="mobile-theme-btn">
+            <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+            <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+            <span class="text-sm dark:hidden">Dark Mode</span>
+            <span class="text-sm hidden dark:inline">Light Mode</span>
+          </button>
+          <!-- Preferences (shown when signed in) -->
+          <a href="test-shadcn-preferences.html" class="hidden items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left" id="mobile-preferences-link">
+            <i data-lucide="settings" class="w-5 h-5"></i>
+            <span class="text-sm">Preferences</span>
+          </a>
+          <!-- Sign Out (shown when signed in) -->
+          <button class="hidden items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left text-[hsl(var(--destructive))]" id="mobile-sign-out-btn">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+            <span class="text-sm">Sign Out</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      
+      <!-- All Alerts View (default) -->
+      <div id="all-alerts-view">
+        <!-- Filter Chips -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button class="filter-chip active" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="disruption">Service Disruption</button>
+          <button class="filter-chip" data-filter="resumed">Service Resumed</button>
+          <button class="filter-chip" data-filter="delay">Delay</button>
+          <button class="filter-chip" data-filter="detour">Detour</button>
+        </div>
+
+        <!-- Planned Maintenance Widget -->
+      <div class="maintenance-widget mb-4">
+        <button class="maintenance-toggle" id="maintenance-toggle">
+          <div class="maintenance-toggle-content">
+            <i data-lucide="wrench" class="maintenance-toggle-icon"></i>
+            <span class="maintenance-toggle-title">Planned Maintenance</span>
+            <span class="maintenance-toggle-badge">3 upcoming</span>
+          </div>
+          <i data-lucide="chevron-down" class="maintenance-toggle-chevron" id="maintenance-chevron"></i>
+        </button>
+        
+        <!-- Maintenance Content (collapsed by default) -->
+        <div class="maintenance-content hidden" id="maintenance-content">
+          <!-- Maintenance Tabs -->
+          <div class="maintenance-tabs scrollbar-hide" id="maintenance-tabs">
+            <button class="maintenance-tab active" data-tab="starting-soon">
+              <span>Starting Soon</span>
+              <span class="maintenance-tab-count">1</span>
+            </button>
+            <button class="maintenance-tab" data-tab="weekend">
+              <span>This Weekend</span>
+              <span class="maintenance-tab-count">2</span>
+            </button>
+            <button class="maintenance-tab" data-tab="coming-up">
+              <span>Coming Up</span>
+              <span class="maintenance-tab-count">0</span>
+            </button>
+          </div>
+          
+          <!-- Maintenance Items -->
+          <div class="maintenance-items" id="maintenance-items-starting-soon">
+            <div class="maintenance-item">
+              <div class="maintenance-item-header">
+                <span class="route-badge route-line-1">Line 1 (Yonge - University)</span>
+              </div>
+              <p class="maintenance-item-description">Eglinton to Sheppard-Yonge stations</p>
+              <p class="maintenance-item-dates">Monday, December 1 to Wednesday, December 3, 2025 • Starting at 11 p.m.</p>
+              <a href="https://www.ttc.ca/service-advisories/subway-service" target="_blank" rel="noopener noreferrer" class="maintenance-item-link">More info <i data-lucide="external-link" class="h-3 w-3"></i></a>
+            </div>
+          </div>
+          
+          <!-- This Weekend Items (hidden by default) -->
+          <div class="maintenance-items hidden" id="maintenance-items-weekend">
+            <div class="maintenance-item">
+              <div class="maintenance-item-header">
+                <span class="route-badge route-line-2">Line 2 (Bloor - Danforth)</span>
+              </div>
+              <span class="maintenance-item-closure-badge">Full Weekend Closure</span>
+              <p class="maintenance-item-description">Warden to Kennedy stations</p>
+              <p class="maintenance-item-dates">Saturday, December 6 to Sunday, December 7, 2025</p>
+              <a href="https://www.ttc.ca/service-advisories/subway-service" target="_blank" rel="noopener noreferrer" class="maintenance-item-link">More info <i data-lucide="external-link" class="h-3 w-3"></i></a>
+            </div>
+            
+            <div class="maintenance-item">
+              <div class="maintenance-item-header">
+                <span class="route-badge route-line-1">Line 1 (Yonge - University)</span>
+              </div>
+              <span class="maintenance-item-closure-badge">Full Weekend Closure</span>
+              <p class="maintenance-item-description">Osgoode to College stations</p>
+              <p class="maintenance-item-dates">Saturday, December 6 to Sunday, December 7, 2025</p>
+              <a href="https://www.ttc.ca/service-advisories/subway-service" target="_blank" rel="noopener noreferrer" class="maintenance-item-link">More info <i data-lucide="external-link" class="h-3 w-3"></i></a>
+            </div>
+          </div>
+          
+          <!-- Coming Up Items (hidden by default) -->
+          <div class="maintenance-items hidden" id="maintenance-items-coming-up">
+            <p class="text-sm text-[hsl(var(--muted-foreground))] p-4">No upcoming maintenance scheduled.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert Cards (dynamically loaded from API) -->
+      <div class="space-y-3" id="all-alerts-container">
+        
+        <!-- DUMMY ALERTS FOR STYLING REFERENCE -->
+        
+        <!-- Service Resumed Alert -->
+        <div class="alert-card">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-bus">102 Markham Rd</span>
+                <span class="status-badge status-badge-resumed">Service Resumed</span>
+              </div>
+              <span class="alert-card-timestamp">25 min ago</span>
+            </div>
+            <p class="alert-card-title">102 Markham Rd Regular service has resumed northbound near Castlemore Ave at Mingay Ave</p>
+            <p class="alert-card-description">Regular service has resumed following earlier detour.</p>
+          </div>
+        </div>
+
+        <!-- Service Disruption Alert -->
+        <div class="alert-card">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-line-1">Line 1</span>
+                <span class="status-badge status-badge-disruption">Disruption</span>
+              </div>
+              <span class="alert-card-timestamp">10 min ago</span>
+            </div>
+            <p class="alert-card-title">Line 1: No subway service between Eglinton and Sheppard-Yonge</p>
+            <p class="alert-card-description">Shuttle buses are running. Use Line 2 as alternate.</p>
+          </div>
+        </div>
+
+        <!-- Delay Alert -->
+        <div class="alert-card">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-line-2">Line 2</span>
+                <span class="status-badge status-badge-delay">Delay</span>
+              </div>
+              <span class="alert-card-timestamp">45 min ago</span>
+            </div>
+            <p class="alert-card-title">Line 2: Delays of up to 10 minutes in both directions</p>
+            <p class="alert-card-description">Due to an earlier signal problem at Pape station.</p>
+          </div>
+        </div>
+
+        <!-- Detour Alert -->
+        <div class="alert-card">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-streetcar">504 King</span>
+                <span class="status-badge status-badge-detour">Detour</span>
+              </div>
+              <span class="alert-card-timestamp">1 hour ago</span>
+            </div>
+            <p class="alert-card-title">504 King: Detour via Queen St due to film shoot</p>
+            <p class="alert-card-description">Westbound streetcars diverting via Queen, Spadina, and King.</p>
+          </div>
+        </div>
+
+        <!-- Planned Maintenance Alert -->
+        <div class="alert-card">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-line-4">Line 4</span>
+                <span class="status-badge status-badge-planned">Planned</span>
+              </div>
+              <span class="alert-card-timestamp">2 hours ago</span>
+            </div>
+            <p class="alert-card-title">Line 4 Sheppard: Weekend closure for track maintenance</p>
+            <p class="alert-card-description">No service Saturday Dec 7 to Sunday Dec 8. Shuttle buses provided.</p>
+          </div>
+        </div>
+
+        <!-- Threaded Alert with Earlier Updates -->
+        <div class="alert-card">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-bus">39 Finch East</span>
+                <span class="status-badge status-badge-resumed">Service Resumed</span>
+              </div>
+              <span class="alert-card-timestamp">30 min ago</span>
+            </div>
+            <p class="alert-card-title">39 Finch East Regular service has resumed near Victoria Park</p>
+            <p class="alert-card-description">Service restored following earlier collision.</p>
+          </div>
+          <!-- Earlier Updates Section -->
+          <button class="earlier-updates-toggle" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('svg').style.transform = this.nextElementSibling.classList.contains('hidden') ? '' : 'rotate(180deg)'">
+            <span>2 earlier updates</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="earlier-updates-content hidden">
+            <div class="earlier-update-item">
+              <div class="flex justify-between items-start mb-1">
+                <span class="status-badge status-badge-detour">Detour</span>
+                <span class="text-xs text-[hsl(var(--muted-foreground))]">1 hour ago</span>
+              </div>
+              <p class="text-sm">39 Finch East: Detour eastbound via Pharmacy Ave due to collision</p>
+            </div>
+            <div class="earlier-update-item">
+              <div class="flex justify-between items-start mb-1">
+                <span class="status-badge status-badge-delay">Delay</span>
+                <span class="text-xs text-[hsl(var(--muted-foreground))]">2 hours ago</span>
+              </div>
+              <p class="text-sm">39 Finch East: Delays of up to 15 minutes eastbound near Victoria Park</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bus Alert -->
+        <div class="alert-card">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-bus">95 York Mills</span>
+                <span class="route-badge route-express">995 York Mills Express</span>
+                <span class="status-badge status-badge-detour">Detour</span>
+              </div>
+              <span class="alert-card-timestamp">3 hours ago</span>
+            </div>
+            <p class="alert-card-title">95/995 York Mills: Detour via Don Mills due to water main break</p>
+            <p class="alert-card-description">Buses not serving stops on York Mills between Leslie and Don Mills.</p>
+          </div>
+        </div>
+
+      </div>
+      </div> <!-- End all-alerts-view -->
+
+      <!-- My Alerts View (hidden by default) -->
+      <div id="my-alerts-view" class="hidden">
+        
+        <!-- Empty State: No Preferences Set -->
+        <div id="my-alerts-empty-state" class="flex flex-col items-center justify-center py-12 px-4 text-center">
+          <div class="w-20 h-20 rounded-full bg-[hsl(var(--muted))] flex items-center justify-center mb-4">
+            <i data-lucide="star" class="h-10 w-10 text-[hsl(var(--muted-foreground))]"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">No Preferences Set</h3>
+          <p class="text-sm text-[hsl(var(--muted-foreground))] max-w-sm mb-6">
+            Set up your route preferences to see personalized alerts for the routes you use.
+          </p>
+          <a href="test-shadcn-preferences.html" class="btn btn-primary gap-2">
+            <i data-lucide="settings" class="h-4 w-4"></i>
+            Set Up Preferences
+          </a>
+        </div>
+
+        <!-- My Alerts Container (shown when user has preferences) -->
+        <div id="my-alerts-container" class="space-y-3 hidden">
+          <!-- Filter Chips for My Alerts -->
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button class="filter-chip active" data-filter="all">All</button>
+            <button class="filter-chip" data-filter="disruption">Service Disruption</button>
+            <button class="filter-chip" data-filter="resumed">Service Resumed</button>
+            <button class="filter-chip" data-filter="delay">Delay</button>
+            <button class="filter-chip" data-filter="detour">Detour</button>
+          </div>
+          
+          <!-- All Clear State (shown when no matching alerts) -->
+          <div id="my-alerts-all-clear" class="hidden flex-col items-center justify-center py-12 px-4 text-center">
+            <div class="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
+              <i data-lucide="check-circle" class="h-10 w-10 text-green-500"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">All Clear!</h3>
+            <p class="text-sm text-[hsl(var(--muted-foreground))] max-w-sm">
+              No active alerts for your selected routes. You're good to go! 🚇
+            </p>
+          </div>
+          
+          <!-- Filtered alerts will be inserted here -->
+          <div id="my-alerts-list"></div>
+        </div>
+      </div>
+
+    </main>
+  </div> <!-- End main-wrapper -->
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav">
+    <button class="nav-item active" data-nav="all" id="nav-all">
+      <i data-lucide="bell"></i>
+      <span>All Alerts</span>
+    </button>
+    <button class="nav-item" data-nav="my" id="nav-my">
+      <i data-lucide="star"></i>
+      <span>My Alerts</span>
+    </button>
+    <a href="test-shadcn-preferences.html" class="nav-item" id="nav-preferences">
+      <i data-lucide="settings"></i>
+      <span>Preferences</span>
+    </a>
+  </nav>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none"></div>
+
+  <!-- How to Use Modal -->
+  <div class="dialog-overlay hidden" id="how-to-use-dialog">
+    <div class="dialog-content max-w-lg">
+      <button class="dialog-close" id="how-to-use-close">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--primary)/0.1)] flex items-center justify-center">
+            <i data-lucide="help-circle" class="h-5 w-5 text-[hsl(var(--primary))]"></i>
+          </div>
+          <h3 class="dialog-title">How to Use TTC Alerts</h3>
+        </div>
+      </div>
+      <div class="dialog-body space-y-4 max-h-[60vh] overflow-y-auto">
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] flex items-center justify-center text-sm font-bold">1</div>
+          <div>
+            <h4 class="font-semibold">Set Up Your Preferences</h4>
+            <p class="text-sm text-[hsl(var(--muted-foreground))]">Go to Preferences and select your transport modes (Subway, Bus, Streetcar) and the specific routes you use.</p>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] flex items-center justify-center text-sm font-bold">2</div>
+          <div>
+            <h4 class="font-semibold">Choose Your Schedule</h4>
+            <p class="text-sm text-[hsl(var(--muted-foreground))]">Set the days and times when you want to receive alerts. Only get notified when it matters to you.</p>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] flex items-center justify-center text-sm font-bold">3</div>
+          <div>
+            <h4 class="font-semibold">Filter Alerts</h4>
+            <p class="text-sm text-[hsl(var(--muted-foreground))]">Use the filter chips on the home page to view specific alert types: Service Disruptions, Delays, Detours, or Service Resumed.</p>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] flex items-center justify-center text-sm font-bold">4</div>
+          <div>
+            <h4 class="font-semibold">Check Planned Maintenance</h4>
+            <p class="text-sm text-[hsl(var(--muted-foreground))]">Expand the Planned Maintenance widget to see upcoming service changes and weekend closures.</p>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn btn-primary w-full" id="how-to-use-done">Got it!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Bug Modal -->
+  <div class="dialog-overlay hidden" id="report-bug-dialog">
+    <div class="dialog-content max-w-lg">
+      <button class="dialog-close" id="report-bug-close">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[hsl(var(--destructive)/0.1)] flex items-center justify-center">
+            <i data-lucide="bug" class="h-5 w-5 text-[hsl(var(--destructive))]"></i>
+          </div>
+          <h3 class="dialog-title">Report a Bug</h3>
+        </div>
+      </div>
+      <form id="report-bug-form" class="dialog-body space-y-4">
+        <div>
+          <label class="label" for="bug-email">Email <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <input type="email" id="bug-email" name="email" class="input" placeholder="your@email.com" required>
+        </div>
+        <div>
+          <label class="label" for="bug-subject">Subject <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <input type="text" id="bug-subject" name="subject" class="input" placeholder="Brief description of the issue" required>
+        </div>
+        <div>
+          <label class="label" for="bug-description">Description <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <textarea id="bug-description" name="description" class="input min-h-[120px]" placeholder="Please describe the bug in detail. What happened? What did you expect to happen?" required></textarea>
+        </div>
+        <div class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY"></div>
+      </form>
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-outline" id="report-bug-cancel">Cancel</button>
+        <button type="submit" form="report-bug-form" class="btn btn-primary gap-2">
+          <i data-lucide="send" class="h-4 w-4"></i>
+          Send Report
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Request Modal -->
+  <div class="dialog-overlay hidden" id="feature-request-dialog">
+    <div class="dialog-content max-w-lg">
+      <button class="dialog-close" id="feature-request-close">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+            <i data-lucide="lightbulb" class="h-5 w-5 text-amber-600 dark:text-amber-400"></i>
+          </div>
+          <h3 class="dialog-title">Request a Feature</h3>
+        </div>
+        <p class="dialog-description">Have an idea to make TTC Alerts better? We'd love to hear it!</p>
+      </div>
+      <form id="feature-request-form" class="dialog-body space-y-4">
+        <div>
+          <label class="label" for="feature-email">Email <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <input type="email" id="feature-email" name="email" class="input" placeholder="your@email.com" required>
+        </div>
+        <div>
+          <label class="label" for="feature-title">Feature Title <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <input type="text" id="feature-title" name="title" class="input" placeholder="Brief title for your feature idea" required>
+        </div>
+        <div>
+          <label class="label" for="feature-description">Description <span class="text-[hsl(var(--destructive))]">*</span></label>
+          <textarea id="feature-description" name="description" class="input min-h-[120px]" placeholder="Describe the feature you'd like to see. How would it help you?" required></textarea>
+        </div>
+        <div class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY"></div>
+      </form>
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-outline" id="feature-request-cancel">Cancel</button>
+        <button type="submit" form="feature-request-form" class="btn btn-primary gap-2">
+          <i data-lucide="send" class="h-4 w-4"></i>
+          Send Request
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div class="dialog-overlay hidden" id="about-dialog">
+    <div class="dialog-content max-w-md">
+      <button class="dialog-close" id="about-close">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header text-center">
+        <div class="flex flex-col items-center gap-3">
+          <div class="text-5xl">🚇</div>
+          <h3 class="dialog-title">TTC Alerts</h3>
+          <span class="text-sm text-[hsl(var(--muted-foreground))]">v1.0.0</span>
+        </div>
+      </div>
+      <div class="dialog-body space-y-4 text-center">
+        <p class="text-sm text-[hsl(var(--muted-foreground))]">
+          Real-time service alerts for Toronto Transit Commission (TTC) subway, bus, and streetcar routes.
+        </p>
+        <div class="p-3 rounded-lg bg-[hsl(var(--muted))]">
+          <p class="text-xs text-[hsl(var(--muted-foreground))]">
+            <i data-lucide="database" class="h-3 w-3 inline-block mr-1"></i>
+            Data sourced from TTC
+          </p>
+        </div>
+        <div class="separator-horizontal"></div>
+        <div>
+          <h4 class="font-semibold text-sm mb-2">About the Developer</h4>
+          <p class="text-sm text-[hsl(var(--muted-foreground))]">
+            Built with ❤️ by <strong>Your Name</strong>. A passionate developer creating tools to make Toronto commuting easier.
+          </p>
+          <div class="flex justify-center gap-3 mt-3">
+            <a href="https://github.com/YOUR_GITHUB" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm gap-2">
+              <i data-lucide="github" class="h-4 w-4"></i>
+              GitHub
+            </a>
+            <a href="https://linkedin.com/in/YOUR_LINKEDIN" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm gap-2">
+              <i data-lucide="linkedin" class="h-4 w-4"></i>
+              LinkedIn
+            </a>
+            <a href="https://yourwebsite.com" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm gap-2">
+              <i data-lucide="globe" class="h-4 w-4"></i>
+              Website
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn btn-primary w-full" id="about-done">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Alerts Sign-In Prompt Modal -->
+  <div class="dialog-overlay hidden" id="my-alerts-auth-dialog">
+    <div class="dialog-content max-w-md">
+      <button class="dialog-close" id="my-alerts-auth-close">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex flex-col items-center gap-3 text-center">
+          <div class="w-16 h-16 rounded-full bg-[hsl(var(--primary)/0.1)] flex items-center justify-center">
+            <i data-lucide="star" class="h-8 w-8 text-[hsl(var(--primary))]"></i>
+          </div>
+          <h3 class="dialog-title">Get Personalized Alerts</h3>
+          <p class="dialog-description">Sign in to see only the alerts that matter to you, based on your saved routes and preferences.</p>
+        </div>
+      </div>
+      
+      <div class="dialog-body space-y-4">
+        <!-- Benefits -->
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+            <i data-lucide="filter" class="h-5 w-5 text-[hsl(var(--primary))] flex-shrink-0 mt-0.5"></i>
+            <div>
+              <p class="font-medium text-sm">Filtered Just for You</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Only see alerts for your selected routes and transit modes.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+            <i data-lucide="smartphone" class="h-5 w-5 text-[hsl(var(--primary))] flex-shrink-0 mt-0.5"></i>
+            <div>
+              <p class="font-medium text-sm">Sync Across Devices</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))]">Access your preferences on any device - phone, tablet, or computer.</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- WebAuthn Security Info -->
+        <div class="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="fingerprint" class="h-5 w-5 text-green-500"></i>
+            </div>
+            <div>
+              <p class="font-semibold text-sm">Easy & Secure Sign-Up</p>
+              <p class="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+                <strong>No password or email needed!</strong> Create an account instantly using your device's biometrics (Face ID, Touch ID, or fingerprint). Your biometric data stays on your device - we never see it.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dialog-footer flex-col sm:flex-row gap-2">
+        <button class="btn btn-outline flex-1" id="my-alerts-auth-cancel">Maybe Later</button>
+        <a href="test-shadcn-preferences.html" class="btn btn-primary flex-1 gap-2">
+          <i data-lucide="user-plus" class="h-4 w-4"></i>
+          Get Started
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sign In Modal (for header button) -->
+  <div class="dialog-overlay hidden" id="sign-in-dialog">
+    <div class="dialog-content max-w-sm">
+      <button class="dialog-close" id="sign-in-close">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+      <div class="dialog-header">
+        <div class="flex items-center justify-center sm:justify-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-[hsl(var(--primary)/0.1)] flex items-center justify-center">
+            <i data-lucide="scan-face" class="h-5 w-5 text-[hsl(var(--primary))]"></i>
+          </div>
+          <h3 class="dialog-title">Welcome Back</h3>
+        </div>
+        <p class="dialog-description mt-2">Sign in with your device's biometrics to access your saved preferences.</p>
+      </div>
+      
+      <div class="dialog-body space-y-4">
+        <div class="space-y-2">
+          <label for="homepage-sign-in-username" class="text-sm font-medium">Username</label>
+          <input type="text" id="homepage-sign-in-username" class="input w-full" placeholder="Enter your username" autocomplete="username" />
+        </div>
+        
+        <!-- Security note -->
+        <div class="flex items-start gap-2 p-3 rounded-lg bg-[hsl(var(--muted)/0.5)]">
+          <i data-lucide="shield-check" class="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5"></i>
+          <p class="text-xs text-[hsl(var(--muted-foreground))]">
+            Your biometric data never leaves your device. Authentication is fast, secure, and passwordless.
+          </p>
+        </div>
+        
+        <div class="text-center">
+          <button type="button" class="text-sm text-[hsl(var(--primary))] hover:underline" id="homepage-recovery-link">
+            Lost access? Use recovery code
+          </button>
+        </div>
+      </div>
+      
+      <div class="dialog-footer flex-col gap-2">
+        <button class="btn btn-primary w-full gap-2" id="homepage-sign-in-confirm">
+          <i data-lucide="scan-face" class="h-4 w-4"></i>
+          Sign In with Biometrics
+        </button>
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <span class="w-full border-t border-[hsl(var(--border))]"></span>
+          </div>
+          <div class="relative flex justify-center text-xs uppercase">
+            <span class="bg-[hsl(var(--card))] px-2 text-[hsl(var(--muted-foreground))]">or</span>
+          </div>
+        </div>
+        <a href="test-shadcn-preferences.html" class="btn btn-outline w-full gap-2">
+          <i data-lucide="user-plus" class="h-4 w-4"></i>
+          Create New Account
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- External Scripts - DISABLED FOR STATIC DEMO -->
+  <!--
+  <script src="client/src/js/api-client.iife.js"></script>
+  <script src="client/src/js/alerts-loader.iife.js"></script>
+  -->
+  <script src="client/src/js/components/theme.iife.js"></script>
+  <script src="client/src/js/components/toast.iife.js"></script>
+  <script src="client/src/js/components/dialogs.iife.js"></script>
+  <script src="client/src/js/homepage.iife.js"></script>
+  
+  <!-- Initialize Lucide icons - wait for library to load -->
+  <script>
+    function initLucideIcons() {
+      if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+        console.log('✓ Lucide icons initialized');
+      } else {
+        // Retry after a short delay if Lucide isn't loaded yet
+        setTimeout(initLucideIcons, 50);
+      }
+    }
+    
+    // Run immediately since scripts are at end of body
+    initLucideIcons();
+    
+    // Also run after dynamic content loads
+    document.addEventListener('DOMContentLoaded', initLucideIcons);
+    window.addEventListener('load', initLucideIcons);
+  </script>
+
+</body>
+</html>

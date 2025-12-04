@@ -101,12 +101,26 @@ export async function loadPreferences() {
 }
 
 // Save preferences
-export async function savePreferences(updates: Partial<UserPreferences | DevicePreferences>) {
+export async function savePreferences(updates: {
+  modes?: string[];
+  routes?: string[];
+  alertTypes?: string[];
+  schedules?: Array<{ days: string[]; startTime: string; endTime: string }>;
+  pushEnabled?: boolean;
+}) {
   isSaving.set(true);
   
   try {
     const currentUserId = get(userId);
     const current = get(preferences);
+    
+    // Transform to database format
+    const dbUpdates: any = {};
+    if (updates.modes !== undefined) dbUpdates.transport_modes = updates.modes;
+    if (updates.routes !== undefined) dbUpdates.routes = updates.routes;
+    if (updates.alertTypes !== undefined) dbUpdates.alert_types = updates.alertTypes;
+    if (updates.schedules !== undefined) dbUpdates.schedule = updates.schedules;
+    if (updates.pushEnabled !== undefined) dbUpdates.push_enabled = updates.pushEnabled;
     
     if (currentUserId) {
       // Save to user_preferences
@@ -115,7 +129,7 @@ export async function savePreferences(updates: Partial<UserPreferences | DeviceP
         .upsert({
           user_id: currentUserId,
           ...current,
-          ...updates,
+          ...dbUpdates,
           updated_at: new Date().toISOString()
         });
       
@@ -128,14 +142,14 @@ export async function savePreferences(updates: Partial<UserPreferences | DeviceP
         .upsert({
           device_fingerprint: fingerprint,
           ...current,
-          ...updates,
+          ...dbUpdates,
           updated_at: new Date().toISOString()
         });
       
       if (error) throw error;
     }
     
-    preferences.update(p => ({ ...p, ...updates } as any));
+    preferences.update(p => ({ ...p, ...dbUpdates } as any));
     return { success: true };
   } catch (error) {
     console.error('Error saving preferences:', error);
@@ -176,7 +190,56 @@ export async function migratePreferencesToUser(newUserId: string) {
 }
 
 // Derived stores for convenience
-export const transportModes = derived(preferences, $p => $p?.transport_modes ?? []);
+export const modes = derived(preferences, $p => $p?.transport_modes ?? []);
+export const transportModes = modes; // Alias for backwards compatibility
 export const routes = derived(preferences, $p => $p?.routes ?? []);
 export const alertTypes = derived(preferences, $p => $p?.alert_types ?? []);
+export const schedules = derived(preferences, $p => {
+  const schedule = ($p as any)?.schedule;
+  if (!schedule) return [];
+  if (Array.isArray(schedule)) return schedule;
+  return [schedule];
+});
 export const pushEnabled = derived(preferences, $p => $p?.push_enabled ?? false);
+
+// Reset preferences to defaults
+export async function resetPreferences() {
+  isSaving.set(true);
+  
+  try {
+    const currentUserId = get(userId);
+    
+    if (currentUserId) {
+      // Reset user preferences
+      const { error } = await supabase
+        .from('user_preferences')
+        .update({
+          ...defaultPreferences,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', currentUserId);
+      
+      if (error) throw error;
+    } else {
+      // Reset device preferences
+      const fingerprint = await getDeviceFingerprint();
+      const { error } = await supabase
+        .from('device_preferences')
+        .update({
+          ...defaultPreferences,
+          updated_at: new Date().toISOString()
+        })
+        .eq('device_fingerprint', fingerprint);
+      
+      if (error) throw error;
+    }
+    
+    preferences.set({ ...defaultPreferences } as any);
+    return { success: true };
+  } catch (error) {
+    console.error('Error resetting preferences:', error);
+    return { success: false, error };
+  } finally {
+    isSaving.set(false);
+  }
+}

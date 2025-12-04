@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { Bell, Star, Settings, HelpCircle, Bug, Lightbulb, Info, Sun, Moon } from 'lucide-svelte';
+  import { Bell, Star, Settings, HelpCircle, Bug, Lightbulb, Info, Sun, Moon, User, LogOut } from 'lucide-svelte';
   import { Separator } from '$lib/components/ui/separator';
+  import { Button } from '$lib/components/ui/button';
   import { page } from '$app/stores';
+  import { isAuthenticated, userName, userInitial, signOut } from '$lib/stores/auth';
   
   let { onOpenDialog }: { onOpenDialog?: (dialog: string) => void } = $props();
   
@@ -21,73 +23,142 @@
     onOpenDialog?.(dialog);
   }
   
-  const navItems = [
-    { href: '/', icon: Bell, label: 'All Alerts' },
-    { href: '/?tab=my', icon: Star, label: 'My Alerts' },
-    { href: '/preferences', icon: Settings, label: 'Preferences' }
-  ];
+  async function handleSignOut() {
+    await signOut();
+  }
   
-  const footerLinks = [
-    { id: 'how-to-use', icon: HelpCircle, label: 'How to Use' },
-    { id: 'report-bug', icon: Bug, label: 'Report Bug' },
-    { id: 'feature-request', icon: Lightbulb, label: 'Feature Request' },
-    { id: 'about', icon: Info, label: 'About' }
-  ];
+  function isNavActive(href: string, tab: string | null): boolean {
+    const currentPath = $page.url.pathname;
+    const currentTab = $page.url.searchParams.get('tab');
+    
+    if (href === '/preferences') {
+      return currentPath === '/preferences';
+    }
+    if (tab === 'my') {
+      return currentPath === '/' && currentTab === 'my';
+    }
+    return currentPath === '/' && !currentTab;
+  }
 </script>
 
-<aside class="hidden lg:flex flex-col fixed top-0 left-0 bottom-0 w-64 bg-card border-r border-border z-40">
-  <!-- Header -->
-  <a href="/" class="flex items-center gap-3 px-6 h-14 border-b border-border">
-    <span class="text-2xl">🚇</span>
-    <span class="text-lg font-semibold">TTC Alerts</span>
+<aside class="sidebar">
+  <a href="/" class="sidebar-header">
+    <span class="sidebar-logo">🚇</span>
+    <span class="sidebar-title">TTC Alerts</span>
   </a>
   
-  <!-- Navigation -->
-  <nav class="flex-1 py-4 px-3 flex flex-col gap-1">
-    {#each navItems as item}
-      {@const isActive = $page.url.pathname === item.href || 
-        (item.href === '/?tab=my' && $page.url.searchParams.get('tab') === 'my') ||
-        (item.href === '/' && $page.url.pathname === '/' && !$page.url.searchParams.get('tab'))}
-      <a 
-        href={item.href}
-        class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-colors
-               {isActive 
-                 ? 'bg-accent text-foreground' 
-                 : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'}"
-      >
-        <item.icon class="w-5 h-5 shrink-0" />
-        <span>{item.label}</span>
-      </a>
-    {/each}
+  <nav class="sidebar-nav">
+    <a 
+      href="/"
+      class="sidebar-nav-item {isNavActive('/', null) ? 'active' : ''}"
+    >
+      <Bell />
+      <span>All Alerts</span>
+    </a>
+    <a 
+      href="/?tab=my"
+      class="sidebar-nav-item {isNavActive('/', 'my') ? 'active' : ''}"
+    >
+      <Star />
+      <span>My Alerts</span>
+    </a>
+    <a 
+      href="/preferences"
+      class="sidebar-nav-item {isNavActive('/preferences', null) ? 'active' : ''}"
+    >
+      <Settings />
+      <span>Preferences</span>
+    </a>
   </nav>
   
-  <!-- Footer -->
-  <div class="p-3 border-t border-border">
-    <div class="flex flex-col gap-1">
-      {#each footerLinks as link}
-        <button 
-          onclick={() => handleDialog(link.id)}
-          class="flex items-center gap-3 px-3 py-2 text-[13px] text-muted-foreground rounded-md
-                 hover:bg-accent hover:text-foreground transition-colors w-full text-left"
+  <div class="sidebar-footer">
+    <!-- User Section -->
+    {#if $isAuthenticated}
+      <div class="px-3 py-2 mb-2">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center flex-shrink-0">
+            <span class="text-sm font-semibold text-[hsl(var(--primary-foreground))]">{$userInitial}</span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium truncate">{$userName}</p>
+            <p class="text-xs text-muted-foreground">Signed in</p>
+          </div>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          class="w-full mt-2 justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+          onclick={handleSignOut}
         >
-          <link.icon class="w-4 h-4 shrink-0 opacity-70" />
-          <span>{link.label}</span>
-        </button>
-      {/each}
+          <LogOut class="w-4 h-4 mr-2" />
+          Sign Out
+        </Button>
+      </div>
+      <Separator class="my-2" />
+    {:else}
+      <div class="px-3 py-2 mb-2">
+        <Button 
+          variant="outline" 
+          class="w-full justify-start"
+          onclick={() => handleDialog('sign-in')}
+        >
+          <User class="w-4 h-4 mr-2" />
+          Sign In
+        </Button>
+        <p class="text-xs text-muted-foreground mt-2 px-1">
+          Sign in to sync preferences across devices
+        </p>
+      </div>
+      <Separator class="my-2" />
+    {/if}
+    
+    <!-- Help & Info Links -->
+    <div class="sidebar-footer-links">
+      <button 
+        onclick={() => handleDialog('how-to-use')}
+        class="sidebar-footer-link"
+        title="How to Use"
+      >
+        <HelpCircle class="w-4 h-4" />
+        <span>How to Use</span>
+      </button>
+      <button 
+        onclick={() => handleDialog('report-bug')}
+        class="sidebar-footer-link"
+        title="Report a Bug"
+      >
+        <Bug class="w-4 h-4" />
+        <span>Report Bug</span>
+      </button>
+      <button 
+        onclick={() => handleDialog('feature-request')}
+        class="sidebar-footer-link"
+        title="Feature Request"
+      >
+        <Lightbulb class="w-4 h-4" />
+        <span>Feature Request</span>
+      </button>
+      <button 
+        onclick={() => handleDialog('about')}
+        class="sidebar-footer-link"
+        title="About"
+      >
+        <Info class="w-4 h-4" />
+        <span>About</span>
+      </button>
     </div>
     
     <Separator class="my-2" />
     
     <button 
       onclick={toggleTheme}
-      class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium w-full
-             text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+      class="sidebar-nav-item w-full"
     >
       {#if isDark}
-        <Sun class="w-5 h-5 shrink-0" />
+        <Sun class="w-5 h-5" />
         <span>Light Mode</span>
       {:else}
-        <Moon class="w-5 h-5 shrink-0" />
+        <Moon class="w-5 h-5" />
         <span>Dark Mode</span>
       {/if}
     </button>
