@@ -15,12 +15,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## Status Summary
 
-| Phase              | Status         | %   |
-| ------------------ | -------------- | --- |
+| Phase              | Status         | %    |
+| ------------------ | -------------- | ---- |
 | Backend (Supabase) | ✅ Complete    | 100% |
 | Frontend (Svelte)  | ✅ Complete    | 100% |
-| PWA Features       | ✅ Complete    | 90% |
-| Deployment         | ❌ Not Started | 0%  |
+| PWA Features       | ✅ Complete    | 100% |
+| Deployment         | 🔄 Ready       | 80%  |
 
 ---
 
@@ -35,7 +35,6 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display        |
 | `components/alerts/RouteBadge.svelte`           | ✅     | TTC route badges with colors         |
 | `components/alerts/StatusBadge.svelte`          | ✅     | Alert status indicators              |
-| `components/alerts/TabNavigation.svelte`        | ✅     | All/My Alerts/Scheduled tabs         |
 | `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback |
 | `components/dialogs/CreateAccountDialog.svelte` | ✅     | Registration + recovery codes        |
 | `components/dialogs/AuthRequiredDialog.svelte`  | ✅     | Auth prompt for protected features   |
@@ -129,11 +128,23 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## Next Steps
 
-| Priority | Task                                           | Status |
-| -------- | ---------------------------------------------- | ------ |
-| 1        | Set WebAuthn env vars (see below)              | ⚠️     |
-| 2        | Deploy to Cloudflare Pages                     | ❌     |
-| 3        | Test full auth flow end-to-end                 | ❌     |
+| Priority | Task                              | Status |
+| -------- | --------------------------------- | ------ |
+| 1        | Set WebAuthn env vars (see below) | ⚠️     |
+| 2        | Deploy to Cloudflare Pages        | ⚠️     |
+| 3        | Test full auth flow end-to-end    | ❌     |
+
+### Cloudflare Pages Deployment
+
+1. Go to [Cloudflare Pages](https://dash.cloudflare.com/)
+2. Create new project → Connect to Git → Select `ttc-alerts-svelte`
+3. Configure build:
+   - **Build command**: `npm run build`
+   - **Build output directory**: `build`
+   - **Environment variables**:
+     - `VITE_SUPABASE_URL` = `https://wmchvmegxcpyfjcuzqzk.supabase.co`
+     - `VITE_SUPABASE_ANON_KEY` = (your anon key)
+4. Deploy!
 
 ### Environment Variables (Set in Supabase Dashboard)
 
@@ -163,6 +174,13 @@ For local development, use `localhost` and `http://localhost:5173`.
 ---
 
 ## Changelog
+
+### Dec 4, 2025 - Cloudflare Pages Ready
+
+- Configured @sveltejs/adapter-static for Cloudflare Pages
+- Added +layout.ts with SPA mode (prerender: true, ssr: false)
+- Build outputs to `build/` directory
+- Removed TabNavigation component (redundant tabs)
 
 ### Dec 4, 2025 - Real Data & PWA Complete
 
