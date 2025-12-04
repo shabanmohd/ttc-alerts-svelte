@@ -523,11 +523,11 @@ self.addEventListener("fetch", (event) => {
 
 ### 2.1 TTC Stops Data
 
-- [ ] Download TTC GTFS data from Toronto Open Data
-- [ ] Extract and transform `stops.txt` to JSON format
-- [ ] Create `src/lib/data/ttc-stops.json` (~3MB compressed)
-- [ ] Define `TTCStop` TypeScript interface
-- [ ] Include: stop_id, stop_name, lat, lon, routes[], stop_type
+- [x] Download TTC GTFS data from Toronto Open Data ✅
+- [x] Extract and transform `stops.txt` to JSON format ✅
+- [x] Create `static/data/ttc-stops.json` (1.1MB, 9,346 stops) ✅
+- [x] Define `TTCStop` TypeScript interface ✅
+- [x] Include: stop_id, stop_name, lat, lon, routes[], stop_type ✅
 
 **Data Structure:**
 
@@ -549,15 +549,15 @@ export interface TTCStop {
 
 ### 2.2 IndexedDB Layer with Dexie.js
 
-- [ ] Install `dexie` package
-- [ ] Create `src/lib/data/stops-db.ts`
-- [ ] Define Dexie database schema with stops table
-- [ ] Add compound index on `name` for search
-- [ ] Create `initStopsDB()` function to populate from JSON
-- [ ] Add database version tracking in localStorage
-- [ ] Create `searchStops(query)` function with fuzzy matching
-- [ ] Create `getStopById(id)` function
-- [ ] Test with 11,000 stops
+- [x] Install `dexie` package ✅
+- [x] Create `src/lib/data/stops-db.ts` ✅
+- [x] Define Dexie database schema with stops table ✅
+- [x] Add compound index on `name` for search ✅
+- [x] Create `initStopsDB()` function to populate from JSON ✅
+- [x] Add database version tracking in localStorage ✅
+- [x] Create `searchStops(query)` function with fuzzy matching ✅
+- [x] Create `getStopById(id)` function ✅
+- [x] Test with 9,346 stops ✅
 
 **Implementation:**
 
@@ -623,15 +623,16 @@ export async function getStopById(id: string): Promise<TTCStop | undefined> {
 
 ### 2.3 Stop Search Component
 
-- [ ] Create `src/lib/components/stops/StopSearch.svelte`
-- [ ] Add debounced input (300ms delay)
-- [ ] Show autocomplete dropdown with matching stops
-- [ ] Display stop name + routes served as badges
-- [ ] Handle keyboard navigation (up/down/enter)
-- [ ] Emit `select` event with chosen stop
-- [ ] Add loading state during IndexedDB init
-- [ ] Add "No results" empty state
-- [ ] Add ARIA attributes for accessibility
+- [x] Create `src/lib/components/stops/StopSearch.svelte` ✅
+- [x] Add debounced input (200ms delay) ✅
+- [x] Show autocomplete dropdown with matching stops ✅
+- [x] Display stop name + routes served as badges ✅
+- [x] Handle keyboard navigation (up/down/enter/escape) ✅
+- [x] Emit `select` event with chosen stop ✅
+- [x] Add loading state during IndexedDB init ✅
+- [x] Add "No results" empty state ✅
+- [x] Add ARIA attributes for accessibility ✅
+- [x] Add "Find Nearby" button with geolocation ✅
 
 **Component Design:**
 

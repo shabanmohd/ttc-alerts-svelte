@@ -94,11 +94,32 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Static (`static/`)
 
-| File            | Status | Purpose                  |
-| --------------- | ------ | ------------------------ |
-| `manifest.json` | ✅     | PWA manifest             |
-| `sw.js`         | ✅     | Service worker           |
-| `icons/*`       | ✅     | All PWA icons (72-512px) |
+| File                  | Status | Purpose                                 |
+| --------------------- | ------ | --------------------------------------- |
+| `manifest.json`       | ✅     | PWA manifest                            |
+| `sw.js`               | ✅     | Service worker                          |
+| `icons/*`             | ✅     | All PWA icons (72-512px)                |
+| `data/ttc-stops.json` | ✅     | TTC stops database (9,346 stops, 1.1MB) |
+
+### Data (`src/lib/data/`)
+
+| File          | Status | Purpose                                       |
+| ------------- | ------ | --------------------------------------------- |
+| `stops-db.ts` | ✅     | IndexedDB layer with Dexie.js for stop search |
+
+### Stops Components (`src/lib/components/stops/`)
+
+| File                | Status | Purpose                                     |
+| ------------------- | ------ | ------------------------------------------- |
+| `StopSearch.svelte` | ✅     | Stop search with autocomplete & geolocation |
+| `index.ts`          | ✅     | Component exports                           |
+
+### Accessibility Stores (`src/lib/stores/`)
+
+| File               | Status | Purpose                                       |
+| ------------------ | ------ | --------------------------------------------- |
+| `visibility.ts`    | ✅     | Track document visibility for polling control |
+| `accessibility.ts` | ✅     | Text scaling and reduce motion settings       |
 
 ### Configuration (`src/`)
 

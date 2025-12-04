@@ -35,6 +35,8 @@
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.86.0",
+		"csv-parse": "^6.1.0",
+		"dexie": "^4.2.1",
 		"lucide-svelte": "^0.555.0"
 	}
 }

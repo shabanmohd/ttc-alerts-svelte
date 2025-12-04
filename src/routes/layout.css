@@ -191,7 +191,9 @@ html.reduce-motion *::after {
     @apply bg-background text-foreground;
     font-family: "Lexend", system-ui, -apple-system, sans-serif;
     font-weight: 400; /* Regular for body text - optimal readability */
-    font-size: calc(0.9375rem * var(--text-scale)); /* 15px base with accessibility scaling */
+    font-size: calc(
+      0.9375rem * var(--text-scale)
+    ); /* 15px base with accessibility scaling */
     line-height: 1.6;
     letter-spacing: -0.01em; /* Lexend reads better slightly tighter */
     -webkit-font-smoothing: antialiased;

@@ -9,6 +9,8 @@
   import { HowToUseDialog, SignInDialog, AuthRequiredDialog, CreateAccountDialog } from '$lib/components/dialogs';
   import { isAuthenticated, userName, signOut } from '$lib/stores/auth';
   import { accessibility, type TextScale } from '$lib/stores/accessibility';
+  import { StopSearch } from '$lib/components/stops';
+  import type { TTCStop } from '$lib/data/stops-db';
   import { 
     routes as userRoutes, 
     modes as userModes, 
@@ -28,6 +30,18 @@
   let selectedAlertTypes = $state<Set<string>>(new Set());
   let routeSearch = $state('');
   let openAccordion = $state<string>('step-1');
+  
+  // Stop search state
+  let selectedStop = $state<TTCStop | null>(null);
+  
+  function handleStopSelect(stop: TTCStop) {
+    selectedStop = stop;
+    // Add all routes from this stop to selected routes
+    stop.routes.forEach(route => {
+      selectedRoutes = new Set([...selectedRoutes, route]);
+    });
+    toast.success(`Added ${stop.routes.length} routes from ${stop.name}`);
+  }
   
   // Schedule state
   interface Schedule {
@@ -391,6 +405,38 @@
           </Accordion.Content>
         </Accordion.Item>
       </Accordion.Root>
+    </div>
+    
+    <!-- Stop Finder (Beta Feature) -->
+    <div class="card relative overflow-hidden">
+      <div class="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-semibold px-2 py-0.5 rounded-bl">
+        Beta
+      </div>
+      <div class="px-4 sm:px-6 py-4">
+        <div class="flex items-center gap-2 sm:gap-3 mb-4">
+          <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-lg">
+            🚏
+          </div>
+          <div>
+            <div class="font-semibold text-sm sm:text-base">Stop Finder</div>
+            <div class="text-xs text-muted-foreground">Search 9,000+ TTC stops</div>
+          </div>
+        </div>
+        <StopSearch 
+          onSelect={handleStopSelect}
+          placeholder="Search stops (e.g., 'Bloor Station')" 
+        />
+        {#if selectedStop}
+          <div class="mt-3 p-3 rounded-md bg-muted/50">
+            <p class="text-sm font-medium">{selectedStop.name}</p>
+            <div class="mt-2 flex flex-wrap gap-1">
+              {#each selectedStop.routes as route}
+                <RouteBadge {route} size="sm" />
+              {/each}
+            </div>
+          </div>
+        {/if}
+      </div>
     </div>
     
     <!-- Step 3: Schedule -->
