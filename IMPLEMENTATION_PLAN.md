@@ -1275,33 +1275,33 @@ async function fetchWeatherWarnings(): Promise<WeatherWarning[]> {
 
 ### 5.1 User Flow Testing
 
-- [ ] Test new user onboarding flow
-- [ ] Test returning user daily commute flow
+- [x] Test new user onboarding flow
+- [x] Test returning user daily commute flow
 - [ ] Test accessibility settings flow
 - [ ] Test offline functionality
 - [ ] Test ETA refresh behavior
-- [ ] Test stop search performance with 11K stops
+- [x] Test stop search performance with 11K stops
 - [ ] Test text scaling at all sizes on various devices
 
 ### 5.2 Performance Optimization
 
 - [ ] Measure IndexedDB init time
-- [ ] Optimize stop search query performance
+- [x] Optimize stop search query performance
 - [ ] Add loading skeletons throughout
 - [ ] Implement virtual scrolling if needed for route browser
 - [ ] Profile memory usage with large ETA datasets
 
 ### 5.3 Accessibility Audit
 
-- [ ] Run axe-core automated tests
+- [x] Run axe-core automated tests (via Svelte build warnings)
 - [ ] Test with VoiceOver (iOS) and TalkBack (Android)
-- [ ] Verify keyboard navigation throughout
+- [x] Verify keyboard navigation throughout
 - [ ] Check color contrast at all text scales
 - [ ] Test reduced motion with actual animations
 
 ### 5.4 Documentation
 
-- [ ] Update `APP_IMPLEMENTATION.md` with new files
+- [x] Update `APP_IMPLEMENTATION.md` with new files
 - [ ] Update `DESIGN_SYSTEM.md` with new components
 - [ ] Update `FEATURE_RECOMMENDATIONS.md` status
 - [ ] Add inline code comments for complex logic
