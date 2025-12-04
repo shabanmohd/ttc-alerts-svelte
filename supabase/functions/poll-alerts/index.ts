@@ -187,8 +187,8 @@ serve(async (req) => {
         const hasRouteOverlap = routes.some(r => threadRoutes.includes(r));
         
         if (hasRouteOverlap) {
-          const headerText = thread.header_text || '';
-          const similarity = jaccardSimilarity(text, headerText);
+          const threadTitle = thread.title || '';
+          const similarity = jaccardSimilarity(text, threadTitle);
           
           // High similarity (80%) for general matching
           if (similarity >= 0.8) {
@@ -219,7 +219,7 @@ serve(async (req) => {
 
         // Update thread
         const updates: any = {
-          header_text: text.split('\n')[0].substring(0, 200),
+          title: text.split('\n')[0].substring(0, 200),
           updated_at: new Date().toISOString()
         };
 
@@ -239,7 +239,7 @@ serve(async (req) => {
         const { data: newThread } = await supabase
           .from('incident_threads')
           .insert({
-            header_text: text.split('\n')[0].substring(0, 200),
+            title: text.split('\n')[0].substring(0, 200),
             categories: [category],
             affected_routes: routes,
             is_resolved: category === 'SERVICE_RESUMED'

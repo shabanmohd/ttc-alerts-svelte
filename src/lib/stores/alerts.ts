@@ -106,27 +106,26 @@ export async function fetchAlerts(): Promise<void> {
   error.set(null);
   
   try {
-    // Fetch active threads (not resolved, from last 24 hours)
-    const { data: threadsData, error: threadsError } = await supabase
-      .from('incident_threads')
-      .select('*')
-      .eq('is_resolved', false)
-      .gte('updated_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-      .order('updated_at', { ascending: false })
-      .limit(50);
-    
-    if (threadsError) throw threadsError;
-    
-    // Fetch latest alerts for those threads
+    // Fetch ALL alerts in 24-hour window for proper threading (not just is_latest)
     const { data: alertsData, error: alertsError } = await supabase
       .from('alert_cache')
       .select('*')
-      .eq('is_latest', true)
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(500);
     
     if (alertsError) throw alertsError;
+    
+    // Get unique thread IDs from alerts
+    const threadIds = [...new Set((alertsData || []).map(a => a.thread_id).filter(Boolean))];
+    
+    // Fetch all threads for those alerts (resolved or not)
+    const { data: threadsData, error: threadsError } = await supabase
+      .from('incident_threads')
+      .select('*')
+      .in('thread_id', threadIds);
+    
+    if (threadsError) throw threadsError;
     
     threads.set(threadsData || []);
     alerts.set(alertsData || []);
@@ -143,13 +142,13 @@ export async function fetchAlerts(): Promise<void> {
 // Background poll for updates (doesn't update UI immediately)
 export async function pollForUpdates(): Promise<void> {
   try {
+    // Fetch ALL alerts in 24-hour window for proper threading
     const { data: alertsData, error: alertsError } = await supabase
       .from('alert_cache')
       .select('*')
-      .eq('is_latest', true)
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(500);
     
     if (alertsError) throw alertsError;
     

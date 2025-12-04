@@ -77,14 +77,14 @@
 />
 
 <main class="content-area">
-  <!-- Filter Chips -->
-  <div class="mb-4">
-    <FilterChips />
-  </div>
-  
   <!-- Planned Maintenance Widget -->
   <div class="mb-4">
     <MaintenanceWidget items={$maintenanceItems} />
+  </div>
+  
+  <!-- Filter Chips -->
+  <div class="mb-4">
+    <FilterChips />
   </div>
   
   <!-- Alert Cards -->

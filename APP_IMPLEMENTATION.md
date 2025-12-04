@@ -74,20 +74,20 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                       |
 | `functions/auth-session/index.ts`       | ✅     | Validate existing session                               |
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                              |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch alerts from Bluesky API                           |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v5: fixed schema)            |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                             |
 
 ### Database (EXISTING in Supabase)
 
-| Table                  | Rows | Purpose                                     |
-| ---------------------- | ---- | ------------------------------------------- |
-| `alert_cache`          | 592  | Alerts from Bluesky (affected_routes JSONB) |
-| `incident_threads`     | 248K | Grouped alert threads                       |
-| `planned_maintenance`  | 9    | Scheduled maintenance                       |
-| `user_profiles`        | -    | User display_name, linked to auth.users     |
-| `webauthn_credentials` | -    | Public keys (credential_id as PK)           |
-| `recovery_codes`       | -    | Bcrypt-hashed one-time codes                |
-| `user_preferences`     | -    | Routes, modes, notification settings        |
+| Table                  | Rows | Purpose                                                  |
+| ---------------------- | ---- | -------------------------------------------------------- |
+| `alert_cache`          | 600+ | Alerts from Bluesky (header_text, categories, is_latest) |
+| `incident_threads`     | 255K | Grouped alert threads (title, is_resolved)               |
+| `planned_maintenance`  | 9    | Scheduled maintenance                                    |
+| `user_profiles`        | -    | User display_name, linked to auth.users                  |
+| `webauthn_credentials` | -    | Public keys (credential_id as PK)                        |
+| `recovery_codes`       | -    | Bcrypt-hashed one-time codes                             |
+| `user_preferences`     | -    | Routes, modes, notification settings                     |
 
 ### Static (`static/`)
 
@@ -338,8 +338,10 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ### Dec 4, 2025 - Edge Functions Deployed
 
-- Deployed 6 Edge Functions via MCP
-- auth-register, auth-challenge, auth-verify, auth-session, auth-recover, poll-alerts
+- Deployed 8 Edge Functions via MCP
+- auth-register, auth-challenge, auth-verify, auth-session, auth-recover, poll-alerts, scrape-maintenance
+- poll-alerts v5: Fixed schema mismatches (header_text→title, table names, JSONB fields)
+- Threading now works correctly for SERVICE_RESUMED alerts (25% similarity threshold)
 
 ### Dec 4, 2025 - Schema Adaptation
 

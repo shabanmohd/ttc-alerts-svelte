@@ -3,6 +3,7 @@
   import { Button } from '$lib/components/ui/button';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
   import { hasUpdates, updateCount, lastUpdated, applyPendingUpdates, fetchAlerts } from '$lib/stores/alerts';
+  import { onMount } from 'svelte';
   
   let { 
     isAuthenticated = false,
@@ -21,9 +22,18 @@
   let isDark = $state(false);
   let isRefreshing = $state(false);
   let mobileMenuOpen = $state(false);
+  let tick = $state(0); // Force re-render for relative time
   
   $effect(() => {
     isDark = document.documentElement.classList.contains('dark');
+  });
+  
+  // Update relative time every 30 seconds
+  onMount(() => {
+    const interval = setInterval(() => {
+      tick++;
+    }, 30000);
+    return () => clearInterval(interval);
   });
   
   function toggleTheme() {
@@ -46,7 +56,7 @@
     isRefreshing = false;
   }
   
-  function formatLastUpdated(date: Date | null): string {
+  function formatLastUpdated(date: Date | null, _tick: number): string {
     if (!date) return '';
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -74,7 +84,7 @@
       <!-- Last updated + Refresh (always visible) -->
       <div class="flex items-center gap-1 text-xs text-muted-foreground">
         {#if $lastUpdated}
-          <span id="last-updated">Updated {formatLastUpdated($lastUpdated)}</span>
+          <span id="last-updated">Updated {formatLastUpdated($lastUpdated, tick)}</span>
         {/if}
         <button 
           class="p-1.5 rounded-md hover:bg-accent transition-colors {$hasUpdates ? 'refresh-pulse' : ''}"
