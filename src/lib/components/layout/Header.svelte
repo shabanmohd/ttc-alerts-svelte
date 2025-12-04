@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { RefreshCw, Sun, Moon, User, Menu, HelpCircle, LogOut, ChevronDown, Settings, Wifi, WifiOff, Globe } from 'lucide-svelte';
+  import { RefreshCw, Sun, Moon, User, Menu, HelpCircle, LogOut, ChevronDown, Settings, Wifi, WifiOff } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
   import { lastUpdated, refreshAlerts, isConnected } from '$lib/stores/alerts';
@@ -127,46 +127,30 @@
       </button>
 
       <!-- Language toggle (hidden on mobile) -->
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild let:builder>
+      <div class="hidden sm:flex items-center gap-1 border border-border rounded-md p-0.5">
+        {#each getSupportedLocales() as lang}
           <button
-            use:builder.action
-            {...builder}
-            class="hidden sm:flex p-2 rounded-md hover:bg-accent transition-colors items-center gap-1"
-            title="Change language"
-            aria-label="Change language"
+            onclick={() => setLocale(lang.code)}
+            class="px-2 py-1 text-xs font-medium rounded transition-colors {$locale === lang.code ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}"
+            aria-label="Switch to {lang.name}"
+            aria-pressed={$locale === lang.code}
           >
-            <Globe class="w-5 h-5" aria-hidden="true" />
-            <span class="text-xs uppercase font-medium">{$locale?.slice(0, 2) || 'EN'}</span>
+            {lang.code.toUpperCase()}
           </button>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content align="end" class="w-36">
-          {#each getSupportedLocales() as lang}
-            <DropdownMenu.Item 
-              onclick={() => setLocale(lang.code)}
-              class={$locale === lang.code ? 'bg-accent' : ''}
-            >
-              {lang.name}
-            </DropdownMenu.Item>
-          {/each}
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+        {/each}
+      </div>
       
       <!-- Sign In / User Menu (hidden on mobile) -->
       {#if isAuthenticated}
         <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild let:builder>
-            <button 
-              use:builder.action
-              {...builder}
-              class="hidden sm:inline-flex items-center gap-2 h-9 px-3 py-2 rounded-md hover:bg-accent transition-colors"
-            >
-              <div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
-                <span class="text-xs font-semibold text-primary-foreground">{getUserInitial(username)}</span>
-              </div>
-              <span class="text-sm font-medium max-w-[100px] truncate">{username}</span>
-              <ChevronDown class="w-4 h-4" aria-hidden="true" />
-            </button>
+          <DropdownMenu.Trigger
+            class="hidden sm:inline-flex items-center gap-2 h-9 px-3 py-2 rounded-md hover:bg-accent transition-colors"
+          >
+            <div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
+              <span class="text-xs font-semibold text-primary-foreground">{getUserInitial(username)}</span>
+            </div>
+            <span class="text-sm font-medium max-w-[100px] truncate">{username}</span>
+            <ChevronDown class="w-4 h-4" aria-hidden="true" />
           </DropdownMenu.Trigger>
           <DropdownMenu.Content align="end" class="w-48">
             <div class="px-3 py-2 border-b border-border">
