@@ -22,6 +22,10 @@
   let isRefreshing = $state(false);
   let mobileMenuOpen = $state(false);
   
+  // Derived classes to avoid quoted attribute warning
+  const refreshButtonClass = $derived($hasUpdates ? 'refresh-pulse text-primary' : '');
+  const refreshIconClass = $derived(`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`);
+  
   $effect(() => {
     isDark = document.documentElement.classList.contains('dark');
   });
@@ -85,10 +89,10 @@
         variant="ghost"
         size="icon"
         onclick={handleRefresh}
-        class="{$hasUpdates ? 'refresh-pulse text-primary' : ''}"
+        class={refreshButtonClass}
         disabled={isRefreshing}
       >
-        <RefreshCw class="h-5 w-5 {isRefreshing ? 'animate-spin' : ''}" />
+        <RefreshCw class={refreshIconClass} />
         {#if $hasUpdates && $updateCount > 0}
           <span class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
             {$updateCount}
