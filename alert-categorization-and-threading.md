@@ -561,46 +561,52 @@ Bluesky API → poll-alerts Edge Function → Supabase PostgreSQL
 
 ### Supabase Free Tier Limits
 
-| Resource | Limit | Period |
-|----------|-------|--------|
-| **Egress (Data Transfer)** | 5 GB | Monthly |
-| **Database Size** | 500 MB | Total |
+| Resource                      | Limit   | Period  |
+| ----------------------------- | ------- | ------- |
+| **Egress (Data Transfer)**    | 5 GB    | Monthly |
+| **Database Size**             | 500 MB  | Total   |
 | **Edge Function Invocations** | 500,000 | Monthly |
 
 ### Data Transfer Per User Session
 
 **Initial Page Load:**
+
 ```typescript
 // 100 alerts with selected columns (no raw_data JSONB)
 .select('alert_id, text, category, affected_routes, thread_id, is_latest, created_at, indexed_at')
 .limit(100)
 ```
+
 - ~500 bytes per alert × 100 = **~50 KB**
 
 **Polling (every 30 seconds):**
+
 ```typescript
 // Lightweight - only IDs
 .select('alert_id, created_at').limit(50)
 ```
+
 - ~50 bytes per alert × 50 = **~2.5 KB per poll**
 
 **Average 10-minute session:** ~115 KB total
 
 ### Monthly User Capacity
 
-| User Type | Sessions/Month | Max Users |
-|-----------|----------------|-----------|
-| Casual (2x/week) | 8 | ~5,500 |
-| Regular (daily) | 30 | ~1,480 |
-| Power (3x/day) | 90 | ~495 |
-| **Mixed (realistic)** | ~23 avg | **~1,950** |
+| User Type             | Sessions/Month | Max Users  |
+| --------------------- | -------------- | ---------- |
+| Casual (2x/week)      | 8              | ~5,500     |
+| Regular (daily)       | 30             | ~1,480     |
+| Power (3x/day)        | 90             | ~495       |
+| **Mixed (realistic)** | ~23 avg        | **~1,950** |
 
 ### Edge Function Usage
 
 `poll-alerts` runs every 2 minutes:
+
 ```
 30 days × 24 hours × 30/hour = 21,600 invocations/month
 ```
+
 ✅ Well under 500,000 limit
 
 ### Scaling Options

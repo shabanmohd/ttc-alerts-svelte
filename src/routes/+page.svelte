@@ -12,10 +12,11 @@
     isLoading, 
     error, 
     fetchAlerts, 
-    pollForUpdates,
+    subscribeToAlerts,
     fetchMaintenance,
     maintenanceItems,
-    activeFilters
+    activeFilters,
+    isConnected
   } from '$lib/stores/alerts';
   import { isAuthenticated, userName, signOut } from '$lib/stores/auth';
   
@@ -23,27 +24,29 @@
   import { HowToUseDialog, SignInDialog, InstallPWADialog } from '$lib/components/dialogs';
   
   let activeDialog = $state<string | null>(null);
-  let alertsPollingInterval: ReturnType<typeof setInterval> | null = null;
+  let unsubscribeRealtime: (() => void) | null = null;
   let maintenancePollingInterval: ReturnType<typeof setInterval> | null = null;
   
   onMount(async () => {
+    // Initial data fetch
+    await fetchAlerts();
+    
+    // Subscribe to Realtime updates (push-based, no polling!)
+    unsubscribeRealtime = subscribeToAlerts();
+    
     // Fetch maintenance items
     await fetchMaintenance();
     
-    // Set up alerts polling (every 30s)
-    alertsPollingInterval = setInterval(() => {
-      pollForUpdates();
-    }, 30000);
-    
-    // Set up maintenance polling (every 5 minutes) - fetches in background
+    // Maintenance still uses polling (every 5 minutes) since it's not real-time critical
     maintenancePollingInterval = setInterval(() => {
       fetchMaintenance();
     }, 300000);
   });
   
   onDestroy(() => {
-    if (alertsPollingInterval) {
-      clearInterval(alertsPollingInterval);
+    // Clean up Realtime subscription
+    if (unsubscribeRealtime) {
+      unsubscribeRealtime();
     }
     if (maintenancePollingInterval) {
       clearInterval(maintenancePollingInterval);

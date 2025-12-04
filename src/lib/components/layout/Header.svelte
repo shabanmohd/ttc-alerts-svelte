@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { RefreshCw, Sun, Moon, User, Menu, HelpCircle, LogOut, ChevronDown, Settings } from 'lucide-svelte';
+  import { RefreshCw, Sun, Moon, User, Menu, HelpCircle, LogOut, ChevronDown, Settings, Wifi, WifiOff } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-  import { hasUpdates, updateCount, lastUpdated, applyPendingUpdates, fetchAlerts } from '$lib/stores/alerts';
+  import { lastUpdated, refreshAlerts, isConnected } from '$lib/stores/alerts';
   import { onMount } from 'svelte';
   
   let { 
@@ -46,13 +46,7 @@
     if (isRefreshing) return;
     
     isRefreshing = true;
-    
-    if ($hasUpdates) {
-      applyPendingUpdates();
-    } else {
-      await fetchAlerts();
-    }
-    
+    await refreshAlerts();
     isRefreshing = false;
   }
   
@@ -86,8 +80,18 @@
         {#if $lastUpdated}
           <span id="last-updated">Updated {formatLastUpdated($lastUpdated, tick)}</span>
         {/if}
+        <!-- Connection status indicator -->
+        {#if $isConnected}
+          <span class="text-green-500" title="Live updates active">
+            <Wifi class="w-3 h-3" aria-hidden="true" />
+          </span>
+        {:else}
+          <span class="text-muted-foreground" title="Connecting...">
+            <WifiOff class="w-3 h-3" aria-hidden="true" />
+          </span>
+        {/if}
         <button 
-          class="p-1.5 rounded-md hover:bg-accent transition-colors {$hasUpdates ? 'refresh-pulse' : ''}"
+          class="p-1.5 rounded-md hover:bg-accent transition-colors"
           onclick={handleRefresh}
           title="Refresh"
           aria-label="Refresh alerts"

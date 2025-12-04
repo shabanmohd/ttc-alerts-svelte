@@ -1,6 +1,7 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import type { Alert, Thread, ThreadWithAlerts, Maintenance, PlannedMaintenance } from '$lib/types/database';
 import { supabase } from '$lib/supabase';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 // Core alert state
 export const alerts = writable<Alert[]>([]);
@@ -13,13 +14,15 @@ export const lastUpdated = writable<Date | null>(null);
 export const activeFilters = writable<Set<string>>(new Set(['ALL']));
 export const currentTab = writable<'all' | 'my'>('all');
 
-// Pending updates (background polling pattern)
-export const pendingAlerts = writable<Alert[] | null>(null);
-export const hasUpdates = writable(false);
-export const updateCount = writable(0);
+// Realtime connection state
+export const isConnected = writable(false);
+export const connectionError = writable<string | null>(null);
 
 // Maintenance state
 export const maintenanceItems = writable<PlannedMaintenance[]>([]);
+
+// Track active Realtime channel
+let realtimeChannel: RealtimeChannel | null = null;
 
 // Helper to extract categories from JSONB or array
 function extractCategories(data: unknown): string[] {
@@ -100,7 +103,7 @@ export const filteredThreads = derived(
   }
 );
 
-// Fetch alerts from Supabase
+// Fetch alerts from Supabase (initial load only)
 export async function fetchAlerts(): Promise<void> {
   isLoading.set(true);
   error.set(null);
@@ -120,14 +123,18 @@ export async function fetchAlerts(): Promise<void> {
     const threadIds = [...new Set((alertsData || []).map(a => a.thread_id).filter(Boolean))];
     
     // Fetch threads - select only needed columns to reduce egress
-    const { data: threadsData, error: threadsError } = await supabase
-      .from('incident_threads')
-      .select('thread_id, title, categories, affected_routes, is_resolved, created_at, updated_at')
-      .in('thread_id', threadIds);
+    let threadsData: Thread[] = [];
+    if (threadIds.length > 0) {
+      const { data, error: threadsError } = await supabase
+        .from('incident_threads')
+        .select('thread_id, title, categories, affected_routes, is_resolved, created_at, updated_at')
+        .in('thread_id', threadIds);
+      
+      if (threadsError) throw threadsError;
+      threadsData = data || [];
+    }
     
-    if (threadsError) throw threadsError;
-    
-    threads.set(threadsData || []);
+    threads.set(threadsData);
     alerts.set(alertsData || []);
     lastUpdated.set(new Date());
     
@@ -139,82 +146,159 @@ export async function fetchAlerts(): Promise<void> {
   }
 }
 
-// Background poll for updates (doesn't update UI immediately)
-export async function pollForUpdates(): Promise<void> {
-  try {
-    // Lightweight poll - only fetch alert IDs to check for new alerts
-    const { data: alertsData, error: alertsError } = await supabase
-      .from('alert_cache')
-      .select('alert_id, created_at')
-      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-      .order('created_at', { ascending: false })
-      .limit(50);
-    
-    if (alertsError) throw alertsError;
-    
-    // Compare with current alerts using get() pattern
-    let currentAlerts: Alert[] = [];
-    const unsubscribe = alerts.subscribe(value => { currentAlerts = value; });
-    unsubscribe();
-    
-    const newAlertIds = new Set((alertsData || []).map(a => a.alert_id));
-    const currentAlertIds = new Set(currentAlerts.map(a => a.alert_id));
-    
-    // Count truly new alerts (not just removed ones)
-    let newCount = 0;
-    for (const id of newAlertIds) {
-      if (!currentAlertIds.has(id)) {
-        newCount++;
-      }
-    }
-    
-    if (newCount > 0) {
-      // Just mark that updates are available - don't fetch full data
-      hasUpdates.set(true);
-      updateCount.set(newCount);
-    }
-    
-  } catch (e) {
-    console.error('Error polling for updates:', e);
-  }
+// Handle incoming alert from Realtime (minimal data transfer - only the changed row)
+function handleAlertInsert(newAlert: Alert): void {
+  alerts.update(current => {
+    // Add new alert at the beginning (most recent first)
+    const updated = [newAlert, ...current];
+    // Keep only last 100 alerts in memory
+    return updated.slice(0, 100);
+  });
+  lastUpdated.set(new Date());
 }
 
-// Apply pending updates to UI - fetches fresh data
-export async function applyPendingUpdates(): Promise<void> {
-  // Fetch fresh data when user clicks refresh
-  await fetchAlerts();
-  
-  hasUpdates.set(false);
-  updateCount.set(0);
+function handleAlertUpdate(updatedAlert: Alert): void {
+  alerts.update(current => 
+    current.map(a => a.alert_id === updatedAlert.alert_id ? updatedAlert : a)
+  );
+  lastUpdated.set(new Date());
 }
 
-// Set up Supabase Realtime subscription
+function handleAlertDelete(deletedAlert: { alert_id: string }): void {
+  alerts.update(current => 
+    current.filter(a => a.alert_id !== deletedAlert.alert_id)
+  );
+}
+
+// Handle incoming thread from Realtime
+function handleThreadInsert(newThread: Thread): void {
+  threads.update(current => [newThread, ...current]);
+}
+
+function handleThreadUpdate(updatedThread: Thread): void {
+  threads.update(current => 
+    current.map(t => t.thread_id === updatedThread.thread_id ? updatedThread : t)
+  );
+}
+
+function handleThreadDelete(deletedThread: { thread_id: string }): void {
+  threads.update(current => 
+    current.filter(t => t.thread_id !== deletedThread.thread_id)
+  );
+}
+
+// Set up Supabase Realtime subscription (push-based updates - no polling!)
 export function subscribeToAlerts(): () => void {
-  const channel = supabase
-    .channel('alerts-changes')
+  // Clean up existing channel if any
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel);
+  }
+  
+  realtimeChannel = supabase
+    .channel('alerts-realtime')
+    // Subscribe to alert_cache changes
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'alert_cache' },
+      { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'alert_cache' 
+      },
       (payload) => {
-        console.log('Realtime update:', payload);
-        // Mark that updates are available
-        hasUpdates.set(true);
-        updateCount.update(n => n + 1);
+        console.log('🔔 New alert:', payload.new);
+        handleAlertInsert(payload.new as Alert);
       }
     )
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'incident_threads' },
-      () => {
-        hasUpdates.set(true);
+      { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'alert_cache' 
+      },
+      (payload) => {
+        console.log('📝 Alert updated:', payload.new);
+        handleAlertUpdate(payload.new as Alert);
       }
     )
-    .subscribe();
+    .on(
+      'postgres_changes',
+      { 
+        event: 'DELETE', 
+        schema: 'public', 
+        table: 'alert_cache' 
+      },
+      (payload) => {
+        console.log('🗑️ Alert deleted:', payload.old);
+        handleAlertDelete(payload.old as { alert_id: string });
+      }
+    )
+    // Subscribe to incident_threads changes
+    .on(
+      'postgres_changes',
+      { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'incident_threads' 
+      },
+      (payload) => {
+        console.log('🧵 New thread:', payload.new);
+        handleThreadInsert(payload.new as Thread);
+      }
+    )
+    .on(
+      'postgres_changes',
+      { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'incident_threads' 
+      },
+      (payload) => {
+        console.log('📝 Thread updated:', payload.new);
+        handleThreadUpdate(payload.new as Thread);
+      }
+    )
+    .on(
+      'postgres_changes',
+      { 
+        event: 'DELETE', 
+        schema: 'public', 
+        table: 'incident_threads' 
+      },
+      (payload) => {
+        console.log('🗑️ Thread deleted:', payload.old);
+        handleThreadDelete(payload.old as { thread_id: string });
+      }
+    )
+    .subscribe((status) => {
+      console.log('Realtime subscription status:', status);
+      if (status === 'SUBSCRIBED') {
+        isConnected.set(true);
+        connectionError.set(null);
+      } else if (status === 'CHANNEL_ERROR') {
+        isConnected.set(false);
+        connectionError.set('Failed to connect to realtime updates');
+      } else if (status === 'TIMED_OUT') {
+        isConnected.set(false);
+        connectionError.set('Connection timed out');
+      } else if (status === 'CLOSED') {
+        isConnected.set(false);
+      }
+    });
   
   // Return cleanup function
   return () => {
-    supabase.removeChannel(channel);
+    if (realtimeChannel) {
+      supabase.removeChannel(realtimeChannel);
+      realtimeChannel = null;
+    }
+    isConnected.set(false);
   };
+}
+
+// Manual refresh (for pull-to-refresh or refresh button)
+export async function refreshAlerts(): Promise<void> {
+  await fetchAlerts();
 }
 
 // Fetch planned maintenance from Supabase
