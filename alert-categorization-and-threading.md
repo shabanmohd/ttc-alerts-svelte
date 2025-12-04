@@ -566,57 +566,69 @@ Bluesky API → poll-alerts Edge Function → Supabase PostgreSQL
 | **Egress (Data Transfer)**    | 5 GB    | Monthly |
 | **Database Size**             | 500 MB  | Total   |
 | **Edge Function Invocations** | 500,000 | Monthly |
+| **Realtime Connections**      | 200     | Concurrent |
+| **Realtime Messages**         | 2M      | Monthly |
 
-### Data Transfer Per User Session
+### Realtime-First Architecture (Current)
 
-**Initial Page Load:**
+**How it works:**
+- Initial page load fetches alerts once (~50 KB)
+- Supabase Realtime pushes only new/changed alerts (~500 bytes each)
+- No polling - updates arrive instantly
+- Manual refresh button available if needed
 
-```typescript
-// 100 alerts with selected columns (no raw_data JSONB)
-.select('alert_id, text, category, affected_routes, thread_id, is_latest, created_at, indexed_at')
-.limit(100)
-```
+**Data Transfer Per User Session:**
 
-- ~500 bytes per alert × 100 = **~50 KB**
+| Activity | Data Transfer |
+|----------|---------------|
+| Initial page load | ~50 KB |
+| Per new alert (pushed) | ~500 bytes |
+| 10-min session (2 alerts) | ~51 KB |
+| 1-hour session (5 alerts) | ~52.5 KB |
 
-**Polling (every 30 seconds):**
+**Comparison with Polling (old approach):**
 
-```typescript
-// Lightweight - only IDs
-.select('alert_id, created_at').limit(50)
-```
-
-- ~50 bytes per alert × 50 = **~2.5 KB per poll**
-
-**Average 10-minute session:** ~115 KB total
+| Metric | Polling (old) | Realtime (current) | Savings |
+|--------|---------------|-------------------|---------|
+| 10-min session | ~115 KB | ~51 KB | **56%** |
+| 1-hour session | ~350 KB | ~52.5 KB | **85%** |
+| Data per new alert | 2.5 KB poll | 0.5 KB push | **80%** |
 
 ### Monthly User Capacity
 
-| User Type             | Sessions/Month | Max Users  |
-| --------------------- | -------------- | ---------- |
-| Casual (2x/week)      | 8              | ~5,500     |
-| Regular (daily)       | 30             | ~1,480     |
-| Power (3x/day)        | 90             | ~495       |
-| **Mixed (realistic)** | ~23 avg        | **~1,950** |
+| User Type             | Sessions/Month | Max Users (Realtime) |
+| --------------------- | -------------- | -------------------- |
+| Casual (2x/week)      | 8              | **~12,500** |
+| Regular (daily)       | 30             | **~3,300** |
+| Power (3x/day)        | 90             | **~1,100** |
+| **Mixed (realistic)** | ~23 avg        | **~4,400** |
+
+### Realtime Message Usage
+
+With ~50 alerts/day and estimated concurrent users:
+```
+50 alerts × 100 concurrent users = 5,000 messages/day
+Monthly: 150,000 messages ✅ (well under 2M limit)
+```
 
 ### Edge Function Usage
 
 `poll-alerts` runs every 2 minutes:
-
 ```
 30 days × 24 hours × 30/hour = 21,600 invocations/month
 ```
-
 ✅ Well under 500,000 limit
 
-### Scaling Options
+### Current Capacity Summary
 
-1. **Service Worker caching** - Reduce refetches
-2. **Reduce polling** - 60s instead of 30s (halves egress)
-3. **Realtime-only** - Push instead of poll (90% less egress)
-4. **Upgrade** - Pro plan ($25/mo) = 250 GB egress
+| Resource | Usage | Limit | Status |
+|----------|-------|-------|--------|
+| Egress | ~1-2 GB | 5 GB | ✅ Safe |
+| Realtime Messages | ~150K | 2M | ✅ Safe |
+| Edge Invocations | ~22K | 500K | ✅ Safe |
+| Concurrent Connections | ~100 | 200 | ✅ Safe |
 
-**Current safe capacity:** ~2,000 monthly active users on free tier
+**Current safe capacity:** ~4,000 monthly active users on free tier
 
 ---
 
