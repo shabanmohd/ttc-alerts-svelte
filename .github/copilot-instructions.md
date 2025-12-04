@@ -53,12 +53,12 @@ Round to nearest 5%. Update the "Implementation Status Summary" table.
 
 ### Status Indicators
 
-| Symbol | Meaning                   | When to Use                           |
-| ------ | ------------------------- | ------------------------------------- |
-| ✅     | Complete                  | Task fully implemented and tested     |
-| ⚠️     | Needs attention/update    | Partial implementation or has issues  |
-| ❌     | Not started               | No work done yet                      |
-| 🔄     | In progress               | Currently being worked on             |
+| Symbol | Meaning                | When to Use                          |
+| ------ | ---------------------- | ------------------------------------ |
+| ✅     | Complete               | Task fully implemented and tested    |
+| ⚠️     | Needs attention/update | Partial implementation or has issues |
+| ❌     | Not started            | No work done yet                     |
+| 🔄     | In progress            | Currently being worked on            |
 
 ### Example Update Entry
 
@@ -66,6 +66,7 @@ Round to nearest 5%. Update the "Implementation Status Summary" table.
 ### 2.8 Auth Flow ⚠️ → ✅ COMPLETE
 
 - [x] **WebAuthn service created** ✅
+
   - **What**: Implemented `src/lib/services/webauthn.ts` with registration and authentication functions
   - **Why**: Needed browser-side WebAuthn API abstraction for passkey support
   - **Files**: `src/lib/services/webauthn.ts`
@@ -79,6 +80,7 @@ Round to nearest 5%. Update the "Implementation Status Summary" table.
 ### When to Skip Updates
 
 Only skip updating `MIGRATION_PLAN.md` if:
+
 - Making trivial fixes (typos, formatting)
 - Answering questions without code changes
 - The change is completely outside the project scope

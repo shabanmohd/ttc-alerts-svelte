@@ -4,7 +4,7 @@
   import { Toaster } from '$lib/components/ui/sonner';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
   import MobileBottomNav from '$lib/components/layout/MobileBottomNav.svelte';
-  import { SignInDialog, HowToUseDialog } from '$lib/components/dialogs';
+  import { SignInDialog, HowToUseDialog, CreateAccountDialog } from '$lib/components/dialogs';
   import { onMount, onDestroy } from 'svelte';
   import { initAuth, subscribeToAuth, isAuthenticated, userName } from '$lib/stores/auth';
   import { subscribeToAlerts, fetchAlerts } from '$lib/stores/alerts';
@@ -22,6 +22,14 @@
   
   function handleCloseDialog() {
     activeDialog = null;
+  }
+  
+  function switchToCreateAccount() {
+    activeDialog = 'create-account';
+  }
+  
+  function switchToSignIn() {
+    activeDialog = 'sign-in';
   }
   
   // Initialize app on mount
@@ -78,6 +86,13 @@
 <SignInDialog 
   open={activeDialog === 'sign-in'} 
   onOpenChange={(open) => { if (!open) activeDialog = null; }}
+  onCreateAccount={switchToCreateAccount}
+/>
+
+<CreateAccountDialog 
+  open={activeDialog === 'create-account'} 
+  onOpenChange={(open) => { if (!open) activeDialog = null; }}
+  onSignIn={switchToSignIn}
 />
 
 <HowToUseDialog 

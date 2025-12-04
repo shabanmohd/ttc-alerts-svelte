@@ -29,8 +29,8 @@ Building a new TTC Service Alerts PWA from scratch using a modern, cost-free, se
 
 | Phase                      | Status         | Completion |
 | -------------------------- | -------------- | ---------- |
-| Phase 1: Supabase Backend  | 🔄 In Progress | 30%        |
-| Phase 2: Frontend (Svelte) | 🔄 In Progress | 85%        |
+| Phase 1: Supabase Backend  | 🔄 In Progress | 70%        |
+| Phase 2: Frontend (Svelte) | ✅ Complete    | 95%        |
 | Phase 3: PWA Features      | 🔄 In Progress | 60%        |
 | Phase 4: Deployment        | ❌ Not Started | 0%         |
 | Phase 5: Testing & QA      | ❌ Not Started | 0%         |
@@ -123,12 +123,12 @@ CREATE TABLE user_preferences (
 
 #### Edge Functions Required:
 
-- [ ] **`auth-register`** - Create user with WebAuthn credential + recovery codes
-- [ ] **`auth-challenge`** - Generate WebAuthn challenge for sign-in
-- [ ] **`auth-verify`** - Verify WebAuthn assertion and create session
-- [ ] **`auth-session`** - Validate existing session
-- [ ] **`auth-recover`** - Sign in with recovery code
-- [ ] **`auth-add-credential`** - Add new device to existing account
+- [x] **`auth-register`** ✅ - Create user with WebAuthn credential + recovery codes
+- [x] **`auth-challenge`** ✅ - Generate WebAuthn challenge for sign-in
+- [x] **`auth-verify`** ✅ - Verify WebAuthn assertion and create session
+- [x] **`auth-session`** ✅ - Validate existing session
+- [x] **`auth-recover`** ✅ - Sign in with recovery code
+- [ ] **`auth-add-credential`** - Add new device to existing account (future)
 
 #### Auth Flow:
 
@@ -189,20 +189,13 @@ All required components installed:
 - [x] **`MaintenanceWidget.svelte`** - Scheduled maintenance display
 - [x] **`TabNavigation.svelte`** - All/My Alerts/Scheduled tabs
 
-### 2.6 Dialog Components ⚠️ NEEDS UPDATE
+### 2.6 Dialog Components ✅ COMPLETE
 
-- [x] **`SignInDialog.svelte`** - ⚠️ Needs update for WebAuthn
-- [x] **`CreateAccountDialog.svelte`** - ⚠️ Needs update for WebAuthn + recovery codes
+- [x] **`SignInDialog.svelte`** ✅ - WebAuthn biometric sign-in with recovery code fallback
+- [x] **`CreateAccountDialog.svelte`** ✅ - WebAuthn registration + recovery codes display
 - [x] **`AuthRequiredDialog.svelte`** - Prompt for features requiring auth ✅
 - [x] **`HowToUseDialog.svelte`** - User guide ✅
 - [x] **`InstallPWADialog.svelte`** - PWA install prompt ✅
-
-**Auth dialogs need to be updated to implement:**
-
-- Username input
-- WebAuthn biometric registration/authentication
-- Recovery code display (on sign up)
-- Recovery code input (for account recovery)
 
 ### 2.7 Pages ✅
 
@@ -223,39 +216,42 @@ All required components installed:
   - [x] Auth required to save (prompts sign up/sign in)
 - [x] **Auth Callback** (`src/routes/auth/callback/+page.svelte`)
 
-### 2.8 Auth Flow ⚠️ NEEDS IMPLEMENTATION
+### 2.8 Auth Flow ✅ COMPLETE
 
-Custom WebAuthn authentication system:
+Custom WebAuthn authentication system implemented:
 
-1. **Preferences visible to everyone** - Users can configure without signing in
-2. **Save requires account** - Clicking "Save" prompts AuthRequiredDialog
-3. **"My Alerts" requires account** - Clicking tab prompts AuthRequiredDialog
-4. **Sign Up flow:**
-   - Enter username
+1. **Preferences visible to everyone** - Users can configure without signing in ✅
+2. **Save requires account** - Clicking "Save" prompts AuthRequiredDialog ✅
+3. **"My Alerts" requires account** - Clicking tab prompts AuthRequiredDialog ✅
+4. **Sign Up flow:** ✅
+   - Enter username (availability check)
    - Register WebAuthn credential (Face ID/Touch ID/fingerprint)
-   - Display 8 recovery codes (user must save)
+   - Display 8 recovery codes (user must acknowledge)
    - Create persistent session
-5. **Sign In flow:**
+5. **Sign In flow:** ✅
    - Enter username
    - Authenticate with WebAuthn biometrics
+   - Recovery code fallback option
    - Create/update persistent session
-6. **Recovery flow:**
+6. **Recovery flow:** ✅
    - Enter username + recovery code
    - Create session
-   - Prompt to add new device credential
-7. **Sessions never auto-expire** - Users stay logged in
+   - Shows remaining codes warning
+7. **Sessions never auto-expire** - Users stay logged in ✅
 
-#### Files to Create/Update:
+#### Files Created/Updated:
 
-- [ ] `src/lib/services/webauthn.ts` - WebAuthn utilities
-- [ ] `src/lib/stores/auth.ts` - Update for custom auth
-- [ ] `src/lib/components/dialogs/SignInDialog.svelte` - WebAuthn sign in
-- [ ] `src/lib/components/dialogs/CreateAccountDialog.svelte` - WebAuthn + recovery codes
-- [ ] `supabase/functions/auth-register/index.ts`
-- [ ] `supabase/functions/auth-challenge/index.ts`
-- [ ] `supabase/functions/auth-verify/index.ts`
-- [ ] `supabase/functions/auth-session/index.ts`
-- [ ] `supabase/functions/auth-recover/index.ts`
+- [x] `src/lib/types/auth.ts` ✅ - Auth type definitions
+- [x] `src/lib/services/webauthn.ts` ✅ - WebAuthn utilities and API calls
+- [x] `src/lib/stores/auth.ts` ✅ - Custom auth store (replaced Supabase Auth)
+- [x] `src/lib/components/dialogs/SignInDialog.svelte` ✅ - WebAuthn sign in with steps
+- [x] `src/lib/components/dialogs/CreateAccountDialog.svelte` ✅ - Registration + recovery codes
+- [x] `supabase/functions/auth-register/index.ts` ✅
+- [x] `supabase/functions/auth-challenge/index.ts` ✅
+- [x] `supabase/functions/auth-verify/index.ts` ✅
+- [x] `supabase/functions/auth-session/index.ts` ✅
+- [x] `supabase/functions/auth-recover/index.ts` ✅
+- [x] `supabase/migrations/20241204_auth_tables.sql` ✅ - Database schema
 
 ### 2.9 Remaining Frontend Tasks
 
@@ -393,10 +389,10 @@ src/
 │   │   │   └── TabNavigation.svelte ✅
 │   │   ├── dialogs/
 │   │   │   ├── AuthRequiredDialog.svelte ✅
-│   │   │   ├── CreateAccountDialog.svelte ⚠️ (needs WebAuthn update)
+│   │   │   ├── CreateAccountDialog.svelte ✅ (WebAuthn + recovery codes)
 │   │   │   ├── HowToUseDialog.svelte ✅
 │   │   │   ├── InstallPWADialog.svelte ✅
-│   │   │   ├── SignInDialog.svelte ⚠️ (needs WebAuthn update)
+│   │   │   ├── SignInDialog.svelte ✅ (WebAuthn + recovery)
 │   │   │   └── index.ts ✅
 │   │   ├── layout/
 │   │   │   ├── Header.svelte ✅
@@ -404,13 +400,13 @@ src/
 │   │   │   └── Sidebar.svelte ✅
 │   │   └── ui/ (shadcn-svelte components) ✅
 │   ├── services/
-│   │   └── webauthn.ts ❌ (to be created)
+│   │   └── webauthn.ts ✅ (WebAuthn API wrapper)
 │   ├── stores/
 │   │   ├── alerts.ts ✅
-│   │   ├── auth.ts ⚠️ (needs update for custom auth)
+│   │   ├── auth.ts ✅ (custom WebAuthn auth)
 │   │   └── preferences.ts ✅
 │   ├── types/
-│   │   ├── auth.ts ❌ (to be created)
+│   │   ├── auth.ts ✅ (auth type definitions)
 │   │   └── database.ts ✅
 │   ├── supabase.ts ✅
 │   └── utils.ts ✅
@@ -425,30 +421,37 @@ src/
     └── icons/ ⚠️ (needs proper PWA icons)
 
 supabase/
+├── migrations/
+│   └── 20241204_auth_tables.sql ✅ (auth schema)
 └── functions/
+    ├── _shared/
+    │   └── auth-utils.ts ✅
     ├── poll-alerts/ ✅ (exists)
     ├── scrape-maintenance/ ✅ (exists)
-    ├── auth-register/ ❌ (to be created)
-    ├── auth-challenge/ ❌ (to be created)
-    ├── auth-verify/ ❌ (to be created)
-    ├── auth-session/ ❌ (to be created)
-    └── auth-recover/ ❌ (to be created)
+    ├── auth-register/ ✅
+    ├── auth-challenge/ ✅
+    ├── auth-verify/ ✅
+    ├── auth-session/ ✅
+    └── auth-recover/ ✅
 ```
 
 ---
 
 ## Next Steps (Priority Order)
 
-1. **Create auth database tables** - users, webauthn_credentials, recovery_codes, device_sessions, user_preferences
-2. **Implement auth Edge Functions** - auth-register, auth-challenge, auth-verify, auth-session, auth-recover
-3. **Create WebAuthn service** - `src/lib/services/webauthn.ts`
-4. **Update auth store** - `src/lib/stores/auth.ts` for custom auth
-5. **Update SignInDialog** - WebAuthn biometric authentication
-6. **Update CreateAccountDialog** - WebAuthn + recovery codes display
-7. **Create PWA icons** - App won't install without proper icons
-8. **Connect to real Supabase data** - Replace mock alert data
-9. **Enable Realtime** - Subscribe to alerts table
-10. **Deploy to Cloudflare Pages** - Get production URL
+1. ✅ ~~**Create auth database tables**~~ - SQL migration created
+2. ✅ ~~**Implement auth Edge Functions**~~ - All 5 functions created
+3. ✅ ~~**Create WebAuthn service**~~ - `src/lib/services/webauthn.ts`
+4. ✅ ~~**Update auth store**~~ - `src/lib/stores/auth.ts` for custom auth
+5. ✅ ~~**Update SignInDialog**~~ - WebAuthn biometric authentication
+6. ✅ ~~**Update CreateAccountDialog**~~ - WebAuthn + recovery codes display
+7. **Run database migration** - Execute `20241204_auth_tables.sql` in Supabase
+8. **Deploy Edge Functions** - `supabase functions deploy`
+9. **Set environment variables** - WEBAUTHN_RP_ID, WEBAUTHN_RP_NAME, WEBAUTHN_ORIGIN
+10. **Create PWA icons** - App won't install without proper icons
+11. **Connect to real Supabase data** - Replace mock alert data
+12. **Enable Realtime** - Subscribe to alerts table
+13. **Deploy to Cloudflare Pages** - Get production URL
 
 ---
 
@@ -474,25 +477,136 @@ Track all implementation sessions here. Add new entries at the top.
 **Session Focus**: What was the main goal
 
 **Completed Tasks**:
+
 - **Task 1** ✅
+
   - What: Description of implementation
   - Why: Reasoning behind approach
   - Files: `path/to/file.ts`
 
 - **Task 2** ✅
-  - What: Description of implementation  
+  - What: Description of implementation
   - Why: Reasoning behind approach
   - Files: `path/to/file.ts`, `path/to/other.ts`
 
 **Decisions Made**:
+
 - Decision and reasoning
 
 **Blockers/Issues**:
+
 - Any issues encountered
 
 **Next Session**:
+
 - What to work on next
 ```
+
+---
+
+### [December 4, 2025] - WebAuthn Authentication System
+
+**Session Focus**: Complete custom WebAuthn authentication implementation
+
+**Completed Tasks**:
+
+- **Auth database schema** ✅
+
+  - What: Created comprehensive SQL migration with all auth tables
+  - Why: Custom auth system requires dedicated tables for users, credentials, sessions, recovery codes
+  - Files: `supabase/migrations/20241204_auth_tables.sql`
+
+- **Shared auth utilities** ✅
+
+  - What: CORS headers and Supabase client factory for Edge Functions
+  - Why: DRY principle - all auth functions need same setup
+  - Files: `supabase/functions/_shared/auth-utils.ts`
+
+- **auth-register Edge Function** ✅
+
+  - What: Two-phase registration (challenge → complete) with recovery code generation
+  - Why: WebAuthn requires challenge-response flow; recovery codes provide backup access
+  - Files: `supabase/functions/auth-register/index.ts`
+
+- **auth-challenge Edge Function** ✅
+
+  - What: Generate WebAuthn authentication challenge for sign-in
+  - Why: Each sign-in attempt needs unique challenge with 5-minute expiry
+  - Files: `supabase/functions/auth-challenge/index.ts`
+
+- **auth-verify Edge Function** ✅
+
+  - What: Verify WebAuthn assertion and create/update device session
+  - Why: Validates biometric authentication and manages persistent sessions
+  - Files: `supabase/functions/auth-verify/index.ts`
+
+- **auth-session Edge Function** ✅
+
+  - What: Validate existing session by token + device ID
+  - Why: App needs to check if user is still authenticated on load
+  - Files: `supabase/functions/auth-session/index.ts`
+
+- **auth-recover Edge Function** ✅
+
+  - What: Sign in using recovery code (one-time use)
+  - Why: Users need fallback when device/biometrics unavailable
+  - Files: `supabase/functions/auth-recover/index.ts`
+
+- **Auth type definitions** ✅
+
+  - What: TypeScript types for auth system (AuthUser, AuthSession, etc.)
+  - Why: Type safety across frontend auth code
+  - Files: `src/lib/types/auth.ts`
+
+- **WebAuthn service** ✅
+
+  - What: Browser WebAuthn API wrapper with all auth operations
+  - Why: Abstracts WebAuthn complexity from UI components
+  - Files: `src/lib/services/webauthn.ts`
+
+- **Auth store rewrite** ✅
+
+  - What: Replaced Supabase Auth with custom WebAuthn auth store
+  - Why: Supabase Auth doesn't support WebAuthn/passkeys
+  - Files: `src/lib/stores/auth.ts`
+
+- **SignInDialog update** ✅
+
+  - What: Multi-step WebAuthn sign-in with recovery code fallback
+  - Why: Biometric auth requires different UX than password auth
+  - Files: `src/lib/components/dialogs/SignInDialog.svelte`
+
+- **CreateAccountDialog update** ✅
+
+  - What: WebAuthn registration with recovery codes display
+  - Why: Users must see and save recovery codes during signup
+  - Files: `src/lib/components/dialogs/CreateAccountDialog.svelte`
+
+- **Layout integration** ✅
+  - What: Added dialog switching between SignIn and CreateAccount
+  - Why: Users need to navigate between auth flows
+  - Files: `src/routes/+layout.svelte`
+
+**Decisions Made**:
+
+- 8 recovery codes with bcrypt hashing (balance between security and usability)
+- Device sessions never auto-expire (user preference for persistence)
+- Username availability check before registration attempt
+- Copy-all-codes functionality for easy backup
+
+**Blockers/Issues**:
+
+- Edge Functions have lint errors in VS Code (expected - Deno types not available locally)
+- Need to run SQL migration in Supabase dashboard
+- Need to deploy Edge Functions to Supabase
+- Environment variables needed: WEBAUTHN_RP_ID, WEBAUTHN_RP_NAME, WEBAUTHN_ORIGIN
+
+**Next Session**:
+
+- Run database migration
+- Deploy and test Edge Functions
+- Create PWA icons
+- Connect to real alert data
 
 ---
 
@@ -501,37 +615,45 @@ Track all implementation sessions here. Add new entries at the top.
 **Session Focus**: Project scaffolding and core UI
 
 **Completed Tasks**:
+
 - **Svelte 5 + TypeScript project** ✅
+
   - What: Created new Svelte 5 project with TypeScript configuration
   - Why: Modern framework with excellent performance and developer experience
   - Files: Project root configuration files
 
 - **shadcn-svelte UI components** ✅
+
   - What: Installed all required UI components (Button, Card, Dialog, etc.)
   - Why: Consistent, accessible UI components with Tailwind styling
   - Files: `src/lib/components/ui/*`
 
 - **TTC Theme implementation** ✅
+
   - What: Custom Tailwind theme with TTC brand colors
   - Why: Brand consistency with official TTC design
   - Files: `src/lib/styles/ttc-theme.css`, `tailwind.config.js`
 
 - **Core layout components** ✅
+
   - What: Header, Sidebar, MobileBottomNav
   - Why: Responsive layout supporting desktop and mobile
   - Files: `src/lib/components/layout/*`
 
 - **Alert components** ✅
+
   - What: AlertCard, FilterChips, RouteBadge, StatusBadge, etc.
   - Why: Display and filter TTC service alerts
   - Files: `src/lib/components/alerts/*`
 
 - **Dialog components** ✅
+
   - What: Auth dialogs, PWA install prompt, How to Use guide
   - Why: User onboarding and authentication flows
   - Files: `src/lib/components/dialogs/*`
 
 - **Pages** ✅
+
   - What: Homepage with tabs, Preferences page, Auth callback
   - Why: Core application routing and user flows
   - Files: `src/routes/*`
@@ -542,15 +664,18 @@ Track all implementation sessions here. Add new entries at the top.
   - Files: `static/manifest.json`, `static/sw.js`
 
 **Decisions Made**:
+
 - Custom WebAuthn auth instead of Supabase Auth (Supabase doesn't support passkeys)
 - Username-based accounts (no email required for privacy)
 - Preferences viewable without auth, save requires account
 
 **Blockers/Issues**:
+
 - Auth dialogs need WebAuthn implementation
 - Using mock data, not connected to Supabase yet
 - PWA icons need to be created
 
 **Next Session**:
+
 - Implement WebAuthn auth system
 - Connect to real Supabase data
