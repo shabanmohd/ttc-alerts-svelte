@@ -6,6 +6,21 @@ Comprehensive plan for ETA feature, stop search, accessibility enhancements, and
 
 ---
 
+## 📊 Implementation Progress Summary
+
+| Phase | Name                          | Status         | Progress |
+|-------|-------------------------------|----------------|----------|
+| 0     | Version A/B Deployment Setup  | ✅ Complete    | 100%     |
+| 1     | Foundation & Accessibility    | ✅ Complete    | 100%     |
+| 2     | Stop Database & Search        | ✅ Complete    | 100%     |
+| 3     | ETA Feature                   | ❌ Not Started | 0%       |
+| 4     | i18n & Additional Features    | ❌ Not Started | 0%       |
+| 5     | Polish & Testing              | ❌ Not Started | 0%       |
+
+**Last Updated**: December 4, 2025
+
+---
+
 ## Phase 0: Version A/B Parallel Deployment Setup
 
 Deploy the current stable app as **Version A** (production) while developing new features in **Version B** (beta) on a separate URL using Cloudflare Pages branch deployments.
@@ -1380,15 +1395,15 @@ Settings persist via localStorage
 
 ### New Files to Create
 
-- [ ] `src/lib/stores/visibility.ts`
-- [ ] `src/lib/stores/accessibility.ts`
-- [ ] `src/lib/stores/bookmarks.ts`
+- [x] `src/lib/stores/visibility.ts` ✅ Phase 1
+- [x] `src/lib/stores/accessibility.ts` ✅ Phase 1
+- [x] `src/lib/stores/bookmarks.ts` ✅ Phase 2
 - [ ] `src/lib/stores/eta.ts`
-- [ ] `src/lib/types/stops.ts`
-- [ ] `src/lib/data/stops-db.ts`
-- [ ] `src/lib/data/ttc-stops.json`
-- [ ] `src/lib/components/stops/StopSearch.svelte`
-- [ ] `src/lib/components/stops/BookmarkStopButton.svelte`
+- [x] `src/lib/data/stops-db.ts` ✅ Phase 2
+- [x] `static/data/ttc-stops.json` ✅ Phase 2 (9,346 stops)
+- [x] `src/lib/components/stops/StopSearch.svelte` ✅ Phase 2
+- [x] `src/lib/components/stops/BookmarkStopButton.svelte` ✅ Phase 2
+- [x] `src/lib/components/stops/MyStopsWidget.svelte` ✅ Phase 2
 - [ ] `src/lib/components/eta/ETABadge.svelte`
 - [ ] `src/lib/components/eta/ETACard.svelte`
 - [ ] `src/lib/components/eta/ETAWidget.svelte`
@@ -1398,19 +1413,22 @@ Settings persist via localStorage
 - [ ] `src/lib/i18n/fr.json`
 - [ ] `src/routes/routes/+page.svelte`
 - [ ] `supabase/functions/get-eta/index.ts`
-- [ ] `supabase/migrations/YYYYMMDD_add_bookmarked_stops.sql`
+- [x] `supabase/migrations/20251204_bookmarked_stops.sql` ✅ Phase 2
+- [x] `scripts/transform-gtfs.js` ✅ Phase 2
 
 ### Files to Modify
 
-- [ ] `src/lib/stores/alerts.ts` - Add visibility-aware fetching
-- [ ] `src/routes/layout.css` - Add text scaling, reduce motion CSS
-- [ ] `src/routes/+layout.svelte` - Initialize accessibility, i18n
+- [x] `src/lib/stores/alerts.ts` - Add visibility-aware fetching ✅ Phase 1
+- [x] `src/routes/layout.css` - Add text scaling, reduce motion CSS ✅ Phase 1
+- [x] `src/routes/+layout.svelte` - Initialize accessibility ✅ Phase 1
 - [ ] `src/routes/+page.svelte` - Add ETA widget, weather banner
-- [ ] `src/routes/preferences/+page.svelte` - Add accessibility section
+- [x] `src/routes/preferences/+page.svelte` - Add accessibility section, stop search ✅ Phase 1 & 2
 - [ ] `src/lib/components/layout/Header.svelte` - Add language toggle
 - [ ] `src/lib/components/layout/Sidebar.svelte` - Add Routes nav item
-- [ ] `static/sw.js` - Upgrade caching strategies
-- [ ] `package.json` - Add dexie, svelte-i18n dependencies
+- [x] `static/sw.js` - Upgrade caching strategies ✅ Phase 0 & 1
+- [x] `static/manifest.json` - Beta version name ✅ Phase 0
+- [x] `package.json` - Add dexie dependency ✅ Phase 2
+- [x] `src/lib/types/database.ts` - Add BookmarkedStop type ✅ Phase 2
 
 ---
 
