@@ -1,0 +1,243 @@
+/**
+ * TTC Alerts Custom Theme - Extends shadcn-svelte base
+ * WCAG 2.1 AA Compliant
+ */
+
+/* ============================================
+   TTC STATUS COLORS
+   ============================================ */
+
+:root {
+  /* Status colors - Light mode */
+  --status-error-bg: oklch(0.936 0.032 25.801);
+  --status-error-text: oklch(0.505 0.213 27.518);
+  --status-warning-bg: oklch(0.962 0.059 95.617);
+  --status-warning-text: oklch(0.553 0.195 38.402);
+  --status-info-bg: oklch(0.932 0.032 255.585);
+  --status-info-text: oklch(0.488 0.243 264.376);
+  --status-success-bg: oklch(0.925 0.084 155.995);
+  --status-success-text: oklch(0.448 0.119 151.328);
+  --status-teal-bg: oklch(0.925 0.084 180);
+  --status-teal-text: oklch(0.448 0.119 175.117);
+}
+
+.dark {
+  /* Status colors - Dark mode */
+  --status-error-bg: oklch(0.505 0.213 27.518 / 0.2);
+  --status-error-text: oklch(0.704 0.191 22.216);
+  --status-warning-bg: oklch(0.769 0.188 70.08 / 0.2);
+  --status-warning-text: oklch(0.828 0.189 84.429);
+  --status-info-bg: oklch(0.488 0.243 264.376 / 0.2);
+  --status-info-text: oklch(0.627 0.265 303.9);
+  --status-success-bg: oklch(0.527 0.154 150.069 / 0.2);
+  --status-success-text: oklch(0.696 0.17 162.48);
+  --status-teal-bg: oklch(0.527 0.154 175 / 0.2);
+  --status-teal-text: oklch(0.696 0.17 175);
+}
+
+/* ============================================
+   TTC ROUTE BADGE COLORS (Brand Colors)
+   ============================================ */
+
+/* Line 1 - Yellow */
+.route-line-1 {
+  background-color: #FFC524 !important;
+  color: #000000 !important;
+}
+
+/* Line 2 - Green */
+.route-line-2 {
+  background-color: #00853F !important;
+  color: #FFFFFF !important;
+}
+
+/* Line 4 - Purple */
+.route-line-4 {
+  background-color: #A12F7D !important;
+  color: #FFFFFF !important;
+}
+
+/* Regular Bus & Streetcar - TTC Red */
+.route-bus,
+.route-streetcar {
+  background-color: #C8102E !important;
+  color: #FFFFFF !important;
+}
+
+/* Express Routes (900-series) - TTC Green */
+.route-express {
+  background-color: #00853F !important;
+  color: #FFFFFF !important;
+}
+
+/* Night Service Routes (300-series) - White with Blue Border */
+.route-night {
+  background-color: #FFFFFF !important;
+  border: 2px solid #003DA5 !important;
+  color: #003DA5 !important;
+}
+
+/* Limited Service Routes - White with Red Border */
+.route-limited {
+  background-color: #FFFFFF !important;
+  border: 2px solid #C8102E !important;
+  color: #C8102E !important;
+}
+
+/* Community Routes (400-series) - White with Gray Border */
+.route-community {
+  background-color: #FFFFFF !important;
+  border: 2px solid #6B7280 !important;
+  color: #6B7280 !important;
+}
+
+/* ============================================
+   STATUS BADGES
+   ============================================ */
+
+.status-badge-resumed {
+  background-color: var(--status-teal-bg);
+  color: var(--status-teal-text);
+}
+
+.status-badge-disruption {
+  background-color: var(--status-error-bg);
+  color: var(--status-error-text);
+}
+
+.status-badge-delay {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-text);
+}
+
+.status-badge-detour {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-text);
+}
+
+.status-badge-planned {
+  background-color: var(--status-info-bg);
+  color: var(--status-info-text);
+}
+
+/* ============================================
+   ALERT CARD PRIORITY BORDERS
+   ============================================ */
+
+.alert-border-high {
+  border-left: 4px solid oklch(0.637 0.237 25.331);
+}
+
+.alert-border-medium {
+  border-left: 4px solid oklch(0.769 0.188 70.08);
+}
+
+.alert-border-info {
+  border-left: 4px solid oklch(0.546 0.245 262.881);
+}
+
+.alert-border-low {
+  border-left: 4px solid oklch(0.723 0.191 142.495);
+}
+
+.alert-border-resolved {
+  border-left: 4px solid var(--muted-foreground);
+}
+
+.alert-border-resumed {
+  border-left: 4px solid oklch(0.6 0.185 175.117);
+}
+
+/* ============================================
+   MAINTENANCE WIDGET
+   ============================================ */
+
+.maintenance-widget {
+  border: 1px solid oklch(0.606 0.25 292.717 / 0.3);
+  box-shadow: 0 0 0 1px oklch(0.606 0.25 292.717 / 0.1);
+}
+
+.maintenance-item {
+  background-color: oklch(0.606 0.25 292.717 / 0.1);
+  border: 1px solid oklch(0.606 0.25 292.717 / 0.2);
+}
+
+/* ============================================
+   MOBILE BOTTOM NAVIGATION
+   ============================================ */
+
+.mobile-bottom-nav {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.nav-item.active {
+  color: oklch(0.546 0.245 262.881);
+  background: oklch(0.546 0.245 262.881 / 0.1);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  background: oklch(0.546 0.245 262.881);
+  border-radius: 0 0 3px 3px;
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+  opacity: 0.3;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.5;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 oklch(0.546 0.245 262.881 / 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px oklch(0.546 0.245 262.881 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.546 0.245 262.881 / 0);
+  }
+}
+
+.refresh-pulse {
+  animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+}
+
+/* ============================================
+   SAFE AREA INSETS (iOS)
+   ============================================ */
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
