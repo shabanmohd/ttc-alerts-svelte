@@ -17,8 +17,10 @@
   --status-info-text: oklch(0.488 0.243 264.376);
   --status-success-bg: oklch(0.925 0.084 155.995);
   --status-success-text: oklch(0.448 0.119 151.328);
-  --status-teal-bg: oklch(0.925 0.084 180);
-  --status-teal-text: oklch(0.448 0.119 175.117);
+  --status-teal-bg: #d2f9f0;
+  --status-teal-text: #166a5f;
+  --status-orange-bg: oklch(0.94 0.06 60);
+  --status-orange-text: oklch(0.5 0.15 45);
 }
 
 .dark {
@@ -31,8 +33,10 @@
   --status-info-text: oklch(0.627 0.265 303.9);
   --status-success-bg: oklch(0.527 0.154 150.069 / 0.2);
   --status-success-text: oklch(0.696 0.17 162.48);
-  --status-teal-bg: oklch(0.527 0.154 175 / 0.2);
-  --status-teal-text: oklch(0.696 0.17 175);
+  --status-teal-bg: oklch(0.35 0.08 175 / 0.4);
+  --status-teal-text: #5fd4c4;
+  --status-orange-bg: oklch(0.4 0.1 55 / 0.4);
+  --status-orange-text: oklch(0.8 0.15 55);
 }
 
 /* ============================================
@@ -41,54 +45,54 @@
 
 /* Line 1 - Yellow */
 .route-line-1 {
-  background-color: #FFC524 !important;
+  background-color: #ffc524 !important;
   color: #000000 !important;
 }
 
 /* Line 2 - Green */
 .route-line-2 {
-  background-color: #00853F !important;
-  color: #FFFFFF !important;
+  background-color: #00853f !important;
+  color: #ffffff !important;
 }
 
 /* Line 4 - Purple */
 .route-line-4 {
-  background-color: #A12F7D !important;
-  color: #FFFFFF !important;
+  background-color: #a12f7d !important;
+  color: #ffffff !important;
 }
 
 /* Regular Bus & Streetcar - TTC Red */
 .route-bus,
 .route-streetcar {
-  background-color: #C8102E !important;
-  color: #FFFFFF !important;
+  background-color: #c8102e !important;
+  color: #ffffff !important;
 }
 
 /* Express Routes (900-series) - TTC Green */
 .route-express {
-  background-color: #00853F !important;
-  color: #FFFFFF !important;
+  background-color: #00853f !important;
+  color: #ffffff !important;
 }
 
 /* Night Service Routes (300-series) - White with Blue Border */
 .route-night {
-  background-color: #FFFFFF !important;
-  border: 2px solid #003DA5 !important;
-  color: #003DA5 !important;
+  background-color: #ffffff !important;
+  border: 2px solid #003da5 !important;
+  color: #003da5 !important;
 }
 
 /* Limited Service Routes - White with Red Border */
 .route-limited {
-  background-color: #FFFFFF !important;
-  border: 2px solid #C8102E !important;
-  color: #C8102E !important;
+  background-color: #ffffff !important;
+  border: 2px solid #c8102e !important;
+  color: #c8102e !important;
 }
 
 /* Community Routes (400-series) - White with Gray Border */
 .route-community {
-  background-color: #FFFFFF !important;
-  border: 2px solid #6B7280 !important;
-  color: #6B7280 !important;
+  background-color: #ffffff !important;
+  border: 2px solid #6b7280 !important;
+  color: #6b7280 !important;
 }
 
 /* ============================================
@@ -111,13 +115,35 @@
 }
 
 .status-badge-detour {
-  background-color: var(--status-warning-bg);
-  color: var(--status-warning-text);
+  background-color: var(--status-orange-bg);
+  color: var(--status-orange-text);
 }
 
 .status-badge-planned {
   background-color: var(--status-info-bg);
   color: var(--status-info-text);
+}
+
+/* Default/Other status */
+.status-badge-default {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+/* Transport mode status badges */
+.status-badge-bus {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.status-badge-streetcar {
+  background-color: #dc241f;
+  color: #ffffff;
+}
+
+.status-badge-subway {
+  background-color: #ffcc00;
+  color: #000000;
 }
 
 /* ============================================
@@ -176,7 +202,7 @@
 }
 
 .nav-item.active::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 50%;

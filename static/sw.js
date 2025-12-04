@@ -74,6 +74,16 @@ self.addEventListener('fetch', (event) => {
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) return;
 
+  // Skip Vite/SvelteKit dev server requests
+  if (url.pathname.startsWith('/.svelte-kit/') || 
+      url.pathname.startsWith('/@vite/') ||
+      url.pathname.startsWith('/@fs/') ||
+      url.pathname.startsWith('/__vite') ||
+      url.pathname.startsWith('/node_modules/') ||
+      url.pathname.startsWith('/src/')) {
+    return;
+  }
+
   // API and Supabase requests - Network only (don't cache)
   if (url.hostname.includes('supabase') || url.pathname.startsWith('/api')) {
     event.respondWith(

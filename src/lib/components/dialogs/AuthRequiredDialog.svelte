@@ -35,8 +35,8 @@
 <Dialog.Root bind:open {onOpenChange}>
   <Dialog.Content class="sm:max-w-md">
     <Dialog.Header>
-      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10">
-        <Bell class="h-8 w-8 text-[hsl(var(--primary))]" />
+      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+        <Bell class="h-8 w-8 text-primary" aria-hidden="true" />
       </div>
       <Dialog.Title class="text-center">{title}</Dialog.Title>
       <Dialog.Description class="text-center">
@@ -45,23 +45,23 @@
     </Dialog.Header>
 
     <div class="space-y-4 py-4">
-      <div class="rounded-lg border bg-[hsl(var(--muted))]/50 p-4">
+      <div class="rounded-lg border bg-muted/50 p-4">
         <h4 class="mb-2 font-medium">With an account you can:</h4>
-        <ul class="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
+        <ul class="space-y-2 text-sm text-muted-foreground">
           <li class="flex items-center gap-2">
-            <span class="h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]"></span>
+            <span class="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true"></span>
             Save your favorite routes
           </li>
           <li class="flex items-center gap-2">
-            <span class="h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]"></span>
+            <span class="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true"></span>
             Get personalized alerts
           </li>
           <li class="flex items-center gap-2">
-            <span class="h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]"></span>
+            <span class="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true"></span>
             Set quiet hours for notifications
           </li>
           <li class="flex items-center gap-2">
-            <span class="h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]"></span>
+            <span class="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true"></span>
             Access your preferences on any device
           </li>
         </ul>

@@ -1,31 +1,60 @@
 <script lang="ts">
   import { Check } from 'lucide-svelte';
+  import { cn } from '$lib/utils';
   
   let { 
     route, 
     size = 'default',
     selectable = false,
-    selected = false
+    selected = false,
+    class: className = ''
   }: { 
     route: string; 
     size?: 'sm' | 'default';
     selectable?: boolean;
     selected?: boolean;
+    class?: string;
   } = $props();
   
-  // Determine route type and style class
-  function getRouteClass(route: string): string {
-    const routeNum = parseInt(route);
+  /**
+   * Extract just the route number for determining the style.
+   */
+  function getRouteNumber(route: string): number {
+    const match = route.match(/^\d+/);
+    return match ? parseInt(match[0]) : 0;
+  }
+  
+  /**
+   * Determine route type for accessibility announcement.
+   */
+  function getRouteType(route: string): string {
     const routeLower = route.toLowerCase();
+    const routeNum = getRouteNumber(route);
+    
+    if (routeLower.includes('line')) return 'Subway';
+    if (routeNum >= 300 && routeNum < 400) return 'Night bus';
+    if (routeNum >= 400 && routeNum < 500) return 'Community bus';
+    if (routeNum >= 500 && routeNum < 600) return 'Streetcar';
+    if (routeNum >= 900) return 'Express bus';
+    return 'Bus';
+  }
+  
+  /**
+   * Determine route type and style class.
+   * TTC brand colors are used with appropriate contrast ratios.
+   */
+  function getRouteClass(route: string): string {
+    const routeLower = route.toLowerCase();
+    const routeNum = getRouteNumber(route);
     
     // Subway lines
-    if (routeLower === 'line 1' || routeLower === '1' || routeLower.includes('yonge')) {
+    if (routeLower.includes('line 1') || routeLower.includes('yonge') || routeLower.includes('university')) {
       return 'route-line-1';
     }
-    if (routeLower === 'line 2' || routeLower === '2' || routeLower.includes('bloor')) {
+    if (routeLower.includes('line 2') || routeLower.includes('bloor') || routeLower.includes('danforth')) {
       return 'route-line-2';
     }
-    if (routeLower === 'line 4' || routeLower === '4' || routeLower.includes('sheppard')) {
+    if (routeLower.includes('line 4') || routeLower.includes('sheppard')) {
       return 'route-line-4';
     }
     
@@ -63,28 +92,31 @@
     return 'route-bus';
   }
   
-  function formatRoute(route: string): string {
-    const routeLower = route.toLowerCase();
-    
-    // Format subway lines nicely
-    if (routeLower === '1' || routeLower.includes('line 1')) return 'Line 1';
-    if (routeLower === '2' || routeLower.includes('line 2')) return 'Line 2';
-    if (routeLower === '4' || routeLower.includes('line 4')) return 'Line 4';
-    
-    return route;
-  }
+  const ariaLabel = $derived(
+    selectable 
+      ? `${getRouteType(route)} route ${route}${selected ? ', selected' : ', not selected'}` 
+      : `${getRouteType(route)} route ${route}`
+  );
 </script>
 
 <span 
-  class="route-badge {getRouteClass(route)}" 
-  class:route-badge-sm={size === 'sm'}
-  class:route-badge-selectable={selectable}
-  class:selected={selectable && selected}
+  class={cn(
+    'route-badge',
+    getRouteClass(route),
+    size === 'sm' && 'route-badge-sm',
+    selectable && 'route-badge-selectable',
+    selectable && selected && 'selected',
+    className
+  )}
+  role={selectable ? 'checkbox' : 'status'}
+  aria-checked={selectable ? selected : undefined}
+  aria-label={ariaLabel}
+  tabindex={selectable ? 0 : undefined}
 >
   {#if selectable}
-    <span class="route-check">
+    <span class="route-check" aria-hidden="true">
       <Check class="check-icon" />
     </span>
   {/if}
-  {formatRoute(route)}
+  {route}
 </span>

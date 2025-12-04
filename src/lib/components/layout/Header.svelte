@@ -61,7 +61,7 @@
   }
 </script>
 
-<header class="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background))] backdrop-blur relative">
+<header class="sticky top-0 z-50 w-full border-b border-border bg-background backdrop-blur relative">
   <div class="header-container">
     <!-- Logo (mobile only) -->
     <a href="/" class="header-left">
@@ -72,39 +72,42 @@
     <!-- Right side actions -->
     <div class="header-right">
       <!-- Last updated + Refresh -->
-      <div class="flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))]">
+      <div class="flex items-center gap-1 text-xs text-muted-foreground">
         {#if $lastUpdated}
           <span id="last-updated">Updated {formatLastUpdated($lastUpdated)}</span>
         {/if}
         <button 
-          class="p-1.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors {$hasUpdates ? 'refresh-pulse' : ''}"
+          class="p-1.5 rounded-md hover:bg-accent transition-colors {$hasUpdates ? 'refresh-pulse' : ''}"
           onclick={handleRefresh}
           title="Refresh"
+          aria-label="Refresh alerts"
           disabled={isRefreshing}
         >
-          <RefreshCw class="w-4 h-4 {isRefreshing ? 'animate-spin' : ''}" />
+          <RefreshCw class="w-4 h-4 {isRefreshing ? 'animate-spin' : ''}" aria-hidden="true" />
         </button>
       </div>
       
       <!-- Help button (tablet only - hidden on mobile and desktop) -->
       <button 
-        class="max-sm:hidden lg:hidden flex p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors"
+        class="max-sm:hidden lg:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
         onclick={() => onOpenDialog?.('how-to-use')}
         title="How to Use"
+        aria-label="How to use this app"
       >
-        <HelpCircle class="w-5 h-5" />
+        <HelpCircle class="w-5 h-5" aria-hidden="true" />
       </button>
       
       <!-- Theme toggle (tablet only - hidden on mobile and desktop) -->
       <button 
-        class="max-sm:hidden lg:hidden flex p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors"
+        class="max-sm:hidden lg:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
         onclick={toggleTheme}
         title="Toggle theme"
+        aria-label="Toggle light or dark mode"
       >
         {#if isDark}
-          <Sun class="w-5 h-5" />
+          <Sun class="w-5 h-5" aria-hidden="true" />
         {:else}
-          <Moon class="w-5 h-5" />
+          <Moon class="w-5 h-5" aria-hidden="true" />
         {/if}
       </button>
       
@@ -115,102 +118,100 @@
             <button 
               use:builder.action
               {...builder}
-              class="max-sm:hidden lg:hidden inline-flex items-center gap-2 h-9 px-3 py-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors"
+              class="max-sm:hidden lg:hidden inline-flex items-center gap-2 h-9 px-3 py-2 rounded-md hover:bg-accent transition-colors"
             >
-              <div class="w-7 h-7 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center">
-                <span class="text-xs font-semibold text-[hsl(var(--primary-foreground))]">{getUserInitial(username)}</span>
+              <div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
+                <span class="text-xs font-semibold text-primary-foreground">{getUserInitial(username)}</span>
               </div>
               <span class="text-sm font-medium max-w-[100px] truncate">{username}</span>
-              <ChevronDown class="w-4 h-4" />
+              <ChevronDown class="w-4 h-4" aria-hidden="true" />
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Content align="end" class="w-48">
-            <div class="px-3 py-2 border-b border-[hsl(var(--border))]">
+            <div class="px-3 py-2 border-b border-border">
               <p class="text-sm font-medium">{username}</p>
-              <p class="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
+              <p class="text-xs text-muted-foreground">Signed in</p>
             </div>
             <DropdownMenu.Item href="/preferences">
-              <Settings class="w-4 h-4 mr-2" />
+              <Settings class="w-4 h-4 mr-2" aria-hidden="true" />
               Preferences
             </DropdownMenu.Item>
-            <DropdownMenu.Item onclick={onSignOut} class="text-[hsl(var(--destructive))]">
-              <LogOut class="w-4 h-4 mr-2" />
+            <DropdownMenu.Item onclick={onSignOut} class="text-destructive">
+              <LogOut class="w-4 h-4 mr-2" aria-hidden="true" />
               Sign Out
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Root>
       {:else}
         <button
-          class="max-sm:hidden lg:hidden inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-transparent text-sm font-medium hover:bg-[hsl(var(--accent))] transition-colors gap-2"
+          class="max-sm:hidden lg:hidden inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border border-border bg-transparent text-sm font-medium hover:bg-accent transition-colors gap-2"
           onclick={onSignIn}
         >
-          <User class="w-4 h-4" />
+          <User class="w-4 h-4" aria-hidden="true" />
           <span>Sign In</span>
         </button>
       {/if}
       
-      <!-- Set up alerts button (desktop only, when not authenticated) -->
-      {#if !isAuthenticated}
-        <a 
-          href="/preferences"
-          class="max-sm:hidden lg:hidden inline-flex h-9 px-4 py-2 rounded-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-medium hover:opacity-90 transition-colors"
-        >
-          Set up alerts
-        </a>
-      {/if}
-      
       <!-- Mobile Menu Button -->
       <button 
-        class="hidden max-sm:flex p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors"
+        class="hidden max-sm:flex p-2 rounded-md hover:bg-accent transition-colors"
         onclick={() => mobileMenuOpen = !mobileMenuOpen}
         title="Menu"
+        aria-label="Open menu"
+        aria-expanded={mobileMenuOpen}
       >
-        <Menu class="w-5 h-5" />
+        <Menu class="w-5 h-5" aria-hidden="true" />
       </button>
     </div>
   </div>
   
   <!-- Mobile Menu Dropdown (overlay) -->
   {#if mobileMenuOpen}
-    <div class="sm:hidden absolute left-0 right-0 top-full border-t border-[hsl(var(--border))] bg-[hsl(var(--background))] shadow-lg z-50">
+    <!-- Backdrop to close menu when clicking outside -->
+    <button 
+      class="sm:hidden fixed inset-0 z-40 bg-black/50" 
+      onclick={() => mobileMenuOpen = false}
+      aria-label="Close menu"
+    ></button>
+    <div class="sm:hidden absolute left-0 right-0 top-full border-t border-border shadow-lg z-50" style="background-color: hsl(var(--card));">
       <div class="px-4 py-3 space-y-1">
         {#if isAuthenticated}
-          <div class="flex items-center gap-3 px-3 py-2.5 border-b border-[hsl(var(--border))] mb-2">
-            <div class="w-8 h-8 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center">
-              <span class="text-sm font-semibold text-[hsl(var(--primary-foreground))]">{getUserInitial(username)}</span>
+          <div class="flex items-center gap-3 px-3 py-2.5 border-b border-border mb-2">
+            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+              <span class="text-sm font-semibold text-primary-foreground">{getUserInitial(username)}</span>
             </div>
             <div>
               <p class="text-sm font-medium">{username}</p>
-              <p class="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
+              <p class="text-xs text-muted-foreground">Signed in</p>
             </div>
           </div>
         {:else}
           <button
             onclick={() => { mobileMenuOpen = false; onSignIn?.(); }}
-            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left"
+            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
           >
-            <User class="w-5 h-5" />
+            <User class="w-5 h-5" aria-hidden="true" />
             <span class="text-sm font-medium">Sign In</span>
           </button>
         {/if}
         
         <button
           onclick={() => { mobileMenuOpen = false; onOpenDialog?.('how-to-use'); }}
-          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left"
+          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
         >
-          <HelpCircle class="w-5 h-5" />
+          <HelpCircle class="w-5 h-5" aria-hidden="true" />
           <span class="text-sm">How to Use</span>
         </button>
         
         <button
           onclick={() => { mobileMenuOpen = false; toggleTheme(); }}
-          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left"
+          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
         >
           {#if isDark}
-            <Sun class="w-5 h-5" />
+            <Sun class="w-5 h-5" aria-hidden="true" />
             <span class="text-sm">Light Mode</span>
           {:else}
-            <Moon class="w-5 h-5" />
+            <Moon class="w-5 h-5" aria-hidden="true" />
             <span class="text-sm">Dark Mode</span>
           {/if}
         </button>
@@ -219,16 +220,16 @@
           <a
             href="/preferences"
             onclick={() => mobileMenuOpen = false}
-            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left"
+            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
           >
-            <Settings class="w-5 h-5" />
+            <Settings class="w-5 h-5" aria-hidden="true" />
             <span class="text-sm">Preferences</span>
           </a>
           <button
             onclick={() => { mobileMenuOpen = false; onSignOut?.(); }}
-            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-[hsl(var(--accent))] transition-colors text-left text-[hsl(var(--destructive))]"
+            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left text-destructive"
           >
-            <LogOut class="w-5 h-5" />
+            <LogOut class="w-5 h-5" aria-hidden="true" />
             <span class="text-sm">Sign Out</span>
           </button>
         {/if}

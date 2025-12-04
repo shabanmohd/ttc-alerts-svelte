@@ -15,12 +15,14 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## Status Summary
 
-| Phase              | Status         | %    |
-| ------------------ | -------------- | ---- |
-| Backend (Supabase) | ✅ Complete    | 100% |
-| Frontend (Svelte)  | ✅ Complete    | 100% |
-| PWA Features       | ✅ Complete    | 100% |
-| Deployment         | 🔄 Ready       | 80%  |
+| Phase              | Status      | %    |
+| ------------------ | ----------- | ---- |
+| Backend (Supabase) | ✅ Complete | 100% |
+| Frontend (Svelte)  | ✅ Complete | 100% |
+| PWA Features       | ✅ Complete | 100% |
+| Deployment         | ✅ Live     | 100% |
+
+**Production URL**: https://ttc-alerts-svelte.pages.dev
 
 ---
 
@@ -28,30 +30,30 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Frontend (`src/lib/`)
 
-| File                                            | Status | Purpose                              |
-| ----------------------------------------------- | ------ | ------------------------------------ |
-| `components/alerts/AlertCard.svelte`            | ✅     | Alert display card (JSONB ready)     |
-| `components/alerts/FilterChips.svelte`          | ✅     | Category filter buttons              |
-| `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display        |
-| `components/alerts/RouteBadge.svelte`           | ✅     | TTC route badges with colors         |
-| `components/alerts/StatusBadge.svelte`          | ✅     | Alert status indicators              |
-| `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback |
-| `components/dialogs/CreateAccountDialog.svelte` | ✅     | Registration + recovery codes        |
-| `components/dialogs/AuthRequiredDialog.svelte`  | ✅     | Auth prompt for protected features   |
-| `components/dialogs/HowToUseDialog.svelte`      | ✅     | User guide                           |
-| `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                   |
-| `components/layout/Header.svelte`               | ✅     | App header with auth controls        |
-| `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation                   |
-| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation                    |
-| `components/ui/*`                               | ✅     | shadcn-svelte base components        |
-| `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper         |
-| `stores/alerts.ts`                              | ✅     | Alerts state (real Supabase data)    |
-| `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store           |
-| `stores/preferences.ts`                         | ✅     | User preferences state               |
-| `types/auth.ts`                                 | ✅     | Auth TypeScript types                |
-| `types/database.ts`                             | ✅     | Database types (JSONB fields)        |
-| `supabase.ts`                                   | ✅     | Supabase client config               |
-| `utils.ts`                                      | ✅     | Utility functions                    |
+| File                                            | Status | Purpose                                          |
+| ----------------------------------------------- | ------ | ------------------------------------------------ |
+| `components/alerts/AlertCard.svelte`            | ✅     | Alert cards w/ route extraction from header_text |
+| `components/alerts/FilterChips.svelte`          | ✅     | Category filter buttons                          |
+| `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display                    |
+| `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)    |
+| `components/alerts/StatusBadge.svelte`          | ✅     | Status indicators (Delay, Detour, Resumed, etc.) |
+| `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback             |
+| `components/dialogs/CreateAccountDialog.svelte` | ✅     | Registration + recovery codes                    |
+| `components/dialogs/AuthRequiredDialog.svelte`  | ✅     | Auth prompt for protected features               |
+| `components/dialogs/HowToUseDialog.svelte`      | ✅     | User guide                                       |
+| `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                               |
+| `components/layout/Header.svelte`               | ✅     | App header with auth controls                    |
+| `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation                               |
+| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation                                |
+| `components/ui/*`                               | ✅     | shadcn-svelte base components                    |
+| `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                     |
+| `stores/alerts.ts`                              | ✅     | Alerts state + date validation filter            |
+| `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store                       |
+| `stores/preferences.ts`                         | ✅     | User preferences state                           |
+| `types/auth.ts`                                 | ✅     | Auth TypeScript types                            |
+| `types/database.ts`                             | ✅     | Database types (JSONB fields)                    |
+| `supabase.ts`                                   | ✅     | Supabase client config                           |
+| `utils.ts`                                      | ✅     | Utility functions                                |
 
 ### Pages (`src/routes/`)
 
@@ -77,23 +79,23 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Database (EXISTING in Supabase)
 
-| Table                  | Rows   | Purpose                                      |
-| ---------------------- | ------ | -------------------------------------------- |
-| `alert_cache`          | 592    | Alerts from Bluesky (affected_routes JSONB)  |
-| `incident_threads`     | 248K   | Grouped alert threads                        |
-| `planned_maintenance`  | 9      | Scheduled maintenance                        |
-| `user_profiles`        | -      | User display_name, linked to auth.users      |
-| `webauthn_credentials` | -      | Public keys (credential_id as PK)            |
-| `recovery_codes`       | -      | Bcrypt-hashed one-time codes                 |
-| `user_preferences`     | -      | Routes, modes, notification settings         |
+| Table                  | Rows | Purpose                                     |
+| ---------------------- | ---- | ------------------------------------------- |
+| `alert_cache`          | 592  | Alerts from Bluesky (affected_routes JSONB) |
+| `incident_threads`     | 248K | Grouped alert threads                       |
+| `planned_maintenance`  | 9    | Scheduled maintenance                       |
+| `user_profiles`        | -    | User display_name, linked to auth.users     |
+| `webauthn_credentials` | -    | Public keys (credential_id as PK)           |
+| `recovery_codes`       | -    | Bcrypt-hashed one-time codes                |
+| `user_preferences`     | -    | Routes, modes, notification settings        |
 
 ### Static (`static/`)
 
-| File            | Status | Purpose                         |
-| --------------- | ------ | ------------------------------- |
-| `manifest.json` | ✅     | PWA manifest                    |
-| `sw.js`         | ✅     | Service worker                  |
-| `icons/*`       | ✅     | All PWA icons (72-512px)        |
+| File            | Status | Purpose                  |
+| --------------- | ------ | ------------------------ |
+| `manifest.json` | ✅     | PWA manifest             |
+| `sw.js`         | ✅     | Service worker           |
+| `icons/*`       | ✅     | All PWA icons (72-512px) |
 
 ---
 
@@ -128,11 +130,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## Next Steps
 
-| Priority | Task                              | Status |
-| -------- | --------------------------------- | ------ |
-| 1        | Set WebAuthn env vars (see below) | ⚠️     |
-| 2        | Deploy to Cloudflare Pages        | ⚠️     |
-| 3        | Test full auth flow end-to-end    | ❌     |
+| Priority | Task                              | Status      |
+| -------- | --------------------------------- | ----------- |
+| 1        | Set WebAuthn env vars (see below) | ⚠️ Required |
+| 2        | Test full auth flow end-to-end    | ❌ Pending  |
 
 ### Cloudflare Pages Deployment
 
@@ -174,6 +175,100 @@ For local development, use `localhost` and `http://localhost:5173`.
 ---
 
 ## Changelog
+
+### Dec 4, 2025 - Planned Alerts & Filter UX Improvements
+
+**Planned Alerts Widget:**
+
+- ✅ Renamed "Planned Maintenance" to "Planned Subway Closures"
+- ✅ Moved closure badges (Full Weekend / Nightly Early) below station text
+- ✅ Added footer row with badge on left, Details link on right
+- ✅ Neutral gray outline style for closure badges (zinc-400)
+- ✅ Fixed time parsing to handle HH:MM:SS format → displays as "11:59 PM"
+- ✅ Consistent vertical alignment for dates across all cards
+
+**Filter Improvements:**
+
+- ✅ Removed "Planned" filter chip (handled by dedicated widget)
+- ✅ Filters are now mutually exclusive (only one selected at a time)
+- ✅ Filter only considers latest alert's category (not thread history)
+- ✅ Excluded planned alerts from main feed (checks categories, effect, and header text)
+
+**Empty State:**
+
+- ✅ Added SearchX icon for empty filter results
+- ✅ Changed message to "No alerts for this filter" with helpful hint
+
+**Service Worker:**
+
+- ✅ Fixed SW to skip Vite dev server requests (/.svelte-kit/, /@vite/, etc.)
+
+**Files Updated:**
+
+- `src/lib/components/alerts/MaintenanceWidget.svelte` - Closure badge position, time parsing
+- `src/lib/components/alerts/FilterChips.svelte` - Removed Planned filter
+- `src/lib/stores/alerts.ts` - Mutually exclusive filters, exclude planned alerts
+- `src/routes/+page.svelte` - Empty state with icon
+- `src/routes/layout.css` - Footer layout, badge styling, time styling
+- `static/sw.js` - Skip dev server requests
+
+### Dec 6, 2025 - MaintenanceWidget UX Redesign
+
+**New Features:**
+
+- ✅ Closure type badges: "Full weekend closure" (red) and "Nightly early closure" (amber)
+- ✅ Structured layout: Line badge + closure type on left, date + start time on right
+- ✅ Timezone-safe date parsing with `parseLocalDate()` helper
+- ✅ Smart time display: 12-hour format with "from 11:59 PM" for nightly closures
+- ✅ Added `affected_stations` field to PlannedMaintenance type
+
+**Files Updated:**
+
+- `src/lib/types/database.ts` - Added `affected_stations`, `reason`, `start_time` to PlannedMaintenance
+- `src/lib/stores/alerts.ts` - Updated fetchMaintenance to map all new fields
+- `src/lib/components/alerts/MaintenanceWidget.svelte` - Complete UX overhaul
+- `src/routes/layout.css` - New CSS for datetime, stations, closure badges
+
+### Dec 6, 2025 - WCAG 2.2 AA & shadcn Consistency Overhaul
+
+**UI/UX Improvements:**
+
+- ✅ All components now follow shadcn-svelte patterns strictly
+- ✅ WCAG 2.2 AA compliant contrast ratios (4.5:1 minimum) for status badges
+- ✅ Consistent spacing tokens throughout (p-4 cards, gap-3 flex items, mb-6 sections)
+- ✅ Single source of truth pattern: StatusBadge now extends shadcn Badge component
+- ✅ Replaced all `hsl(var())` patterns with direct Tailwind classes (`bg-primary`, `text-muted-foreground`, etc.)
+
+**Accessibility Enhancements:**
+
+- Added ARIA attributes across all interactive components
+- FilterChips: role="group" with aria-label, aria-pressed states
+- AlertCard: aria-live regions, semantic HTML with `<time>` element
+- MaintenanceWidget: tablist/tab roles, aria-selected states
+- RouteBadge: aria-label with route descriptions, aria-pressed for selection
+- Preferences page: aria-pressed on selection buttons, role="group" for day selectors
+
+**Files Updated:**
+
+- `src/routes/layout.css` - Status badge colors (oklch for WCAG), spacing tokens
+- `src/lib/components/alerts/StatusBadge.svelte` - Refactored to use shadcn Badge
+- `src/lib/components/alerts/RouteBadge.svelte` - cn() utility, ARIA support
+- `src/lib/components/alerts/FilterChips.svelte` - ARIA group semantics
+- `src/lib/components/alerts/AlertCard.svelte` - Semantic HTML, aria-live
+- `src/lib/components/alerts/MaintenanceWidget.svelte` - Tab accessibility
+- `src/routes/+page.svelte` - Consistent spacing
+- `src/routes/preferences/+page.svelte` - Full styling consistency, ARIA support
+- `src/lib/components/layout/Header.svelte` - Direct Tailwind classes, ARIA labels
+- `src/lib/components/layout/Sidebar.svelte` - Direct Tailwind classes
+- `src/lib/components/dialogs/AuthRequiredDialog.svelte` - Direct Tailwind classes
+
+### Dec 5, 2025 - UI Matching Reference App
+
+- Fixed AlertCard.svelte: `extractRouteName()` parses full route names from header_text (e.g., "306 Carlton")
+- Fixed RouteBadge.svelte: Full route names displayed with proper TTC brand colors
+- Fixed alerts.ts: Added date validation filter to remove threads with invalid dates
+- Deployed to Cloudflare Pages production: https://ttc-alerts-svelte.pages.dev
+- UI now matches reference at https://ttc-service-alerts-pwa.onrender.com/
 
 ### Dec 4, 2025 - Cloudflare Pages Ready
 

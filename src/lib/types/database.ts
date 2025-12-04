@@ -108,6 +108,21 @@ export type Maintenance = Database['public']['Tables']['planned_maintenance']['R
 export type UserPreferences = Database['public']['Tables']['user_preferences']['Row'];
 export type DevicePreferences = Database['public']['Tables']['device_preferences']['Row'];
 
+// UI-friendly maintenance type (mapped from Maintenance)
+export interface PlannedMaintenance {
+  id: number;
+  maintenance_id: string;
+  routes: string[];  // Mapped from subway_line
+  affected_stations: string;
+  description: string | null;
+  reason: string | null;
+  start_date: string;
+  end_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  url: string | null;
+}
+
 // Alert categories
 export type AlertCategory = 
   | 'SERVICE_DISRUPTION'

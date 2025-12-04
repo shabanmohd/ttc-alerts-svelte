@@ -1,5 +1,5 @@
 import { writable, derived } from 'svelte/store';
-import type { Alert, Thread, ThreadWithAlerts } from '$lib/types/database';
+import type { Alert, Thread, ThreadWithAlerts, Maintenance, PlannedMaintenance } from '$lib/types/database';
 import { supabase } from '$lib/supabase';
 
 // Core alert state
@@ -18,9 +18,21 @@ export const pendingAlerts = writable<Alert[] | null>(null);
 export const hasUpdates = writable(false);
 export const updateCount = writable(0);
 
-// Helper to extract categories from JSONB
+// Maintenance state
+export const maintenanceItems = writable<PlannedMaintenance[]>([]);
+
+// Helper to extract categories from JSONB or array
 function extractCategories(data: unknown): string[] {
+  if (!data) return [];
   if (Array.isArray(data)) return data as string[];
+  if (typeof data === 'string') {
+    try {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed as string[];
+    } catch {
+      // Not valid JSON
+    }
+  }
   return [];
 }
 
@@ -34,20 +46,41 @@ function extractRoutes(data: unknown): string[] {
 export const threadsWithAlerts = derived(
   [threads, alerts],
   ([$threads, $alerts]) => {
-    return $threads.map((thread): ThreadWithAlerts => {
-      const threadAlerts = $alerts
-        .filter(a => a.thread_id === thread.thread_id)
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      
-      return {
-        ...thread,
-        alerts: threadAlerts,
-        latestAlert: threadAlerts[0]
-      };
-    }).sort((a, b) => 
-      new Date(b.latestAlert?.created_at || 0).getTime() - 
-      new Date(a.latestAlert?.created_at || 0).getTime()
-    );
+    return $threads
+      .map((thread): ThreadWithAlerts => {
+        const threadAlerts = $alerts
+          .filter(a => a.thread_id === thread.thread_id)
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        
+        return {
+          ...thread,
+          alerts: threadAlerts,
+          latestAlert: threadAlerts[0]
+        };
+      })
+      // Filter out threads with no alerts, missing critical data, invalid timestamps, or planned alerts
+      .filter(thread => {
+        if (!thread.latestAlert || !thread.latestAlert.header_text) return false;
+        // Check for valid timestamp
+        const date = new Date(thread.latestAlert.created_at);
+        if (isNaN(date.getTime())) return false;
+        // Exclude planned service disruptions (handled by maintenance widget)
+        const categories = extractCategories(thread.categories) || 
+                           extractCategories(thread.latestAlert?.categories) || [];
+        if (categories.includes('PLANNED_SERVICE_DISRUPTION')) return false;
+        if (categories.includes('PLANNED')) return false;
+        // Also check effect field for planned alerts
+        const effect = thread.latestAlert?.effect?.toUpperCase() || '';
+        if (effect.includes('PLANNED')) return false;
+        // Check header text for planned maintenance keywords
+        const headerText = thread.latestAlert?.header_text?.toLowerCase() || '';
+        if (headerText.includes('due to planned') || headerText.includes('planned track work')) return false;
+        return true;
+      })
+      .sort((a, b) => 
+        new Date(b.latestAlert?.created_at || 0).getTime() - 
+        new Date(a.latestAlert?.created_at || 0).getTime()
+      );
   }
 );
 
@@ -60,8 +93,8 @@ export const filteredThreads = derived(
     }
     
     return $threadsWithAlerts.filter(thread => {
-      const categories = extractCategories(thread.categories) || 
-                         extractCategories(thread.latestAlert?.categories) || [];
+      // Only use the latest alert's categories for filtering
+      const categories = extractCategories(thread.latestAlert?.categories) || [];
       return categories.some(cat => $activeFilters.has(cat));
     });
   }
@@ -192,28 +225,52 @@ export function subscribeToAlerts(): () => void {
   };
 }
 
-// Toggle filter
+// Fetch planned maintenance from Supabase
+export async function fetchMaintenance(): Promise<PlannedMaintenance[]> {
+  try {
+    const { data, error: fetchError } = await supabase
+      .from('planned_maintenance')
+      .select('*')
+      .eq('is_active', true)
+      .gte('end_date', new Date().toISOString())
+      .order('start_date', { ascending: true })
+      .limit(20);
+    
+    if (fetchError) throw fetchError;
+    
+    // Map database format to UI format
+    const items: PlannedMaintenance[] = (data || []).map((m: Maintenance) => ({
+      id: m.id,
+      maintenance_id: m.maintenance_id,
+      routes: [m.subway_line],
+      affected_stations: m.affected_stations || '',
+      description: m.description,
+      reason: m.reason,
+      start_date: m.start_date,
+      end_date: m.end_date,
+      start_time: m.start_time,
+      end_time: m.end_time,
+      url: m.details_url
+    }));
+    
+    maintenanceItems.set(items);
+    return items;
+    
+  } catch (e) {
+    console.error('Error fetching maintenance:', e);
+    return [];
+  }
+}
+
+// Toggle filter (mutually exclusive - only one filter at a time)
 export function toggleFilter(category: string): void {
   activeFilters.update(filters => {
-    const newFilters = new Set(filters);
-    
-    if (category === 'ALL') {
+    // If clicking the already active filter, reset to ALL
+    if (filters.has(category)) {
       return new Set(['ALL']);
     }
     
-    newFilters.delete('ALL');
-    
-    if (newFilters.has(category)) {
-      newFilters.delete(category);
-    } else {
-      newFilters.add(category);
-    }
-    
-    // If no filters selected, default to ALL
-    if (newFilters.size === 0) {
-      return new Set(['ALL']);
-    }
-    
-    return newFilters;
+    // Otherwise, select only this filter
+    return new Set([category]);
   });
 }

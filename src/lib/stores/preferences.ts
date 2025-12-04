@@ -77,19 +77,19 @@ export async function loadPreferences() {
     
     // Fall back to device preferences
     const fingerprint = await getDeviceFingerprint();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('device_preferences')
       .select('*')
-      .eq('device_fingerprint', fingerprint)
-      .single();
+      .eq('device_id', fingerprint)
+      .maybeSingle();
     
     if (data) {
       preferences.set(data);
     } else {
       // Create default device preferences
       preferences.set({
-        device_fingerprint: fingerprint,
-        ...defaultPreferences
+        device_id: fingerprint,
+        preferences: defaultPreferences
       } as DevicePreferences);
     }
   } catch (error) {
@@ -140,11 +140,13 @@ export async function savePreferences(updates: {
       const { error } = await supabase
         .from('device_preferences')
         .upsert({
-          device_fingerprint: fingerprint,
-          ...current,
-          ...dbUpdates,
+          device_id: fingerprint,
+          preferences: {
+            ...((current as any)?.preferences || defaultPreferences),
+            ...dbUpdates
+          },
           updated_at: new Date().toISOString()
-        });
+        }, { onConflict: 'device_id' });
       
       if (error) throw error;
     }
@@ -166,18 +168,15 @@ export async function migratePreferencesToUser(newUserId: string) {
     const { data: devicePrefs } = await supabase
       .from('device_preferences')
       .select('*')
-      .eq('device_fingerprint', fingerprint)
+      .eq('device_id', fingerprint)
       .single();
     
-    if (devicePrefs) {
+    if (devicePrefs && devicePrefs.preferences) {
       // Copy to user preferences
       await supabase.from('user_preferences').upsert({
         user_id: newUserId,
-        transport_modes: devicePrefs.transport_modes,
-        routes: devicePrefs.routes,
-        alert_types: devicePrefs.alert_types,
-        schedule: devicePrefs.schedule,
-        push_enabled: devicePrefs.push_enabled
+        preferences: devicePrefs.preferences,
+        push_subscription: devicePrefs.push_subscription
       });
       
       // Update store
@@ -189,18 +188,34 @@ export async function migratePreferencesToUser(newUserId: string) {
   }
 }
 
+// Helper to get nested preferences from either user or device format
+function getPrefsData(p: any) {
+  if (!p) return null;
+  // If it's device_preferences format with nested preferences
+  if (p.preferences && typeof p.preferences === 'object') {
+    return p.preferences;
+  }
+  // If it's user_preferences format with nested preferences
+  if (p.preferences && typeof p.preferences === 'object') {
+    return p.preferences;
+  }
+  // Legacy flat format
+  return p;
+}
+
 // Derived stores for convenience
-export const modes = derived(preferences, $p => $p?.transport_modes ?? []);
+export const modes = derived(preferences, $p => getPrefsData($p)?.transport_modes ?? []);
 export const transportModes = modes; // Alias for backwards compatibility
-export const routes = derived(preferences, $p => $p?.routes ?? []);
-export const alertTypes = derived(preferences, $p => $p?.alert_types ?? []);
+export const routes = derived(preferences, $p => getPrefsData($p)?.routes ?? []);
+export const alertTypes = derived(preferences, $p => getPrefsData($p)?.alert_types ?? []);
 export const schedules = derived(preferences, $p => {
-  const schedule = ($p as any)?.schedule;
+  const prefs = getPrefsData($p);
+  const schedule = prefs?.schedule;
   if (!schedule) return [];
   if (Array.isArray(schedule)) return schedule;
   return [schedule];
 });
-export const pushEnabled = derived(preferences, $p => $p?.push_enabled ?? false);
+export const pushEnabled = derived(preferences, $p => getPrefsData($p)?.push_enabled ?? false);
 
 // Reset preferences to defaults
 export async function resetPreferences() {
@@ -226,10 +241,10 @@ export async function resetPreferences() {
       const { error } = await supabase
         .from('device_preferences')
         .update({
-          ...defaultPreferences,
+          preferences: defaultPreferences,
           updated_at: new Date().toISOString()
         })
-        .eq('device_fingerprint', fingerprint);
+        .eq('device_id', fingerprint);
       
       if (error) throw error;
     }

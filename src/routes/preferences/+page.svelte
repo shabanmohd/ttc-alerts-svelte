@@ -260,7 +260,7 @@
   <!-- Page Header -->
   <div class="mb-8">
     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">My Alert Preferences</h1>
-    <p class="text-[hsl(var(--muted-foreground))] mt-2">
+    <p class="text-muted-foreground mt-2 leading-relaxed">
       Set up personalized alerts for your commute. Your preferences are saved to this device.
     </p>
   </div>
@@ -272,7 +272,7 @@
         <Accordion.Item value="step-1" class="border-0">
           <Accordion.Trigger class="w-full px-4 sm:px-6 py-4 hover:no-underline">
             <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full {step1Complete ? 'bg-[hsl(var(--primary))]' : 'bg-[hsl(var(--muted))]'} text-{step1Complete ? '[hsl(var(--primary-foreground))]' : '[hsl(var(--muted-foreground))]'} text-xs sm:text-sm font-semibold">
+              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full {step1Complete ? 'bg-primary' : 'bg-muted'} text-{step1Complete ? 'primary-foreground' : 'muted-foreground'} text-xs sm:text-sm font-semibold">
                 {#if step1Complete}
                   <Check class="h-4 w-4" />
                 {:else}
@@ -281,7 +281,7 @@
               </div>
               <div class="text-left min-w-0">
                 <div class="font-semibold text-sm sm:text-base">Select Transport Modes</div>
-                <div class="text-xs text-[hsl(var(--muted-foreground))] hidden sm:block">Choose which TTC services you use</div>
+                <div class="text-xs text-muted-foreground hidden sm:block">Choose which TTC services you use</div>
               </div>
             </div>
             <div class="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -299,15 +299,17 @@
                     class:selected={isSelected}
                     data-selected={isSelected}
                     onclick={() => toggleMode(mode.id)}
+                    aria-pressed={isSelected}
+                    aria-label="{mode.name}: {mode.description}"
                   >
-                    <div class="text-2xl sm:text-3xl shrink-0">{mode.icon}</div>
+                    <div class="text-2xl sm:text-3xl shrink-0" aria-hidden="true">{mode.icon}</div>
                     <div class="flex-1 min-w-0">
                       <div class="font-semibold">{mode.name}</div>
-                      <div class="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">{mode.description}</div>
+                      <div class="text-xs sm:text-sm text-muted-foreground">{mode.description}</div>
                     </div>
-                    <div class="mode-check w-5 h-5 rounded-full border-2 {isSelected ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]' : 'border-[hsl(var(--muted-foreground))]'} flex items-center justify-center transition-all shrink-0">
+                    <div class="mode-check w-5 h-5 rounded-full border-2 {isSelected ? 'border-primary bg-primary' : 'border-muted-foreground'} flex items-center justify-center transition-all shrink-0" aria-hidden="true">
                       {#if isSelected}
-                        <Check class="h-3 w-3 text-[hsl(var(--primary-foreground))]" />
+                        <Check class="h-3 w-3 text-primary-foreground" />
                       {/if}
                     </div>
                   </button>
@@ -325,16 +327,16 @@
         <Accordion.Item value="step-2" class="border-0">
           <Accordion.Trigger class="w-full px-4 sm:px-6 py-4 hover:no-underline">
             <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full {step2Complete ? 'bg-[hsl(var(--primary))]' : 'bg-[hsl(var(--muted))]'} text-xs sm:text-sm font-semibold">
+              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full {step2Complete ? 'bg-primary' : 'bg-muted'} text-xs sm:text-sm font-semibold">
                 {#if step2Complete}
-                  <Check class="h-4 w-4 text-[hsl(var(--primary-foreground))]" />
+                  <Check class="h-4 w-4 text-primary-foreground" />
                 {:else}
-                  <span class="text-[hsl(var(--muted-foreground))]">2</span>
+                  <span class="text-muted-foreground">2</span>
                 {/if}
               </div>
               <div class="text-left min-w-0">
                 <div class="font-semibold text-sm sm:text-base">Select Your Routes</div>
-                <div class="text-xs text-[hsl(var(--muted-foreground))] hidden sm:block">Choose specific routes for alerts</div>
+                <div class="text-xs text-muted-foreground hidden sm:block">Choose specific routes for alerts</div>
               </div>
             </div>
             <div class="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -345,10 +347,12 @@
             <div class="px-4 sm:px-6 pb-4">
               <!-- Search -->
               <div class="mt-4 mb-4">
+                <label for="route-search" class="sr-only">Search routes</label>
                 <div class="relative">
-                  <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+                  <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <input 
                     type="text" 
+                    id="route-search"
                     placeholder="Search routes..." 
                     class="input pl-10 w-full"
                     bind:value={routeSearch}
@@ -394,16 +398,16 @@
         <Accordion.Item value="step-3" class="border-0">
           <Accordion.Trigger class="w-full px-4 sm:px-6 py-4 hover:no-underline">
             <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full {step3Complete ? 'bg-[hsl(var(--primary))]' : 'bg-[hsl(var(--muted))]'} text-xs sm:text-sm font-semibold">
+              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full {step3Complete ? 'bg-primary' : 'bg-muted'} text-xs sm:text-sm font-semibold">
                 {#if step3Complete}
-                  <Check class="h-4 w-4 text-[hsl(var(--primary-foreground))]" />
+                  <Check class="h-4 w-4 text-primary-foreground" />
                 {:else}
-                  <span class="text-[hsl(var(--muted-foreground))]">3</span>
+                  <span class="text-muted-foreground">3</span>
                 {/if}
               </div>
               <div class="text-left min-w-0">
                 <div class="font-semibold text-sm sm:text-base">Set Your Schedule</div>
-                <div class="text-xs text-[hsl(var(--muted-foreground))] hidden sm:block">When do you want alerts?</div>
+                <div class="text-xs text-muted-foreground hidden sm:block">When do you want alerts?</div>
               </div>
             </div>
             <div class="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -412,7 +416,7 @@
           </Accordion.Trigger>
           <Accordion.Content>
             <div class="px-4 sm:px-6 pb-4">
-              <p class="text-sm text-[hsl(var(--muted-foreground))] mt-4 mb-4">
+              <p class="text-sm text-muted-foreground mt-4 mb-4">
                 Add one or more schedules for when you want to receive alerts.
               </p>
               
@@ -424,7 +428,7 @@
                       <span class="font-medium">Schedule {i + 1}</span>
                       {#if schedules.length > 1}
                         <Button variant="ghost" size="icon" type="button" class="h-8 w-8" onclick={() => removeSchedule(schedule.id)}>
-                          <Trash2 class="h-4 w-4 text-[hsl(var(--destructive))]" />
+                          <Trash2 class="h-4 w-4 text-destructive" />
                         </Button>
                       {/if}
                     </div>
@@ -432,7 +436,7 @@
                     <!-- Days -->
                     <div class="mb-4">
                       <label class="label mb-2 block text-sm font-medium">Days</label>
-                      <div class="flex flex-wrap gap-2">
+                      <div class="flex flex-wrap gap-2" role="group" aria-label="Select days of week">
                         {#each days as day}
                           {@const isSelected = schedule.days.has(day.id)}
                           <button
@@ -441,10 +445,12 @@
                             class:selected={isSelected}
                             data-selected={isSelected}
                             onclick={() => toggleDay(schedule.id, day.id)}
+                            aria-pressed={isSelected}
+                            aria-label={day.label}
                           >
-                            <div class="mode-check w-5 h-5 rounded-full border-2 {isSelected ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]' : 'border-[hsl(var(--muted-foreground))]'} flex items-center justify-center transition-all shrink-0">
+                            <div class="mode-check w-5 h-5 rounded-full border-2 {isSelected ? 'border-primary bg-primary' : 'border-muted-foreground'} flex items-center justify-center transition-all shrink-0" aria-hidden="true">
                               {#if isSelected}
-                                <Check class="h-3 w-3 text-[hsl(var(--primary-foreground))]" />
+                                <Check class="h-3 w-3 text-primary-foreground" />
                               {/if}
                             </div>
                             <span class="font-medium text-sm">{day.label}</span>
@@ -493,16 +499,16 @@
         <Accordion.Item value="step-4" class="border-0">
           <Accordion.Trigger class="w-full px-4 sm:px-6 py-4 hover:no-underline">
             <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full {step4Complete ? 'bg-[hsl(var(--primary))]' : 'bg-[hsl(var(--muted))]'} text-xs sm:text-sm font-semibold">
+              <div class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full {step4Complete ? 'bg-primary' : 'bg-muted'} text-xs sm:text-sm font-semibold">
                 {#if step4Complete}
-                  <Check class="h-4 w-4 text-[hsl(var(--primary-foreground))]" />
+                  <Check class="h-4 w-4 text-primary-foreground" />
                 {:else}
-                  <span class="text-[hsl(var(--muted-foreground))]">4</span>
+                  <span class="text-muted-foreground">4</span>
                 {/if}
               </div>
               <div class="text-left min-w-0">
                 <div class="font-semibold text-sm sm:text-base">Choose Alert Types</div>
-                <div class="text-xs text-[hsl(var(--muted-foreground))] hidden sm:block">What alerts do you want?</div>
+                <div class="text-xs text-muted-foreground hidden sm:block">What alerts do you want?</div>
               </div>
             </div>
             <div class="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -520,15 +526,17 @@
                     class:selected={isSelected}
                     data-selected={isSelected}
                     onclick={() => toggleAlertType(alertType.id)}
+                    aria-pressed={isSelected}
+                    aria-label="{alertType.name}: {alertType.description}"
                   >
-                    <div class="text-2xl sm:text-3xl shrink-0">{alertType.icon}</div>
+                    <div class="text-2xl sm:text-3xl shrink-0" aria-hidden="true">{alertType.icon}</div>
                     <div class="flex-1 min-w-0">
                       <div class="font-semibold">{alertType.name}</div>
-                      <div class="text-xs sm:text-sm text-[hsl(var(--muted-foreground))]">{alertType.description}</div>
+                      <div class="text-xs sm:text-sm text-muted-foreground">{alertType.description}</div>
                     </div>
-                    <div class="mode-check w-5 h-5 rounded-full border-2 {isSelected ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]' : 'border-[hsl(var(--muted-foreground))]'} flex items-center justify-center transition-all shrink-0">
+                    <div class="mode-check w-5 h-5 rounded-full border-2 {isSelected ? 'border-primary bg-primary' : 'border-muted-foreground'} flex items-center justify-center transition-all shrink-0" aria-hidden="true">
                       {#if isSelected}
-                        <Check class="h-3 w-3 text-[hsl(var(--primary-foreground))]" />
+                        <Check class="h-3 w-3 text-primary-foreground" />
                       {/if}
                     </div>
                   </button>
@@ -551,7 +559,7 @@
         {/if}
       </Button>
       {#if !$isAuthenticated}
-        <p class="text-center text-sm text-[hsl(var(--muted-foreground))] mt-2">
+        <p class="text-center text-sm text-muted-foreground mt-2">
           An account is required to save preferences
         </p>
       {/if}
@@ -573,15 +581,15 @@
       </Card.Header>
       <Card.Content>
         {#if $isAuthenticated}
-          <div class="flex items-center gap-3 p-3 rounded-lg bg-[hsl(var(--muted))]">
-            <div class="w-10 h-10 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center">
-              <span class="text-lg font-semibold text-[hsl(var(--primary-foreground))]">
+          <div class="flex items-center gap-3 p-3 rounded-lg bg-muted">
+            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+              <span class="text-lg font-semibold text-primary-foreground">
                 {($userName || 'U').charAt(0).toUpperCase()}
               </span>
             </div>
             <div class="flex-1">
               <p class="font-medium">{$userName}</p>
-              <p class="text-sm text-[hsl(var(--muted-foreground))]">Preferences synced</p>
+              <p class="text-sm text-muted-foreground">Preferences synced</p>
             </div>
           </div>
         {:else}
@@ -610,31 +618,31 @@
     </Card.Header>
     <Card.Content class="space-y-2">
       <Button variant="ghost" class="w-full justify-start gap-3" onclick={() => activeDialog = 'how-to-use'}>
-        <HelpCircle class="h-5 w-5 opacity-70" />
+        <HelpCircle class="h-5 w-5 opacity-70" aria-hidden="true" />
         <div class="text-left">
           <div class="font-medium">How to Use</div>
-          <div class="text-xs text-[hsl(var(--muted-foreground))]">Step-by-step guide</div>
+          <div class="text-xs text-muted-foreground">Step-by-step guide</div>
         </div>
       </Button>
       <Button variant="ghost" class="w-full justify-start gap-3">
-        <Bug class="h-5 w-5 opacity-70" />
+        <Bug class="h-5 w-5 opacity-70" aria-hidden="true" />
         <div class="text-left">
           <div class="font-medium">Report a Bug</div>
-          <div class="text-xs text-[hsl(var(--muted-foreground))]">Something not working?</div>
+          <div class="text-xs text-muted-foreground">Something not working?</div>
         </div>
       </Button>
       <Button variant="ghost" class="w-full justify-start gap-3">
-        <Lightbulb class="h-5 w-5 opacity-70" />
+        <Lightbulb class="h-5 w-5 opacity-70" aria-hidden="true" />
         <div class="text-left">
           <div class="font-medium">Request a Feature</div>
-          <div class="text-xs text-[hsl(var(--muted-foreground))]">Have an idea?</div>
+          <div class="text-xs text-muted-foreground">Have an idea?</div>
         </div>
       </Button>
       <Button variant="ghost" class="w-full justify-start gap-3">
-        <Info class="h-5 w-5 opacity-70" />
+        <Info class="h-5 w-5 opacity-70" aria-hidden="true" />
         <div class="text-left">
           <div class="font-medium">About</div>
-          <div class="text-xs text-[hsl(var(--muted-foreground))]">Version & credits</div>
+          <div class="text-xs text-muted-foreground">Version & credits</div>
         </div>
       </Button>
     </Card.Content>
@@ -644,7 +652,7 @@
   <div class="mb-20 text-center">
     <button 
       type="button" 
-      class="text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] transition-colors underline-offset-4 hover:underline"
+      class="text-sm text-muted-foreground hover:text-destructive transition-colors underline-offset-4 hover:underline"
       onclick={handleReset}
     >
       Reset All Preferences

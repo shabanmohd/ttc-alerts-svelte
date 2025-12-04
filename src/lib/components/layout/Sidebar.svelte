@@ -76,8 +76,8 @@
     {#if $isAuthenticated}
       <div class="px-3 py-2 mb-2">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center flex-shrink-0">
-            <span class="text-sm font-semibold text-[hsl(var(--primary-foreground))]">{$userInitial}</span>
+          <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+            <span class="text-sm font-semibold text-primary-foreground">{$userInitial}</span>
           </div>
           <div class="min-w-0 flex-1">
             <p class="text-sm font-medium truncate">{$userName}</p>
@@ -90,7 +90,7 @@
           class="w-full mt-2 justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
           onclick={handleSignOut}
         >
-          <LogOut class="w-4 h-4 mr-2" />
+          <LogOut class="w-4 h-4 mr-2" aria-hidden="true" />
           Sign Out
         </Button>
       </div>
@@ -102,7 +102,7 @@
           class="w-full justify-start"
           onclick={() => handleDialog('sign-in')}
         >
-          <User class="w-4 h-4 mr-2" />
+          <User class="w-4 h-4 mr-2" aria-hidden="true" />
           Sign In
         </Button>
         <p class="text-xs text-muted-foreground mt-2 px-1">
