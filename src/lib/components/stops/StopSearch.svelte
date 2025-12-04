@@ -10,14 +10,21 @@
 	} from '$lib/data/stops-db';
 	import { onMount } from 'svelte';
 	import RouteBadge from '$lib/components/alerts/RouteBadge.svelte';
+	import BookmarkStopButton from './BookmarkStopButton.svelte';
 
 	interface Props {
 		onSelect?: (stop: TTCStop) => void;
 		placeholder?: string;
 		showNearbyButton?: boolean;
+		showBookmarkButton?: boolean;
 	}
 
-	let { onSelect, placeholder = 'Search stops...', showNearbyButton = true }: Props = $props();
+	let { 
+		onSelect, 
+		placeholder = 'Search stops...', 
+		showNearbyButton = true,
+		showBookmarkButton = true
+	}: Props = $props();
 
 	let query = $state('');
 	let results = $state<TTCStop[]>([]);
@@ -284,6 +291,9 @@
 								{/if}
 							</div>
 						</div>
+						{#if showBookmarkButton}
+							<BookmarkStopButton {stop} size="sm" />
+						{/if}
 					</button>
 				{/each}
 			{:else if hasSearched && !isLoading}

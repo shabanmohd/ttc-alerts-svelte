@@ -1,6 +1,13 @@
 // Auto-generated types from Supabase schema
 // Run: npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/lib/types/database.ts
 
+// BookmarkedStop type (defined first for use in Database interface)
+export interface BookmarkedStop {
+  id: string;
+  name: string;
+  routes: string[];
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -95,11 +102,33 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['device_preferences']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['device_preferences']['Insert']>;
       };
+      user_preferences_v2: {
+        Row: {
+          user_id: string;
+          selected_routes: string[];
+          transport_modes: string[];
+          alert_types: string[];
+          quiet_hours_enabled: boolean;
+          quiet_hours_start: string;
+          quiet_hours_end: string;
+          quiet_days: number[];
+          push_enabled: boolean;
+          push_subscription: Record<string, unknown> | null;
+          bookmarked_stops: BookmarkedStop[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Omit<Database['public']['Tables']['user_preferences_v2']['Row'], 'created_at' | 'updated_at'>> & { user_id: string };
+        Update: Partial<Database['public']['Tables']['user_preferences_v2']['Insert']>;
+      };
     };
     Functions: Record<string, never>;
     Enums: Record<string, never>;
   };
 }
+
+// User Preferences V2 type alias (WebAuthn auth system)
+export type UserPreferencesV2 = Database['public']['Tables']['user_preferences_v2']['Row'];
 
 // Convenience types
 export type Alert = Database['public']['Tables']['alert_cache']['Row'];

@@ -714,14 +714,14 @@ export async function getStopById(id: string): Promise<TTCStop | undefined> {
 
 ### 2.4 Stop Bookmarks
 
-- [ ] Add `bookmarked_stops` column to `user_preferences` table (migration)
-- [ ] Create `src/lib/stores/bookmarks.ts`
-- [ ] Store bookmarks in localStorage for anonymous users
-- [ ] Sync to Supabase for authenticated users
-- [ ] Create `BookmarkStopButton.svelte` component
-- [ ] Add bookmark toggle to stop search results
-- [ ] Create `MyStopsWidget.svelte` for homepage
-- [ ] Limit to 10 bookmarked stops per user
+- [x] Add `bookmarked_stops` column to `user_preferences` table (migration) ✅
+- [x] Create `src/lib/stores/bookmarks.ts` ✅
+- [x] Store bookmarks in localStorage for anonymous users ✅
+- [x] Sync to Supabase for authenticated users ✅
+- [x] Create `BookmarkStopButton.svelte` component ✅
+- [x] Add bookmark toggle to stop search results ✅
+- [x] Create `MyStopsWidget.svelte` for homepage ✅
+- [x] Limit to 10 bookmarked stops per user ✅
 
 **Database Migration:**
 
