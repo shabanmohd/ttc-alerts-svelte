@@ -80,7 +80,7 @@ This document describes the alert categorization and threading system designed t
 
 - **Effect > Cause** - "No service" matters more than "due to security incident"
 - **Non-exclusive categories** - Alert can be `SERVICE_DISRUPTION` + `SUBWAY`
-- **Simple threading** - 80% text similarity for general matching, 25% for SERVICE_RESUMED
+- **Simple threading** - 50% text similarity for general matching, 20% for SERVICE_RESUMED
 - **Latest first** - Most recent update at top of thread
 - **Exact route number matching** - Threading uses route NUMBER comparison (e.g., "46" ≠ "996")
 
@@ -266,14 +266,14 @@ for (const thread of unresolvedThreads || []) {
     const threadTitle = thread.title || "";
     const similarity = jaccardSimilarity(text, threadTitle);
 
-    // High similarity (80%) for general matching
-    if (similarity >= 0.8) {
+    // Medium similarity (50%) for general matching
+    if (similarity >= 0.5) {
       matchedThread = thread;
       break;
     }
 
-    // Lower threshold (25%) for SERVICE_RESUMED with route overlap
-    if (category === "SERVICE_RESUMED" && similarity >= 0.25) {
+    // Lower threshold (20%) for SERVICE_RESUMED with route overlap
+    if (category === "SERVICE_RESUMED" && similarity >= 0.2) {
       matchedThread = thread;
       break;
     }
@@ -284,8 +284,8 @@ for (const thread of unresolvedThreads || []) {
 ### Threading Rules
 
 1. **Exact route number match required** - Route NUMBERS must match (e.g., "46" = "46 Martin Grove", but "46" ≠ "996")
-2. **High similarity (≥80%)** - For general alert matching
-3. **Low similarity (≥25%)** - For SERVICE_RESUMED (different vocabulary)
+2. **Medium similarity (≥50%)** - For general alert matching
+3. **Low similarity (≥20%)** - For SERVICE_RESUMED (different vocabulary)
 4. **6-hour window** - Only match unresolved threads updated within 6 hours
 5. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
 
