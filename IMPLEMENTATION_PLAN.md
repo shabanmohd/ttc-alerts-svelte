@@ -14,7 +14,7 @@ Comprehensive plan for ETA feature, stop search, accessibility enhancements, and
 | 1     | Foundation & Accessibility   | ✅ Complete    | 100%     |
 | 2     | Stop Database & Search       | ✅ Complete    | 100%     |
 | 3     | ETA Feature                  | ✅ Complete    | 100%     |
-| 4     | i18n & Additional Features   | ❌ Not Started | 0%       |
+| 4     | i18n & Additional Features   | ✅ Complete    | 100%     |
 | 5     | Polish & Testing             | ❌ Not Started | 0%       |
 
 **Last Updated**: December 4, 2025
@@ -1110,13 +1110,13 @@ export const etaStore = createETAStore();
 
 ### 4.1 French Language Support
 
-- [ ] Install `svelte-i18n` package
-- [ ] Create `src/lib/i18n/index.ts` setup file
-- [ ] Create `src/lib/i18n/en.json` with all UI strings
-- [ ] Create `src/lib/i18n/fr.json` with French translations
+- [x] Install `svelte-i18n` package
+- [x] Create `src/lib/i18n/index.ts` setup file
+- [x] Create `src/lib/i18n/en.json` with all UI strings
+- [x] Create `src/lib/i18n/fr.json` with French translations
 - [ ] Add `$t()` wrapper to all UI strings
-- [ ] Add language toggle to Header (EN/FR buttons)
-- [ ] Persist language preference to localStorage
+- [x] Add language toggle to Header (EN/FR buttons)
+- [x] Persist language preference to localStorage
 - [ ] Update HTML `lang` attribute dynamically
 
 **i18n Setup:**
@@ -1200,13 +1200,13 @@ if (browser) {
 
 ### 4.2 Route Browser Page
 
-- [ ] Create `src/routes/routes/+page.svelte`
-- [ ] Organize routes by category (Subway, Streetcar, Bus, Express, Night)
-- [ ] Display route badge + name for each
-- [ ] Add quick jump navigation (A-Z or category tabs)
-- [ ] Link each route to homepage with route filter applied
+- [x] Create `src/routes/routes/+page.svelte`
+- [x] Organize routes by category (Subway, Streetcar, Bus, Express, Night)
+- [x] Display route badge + name for each
+- [x] Add quick jump navigation (A-Z or category tabs)
+- [x] Link each route to homepage with route filter applied
 - [ ] Add route to navigation sidebar
-- [ ] Add search/filter within route browser
+- [x] Add search/filter within route browser
 
 **Route Categories:**
 
@@ -1221,13 +1221,13 @@ if (browser) {
 
 ### 4.3 Weather Warning Banner
 
-- [ ] Create `src/lib/components/weather/WeatherWarningBanner.svelte`
-- [ ] Fetch Environment Canada RSS feed client-side
-- [ ] Parse XML for active warnings
-- [ ] Filter for transit-relevant warnings (ice, snow, extreme cold)
-- [ ] Display dismissible banner above main content
-- [ ] Cache warnings in localStorage (15 min TTL)
-- [ ] Add expand/collapse for full warning text
+- [x] Create `src/lib/components/weather/WeatherWarningBanner.svelte`
+- [x] Fetch Environment Canada RSS feed client-side
+- [x] Parse XML for active warnings
+- [x] Filter for transit-relevant warnings (ice, snow, extreme cold)
+- [x] Display dismissible banner above main content
+- [x] Cache warnings in localStorage (15 min TTL)
+- [x] Add expand/collapse for full warning text
 
 **Weather API:**
 
