@@ -307,7 +307,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 - `src/routes/layout.css` - Footer layout, badge styling, time styling
 - `static/sw.js` - Skip dev server requests
 
-### Dec 6, 2025 - MaintenanceWidget UX Redesign
+### Dec 4, 2025 - MaintenanceWidget UX Redesign
 
 **New Features:**
 
@@ -324,7 +324,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 - `src/lib/components/alerts/MaintenanceWidget.svelte` - Complete UX overhaul
 - `src/routes/layout.css` - New CSS for datetime, stations, closure badges
 
-### Dec 6, 2025 - WCAG 2.2 AA & shadcn Consistency Overhaul
+### Dec 4, 2025 - WCAG 2.2 AA & shadcn Consistency Overhaul
 
 **UI/UX Improvements:**
 
@@ -357,7 +357,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 - `src/lib/components/layout/Sidebar.svelte` - Direct Tailwind classes
 - `src/lib/components/dialogs/AuthRequiredDialog.svelte` - Direct Tailwind classes
 
-### Dec 5, 2025 - UI Matching Reference App
+### Dec 4, 2025 - UI Matching Reference App
 
 - Fixed AlertCard.svelte: `extractRouteName()` parses full route names from header_text (e.g., "306 Carlton")
 - Fixed RouteBadge.svelte: Full route names displayed with proper TTC brand colors
