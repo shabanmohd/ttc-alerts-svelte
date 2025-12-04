@@ -65,11 +65,11 @@
       <div class="px-3 py-2 mb-2">
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-            <span class="text-sm font-semibold text-primary-foreground">{$userInitial}</span>
+            <span class="text-sm font-bold text-primary-foreground">{$userInitial}</span>
           </div>
           <div class="min-w-0 flex-1">
-            <p class="text-sm font-medium truncate">{$userName}</p>
-            <p class="text-xs text-muted-foreground">Signed in</p>
+            <p class="text-sm font-semibold truncate">{$userName}</p>
+            <p class="text-xs text-muted-foreground font-normal">Signed in</p>
           </div>
         </div>
         <Button 

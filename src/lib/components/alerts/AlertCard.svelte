@@ -183,7 +183,7 @@
                 {formatTimestamp(alert.created_at)}
               </time>
             </div>
-            <p class="text-sm leading-relaxed text-muted-foreground">
+            <p class="text-sm leading-relaxed text-muted-foreground font-normal">
               {alert.header_text}
             </p>
           </div>

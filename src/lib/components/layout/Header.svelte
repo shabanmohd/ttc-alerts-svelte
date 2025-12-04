@@ -76,13 +76,13 @@
     <!-- Logo (mobile only) -->
     <a href="/" class="header-left">
       <span class="text-xl">🚇</span>
-      <span class="font-semibold">TTC Alerts</span>
+      <span class="font-bold tracking-tight">TTC Alerts</span>
     </a>
     
     <!-- Right side actions -->
     <div class="header-right">
       <!-- Last updated + Refresh (always visible) -->
-      <div class="flex items-center gap-1 text-xs text-muted-foreground">
+      <div class="flex items-center gap-1 text-xs text-muted-foreground font-normal">
         {#if $lastUpdated}
           <span id="last-updated">Updated {formatLastUpdated($lastUpdated, tick)}</span>
         {/if}
@@ -139,8 +139,8 @@
           </DropdownMenu.Trigger>
           <DropdownMenu.Content align="end" class="w-48">
             <div class="px-3 py-2 border-b border-border">
-              <p class="text-sm font-medium">{username}</p>
-              <p class="text-xs text-muted-foreground">Signed in</p>
+              <p class="text-sm font-semibold">{username}</p>
+              <p class="text-xs text-muted-foreground font-normal">Signed in</p>
             </div>
             <DropdownMenu.Item href="/preferences">
               <Settings class="w-4 h-4 mr-2" aria-hidden="true" />
@@ -154,7 +154,7 @@
         </DropdownMenu.Root>
       {:else}
         <button
-          class="hidden sm:inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border border-border bg-transparent text-sm font-medium hover:bg-accent transition-colors gap-2"
+          class="hidden sm:inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border border-border bg-transparent text-sm font-medium tracking-tight hover:bg-accent transition-colors gap-2"
           onclick={onSignIn}
         >
           <User class="w-4 h-4" aria-hidden="true" />
@@ -188,11 +188,11 @@
         {#if isAuthenticated}
           <div class="flex items-center gap-3 px-3 py-2.5 border-b border-border mb-2">
             <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span class="text-sm font-semibold text-primary-foreground">{getUserInitial(username)}</span>
+              <span class="text-sm font-bold text-primary-foreground">{getUserInitial(username)}</span>
             </div>
             <div>
-              <p class="text-sm font-medium">{username}</p>
-              <p class="text-xs text-muted-foreground">Signed in</p>
+              <p class="text-sm font-semibold">{username}</p>
+              <p class="text-xs text-muted-foreground font-normal">Signed in</p>
             </div>
           </div>
         {:else}
@@ -201,7 +201,7 @@
             class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
           >
             <User class="w-5 h-5" aria-hidden="true" />
-            <span class="text-sm font-medium">Sign In</span>
+            <span class="text-sm font-semibold">Sign In</span>
           </button>
         {/if}
         
