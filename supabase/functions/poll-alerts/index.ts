@@ -207,14 +207,14 @@ serve(async (req) => {
           const threadTitle = thread.title || '';
           const similarity = jaccardSimilarity(text, threadTitle);
           
-          // High similarity (80%) for general matching
-          if (similarity >= 0.8) {
+          // Lower threshold (50%) for general matching - routes already match
+          if (similarity >= 0.5) {
             matchedThread = thread;
             break;
           }
           
-          // Lower threshold (25%) for SERVICE_RESUMED with route overlap
-          if (category === 'SERVICE_RESUMED' && similarity >= 0.25) {
+          // Even lower threshold (20%) for SERVICE_RESUMED with route overlap
+          if (category === 'SERVICE_RESUMED' && similarity >= 0.2) {
             matchedThread = thread;
             break;
           }

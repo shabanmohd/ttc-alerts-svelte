@@ -74,27 +74,30 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 
 ### Available MCPs - USE THESE!
 
-| MCP               | Purpose                                    | When to Use                                         |
-| ----------------- | ------------------------------------------ | --------------------------------------------------- |
-| **Supabase**      | Database queries, Edge Function deployment | Deploy functions, run SQL, manage branches          |
-| **Cloudflare**    | Workers, D1, KV, R2 management             | Check worker logs, manage KV storage                |
-| **Playwright**    | Browser automation, testing                | UI testing, screenshots, form automation            |
-| **GitKraken**     | Git operations, PR management              | Commits, branches, pull requests, issue management  |
+| MCP            | Purpose                                    | When to Use                                        |
+| -------------- | ------------------------------------------ | -------------------------------------------------- |
+| **Supabase**   | Database queries, Edge Function deployment | Deploy functions, run SQL, manage branches         |
+| **Cloudflare** | Workers, D1, KV, R2 management             | Check worker logs, manage KV storage               |
+| **Playwright** | Browser automation, testing                | UI testing, screenshots, form automation           |
+| **GitKraken**  | Git operations, PR management              | Commits, branches, pull requests, issue management |
 
 ### When to Use MCPs
 
 1. **Supabase MCP** - Prefer over `supabase` CLI commands:
+
    - `mcp_supabase_deploy_edge_function` - Deploy Edge Functions
    - `mcp_supabase_execute_sql` - Run database queries
    - `mcp_supabase_list_tables` - Inspect database schema
    - `mcp_supabase_get_logs` - Debug Edge Function issues
 
 2. **Cloudflare MCP** - For production infrastructure:
+
    - Check worker observability/logs
    - Manage KV namespaces
    - Deploy and monitor workers
 
 3. **Playwright MCP** - For browser-based tasks:
+
    - Take screenshots for verification
    - Test UI interactions
    - Automate form submissions
@@ -106,13 +109,13 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 
 ### MCP vs Terminal
 
-| Task                      | Use MCP                            | Use Terminal           |
-| ------------------------- | ---------------------------------- | ---------------------- |
-| Deploy Edge Function      | ✅ `mcp_supabase_deploy_edge_function` | ❌ `supabase functions deploy` |
-| Run SQL query             | ✅ `mcp_supabase_execute_sql`      | ❌ `psql` commands     |
-| Git commit/push           | Either works                       | Either works           |
-| npm install/build         | ❌                                 | ✅ `run_in_terminal`   |
-| Check Cloudflare logs     | ✅ Cloudflare observability MCP    | ❌                     |
+| Task                  | Use MCP                                | Use Terminal                   |
+| --------------------- | -------------------------------------- | ------------------------------ |
+| Deploy Edge Function  | ✅ `mcp_supabase_deploy_edge_function` | ❌ `supabase functions deploy` |
+| Run SQL query         | ✅ `mcp_supabase_execute_sql`          | ❌ `psql` commands             |
+| Git commit/push       | Either works                           | Either works                   |
+| npm install/build     | ❌                                     | ✅ `run_in_terminal`           |
+| Check Cloudflare logs | ✅ Cloudflare observability MCP        | ❌                             |
 
 ---
 
