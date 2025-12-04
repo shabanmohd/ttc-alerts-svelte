@@ -1,8 +1,8 @@
 // Auth types for custom WebAuthn authentication
+// Uses displayName as primary identifier (no username/email)
 
 export interface AuthUser {
   id: string;
-  username: string;
   displayName: string;
 }
 
@@ -21,7 +21,7 @@ export interface RegistrationOptions {
     };
     user: {
       id: string;
-      name: string;
+      name: string; // WebAuthn spec requires this, we use displayName
       displayName: string;
     };
     pubKeyCredParams: Array<{
@@ -82,14 +82,14 @@ export interface SessionValidationResult {
 }
 
 export interface WebAuthnCredential {
-  id: string;
+  credentialId: string; // Matches database schema (credential_id as PK)
   publicKey: string;
   counter: number;
   transports?: string[];
 }
 
 export type AuthStep = 
-  | 'username'
+  | 'displayName' // Changed from 'username'
   | 'biometric'
   | 'recovery'
   | 'recovery-codes'

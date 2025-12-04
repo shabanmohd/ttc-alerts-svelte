@@ -2,7 +2,12 @@
  * Auth Store for TTC Alerts PWA
  * 
  * Custom WebAuthn-based authentication system.
- * Uses username + biometrics instead of email/password.
+ * Uses display name + biometrics instead of email/password.
+ * 
+ * Works with existing Supabase schema:
+ * - user_profiles (linked to auth.users)
+ * - webauthn_credentials
+ * - recovery_codes
  */
 
 import { writable, derived } from 'svelte/store';
@@ -17,8 +22,9 @@ import {
   getDeviceId,
   isWebAuthnSupported,
   isPlatformAuthenticatorAvailable,
+  findUserByDisplayName,
+  userHasCredentials,
 } from '$lib/services/webauthn';
-import { migratePreferencesToUser, loadPreferences } from './preferences';
 
 // ============================================
 // Store State
@@ -57,9 +63,6 @@ function createAuthStore() {
             isLoading: false,
             error: null,
           }));
-          
-          // Load user preferences
-          await loadPreferences();
         } else {
           update(s => ({
             ...s,
@@ -81,16 +84,16 @@ function createAuthStore() {
     },
 
     /**
-     * Sign up with username and biometrics
+     * Sign up with display name and biometrics
      */
-    async signUp(username: string): Promise<{ success: boolean; recoveryCodes?: string[]; error?: string }> {
+    async signUp(displayName: string): Promise<{ success: boolean; recoveryCodes?: string[]; error?: string }> {
       update(s => ({ ...s, isLoading: true, error: null }));
 
       try {
-        const result = await register(username);
+        const result = await register(displayName);
 
         // Store session
-        storeSession(result.sessionToken);
+        storeSession(result.user.id, result.sessionToken);
 
         update(s => ({
           ...s,
@@ -100,10 +103,6 @@ function createAuthStore() {
           sessionToken: result.sessionToken,
           error: null,
         }));
-
-        // Migrate device preferences to user account
-        await migratePreferencesToUser(result.user.id);
-        await loadPreferences();
 
         return { 
           success: true, 
@@ -117,16 +116,29 @@ function createAuthStore() {
     },
 
     /**
-     * Sign in with username and biometrics
+     * Sign in with display name and biometrics
      */
-    async signIn(username: string): Promise<{ success: boolean; error?: string }> {
+    async signIn(displayName: string): Promise<{ success: boolean; error?: string }> {
       update(s => ({ ...s, isLoading: true, error: null }));
 
       try {
-        const result = await authenticate(username);
+        // Find user by display name
+        const userData = await findUserByDisplayName(displayName);
+        if (!userData) {
+          throw new Error('User not found. Please check your name or create an account.');
+        }
+
+        // Check if user has credentials
+        const hasCredentials = await userHasCredentials(userData.id);
+        if (!hasCredentials) {
+          throw new Error('No passkeys found. Please use a recovery code.');
+        }
+
+        // Authenticate with WebAuthn
+        const result = await authenticate(userData.id);
 
         // Store session
-        storeSession(result.sessionToken);
+        storeSession(result.user.id, result.sessionToken);
 
         update(s => ({
           ...s,
@@ -136,9 +148,6 @@ function createAuthStore() {
           sessionToken: result.sessionToken,
           error: null,
         }));
-
-        // Load user preferences
-        await loadPreferences();
 
         return { success: true };
       } catch (error) {
@@ -151,7 +160,7 @@ function createAuthStore() {
     /**
      * Sign in with recovery code
      */
-    async recover(username: string, recoveryCode: string): Promise<{ 
+    async recover(displayName: string, recoveryCode: string): Promise<{ 
       success: boolean; 
       remainingCodes?: number; 
       error?: string 
@@ -159,10 +168,16 @@ function createAuthStore() {
       update(s => ({ ...s, isLoading: true, error: null }));
 
       try {
-        const result = await recoverWithCode(username, recoveryCode);
+        // Find user by display name
+        const userData = await findUserByDisplayName(displayName);
+        if (!userData) {
+          throw new Error('User not found. Please check your name.');
+        }
+
+        const result = await recoverWithCode(userData.id, recoveryCode);
 
         // Store session
-        storeSession(result.sessionToken);
+        storeSession(result.user.id, result.sessionToken);
 
         update(s => ({
           ...s,
@@ -172,9 +187,6 @@ function createAuthStore() {
           sessionToken: result.sessionToken,
           error: null,
         }));
-
-        // Load user preferences
-        await loadPreferences();
 
         return { 
           success: true, 
@@ -197,9 +209,6 @@ function createAuthStore() {
         isLoading: false,
         deviceId: getDeviceId(),
       });
-      
-      // Reload device preferences
-      loadPreferences();
     },
 
     /**
@@ -229,7 +238,7 @@ export const isAuthenticated = derived(authStore, $auth => $auth.isAuthenticated
 export const isLoading = derived(authStore, $auth => $auth.isLoading);
 export const authError = derived(authStore, $auth => $auth.error);
 
-export const userName = derived(user, $user => $user?.displayName ?? $user?.username ?? null);
+export const userName = derived(user, $user => $user?.displayName ?? null);
 export const userInitial = derived(userName, $name => $name?.charAt(0).toUpperCase() ?? 'U');
 
 // Legacy compatibility
@@ -264,16 +273,16 @@ export async function initAuth(): Promise<void> {
   await authStore.init();
 }
 
-export async function signUp(username: string): Promise<{ success: boolean; recoveryCodes?: string[]; error?: string }> {
-  return authStore.signUp(username);
+export async function signUp(displayName: string): Promise<{ success: boolean; recoveryCodes?: string[]; error?: string }> {
+  return authStore.signUp(displayName);
 }
 
-export async function signIn(username: string): Promise<{ success: boolean; error?: string }> {
-  return authStore.signIn(username);
+export async function signIn(displayName: string): Promise<{ success: boolean; error?: string }> {
+  return authStore.signIn(displayName);
 }
 
-export async function recover(username: string, recoveryCode: string): Promise<{ success: boolean; remainingCodes?: number; error?: string }> {
-  return authStore.recover(username, recoveryCode);
+export async function recover(displayName: string, recoveryCode: string): Promise<{ success: boolean; remainingCodes?: number; error?: string }> {
+  return authStore.recover(displayName, recoveryCode);
 }
 
 export function signOut(): void {

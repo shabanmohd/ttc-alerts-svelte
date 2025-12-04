@@ -5,7 +5,7 @@
   import { Label } from '$lib/components/ui/label';
   import { Loader2, Fingerprint, KeyRound, AlertCircle, ArrowLeft } from 'lucide-svelte';
   import { signIn, recover, authError, clearAuthError, biometricsAvailable } from '$lib/stores/auth';
-  import { getUsernameError } from '$lib/services/webauthn';
+  import { getDisplayNameError } from '$lib/services/webauthn';
   
   interface Props {
     open?: boolean;
@@ -16,21 +16,21 @@
   let { open = $bindable(false), onOpenChange, onCreateAccount }: Props = $props();
   
   // Form state
-  let username = $state('');
+  let displayName = $state('');
   let recoveryCode = $state('');
   let isLoading = $state(false);
   let error = $state<string | null>(null);
   
   // UI state
-  type Step = 'username' | 'biometric' | 'recovery';
-  let step = $state<Step>('username');
+  type Step = 'displayName' | 'biometric' | 'recovery';
+  let step = $state<Step>('displayName');
   
   // Validation
-  let usernameError = $derived(username.trim() ? getUsernameError(username) : null);
-  let isUsernameValid = $derived(!usernameError && username.trim().length >= 3);
+  let displayNameError = $derived(displayName.trim() ? getDisplayNameError(displayName) : null);
+  let isDisplayNameValid = $derived(!displayNameError && displayName.trim().length >= 2);
   
   async function handleContinue() {
-    if (!isUsernameValid) return;
+    if (!isDisplayNameValid) return;
     
     error = null;
     step = 'biometric';
@@ -46,7 +46,7 @@
     error = null;
     
     try {
-      const result = await signIn(username.trim());
+      const result = await signIn(displayName.trim());
       
       if (result.success) {
         // Success - close dialog
@@ -68,7 +68,7 @@
     error = null;
     
     try {
-      const result = await recover(username.trim(), recoveryCode.trim());
+      const result = await recover(displayName.trim(), recoveryCode.trim());
       
       if (result.success) {
         // Success - close dialog
@@ -93,17 +93,17 @@
     onOpenChange?.(value);
     if (!value) {
       // Reset state when dialog closes
-      username = '';
+      displayName = '';
       recoveryCode = '';
       error = null;
-      step = 'username';
+      step = 'displayName';
       clearAuthError();
     }
   }
   
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter') {
-      if (step === 'username' && isUsernameValid) {
+      if (step === 'displayName' && isDisplayNameValid) {
         handleContinue();
       } else if (step === 'recovery' && recoveryCode.trim()) {
         handleRecovery();
@@ -121,7 +121,7 @@
   <Dialog.Content class="max-w-sm">
     <Dialog.Header>
       <Dialog.Title class="text-xl">
-        {#if step === 'username'}
+        {#if step === 'displayName'}
           Sign In
         {:else if step === 'biometric'}
           Verify Your Identity
@@ -130,7 +130,7 @@
         {/if}
       </Dialog.Title>
       <Dialog.Description>
-        {#if step === 'username'}
+        {#if step === 'displayName'}
           Sign in to access your saved preferences
         {:else if step === 'biometric'}
           Use Face ID, Touch ID, or fingerprint to sign in
@@ -149,31 +149,31 @@
         </div>
       {/if}
       
-      <!-- Step: Username -->
-      {#if step === 'username'}
+      <!-- Step: Display Name -->
+      {#if step === 'displayName'}
         <div class="space-y-3">
           <div class="space-y-2">
-            <Label for="username">Username</Label>
+            <Label for="displayName">Display Name</Label>
             <Input 
-              id="username"
+              id="displayName"
               type="text"
-              bind:value={username}
-              placeholder="your_username"
+              bind:value={displayName}
+              placeholder="Your name"
               class="h-12"
               disabled={isLoading}
               onkeydown={handleKeydown}
-              autocomplete="username"
-              autocapitalize="none"
+              autocomplete="nickname"
+              autocapitalize="words"
             />
-            {#if usernameError}
-              <p class="text-xs text-destructive">{usernameError}</p>
+            {#if displayNameError}
+              <p class="text-xs text-destructive">{displayNameError}</p>
             {/if}
           </div>
           
           <Button 
             onclick={handleContinue} 
             class="w-full h-12" 
-            disabled={!isUsernameValid || isLoading}
+            disabled={!isDisplayNameValid || isLoading}
           >
             {#if isLoading}
               <Loader2 class="h-5 w-5 mr-2 animate-spin" />
@@ -221,7 +221,7 @@
           <Button 
             variant="outline" 
             class="flex-1"
-            onclick={() => { step = 'username'; error = null; }}
+            onclick={() => { step = 'displayName'; error = null; }}
           >
             <ArrowLeft class="h-4 w-4 mr-2" />
             Back

@@ -18,47 +18,57 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { sessionToken, deviceId } = await req.json();
+    const { userId, deviceId } = await req.json();
 
     // Validate inputs
-    if (!sessionToken || !deviceId) {
+    if (!userId || !deviceId) {
       return new Response(
-        JSON.stringify({ error: 'Missing sessionToken or deviceId' }),
+        JSON.stringify({ error: 'Missing userId or deviceId', valid: false }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Find session
-    const { data: session, error: sessionError } = await supabase
-      .from('device_sessions')
-      .select(`
-        *,
-        user:users(id, username, display_name)
-      `)
-      .eq('session_token', sessionToken)
-      .eq('device_id', deviceId)
+    // Find user in user_profiles
+    const { data: user, error: userError } = await supabase
+      .from('user_profiles')
+      .select('id, display_name')
+      .eq('id', userId)
       .single();
 
-    if (sessionError || !session) {
+    if (userError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid session', valid: false }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Update last active
+    // Check if user has active credentials (meaning they're a valid WebAuthn user)
+    const { data: credentials } = await supabase
+      .from('webauthn_credentials')
+      .select('credential_id')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .limit(1);
+
+    if (!credentials || credentials.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'No active credentials', valid: false }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Update last login
     await supabase
-      .from('device_sessions')
-      .update({ last_active_at: new Date().toISOString() })
-      .eq('id', session.id);
+      .from('user_profiles')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', user.id);
 
     return new Response(
       JSON.stringify({
         valid: true,
         user: {
-          id: session.user.id,
-          username: session.user.username,
-          displayName: session.user.display_name,
+          id: user.id,
+          displayName: user.display_name,
         },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

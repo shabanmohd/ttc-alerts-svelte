@@ -26,25 +26,24 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { username, recoveryCode, deviceId, deviceName, userAgent } = await req.json();
+    const { userId, recoveryCode, deviceId, deviceName } = await req.json();
 
     // Validate inputs
-    if (!username || !recoveryCode || !deviceId) {
+    if (!userId || !recoveryCode || !deviceId) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const normalizedUsername = username.toLowerCase();
     // Remove dashes and convert to uppercase for comparison
     const normalizedCode = recoveryCode.replace(/-/g, '').toUpperCase();
 
-    // Find user
+    // Find user in user_profiles
     const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, username, display_name')
-      .eq('username', normalizedUsername)
+      .from('user_profiles')
+      .select('id, display_name')
+      .eq('id', userId)
       .single();
 
     if (userError || !user) {
@@ -59,7 +58,7 @@ serve(async (req) => {
       .from('recovery_codes')
       .select('*')
       .eq('user_id', user.id)
-      .is('used_at', null);
+      .eq('used', false);
 
     if (codesError || !recoveryCodes || recoveryCodes.length === 0) {
       return new Response(
@@ -88,26 +87,31 @@ serve(async (req) => {
     // Mark code as used
     await supabase
       .from('recovery_codes')
-      .update({ used_at: new Date().toISOString() })
+      .update({ used: true, used_at: new Date().toISOString() })
       .eq('id', validCode.id);
 
     // Count remaining codes
     const remainingCodes = recoveryCodes.length - 1;
 
-    // Create session
+    // Generate session token
     const sessionToken = generateRandomString(32);
-    
+
+    // Update user_profiles last_login_at
     await supabase
-      .from('device_sessions')
+      .from('user_profiles')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', user.id);
+
+    // Update or create user_preferences with device info
+    await supabase
+      .from('user_preferences')
       .upsert({
         user_id: user.id,
         device_id: deviceId,
-        session_token: sessionToken,
         device_name: deviceName || 'Recovery Device',
-        user_agent: userAgent || '',
-        last_active_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }, {
-        onConflict: 'user_id,device_id',
+        onConflict: 'user_id',
       });
 
     return new Response(
@@ -115,7 +119,6 @@ serve(async (req) => {
         success: true,
         user: {
           id: user.id,
-          username: user.username,
           displayName: user.display_name,
         },
         sessionToken,

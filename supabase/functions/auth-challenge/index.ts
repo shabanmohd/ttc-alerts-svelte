@@ -34,23 +34,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { username } = await req.json();
+    const { userId, deviceId } = await req.json();
 
-    // Validate username
-    if (!username || !/^[a-z0-9_]{3,30}$/.test(username.toLowerCase())) {
+    // Validate inputs - userId is required to find user's credentials
+    if (!userId) {
       return new Response(
-        JSON.stringify({ error: 'Invalid username format' }),
+        JSON.stringify({ error: 'User ID is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const normalizedUsername = username.toLowerCase();
-
-    // Find user by username
+    // Find user by ID in user_profiles
     const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, username, display_name')
-      .eq('username', normalizedUsername)
+      .from('user_profiles')
+      .select('id, display_name')
+      .eq('id', userId)
       .single();
 
     if (userError || !user) {
@@ -60,11 +58,12 @@ serve(async (req) => {
       );
     }
 
-    // Get user's credentials
+    // Get user's active credentials
     const { data: credentials, error: credError } = await supabase
       .from('webauthn_credentials')
-      .select('id, transports')
-      .eq('user_id', user.id);
+      .select('credential_id, transports')
+      .eq('user_id', user.id)
+      .eq('is_active', true);
 
     if (credError || !credentials || credentials.length === 0) {
       return new Response(
@@ -82,7 +81,8 @@ serve(async (req) => {
       .insert({
         challenge,
         user_id: user.id,
-        type: 'authentication',
+        operation: 'authentication',
+        device_fingerprint: deviceId || null,
         expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
       });
 
@@ -102,7 +102,7 @@ serve(async (req) => {
           rpId,
           allowCredentials: credentials.map(cred => ({
             type: 'public-key',
-            id: cred.id,
+            id: cred.credential_id,
             transports: cred.transports || ['internal'],
           })),
           userVerification: 'required',

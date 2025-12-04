@@ -3,6 +3,12 @@
  * 
  * Handles WebAuthn credential registration and authentication
  * using the browser's built-in biometric capabilities.
+ * 
+ * Uses existing Supabase schema:
+ * - user_profiles (linked to auth.users)
+ * - webauthn_credentials (credential_id as PK)
+ * - webauthn_challenges (operation, device_fingerprint)
+ * - recovery_codes (used boolean)
  */
 
 import { supabase } from '$lib/supabase';
@@ -110,7 +116,7 @@ function base64UrlDecode(str: string): ArrayBuffer {
 /**
  * Start the registration process - get challenge from server
  */
-export async function startRegistration(username: string): Promise<RegistrationOptions> {
+export async function startRegistration(displayName: string): Promise<RegistrationOptions> {
   const response = await fetch(`${FUNCTIONS_URL}/auth-register`, {
     method: 'POST',
     headers: {
@@ -119,7 +125,8 @@ export async function startRegistration(username: string): Promise<RegistrationO
     },
     body: JSON.stringify({
       action: 'start',
-      username: username.toLowerCase().trim(),
+      displayName: displayName.trim(),
+      deviceId: getDeviceId(),
     }),
   });
 
@@ -135,14 +142,14 @@ export async function startRegistration(username: string): Promise<RegistrationO
  * Complete registration with WebAuthn credential
  */
 export async function completeRegistration(
-  username: string,
+  displayName: string,
   credential: PublicKeyCredential
 ): Promise<RegistrationResult> {
   const attestationResponse = credential.response as AuthenticatorAttestationResponse;
   
   // Extract credential data
   const credentialData: WebAuthnCredential = {
-    id: credential.id,
+    credentialId: credential.id,
     publicKey: base64UrlEncode(attestationResponse.getPublicKey()!),
     counter: 0,
     transports: attestationResponse.getTransports?.() || [],
@@ -156,7 +163,7 @@ export async function completeRegistration(
     },
     body: JSON.stringify({
       action: 'complete',
-      username: username.toLowerCase().trim(),
+      displayName: displayName.trim(),
       credential: credentialData,
       deviceId: getDeviceId(),
       deviceName: getDeviceName(),
@@ -176,14 +183,14 @@ export async function completeRegistration(
  * Register a new user with WebAuthn
  * Full flow: get challenge → create credential → verify
  */
-export async function register(username: string): Promise<RegistrationResult> {
+export async function register(displayName: string): Promise<RegistrationResult> {
   // Check WebAuthn support
   if (!await isPlatformAuthenticatorAvailable()) {
     throw new Error('Biometric authentication is not available on this device');
   }
 
   // Get registration options from server
-  const options = await startRegistration(username);
+  const options = await startRegistration(displayName);
 
   // Create the credential using browser WebAuthn API
   const publicKeyOptions: CredentialCreationOptions = {
@@ -209,7 +216,7 @@ export async function register(username: string): Promise<RegistrationResult> {
   }
 
   // Complete registration on server
-  return completeRegistration(username, credential);
+  return completeRegistration(displayName, credential);
 }
 
 // ============================================
@@ -219,7 +226,7 @@ export async function register(username: string): Promise<RegistrationResult> {
 /**
  * Get authentication challenge from server
  */
-export async function getAuthenticationChallenge(username: string): Promise<AuthenticationOptions> {
+export async function getAuthenticationChallenge(userId: string): Promise<AuthenticationOptions> {
   const response = await fetch(`${FUNCTIONS_URL}/auth-challenge`, {
     method: 'POST',
     headers: {
@@ -227,7 +234,8 @@ export async function getAuthenticationChallenge(username: string): Promise<Auth
       'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
     },
     body: JSON.stringify({
-      username: username.toLowerCase().trim(),
+      userId,
+      deviceId: getDeviceId(),
     }),
   });
 
@@ -243,7 +251,7 @@ export async function getAuthenticationChallenge(username: string): Promise<Auth
  * Verify authentication assertion with server
  */
 export async function verifyAuthentication(
-  username: string,
+  userId: string,
   credential: PublicKeyCredential
 ): Promise<AuthenticationResult> {
   const assertionResponse = credential.response as AuthenticatorAssertionResponse;
@@ -255,7 +263,7 @@ export async function verifyAuthentication(
       'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
     },
     body: JSON.stringify({
-      username: username.toLowerCase().trim(),
+      userId,
       credentialId: credential.id,
       authenticatorData: base64UrlEncode(assertionResponse.authenticatorData),
       clientDataJSON: base64UrlEncode(assertionResponse.clientDataJSON),
@@ -278,9 +286,9 @@ export async function verifyAuthentication(
  * Authenticate a user with WebAuthn
  * Full flow: get challenge → authenticate with biometrics → verify
  */
-export async function authenticate(username: string): Promise<AuthenticationResult> {
+export async function authenticate(userId: string): Promise<AuthenticationResult> {
   // Get authentication options from server
-  const options = await getAuthenticationChallenge(username);
+  const options = await getAuthenticationChallenge(userId);
 
   // Prepare credential request options
   const publicKeyOptions: CredentialRequestOptions = {
@@ -305,7 +313,7 @@ export async function authenticate(username: string): Promise<AuthenticationResu
   }
 
   // Verify on server
-  return verifyAuthentication(username, credential);
+  return verifyAuthentication(userId, credential);
 }
 
 // ============================================
@@ -316,7 +324,7 @@ export async function authenticate(username: string): Promise<AuthenticationResu
  * Sign in with a recovery code
  */
 export async function recoverWithCode(
-  username: string,
+  userId: string,
   recoveryCode: string
 ): Promise<RecoveryResult> {
   const response = await fetch(`${FUNCTIONS_URL}/auth-recover`, {
@@ -326,11 +334,10 @@ export async function recoverWithCode(
       'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
     },
     body: JSON.stringify({
-      username: username.toLowerCase().trim(),
+      userId,
       recoveryCode: recoveryCode.trim(),
       deviceId: getDeviceId(),
       deviceName: getDeviceName(),
-      userAgent: navigator.userAgent,
     }),
   });
 
@@ -346,13 +353,22 @@ export async function recoverWithCode(
 // Session Management
 // ============================================
 
+const SESSION_USER_KEY = 'ttc_user_id';
 const SESSION_TOKEN_KEY = 'ttc_session_token';
 
 /**
- * Store session token
+ * Store session (userId + token)
  */
-export function storeSession(sessionToken: string): void {
+export function storeSession(userId: string, sessionToken: string): void {
+  localStorage.setItem(SESSION_USER_KEY, userId);
   localStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
+}
+
+/**
+ * Get stored user ID
+ */
+export function getStoredUserId(): string | null {
+  return localStorage.getItem(SESSION_USER_KEY);
 }
 
 /**
@@ -366,6 +382,7 @@ export function getStoredSession(): string | null {
  * Clear session
  */
 export function clearSession(): void {
+  localStorage.removeItem(SESSION_USER_KEY);
   localStorage.removeItem(SESSION_TOKEN_KEY);
 }
 
@@ -373,10 +390,10 @@ export function clearSession(): void {
  * Validate current session with server
  */
 export async function validateSession(): Promise<SessionValidationResult> {
-  const sessionToken = getStoredSession();
+  const userId = getStoredUserId();
   const deviceId = getDeviceId();
 
-  if (!sessionToken) {
+  if (!userId) {
     return { valid: false };
   }
 
@@ -388,7 +405,7 @@ export async function validateSession(): Promise<SessionValidationResult> {
         'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({
-        sessionToken,
+        userId,
         deviceId,
       }),
     });
@@ -413,52 +430,73 @@ export function signOut(): void {
 }
 
 // ============================================
-// Username Validation
+// User Lookup
 // ============================================
 
 /**
- * Check if username is available
+ * Find user by display name (for sign-in)
+ * Returns user ID if found, null otherwise
  */
-export async function checkUsernameAvailable(username: string): Promise<boolean> {
-  const normalized = username.toLowerCase().trim();
-  
+export async function findUserByDisplayName(displayName: string): Promise<{ id: string; displayName: string } | null> {
   const { data, error } = await supabase
-    .from('users')
-    .select('id')
-    .eq('username', normalized)
+    .from('user_profiles')
+    .select('id, display_name')
+    .ilike('display_name', displayName.trim())
+    .limit(1)
     .maybeSingle();
 
+  if (error || !data) {
+    return null;
+  }
+
+  // Cast data to expected shape
+  const userData = data as { id: string; display_name: string };
+  
+  return {
+    id: userData.id,
+    displayName: userData.display_name,
+  };
+}
+
+/**
+ * Check if user has WebAuthn credentials
+ */
+export async function userHasCredentials(userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('webauthn_credentials')
+    .select('credential_id')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .limit(1);
+
   if (error) {
-    console.error('Username check error:', error);
+    console.error('Credential check error:', error);
     return false;
   }
 
-  return !data; // Available if no user found
+  return data !== null && data.length > 0;
 }
 
 /**
- * Validate username format
+ * Validate display name format
  */
-export function isValidUsername(username: string): boolean {
-  return /^[a-z0-9_]{3,30}$/.test(username.toLowerCase().trim());
+export function isValidDisplayName(displayName: string): boolean {
+  const trimmed = displayName.trim();
+  return trimmed.length >= 2 && trimmed.length <= 50;
 }
 
 /**
- * Get username validation error message
+ * Get display name validation error message
  */
-export function getUsernameError(username: string): string | null {
-  const normalized = username.toLowerCase().trim();
+export function getDisplayNameError(displayName: string): string | null {
+  const trimmed = displayName.trim();
   
-  if (normalized.length < 3) {
-    return 'Username must be at least 3 characters';
+  if (trimmed.length < 2) {
+    return 'Name must be at least 2 characters';
   }
   
-  if (normalized.length > 30) {
-    return 'Username must be 30 characters or less';
-  }
-  
-  if (!/^[a-z0-9_]+$/.test(normalized)) {
-    return 'Username can only contain letters, numbers, and underscores';
+  if (trimmed.length > 50) {
+    return 'Name must be 50 characters or less';
   }
   
   return null;

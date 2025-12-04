@@ -6,7 +6,7 @@
   import { Fingerprint, Copy, Check, AlertTriangle, Loader2, ArrowLeft, ShieldCheck } from 'lucide-svelte';
   import { toast } from 'svelte-sonner';
   import { signUp, authError, clearAuthError, biometricsAvailable } from '$lib/stores/auth';
-  import { getUsernameError, checkUsernameAvailable } from '$lib/services/webauthn';
+  import { getDisplayNameError, checkDisplayNameAvailable } from '$lib/services/webauthn';
 
   interface Props {
     open: boolean;
@@ -17,46 +17,46 @@
   let { open = $bindable(false), onOpenChange, onSignIn }: Props = $props();
   
   // Form state
-  let username = $state('');
+  let displayName = $state('');
   let isLoading = $state(false);
-  let isCheckingUsername = $state(false);
-  let usernameAvailable = $state<boolean | null>(null);
+  let isCheckingName = $state(false);
+  let nameAvailable = $state<boolean | null>(null);
   let recoveryCodes = $state<string[]>([]);
   let copiedIndex = $state<number | null>(null);
   let acknowledgedCodes = $state(false);
   let error = $state<string | null>(null);
   
   // UI state
-  type Step = 'username' | 'biometric' | 'recovery-codes' | 'success';
-  let step = $state<Step>('username');
+  type Step = 'displayName' | 'biometric' | 'recovery-codes' | 'success';
+  let step = $state<Step>('displayName');
   
   // Validation
-  let usernameError = $derived(username.trim() ? getUsernameError(username) : null);
-  let isUsernameValid = $derived(!usernameError && username.trim().length >= 3 && usernameAvailable === true);
+  let displayNameError = $derived(displayName.trim() ? getDisplayNameError(displayName) : null);
+  let isDisplayNameValid = $derived(!displayNameError && displayName.trim().length >= 2 && nameAvailable === true);
   
-  // Debounced username availability check
+  // Debounced name availability check
   let checkTimeout: ReturnType<typeof setTimeout>;
   
-  function handleUsernameInput() {
-    usernameAvailable = null;
+  function handleDisplayNameInput() {
+    nameAvailable = null;
     clearTimeout(checkTimeout);
     
-    const currentUsername = username.trim().toLowerCase();
-    if (currentUsername.length >= 3 && !getUsernameError(currentUsername)) {
-      isCheckingUsername = true;
+    const currentName = displayName.trim();
+    if (currentName.length >= 2 && !getDisplayNameError(currentName)) {
+      isCheckingName = true;
       checkTimeout = setTimeout(async () => {
-        const available = await checkUsernameAvailable(currentUsername);
-        // Only update if username hasn't changed
-        if (username.trim().toLowerCase() === currentUsername) {
-          usernameAvailable = available;
-          isCheckingUsername = false;
+        const available = await checkDisplayNameAvailable(currentName);
+        // Only update if name hasn't changed
+        if (displayName.trim() === currentName) {
+          nameAvailable = available;
+          isCheckingName = false;
         }
       }, 500);
     }
   }
   
   async function handleContinue() {
-    if (!isUsernameValid) return;
+    if (!isDisplayNameValid) return;
     
     error = null;
     step = 'biometric';
@@ -72,18 +72,18 @@
     error = null;
     
     try {
-      const result = await signUp(username.trim());
+      const result = await signUp(displayName.trim());
       
       if (result.success && result.recoveryCodes) {
         recoveryCodes = result.recoveryCodes;
         step = 'recovery-codes';
       } else {
         error = result.error || 'Registration failed';
-        step = 'username';
+        step = 'displayName';
       }
     } catch (e) {
       error = e instanceof Error ? e.message : 'Registration failed';
-      step = 'username';
+      step = 'displayName';
     } finally {
       isLoading = false;
     }
@@ -125,19 +125,19 @@
     onOpenChange(false);
     // Reset state after dialog closes
     setTimeout(() => {
-      username = '';
+      displayName = '';
       recoveryCodes = [];
       acknowledgedCodes = false;
       copiedIndex = null;
       error = null;
-      step = 'username';
-      usernameAvailable = null;
+      step = 'displayName';
+      nameAvailable = null;
       clearAuthError();
     }, 300);
   }
   
   function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter' && step === 'username' && isUsernameValid) {
+    if (e.key === 'Enter' && step === 'displayName' && isDisplayNameValid) {
       handleContinue();
     }
   }
@@ -152,7 +152,7 @@
   <Dialog.Content class="sm:max-w-md">
     <Dialog.Header>
       <Dialog.Title>
-        {#if step === 'username'}
+        {#if step === 'displayName'}
           Create Account
         {:else if step === 'biometric'}
           Set Up Biometrics
@@ -163,7 +163,7 @@
         {/if}
       </Dialog.Title>
       <Dialog.Description>
-        {#if step === 'username'}
+        {#if step === 'displayName'}
           Create an account to save your preferences across devices
         {:else if step === 'biometric'}
           Use Face ID, Touch ID, or fingerprint to secure your account
@@ -184,53 +184,53 @@
         </div>
       {/if}
       
-      <!-- Step: Username -->
-      {#if step === 'username'}
+      <!-- Step: Display Name -->
+      {#if step === 'displayName'}
         <div class="space-y-3">
           <div class="space-y-2">
-            <Label for="create-username">Choose a username</Label>
+            <Label for="create-displayName">Choose a display name</Label>
             <div class="relative">
               <Input 
-                id="create-username"
+                id="create-displayName"
                 type="text"
-                bind:value={username}
-                oninput={handleUsernameInput}
-                placeholder="your_username"
+                bind:value={displayName}
+                oninput={handleDisplayNameInput}
+                placeholder="Your name"
                 class="h-12 pr-10"
                 disabled={isLoading}
                 onkeydown={handleKeydown}
-                autocomplete="username"
-                autocapitalize="none"
+                autocomplete="nickname"
+                autocapitalize="words"
               />
-              {#if isCheckingUsername}
+              {#if isCheckingName}
                 <div class="absolute right-3 top-1/2 -translate-y-1/2">
                   <Loader2 class="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
-              {:else if usernameAvailable === true}
+              {:else if nameAvailable === true}
                 <div class="absolute right-3 top-1/2 -translate-y-1/2">
                   <Check class="h-4 w-4 text-green-500" />
                 </div>
-              {:else if usernameAvailable === false}
+              {:else if nameAvailable === false}
                 <div class="absolute right-3 top-1/2 -translate-y-1/2">
                   <AlertTriangle class="h-4 w-4 text-destructive" />
                 </div>
               {/if}
             </div>
-            {#if usernameError}
-              <p class="text-xs text-destructive">{usernameError}</p>
-            {:else if usernameAvailable === false}
-              <p class="text-xs text-destructive">This username is already taken</p>
-            {:else if usernameAvailable === true}
-              <p class="text-xs text-green-600 dark:text-green-400">Username is available!</p>
+            {#if displayNameError}
+              <p class="text-xs text-destructive">{displayNameError}</p>
+            {:else if nameAvailable === false}
+              <p class="text-xs text-destructive">This name is already taken</p>
+            {:else if nameAvailable === true}
+              <p class="text-xs text-green-600 dark:text-green-400">Name is available!</p>
             {:else}
-              <p class="text-xs text-muted-foreground">Letters, numbers, and underscores only. 3-30 characters.</p>
+              <p class="text-xs text-muted-foreground">Enter a name to identify yourself. 2-50 characters.</p>
             {/if}
           </div>
           
           <Button 
             onclick={handleContinue} 
             class="w-full h-12" 
-            disabled={!isUsernameValid || isLoading || isCheckingUsername}
+            disabled={!isDisplayNameValid || isLoading || isCheckingName}
           >
             <Fingerprint class="h-5 w-5 mr-2" />
             Continue with Biometrics
@@ -276,7 +276,7 @@
             <Button 
               variant="outline" 
               class="w-full"
-              onclick={() => { step = 'username'; error = null; }}
+              onclick={() => { step = 'displayName'; error = null; }}
             >
               <ArrowLeft class="h-4 w-4 mr-2" />
               Back
@@ -349,7 +349,7 @@
             <Check class="h-10 w-10 text-green-500" />
           </div>
           <div>
-            <p class="font-medium text-lg">Welcome, {username}!</p>
+            <p class="font-medium text-lg">Welcome, {displayName}!</p>
             <p class="text-sm text-muted-foreground mt-1">
               Your account has been created successfully.
             </p>
