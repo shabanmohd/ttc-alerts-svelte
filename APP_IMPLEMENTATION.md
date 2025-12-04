@@ -4,13 +4,13 @@
 
 Real-time Toronto Transit alerts with biometric authentication.
 
-| Stack       | Details                                                     |
-| ----------- | ----------------------------------------------------------- |
-| Frontend    | Svelte 5 + TypeScript + Tailwind + shadcn-svelte            |
-| Typography  | Lexend (dyslexic-friendly) via Google Fonts                 |
-| Backend     | Supabase (DB, Edge Functions, Realtime)                     |
-| Auth        | Custom WebAuthn (displayName + biometrics + recovery codes) |
-| Hosting     | Cloudflare Pages                                            |
+| Stack      | Details                                                     |
+| ---------- | ----------------------------------------------------------- |
+| Frontend   | Svelte 5 + TypeScript + Tailwind + shadcn-svelte            |
+| Typography | Lexend (dyslexic-friendly) via Google Fonts                 |
+| Backend    | Supabase (DB, Edge Functions, Realtime)                     |
+| Auth       | Custom WebAuthn (displayName + biometrics + recovery codes) |
+| Hosting    | Cloudflare Pages                                            |
 
 📐 **Design System**: See [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) for colors, typography, spacing, and component patterns.
 

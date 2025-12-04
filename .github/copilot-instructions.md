@@ -14,10 +14,10 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 
 ### After ANY Code Change, Update These Files:
 
-| File | When to Update |
-|------|----------------|
-| `APP_IMPLEMENTATION.md` | New files, status changes, feature completion |
-| `DESIGN_SYSTEM.md` | Colors, typography, spacing, components, layout changes |
+| File                                    | When to Update                                               |
+| --------------------------------------- | ------------------------------------------------------------ |
+| `APP_IMPLEMENTATION.md`                 | New files, status changes, feature completion                |
+| `DESIGN_SYSTEM.md`                      | Colors, typography, spacing, components, layout changes      |
 | `alert-categorization-and-threading.md` | Categorization logic, threading algorithm, filtering changes |
 
 ### Update Rules:
@@ -27,17 +27,20 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 3. **Update before ending session** - Ensure all changes are documented
 
 ### APP_IMPLEMENTATION.md
+
 - Add new files with status (✅/⚠️/❌)
 - Update completion percentages
 - Keep descriptions to one line per file
 
 ### DESIGN_SYSTEM.md
+
 - Update color tokens if colors change
 - Update typography if fonts/weights/sizes change
 - Update component patterns if UI components change
 - Update spacing if padding/margins change
 
 ### alert-categorization-and-threading.md
+
 - Update if `poll-alerts/index.ts` changes (categorization, threading)
 - Update if `stores/alerts.ts` changes (filtering logic)
 - Update if category keywords or thresholds change

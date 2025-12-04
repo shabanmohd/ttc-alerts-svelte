@@ -7,12 +7,12 @@
 
 ## Quick Reference
 
-| Category | File | Purpose |
-|----------|------|---------|
-| **Design Tokens** | `src/routes/layout.css` | CSS custom properties (colors, spacing, radius) |
-| **TTC Theme** | `src/lib/styles/ttc-theme.css` | Route colors, status badges, brand overrides |
-| **Components** | `src/lib/components/ui/` | shadcn-svelte components |
-| **Config** | `components.json` | shadcn-svelte paths and aliases |
+| Category          | File                           | Purpose                                         |
+| ----------------- | ------------------------------ | ----------------------------------------------- |
+| **Design Tokens** | `src/routes/layout.css`        | CSS custom properties (colors, spacing, radius) |
+| **TTC Theme**     | `src/lib/styles/ttc-theme.css` | Route colors, status badges, brand overrides    |
+| **Components**    | `src/lib/components/ui/`       | shadcn-svelte components                        |
+| **Config**        | `components.json`              | shadcn-svelte paths and aliases                 |
 
 ---
 
@@ -23,18 +23,18 @@
 ```css
 /* Light Mode */
 :root {
-  --background: 0 0% 100%;           /* White */
-  --foreground: 240 10% 3.9%;        /* Near black */
+  --background: 0 0% 100%; /* White */
+  --foreground: 240 10% 3.9%; /* Near black */
   --card: 0 0% 100%;
   --card-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;           /* Dark slate */
+  --primary: 240 5.9% 10%; /* Dark slate */
   --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;       /* Light gray */
+  --secondary: 240 4.8% 95.9%; /* Light gray */
   --secondary-foreground: 240 5.9% 10%;
   --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 40%;  /* WCAG AA: 4.5:1 */
+  --muted-foreground: 240 3.8% 40%; /* WCAG AA: 4.5:1 */
   --accent: 240 4.8% 95.9%;
-  --destructive: 0 72% 45%;          /* Red */
+  --destructive: 0 72% 45%; /* Red */
   --border: 240 5.9% 85%;
   --input: 240 5.9% 85%;
   --ring: 240 5.9% 10%;
@@ -54,28 +54,28 @@
 
 ### Status Colors (WCAG 2.2 AA Compliant)
 
-| Status | Light BG | Light Text | Dark Text |
-|--------|----------|------------|-----------|
-| **Error/Disruption** | `0 70% 96%` | `0 72% 30%` | `0 91% 75%` |
-| **Warning/Delay** | `38 80% 94%` | `28 90% 25%` | `43 96% 70%` |
-| **Info/Planned** | `214 80% 96%` | `224 76% 30%` | `213 94% 75%` |
-| **Success** | `142 60% 94%` | `142 72% 22%` | `142 69% 68%` |
-| **Teal/Resumed** | `168 76% 90%` | `172 66% 22%` | `168 71% 70%` |
-| **Orange/Detour** | `24 80% 94%` | `24 90% 28%` | `30 95% 70%` |
+| Status               | Light BG      | Light Text    | Dark Text     |
+| -------------------- | ------------- | ------------- | ------------- |
+| **Error/Disruption** | `0 70% 96%`   | `0 72% 30%`   | `0 91% 75%`   |
+| **Warning/Delay**    | `38 80% 94%`  | `28 90% 25%`  | `43 96% 70%`  |
+| **Info/Planned**     | `214 80% 96%` | `224 76% 30%` | `213 94% 75%` |
+| **Success**          | `142 60% 94%` | `142 72% 22%` | `142 69% 68%` |
+| **Teal/Resumed**     | `168 76% 90%` | `172 66% 22%` | `168 71% 70%` |
+| **Orange/Detour**    | `24 80% 94%`  | `24 90% 28%`  | `30 95% 70%`  |
 
 ### TTC Brand Colors
 
 ```css
 /* Subway Lines */
---ttc-line-1: #FFC524;     /* Yellow - Yonge-University */
---ttc-line-2: #00853F;     /* Green - Bloor-Danforth */
---ttc-line-4: #A12F7D;     /* Purple - Sheppard */
+--ttc-line-1: #ffc524; /* Yellow - Yonge-University */
+--ttc-line-2: #00853f; /* Green - Bloor-Danforth */
+--ttc-line-4: #a12f7d; /* Purple - Sheppard */
 
 /* Bus & Streetcar */
---ttc-red: #C8102E;        /* Regular routes */
---ttc-express: #00853F;    /* 900-series */
---ttc-night: #003DA5;      /* 300-series border */
---ttc-community: #6B7280;  /* 400-series border */
+--ttc-red: #c8102e; /* Regular routes */
+--ttc-express: #00853f; /* 900-series */
+--ttc-night: #003da5; /* 300-series border */
+--ttc-community: #6b7280; /* 400-series border */
 ```
 
 ---
@@ -92,31 +92,31 @@ font-family: "Lexend", system-ui, -apple-system, sans-serif;
 
 ### Weight Hierarchy
 
-| Weight | Value | Usage |
-|--------|-------|-------|
-| **Bold** | 700 | Route numbers, brand name, count badges |
-| **Semibold** | 600 | Section headings, dates, card titles, badges |
-| **Medium** | 500 | Nav items, tabs, buttons, links, station names |
-| **Regular** | 400 | Body text, descriptions, timestamps |
-| **Light** | 300 | Reserved (not currently used) |
+| Weight       | Value | Usage                                          |
+| ------------ | ----- | ---------------------------------------------- |
+| **Bold**     | 700   | Route numbers, brand name, count badges        |
+| **Semibold** | 600   | Section headings, dates, card titles, badges   |
+| **Medium**   | 500   | Nav items, tabs, buttons, links, station names |
+| **Regular**  | 400   | Body text, descriptions, timestamps            |
+| **Light**    | 300   | Reserved (not currently used)                  |
 
 ### Size Scale
 
-| Size | Pixels | Usage |
-|------|--------|-------|
-| `text-xs` | 10-11px | Tab counts, closure badges, smallest labels |
-| `text-sm` | 12-13px | Timestamps, status badges, secondary text |
-| `text-base` | 15px | Body text, alert descriptions |
-| `text-lg` | 17px | Card titles, section headings |
-| `text-xl` | 18-19px | Page headings (rare in mobile-first UI) |
+| Size        | Pixels  | Usage                                       |
+| ----------- | ------- | ------------------------------------------- |
+| `text-xs`   | 10-11px | Tab counts, closure badges, smallest labels |
+| `text-sm`   | 12-13px | Timestamps, status badges, secondary text   |
+| `text-base` | 15px    | Body text, alert descriptions               |
+| `text-lg`   | 17px    | Card titles, section headings               |
+| `text-xl`   | 18-19px | Page headings (rare in mobile-first UI)     |
 
 ### Letter Spacing
 
-| Spacing | Value | Usage |
-|---------|-------|-------|
-| Tight | `-0.02em` | Headings, brand |
-| Normal | `-0.01em` | Body, nav, buttons |
-| Wide | `0.02-0.04em` | Uppercase badges, labels |
+| Spacing | Value         | Usage                    |
+| ------- | ------------- | ------------------------ |
+| Tight   | `-0.02em`     | Headings, brand          |
+| Normal  | `-0.01em`     | Body, nav, buttons       |
+| Wide    | `0.02-0.04em` | Uppercase badges, labels |
 
 ---
 
@@ -124,52 +124,52 @@ font-family: "Lexend", system-ui, -apple-system, sans-serif;
 
 ### Tailwind Scale (Default)
 
-| Class | Size | Usage |
-|-------|------|-------|
-| `gap-0.5` | 2px | Icon-text gap in compact badges |
-| `gap-1` | 4px | Tight groupings |
-| `gap-2` | 8px | Badge groups, inline elements |
-| `gap-3` | 12px | Card internal sections |
-| `gap-4` | 16px | Between cards, major sections |
-| `gap-6` | 24px | Page sections |
+| Class     | Size | Usage                           |
+| --------- | ---- | ------------------------------- |
+| `gap-0.5` | 2px  | Icon-text gap in compact badges |
+| `gap-1`   | 4px  | Tight groupings                 |
+| `gap-2`   | 8px  | Badge groups, inline elements   |
+| `gap-3`   | 12px | Card internal sections          |
+| `gap-4`   | 16px | Between cards, major sections   |
+| `gap-6`   | 24px | Page sections                   |
 
 ### Padding Patterns
 
-| Pattern | Value | Usage |
-|---------|-------|-------|
-| Card padding | `1rem / 1.25rem` | Mobile / Desktop |
-| Button padding | `0.5rem 1rem` | Standard buttons |
-| Badge padding | `0.125rem 0.5rem` | Status badges |
-| Route badge | `6px 12px` | Route number badges |
-| Content area | `0.875rem` mobile, `1.5rem` desktop | Main content |
+| Pattern        | Value                               | Usage               |
+| -------------- | ----------------------------------- | ------------------- |
+| Card padding   | `1rem / 1.25rem`                    | Mobile / Desktop    |
+| Button padding | `0.5rem 1rem`                       | Standard buttons    |
+| Badge padding  | `0.125rem 0.5rem`                   | Status badges       |
+| Route badge    | `6px 12px`                          | Route number badges |
+| Content area   | `0.875rem` mobile, `1.5rem` desktop | Main content        |
 
 ### Layout Breakpoints
 
-| Breakpoint | Width | Changes |
-|------------|-------|---------|
-| Mobile | `< 640px` | Bottom nav, compact padding |
-| Tablet | `640px - 1023px` | Increased padding |
-| Desktop | `≥ 1024px` | Sidebar visible, no bottom nav |
+| Breakpoint | Width            | Changes                        |
+| ---------- | ---------------- | ------------------------------ |
+| Mobile     | `< 640px`        | Bottom nav, compact padding    |
+| Tablet     | `640px - 1023px` | Increased padding              |
+| Desktop    | `≥ 1024px`       | Sidebar visible, no bottom nav |
 
 ---
 
 ## 4. Border Radius
 
 ```css
---radius: 0.5rem;  /* 8px base */
---radius-sm: calc(var(--radius) - 4px);  /* 4px */
---radius-md: calc(var(--radius) - 2px);  /* 6px */
---radius-lg: var(--radius);              /* 8px */
---radius-xl: calc(var(--radius) + 4px);  /* 12px */
+--radius: 0.5rem; /* 8px base */
+--radius-sm: calc(var(--radius) - 4px); /* 4px */
+--radius-md: calc(var(--radius) - 2px); /* 6px */
+--radius-lg: var(--radius); /* 8px */
+--radius-xl: calc(var(--radius) + 4px); /* 12px */
 ```
 
-| Element | Radius |
-|---------|--------|
-| Cards | `var(--radius)` (8px) |
-| Buttons | `var(--radius-md)` (6px) |
-| Inputs | `var(--radius-md)` (6px) |
-| Badges | `9999px` (pill) |
-| Route badges | `6px` |
+| Element      | Radius                   |
+| ------------ | ------------------------ |
+| Cards        | `var(--radius)` (8px)    |
+| Buttons      | `var(--radius-md)` (6px) |
+| Inputs       | `var(--radius-md)` (6px) |
+| Badges       | `9999px` (pill)          |
+| Route badges | `6px`                    |
 
 ---
 
@@ -209,6 +209,7 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
 ```
 
 **Sizes:**
+
 - Default: `h-10 px-4`
 - Small: `h-9 px-3`
 - Icon: `h-10 w-10`
@@ -224,6 +225,7 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
 ```
 
 **CSS Classes:**
+
 - `.route-line-1` - Yellow subway
 - `.route-line-2` - Green subway
 - `.route-line-4` - Purple subway
@@ -244,6 +246,7 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
 ```
 
 **CSS Classes:**
+
 - `.status-badge-resumed` - Teal
 - `.status-badge-disruption` - Red
 - `.status-badge-delay` - Amber
@@ -268,6 +271,7 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
 ```
 
 **Border Classes:**
+
 - `.alert-border-high` - Red (disruption)
 - `.alert-border-medium` - Amber (delay)
 - `.alert-border-info` - Blue (planned)
@@ -337,8 +341,8 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
 .content-area {
   max-width: 40rem; /* 640px - optimal reading width */
   margin: 0 auto;
-  padding: 0.875rem;        /* Mobile */
-  padding: 1.5rem 2rem;     /* Desktop */
+  padding: 0.875rem; /* Mobile */
+  padding: 1.5rem 2rem; /* Desktop */
 }
 ```
 
@@ -367,15 +371,25 @@ transition: all 0.2s ease;
 ```css
 /* Refresh pulse */
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 hsl(217 91% 60% / 0.4); }
-  70% { box-shadow: 0 0 0 10px hsl(217 91% 60% / 0); }
-  100% { box-shadow: 0 0 0 0 hsl(217 91% 60% / 0); }
+  0% {
+    box-shadow: 0 0 0 0 hsl(217 91% 60% / 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px hsl(217 91% 60% / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 hsl(217 91% 60% / 0);
+  }
 }
 
 /* Loading shimmer */
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 ```
 
@@ -414,7 +428,7 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
 Toggle with class on `<html>`:
 
 ```javascript
-document.documentElement.classList.toggle('dark');
+document.documentElement.classList.toggle("dark");
 ```
 
 All colors use CSS custom properties that update in `.dark` context.
@@ -442,33 +456,36 @@ Components install to `src/lib/components/ui/`.
 
 ## 12. File Reference
 
-| File | Description |
-|------|-------------|
-| `src/routes/layout.css` | All CSS custom properties and base styles |
+| File                           | Description                                                 |
+| ------------------------------ | ----------------------------------------------------------- |
+| `src/routes/layout.css`        | All CSS custom properties and base styles                   |
 | `src/lib/styles/ttc-theme.css` | TTC-specific overrides (imported in layout.css or app.html) |
-| `src/app.html` | Google Fonts Lexend link |
-| `components.json` | shadcn-svelte configuration |
-| `tailwind.config.ts` | Tailwind configuration (if customized) |
+| `src/app.html`                 | Google Fonts Lexend link                                    |
+| `components.json`              | shadcn-svelte configuration                                 |
+| `tailwind.config.ts`           | Tailwind configuration (if customized)                      |
 
 ---
 
 ## 13. Design Decisions
 
 ### Why Lexend?
+
 - Designed for reading efficiency and dyslexia-friendliness
 - Variable font (single file, all weights)
 - Excellent x-height for mobile readability
 
 ### Why TTC Brand Colors?
+
 - Instant recognition for Toronto transit users
 - Official colors ensure consistency with real-world signage
 - High contrast pairs verified for accessibility
 
 ### Why shadcn-svelte?
+
 - Unstyled primitives = full design control
 - Copy-paste components = no version lock-in
 - Tailwind integration = consistent utility classes
 
 ---
 
-*Last updated: December 4, 2025*
+_Last updated: December 4, 2025_

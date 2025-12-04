@@ -370,16 +370,28 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  background: hsl(var(--background) / 0.95);
+  background: hsl(var(--background));
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid hsl(var(--border));
   padding: 0.5rem 0;
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 100;
+}
+
+/* Ensure background extends behind safe area on iOS */
+.mobile-bottom-nav::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-bottom, 0px);
+  background: hsl(var(--background));
+  z-index: -1;
 }
 
 @media (min-width: 1024px) {
