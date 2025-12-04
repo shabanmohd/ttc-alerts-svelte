@@ -42,21 +42,29 @@ const ALERT_CATEGORIES = {
 function extractRoutes(text: string): string[] {
   const routes: string[] = [];
   
-  // Match route patterns: Line 1, Route 501, 504 King, etc.
-  const lineMatch = text.match(/Line\s*(\d)/gi);
+  // Match subway lines first: Line 1, Line 2, Line 4
+  const lineMatch = text.match(/Line\s*(\d+)/gi);
   if (lineMatch) {
     lineMatch.forEach(m => {
-      const num = m.match(/\d/)?.[0];
-      if (num) routes.push(`Line ${num}`);
+      routes.push(m); // Keep "Line 1" format
     });
   }
   
-  // Match numbered routes
-  const routeMatch = text.match(/\b(\d{1,3})\s*(bus|streetcar)?/gi);
-  if (routeMatch) {
-    routeMatch.forEach(m => {
-      const num = m.match(/\d+/)?.[0];
-      if (num && parseInt(num) < 600) routes.push(num);
+  // Match numbered routes with optional name: "306 Carlton", "504 King", etc.
+  const routeWithNameMatch = text.match(/\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g);
+  if (routeWithNameMatch) {
+    routeWithNameMatch.forEach(m => {
+      routes.push(m); // Keep "306 Carlton" format
+    });
+  }
+  
+  // Match standalone route numbers if not already captured
+  const standaloneMatch = text.match(/\b(\d{1,3})(?=\s|:|,|$)/g);
+  if (standaloneMatch) {
+    standaloneMatch.forEach(num => {
+      if (parseInt(num) < 1000 && !routes.some(r => r.startsWith(num))) {
+        routes.push(num);
+      }
     });
   }
   
@@ -120,18 +128,18 @@ serve(async (req) => {
 
     // Get existing alerts from last 24 hours
     const { data: existingAlerts } = await supabase
-      .from('alerts')
-      .select('bluesky_uri, header')
+      .from('alert_cache')
+      .select('bluesky_uri, header_text')
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
     const existingUris = new Set(existingAlerts?.map(a => a.bluesky_uri) || []);
 
     // Get unresolved threads for matching
     const { data: unresolvedThreads } = await supabase
-      .from('alert_threads')
+      .from('incident_threads')
       .select('*')
       .eq('is_resolved', false)
-      .gte('created_at', new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString());
+      .gte('updated_at', new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString());
 
     for (const item of posts) {
       const post = item.post;
@@ -144,21 +152,21 @@ serve(async (req) => {
       const { category, priority } = categorizeAlert(text);
       const routes = extractRoutes(text);
       
-      // Create alert record
+      // Create alert record matching alert_cache schema
       const alert = {
         bluesky_uri: uri,
-        header: text.split('\n')[0].substring(0, 200),
-        body: text,
-        category,
-        priority,
-        routes,
-        posted_at: post.record.createdAt,
-        is_active: category !== 'SERVICE_RESUMED'
+        header_text: text.split('\n')[0].substring(0, 200),
+        description_text: text,
+        categories: [category],
+        affected_routes: routes,
+        created_at: post.record.createdAt,
+        is_latest: true,
+        effect: category === 'SERVICE_RESUMED' ? 'RESUMED' : 'DISRUPTION'
       };
 
       // Insert alert
       const { data: newAlert, error: insertError } = await supabase
-        .from('alerts')
+        .from('alert_cache')
         .insert(alert)
         .select()
         .single();
@@ -173,74 +181,78 @@ serve(async (req) => {
       // Thread matching
       let matchedThread = null;
 
-      // Check for matching thread (80% Jaccard similarity)
+      // Check for matching thread based on route overlap and similarity
       for (const thread of unresolvedThreads || []) {
-        const similarity = jaccardSimilarity(text, thread.initial_header);
-        if (similarity >= 0.8) {
-          matchedThread = thread;
-          break;
-        }
-      }
-
-      // For SERVICE_RESUMED, use location matching (25% threshold)
-      if (category === 'SERVICE_RESUMED' && !matchedThread) {
-        for (const thread of unresolvedThreads || []) {
-          const hasRouteOverlap = routes.some(r => thread.routes?.includes(r));
-          if (hasRouteOverlap) {
-            const similarity = jaccardSimilarity(text, thread.initial_header);
-            if (similarity >= 0.25) {
-              matchedThread = thread;
-              break;
-            }
+        const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+        const hasRouteOverlap = routes.some(r => threadRoutes.includes(r));
+        
+        if (hasRouteOverlap) {
+          const headerText = thread.header_text || '';
+          const similarity = jaccardSimilarity(text, headerText);
+          
+          // High similarity (80%) for general matching
+          if (similarity >= 0.8) {
+            matchedThread = thread;
+            break;
+          }
+          
+          // Lower threshold (25%) for SERVICE_RESUMED with route overlap
+          if (category === 'SERVICE_RESUMED' && similarity >= 0.25) {
+            matchedThread = thread;
+            break;
           }
         }
       }
 
       if (matchedThread) {
-        // Add to existing thread
+        // Mark old alerts in this thread as not latest
         await supabase
-          .from('alert_thread_alerts')
-          .insert({ thread_id: matchedThread.id, alert_id: newAlert.id });
+          .from('alert_cache')
+          .update({ is_latest: false })
+          .eq('thread_id', matchedThread.thread_id);
+
+        // Link alert to thread
+        await supabase
+          .from('alert_cache')
+          .update({ thread_id: matchedThread.thread_id })
+          .eq('alert_id', newAlert.alert_id);
 
         // Update thread
         const updates: any = {
-          latest_header: text.split('\n')[0].substring(0, 200),
-          alert_count: matchedThread.alert_count + 1,
+          header_text: text.split('\n')[0].substring(0, 200),
           updated_at: new Date().toISOString()
         };
 
         // Resolve thread if SERVICE_RESUMED
         if (category === 'SERVICE_RESUMED') {
           updates.is_resolved = true;
-          updates.resolved_at = new Date().toISOString();
         }
 
         await supabase
-          .from('alert_threads')
+          .from('incident_threads')
           .update(updates)
-          .eq('id', matchedThread.id);
+          .eq('thread_id', matchedThread.thread_id);
 
         updatedThreads++;
       } else {
         // Create new thread
         const { data: newThread } = await supabase
-          .from('alert_threads')
+          .from('incident_threads')
           .insert({
-            initial_header: text.split('\n')[0].substring(0, 200),
-            latest_header: text.split('\n')[0].substring(0, 200),
-            category,
-            priority,
-            routes,
-            alert_count: 1,
+            header_text: text.split('\n')[0].substring(0, 200),
+            categories: [category],
+            affected_routes: routes,
             is_resolved: category === 'SERVICE_RESUMED'
           })
           .select()
           .single();
 
         if (newThread) {
+          // Link alert to new thread
           await supabase
-            .from('alert_thread_alerts')
-            .insert({ thread_id: newThread.id, alert_id: newAlert.id });
+            .from('alert_cache')
+            .update({ thread_id: newThread.thread_id })
+            .eq('alert_id', newAlert.alert_id);
         }
       }
     }
