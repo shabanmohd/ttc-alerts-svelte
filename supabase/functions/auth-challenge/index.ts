@@ -7,6 +7,25 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// Allowed origins for WebAuthn
+const ALLOWED_ORIGINS = [
+  'https://ttc-alerts.pages.dev',
+  'https://version-b.ttc-alerts.pages.dev',
+  'http://localhost:5173',
+  'http://localhost:4173',
+];
+
+// Get rpId from request origin
+function getRpIdFromOrigin(requestOrigin: string | null): string {
+  if (requestOrigin) {
+    const origin = ALLOWED_ORIGINS.find((o) => o === requestOrigin);
+    if (origin) {
+      return new URL(origin).hostname;
+    }
+  }
+  return Deno.env.get('WEBAUTHN_RP_ID') || 'localhost';
+}
+
 // Generate random string
 function generateRandomString(length: number): string {
   const array = new Uint8Array(length);
@@ -92,7 +111,8 @@ serve(async (req) => {
       .delete()
       .lt('expires_at', new Date().toISOString());
 
-    const rpId = Deno.env.get('WEBAUTHN_RP_ID') || 'localhost';
+    // Get rpId from request origin (multi-origin support)
+    const rpId = getRpIdFromOrigin(req.headers.get('origin'));
 
     // Return WebAuthn authentication options
     return new Response(

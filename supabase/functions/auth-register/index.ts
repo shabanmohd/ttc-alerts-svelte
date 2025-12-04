@@ -8,6 +8,32 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// Allowed origins for WebAuthn
+const ALLOWED_ORIGINS = [
+  'https://ttc-alerts.pages.dev',
+  'https://version-b.ttc-alerts.pages.dev',
+  'http://localhost:5173',
+  'http://localhost:4173',
+];
+
+// Get RP config from request origin (multi-origin support)
+function getRpConfigFromOrigin(requestOrigin: string | null): { id: string; name: string } {
+  if (requestOrigin) {
+    const origin = ALLOWED_ORIGINS.find((o) => o === requestOrigin);
+    if (origin) {
+      const hostname = new URL(origin).hostname;
+      return {
+        id: hostname,
+        name: hostname.includes('version-b') ? 'TTC Alerts Beta' : 'TTC Alerts',
+      };
+    }
+  }
+  return {
+    id: Deno.env.get('WEBAUTHN_RP_ID') || 'localhost',
+    name: Deno.env.get('WEBAUTHN_RP_NAME') || 'TTC Alerts',
+  };
+}
+
 // Generate recovery codes
 function generateRecoveryCodes(count = 8): string[] {
   const codes: string[] = [];
@@ -81,17 +107,16 @@ serve(async (req) => {
           expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
         });
 
-      // Return WebAuthn registration options
-      const rpId = Deno.env.get('WEBAUTHN_RP_ID') || 'localhost';
-      const rpName = Deno.env.get('WEBAUTHN_RP_NAME') || 'TTC Alerts';
+      // Return WebAuthn registration options (multi-origin support)
+      const rpConfig = getRpConfigFromOrigin(req.headers.get('origin'));
 
       return new Response(
         JSON.stringify({
           publicKey: {
             challenge: base64UrlEncode(new TextEncoder().encode(challenge)),
             rp: {
-              id: rpId,
-              name: rpName,
+              id: rpConfig.id,
+              name: rpConfig.name,
             },
             user: {
               id: base64UrlEncode(new TextEncoder().encode(tempUserId)),

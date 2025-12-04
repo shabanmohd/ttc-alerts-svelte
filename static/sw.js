@@ -1,6 +1,6 @@
-const CACHE_NAME = 'ttc-alerts-v2';
-const STATIC_CACHE = 'ttc-static-v2';
-const DYNAMIC_CACHE = 'ttc-dynamic-v2';
+const CACHE_NAME = 'ttc-alerts-beta-v1';
+const STATIC_CACHE = 'ttc-static-beta-v1';
+const DYNAMIC_CACHE = 'ttc-dynamic-beta-v1';
 
 const STATIC_ASSETS = [
   '/',

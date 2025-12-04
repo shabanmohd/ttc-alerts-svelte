@@ -65,7 +65,32 @@ export function isValidUsername(username: string): boolean {
   return /^[a-z0-9_]{3,30}$/.test(username);
 }
 
-// WebAuthn Relying Party configuration
+// Allowed origins for WebAuthn
+const ALLOWED_ORIGINS = [
+  'https://ttc-alerts.pages.dev',
+  'https://version-b.ttc-alerts.pages.dev',
+  'http://localhost:5173',
+  'http://localhost:4173',
+];
+
+// Get WebAuthn config based on request origin
+export function getWebAuthnConfig(requestOrigin: string) {
+  const origin = ALLOWED_ORIGINS.find((o) => o === requestOrigin);
+  if (!origin) {
+    // Fall back to env config for unknown origins
+    return rpConfig;
+  }
+
+  const url = new URL(origin);
+  const rpId = url.hostname;
+  return {
+    id: rpId,
+    name: rpId.includes('version-b') ? 'TTC Alerts Beta' : 'TTC Alerts',
+    origin,
+  };
+}
+
+// WebAuthn Relying Party configuration (default/fallback)
 export const rpConfig = {
   id: Deno.env.get('WEBAUTHN_RP_ID') || 'localhost',
   name: Deno.env.get('WEBAUTHN_RP_NAME') || 'TTC Alerts',
