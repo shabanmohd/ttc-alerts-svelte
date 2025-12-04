@@ -38,6 +38,35 @@
     <meta property="og:image" content="/icons/icon-512x512.png" />
     
     %sveltekit.head%
+    <style>
+      /* iOS viewport fix */
+      html, body {
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      /* Solid background that extends to cover any gaps */
+      body::after {
+        content: "";
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 200px;
+        background: var(--background-color, #0a0a0b);
+        z-index: 98;
+        pointer-events: none;
+      }
+      :root {
+        --background-color: #ffffff;
+      }
+      :root.dark {
+        --background-color: #0a0a0b;
+      }
+    </style>
   </head>
   <body data-sveltekit-preload-data="hover">
     <div style="display: contents">%sveltekit.body%</div>

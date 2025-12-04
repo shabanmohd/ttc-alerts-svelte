@@ -364,7 +364,7 @@ body {
   color: hsl(var(--foreground));
 }
 
-/* Mobile Bottom Navigation */
+/* Mobile Bottom Navigation - iOS Chrome/Safari compatible */
 .mobile-bottom-nav {
   position: fixed;
   bottom: 0;
@@ -374,14 +374,28 @@ body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid hsl(var(--border));
-  padding: 0.5rem 0;
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+  padding-top: 0.5rem;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   display: flex;
   justify-content: space-around;
   align-items: center;
-  z-index: 100;
-  /* Extend background color to cover any gap */
-  box-shadow: 0 100px 0 100px hsl(var(--background));
+  z-index: 9999;
+  /* Transform trick to extend beyond viewport on iOS */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Pseudo-element to cover gap below nav on iOS */
+.mobile-bottom-nav::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 150px;
+  background: inherit;
+  transform: translateY(100%);
+  pointer-events: none;
 }
 
 @media (min-width: 1024px) {
