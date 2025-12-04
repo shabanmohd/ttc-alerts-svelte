@@ -90,7 +90,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `user_profiles`        | -    | User display_name, linked to auth.users                  |
 | `webauthn_credentials` | -    | Public keys (credential_id as PK)                        |
 | `recovery_codes`       | -    | Bcrypt-hashed one-time codes                             |
-| `user_preferences`     | -    | Routes, modes, notification settings                     |
+| `user_preferences`     | -    | Routes, modes, notification settings, bookmarked_stops   |
 
 ### Static (`static/`)
 
@@ -127,6 +127,20 @@ Real-time Toronto Transit alerts with biometric authentication.
 | ---------- | ------ | ------------------------------------------- |
 | `app.html` | ✅     | HTML template, Lexend font via Google Fonts |
 | `app.d.ts` | ✅     | SvelteKit app type declarations             |
+
+### Scripts (`scripts/`)
+
+| File                 | Status | Purpose                                          |
+| -------------------- | ------ | ------------------------------------------------ |
+| `transform-gtfs.js`  | ✅     | Transform TTC GTFS data to JSON for stop search  |
+| `generate-icons.js`  | ✅     | Generate PWA icons from source                   |
+
+### Migrations (`supabase/migrations/`)
+
+| File                              | Status | Purpose                                    |
+| --------------------------------- | ------ | ------------------------------------------ |
+| `20241204_auth_tables.sql`        | ✅     | WebAuthn auth tables                       |
+| `20251204_bookmarked_stops.sql`   | ✅     | Add bookmarked_stops column to preferences |
 
 ---
 
