@@ -103,6 +103,48 @@
   --status-orange-text: 30 95% 70%;
 }
 
+/* ============================================
+   ACCESSIBILITY - TEXT SCALING
+   ============================================ */
+
+:root {
+  --text-scale: 1;
+}
+
+html.text-scale-medium {
+  --text-scale: 1.15;
+}
+
+html.text-scale-large {
+  --text-scale: 1.3;
+}
+
+/* ============================================
+   ACCESSIBILITY - REDUCED MOTION
+   ============================================ */
+
+/* System preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* User override via settings */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -149,7 +191,7 @@
     @apply bg-background text-foreground;
     font-family: "Lexend", system-ui, -apple-system, sans-serif;
     font-weight: 400; /* Regular for body text - optimal readability */
-    font-size: 0.9375rem; /* 15px base - slightly larger for Lexend */
+    font-size: calc(0.9375rem * var(--text-scale)); /* 15px base with accessibility scaling */
     line-height: 1.6;
     letter-spacing: -0.01em; /* Lexend reads better slightly tighter */
     -webkit-font-smoothing: antialiased;

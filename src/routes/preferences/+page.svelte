@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Save, Home, Check, Plus, Trash2, Search, CheckCircle, XCircle, LogIn, HelpCircle, Bug, Lightbulb, Info } from 'lucide-svelte';
+  import { Save, Home, Check, Plus, Trash2, Search, CheckCircle, XCircle, LogIn, HelpCircle, Bug, Lightbulb, Info, Eye, Type, Zap } from 'lucide-svelte';
   import Header from '$lib/components/layout/Header.svelte';
   import { Button } from '$lib/components/ui/button';
   import * as Card from '$lib/components/ui/card';
@@ -8,6 +8,7 @@
   import RouteBadge from '$lib/components/alerts/RouteBadge.svelte';
   import { HowToUseDialog, SignInDialog, AuthRequiredDialog, CreateAccountDialog } from '$lib/components/dialogs';
   import { isAuthenticated, userName, signOut } from '$lib/stores/auth';
+  import { accessibility, type TextScale } from '$lib/stores/accessibility';
   import { 
     routes as userRoutes, 
     modes as userModes, 
@@ -645,6 +646,71 @@
           <div class="text-xs text-muted-foreground">Version & credits</div>
         </div>
       </Button>
+    </Card.Content>
+  </Card.Root>
+  
+  <!-- Accessibility Settings -->
+  <Card.Root class="mb-6">
+    <Card.Header>
+      <Card.Title class="text-base flex items-center gap-2">
+        <Eye class="h-5 w-5" />
+        Accessibility
+      </Card.Title>
+      <Card.Description>Customize display settings for better readability.</Card.Description>
+    </Card.Header>
+    <Card.Content class="space-y-6">
+      <!-- Text Size -->
+      <fieldset>
+        <legend class="text-sm font-medium mb-3 block">Text Size</legend>
+        <div class="flex gap-2" role="radiogroup" aria-label="Text size options">
+          {#each [
+            { scale: 'normal' as TextScale, label: 'A', size: 'text-sm', name: 'Small' },
+            { scale: 'medium' as TextScale, label: 'A', size: 'text-base', name: 'Medium' },
+            { scale: 'large' as TextScale, label: 'A', size: 'text-lg', name: 'Large' }
+          ] as option}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={$accessibility.textScale === option.scale}
+              aria-label="{option.name} text size"
+              class="flex-1 h-12 rounded-lg border-2 transition-all font-semibold {$accessibility.textScale === option.scale ? 'border-primary bg-primary/10' : 'border-muted hover:border-muted-foreground/50'}"
+              class:text-primary={$accessibility.textScale === option.scale}
+              onclick={() => accessibility.setTextScale(option.scale)}
+            >
+              <span class={option.size}>{option.label}</span>
+            </button>
+          {/each}
+        </div>
+        <div class="flex justify-between text-xs text-muted-foreground mt-2 px-1">
+          <span>Small</span>
+          <span>Medium</span>
+          <span>Large</span>
+        </div>
+      </fieldset>
+
+      <!-- Reduce Motion -->
+      <div class="flex items-center justify-between">
+        <div class="space-y-0.5">
+          <span id="reduce-motion-label" class="text-sm font-medium flex items-center gap-2">
+            <Zap class="h-4 w-4" />
+            Reduce Motion
+          </span>
+          <p id="reduce-motion-desc" class="text-xs text-muted-foreground">Minimize animations and transitions</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={$accessibility.reduceMotion}
+          aria-labelledby="reduce-motion-label"
+          aria-describedby="reduce-motion-desc"
+          class="relative h-6 w-11 rounded-full transition-colors {$accessibility.reduceMotion ? 'bg-primary' : 'bg-muted'}"
+          onclick={() => accessibility.setReduceMotion(!$accessibility.reduceMotion)}
+        >
+          <span 
+            class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform {$accessibility.reduceMotion ? 'translate-x-5' : 'translate-x-0'}"
+          ></span>
+        </button>
+      </div>
     </Card.Content>
   </Card.Root>
   
