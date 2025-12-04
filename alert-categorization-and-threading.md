@@ -53,6 +53,7 @@ This document describes the alert categorization and threading system designed t
 ```
 
 **Stack:**
+
 - **Frontend:** Svelte 5 + TypeScript + Tailwind + shadcn-svelte
 - **Backend:** Supabase (PostgreSQL + Edge Functions + Realtime)
 - **Hosting:** Cloudflare Pages
@@ -94,56 +95,68 @@ Defined in `supabase/functions/poll-alerts/index.ts`:
 ```typescript
 const ALERT_CATEGORIES = {
   SERVICE_DISRUPTION: {
-    keywords: ['no service', 'suspended', 'closed', 'not stopping', 'bypassing'],
-    priority: 1
+    keywords: [
+      "no service",
+      "suspended",
+      "closed",
+      "not stopping",
+      "bypassing",
+    ],
+    priority: 1,
   },
   SERVICE_RESUMED: {
-    keywords: ['regular service', 'resumed', 'restored', 'back to normal', 'now stopping'],
-    priority: 2
+    keywords: [
+      "regular service",
+      "resumed",
+      "restored",
+      "back to normal",
+      "now stopping",
+    ],
+    priority: 2,
   },
   DELAY: {
-    keywords: ['delay', 'delayed', 'slower', 'longer wait'],
-    priority: 3
+    keywords: ["delay", "delayed", "slower", "longer wait"],
+    priority: 3,
   },
   DIVERSION: {
-    keywords: ['diverting', 'detour', 'alternate route', 'diversion'],
-    priority: 4
+    keywords: ["diverting", "detour", "alternate route", "diversion"],
+    priority: 4,
   },
   SHUTTLE: {
-    keywords: ['shuttle', 'buses replacing'],
-    priority: 4
+    keywords: ["shuttle", "buses replacing"],
+    priority: 4,
   },
   PLANNED_CLOSURE: {
-    keywords: ['planned', 'scheduled', 'maintenance', 'this weekend'],
-    priority: 5
-  }
+    keywords: ["planned", "scheduled", "maintenance", "this weekend"],
+    priority: 5,
+  },
 };
 ```
 
 #### Category Priority (for display ordering)
 
-| Priority | Category | User Impact |
-|----------|----------|-------------|
-| 1 | SERVICE_DISRUPTION | CRITICAL - No service |
-| 2 | SERVICE_RESUMED | POSITIVE - Back to normal |
-| 3 | DELAY | MEDIUM - Longer journey |
-| 4 | DIVERSION | MEDIUM - Different route |
-| 4 | SHUTTLE | MEDIUM - Bus replacement |
-| 5 | PLANNED_CLOSURE | HIGH - Advance notice |
+| Priority | Category           | User Impact               |
+| -------- | ------------------ | ------------------------- |
+| 1        | SERVICE_DISRUPTION | CRITICAL - No service     |
+| 2        | SERVICE_RESUMED    | POSITIVE - Back to normal |
+| 3        | DELAY              | MEDIUM - Longer journey   |
+| 4        | DIVERSION          | MEDIUM - Different route  |
+| 4        | SHUTTLE            | MEDIUM - Bus replacement  |
+| 5        | PLANNED_CLOSURE    | HIGH - Advance notice     |
 
 ### Category Matching Logic
 
 ```typescript
 function categorizeAlert(text: string): { category: string; priority: number } {
   const lowerText = text.toLowerCase();
-  
+
   for (const [category, config] of Object.entries(ALERT_CATEGORIES)) {
-    if (config.keywords.some(kw => lowerText.includes(kw))) {
+    if (config.keywords.some((kw) => lowerText.includes(kw))) {
       return { category, priority: config.priority };
     }
   }
-  
-  return { category: 'OTHER', priority: 10 };
+
+  return { category: "OTHER", priority: 10 };
 }
 ```
 
@@ -156,34 +169,37 @@ Routes are extracted from alert text using regex patterns:
 ```typescript
 function extractRoutes(text: string): string[] {
   const routes: string[] = [];
-  
+
   // Match subway lines: Line 1, Line 2, Line 4
   const lineMatch = text.match(/Line\s*(\d+)/gi);
   if (lineMatch) {
-    lineMatch.forEach(m => routes.push(m));
+    lineMatch.forEach((m) => routes.push(m));
   }
-  
+
   // Match numbered routes with names: "306 Carlton", "504 King"
-  const routeWithNameMatch = text.match(/\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g);
+  const routeWithNameMatch = text.match(
+    /\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g
+  );
   if (routeWithNameMatch) {
-    routeWithNameMatch.forEach(m => routes.push(m));
+    routeWithNameMatch.forEach((m) => routes.push(m));
   }
-  
+
   // Match standalone route numbers
   const standaloneMatch = text.match(/\b(\d{1,3})(?=\s|:|,|$)/g);
   if (standaloneMatch) {
-    standaloneMatch.forEach(num => {
-      if (parseInt(num) < 1000 && !routes.some(r => r.startsWith(num))) {
+    standaloneMatch.forEach((num) => {
+      if (parseInt(num) < 1000 && !routes.some((r) => r.startsWith(num))) {
         routes.push(num);
       }
     });
   }
-  
+
   return [...new Set(routes)];
 }
 ```
 
 **Examples:**
+
 - "Line 1: No service" → `["Line 1"]`
 - "306 Carlton: Detour" → `["306 Carlton"]`
 - "504 King delays" → `["504 King"]`
@@ -213,19 +229,19 @@ let matchedThread = null;
 
 for (const thread of unresolvedThreads) {
   const threadRoutes = thread.affected_routes || [];
-  const hasRouteOverlap = routes.some(r => threadRoutes.includes(r));
-  
+  const hasRouteOverlap = routes.some((r) => threadRoutes.includes(r));
+
   if (hasRouteOverlap) {
     const similarity = jaccardSimilarity(text, thread.title);
-    
+
     // High similarity (80%) for general matching
     if (similarity >= 0.8) {
       matchedThread = thread;
       break;
     }
-    
+
     // Lower threshold (25%) for SERVICE_RESUMED with route overlap
-    if (category === 'SERVICE_RESUMED' && similarity >= 0.25) {
+    if (category === "SERVICE_RESUMED" && similarity >= 0.25) {
       matchedThread = thread;
       break;
     }
@@ -247,17 +263,28 @@ for (const thread of unresolvedThreads) {
 
 ```typescript
 function jaccardSimilarity(text1: string, text2: string): number {
-  const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 2));
-  const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(w => w.length > 2));
-  
-  const intersection = new Set([...words1].filter(x => words2.has(x)));
+  const words1 = new Set(
+    text1
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+  );
+  const words2 = new Set(
+    text2
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+  );
+
+  const intersection = new Set([...words1].filter((x) => words2.has(x)));
   const union = new Set([...words1, ...words2]);
-  
+
   return intersection.size / union.size;
 }
 ```
 
 **Example:**
+
 ```
 Text 1: "Line 1: No service between Lawrence West and Wilson"
 Text 2: "Line 1: No service between Lawrence West and Wilson stations"
@@ -309,7 +336,7 @@ The frontend provides filtering capabilities for categorized alerts:
 export const activeFilters = writable<Set<string>>(new Set());
 
 export function toggleFilter(category: string) {
-  activeFilters.update(filters => {
+  activeFilters.update((filters) => {
     const newFilters = new Set<string>();
     // If clicking already-active filter, clear all (show all alerts)
     // Otherwise, set only the clicked filter
@@ -331,24 +358,23 @@ export const threadsWithAlerts = derived(
   [threads, alerts, activeFilters],
   ([$threads, $alerts, $activeFilters]) => {
     // Build thread list excluding PLANNED_CLOSURE from main view
-    return $threads
-      .filter(thread => {
-        const threadAlerts = $alerts.filter(a => a.thread_id === thread.id);
-        const latestAlert = threadAlerts.find(a => a.is_latest);
-        
-        // Exclude if primary category is PLANNED_CLOSURE
-        if (latestAlert?.category === 'PLANNED_CLOSURE') {
-          return false;
-        }
-        
-        // Apply active filters if any
-        if ($activeFilters.size > 0) {
-          const categories = extractCategories(latestAlert);
-          return [...$activeFilters].some(f => categories.includes(f));
-        }
-        
-        return true;
-      });
+    return $threads.filter((thread) => {
+      const threadAlerts = $alerts.filter((a) => a.thread_id === thread.id);
+      const latestAlert = threadAlerts.find((a) => a.is_latest);
+
+      // Exclude if primary category is PLANNED_CLOSURE
+      if (latestAlert?.category === "PLANNED_CLOSURE") {
+        return false;
+      }
+
+      // Apply active filters if any
+      if ($activeFilters.size > 0) {
+        const categories = extractCategories(latestAlert);
+        return [...$activeFilters].some((f) => categories.includes(f));
+      }
+
+      return true;
+    });
   }
 );
 ```
@@ -358,14 +384,14 @@ export const threadsWithAlerts = derived(
 ```typescript
 function extractCategories(alert: Alert | undefined): string[] {
   if (!alert) return [];
-  
+
   const categories = [alert.category];
-  
+
   // Extract routes as pseudo-categories for filtering
   if (alert.affected_routes?.length) {
     categories.push(...alert.affected_routes);
   }
-  
+
   return categories;
 }
 ```
@@ -448,6 +474,7 @@ CREATE TABLE planned_maintenance (
 **Purpose:** Fetch, categorize, and thread alerts from Bluesky
 
 **Flow:**
+
 1. Fetch latest posts from @ttcalerts.bsky.social
 2. For each post:
    - Extract text and routes
@@ -462,6 +489,7 @@ CREATE TABLE planned_maintenance (
 **Purpose:** Scrape planned maintenance from TTC website
 
 **Flow:**
+
 1. Fetch TTC service alerts page
 2. Parse maintenance announcements
 3. Upsert into `planned_maintenance` table

@@ -4,13 +4,15 @@
 
 Real-time Toronto Transit alerts with biometric authentication.
 
-| Stack      | Details                                                     |
-| ---------- | ----------------------------------------------------------- |
-| Frontend   | Svelte 5 + TypeScript + Tailwind + shadcn-svelte            |
-| Typography | Lexend (dyslexic-friendly) via Google Fonts                 |
-| Backend    | Supabase (DB, Edge Functions, Realtime)                     |
-| Auth       | Custom WebAuthn (displayName + biometrics + recovery codes) |
-| Hosting    | Cloudflare Pages                                            |
+| Stack       | Details                                                     |
+| ----------- | ----------------------------------------------------------- |
+| Frontend    | Svelte 5 + TypeScript + Tailwind + shadcn-svelte            |
+| Typography  | Lexend (dyslexic-friendly) via Google Fonts                 |
+| Backend     | Supabase (DB, Edge Functions, Realtime)                     |
+| Auth        | Custom WebAuthn (displayName + biometrics + recovery codes) |
+| Hosting     | Cloudflare Pages                                            |
+
+📐 **Design System**: See [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) for colors, typography, spacing, and component patterns.
 
 ---
 
@@ -100,10 +102,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Configuration (`src/`)
 
-| File       | Status | Purpose                                       |
-| ---------- | ------ | --------------------------------------------- |
-| `app.html` | ✅     | HTML template, Lexend font via Google Fonts   |
-| `app.d.ts` | ✅     | SvelteKit app type declarations               |
+| File       | Status | Purpose                                     |
+| ---------- | ------ | ------------------------------------------- |
+| `app.html` | ✅     | HTML template, Lexend font via Google Fonts |
+| `app.d.ts` | ✅     | SvelteKit app type declarations             |
 
 ---
 
@@ -187,6 +189,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 ### Dec 4, 2025 - Lexend Font + Typography Hierarchy
 
 **Font System:**
+
 - ✅ Switched to Lexend (dyslexic-friendly) from Google Fonts
 - ✅ Variable weights 300-700 for flexible hierarchy
 - ✅ Latin subset only (~50KB) for optimal performance
@@ -211,11 +214,13 @@ For local development, use `localhost` and `http://localhost:5173`.
 | 10px | Tiny (count bubbles) |
 
 **Letter-spacing:**
+
 - Tighter (-0.02em): Large headings
 - Slightly tight (-0.01em): Body text, nav
 - Wider (0.02-0.04em): Uppercase badges, numbers
 
 **Files Updated:**
+
 - `src/app.html` - Google Fonts link with preconnect
 - `src/routes/layout.css` - Complete typography system
 - `src/lib/components/layout/Header.svelte` - Font weight classes
