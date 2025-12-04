@@ -106,23 +106,23 @@ export async function fetchAlerts(): Promise<void> {
   error.set(null);
   
   try {
-    // Fetch ALL alerts in 24-hour window for proper threading (not just is_latest)
+    // Fetch alerts - select only needed columns to reduce egress
     const { data: alertsData, error: alertsError } = await supabase
       .from('alert_cache')
-      .select('*')
+      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
-      .limit(500);
+      .limit(100);
     
     if (alertsError) throw alertsError;
     
     // Get unique thread IDs from alerts
     const threadIds = [...new Set((alertsData || []).map(a => a.thread_id).filter(Boolean))];
     
-    // Fetch all threads for those alerts (resolved or not)
+    // Fetch threads - select only needed columns to reduce egress
     const { data: threadsData, error: threadsError } = await supabase
       .from('incident_threads')
-      .select('*')
+      .select('thread_id, title, categories, affected_routes, is_resolved, created_at, updated_at')
       .in('thread_id', threadIds);
     
     if (threadsError) throw threadsError;
@@ -142,13 +142,13 @@ export async function fetchAlerts(): Promise<void> {
 // Background poll for updates (doesn't update UI immediately)
 export async function pollForUpdates(): Promise<void> {
   try {
-    // Fetch ALL alerts in 24-hour window for proper threading
+    // Lightweight poll - only fetch alert IDs to check for new alerts
     const { data: alertsData, error: alertsError } = await supabase
       .from('alert_cache')
-      .select('*')
+      .select('alert_id, created_at')
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
-      .limit(500);
+      .limit(50);
     
     if (alertsError) throw alertsError;
     
@@ -169,7 +169,7 @@ export async function pollForUpdates(): Promise<void> {
     }
     
     if (newCount > 0) {
-      pendingAlerts.set(alertsData || []);
+      // Just mark that updates are available - don't fetch full data
       hasUpdates.set(true);
       updateCount.set(newCount);
     }
@@ -179,18 +179,11 @@ export async function pollForUpdates(): Promise<void> {
   }
 }
 
-// Apply pending updates to UI
-export function applyPendingUpdates(): void {
-  let pending: Alert[] | null = null;
-  const unsubscribe = pendingAlerts.subscribe(value => { pending = value; });
-  unsubscribe();
+// Apply pending updates to UI - fetches fresh data
+export async function applyPendingUpdates(): Promise<void> {
+  // Fetch fresh data when user clicks refresh
+  await fetchAlerts();
   
-  if (pending) {
-    alerts.set(pending);
-    lastUpdated.set(new Date());
-  }
-  
-  pendingAlerts.set(null);
   hasUpdates.set(false);
   updateCount.set(0);
 }
