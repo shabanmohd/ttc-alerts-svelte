@@ -80,6 +80,7 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 | **Cloudflare** | Workers, D1, KV, R2 management             | Check worker logs, manage KV storage               |
 | **Playwright** | Browser automation, testing                | UI testing, screenshots, form automation           |
 | **GitKraken**  | Git operations, PR management              | Commits, branches, pull requests, issue management |
+| **Fetch**      | HTTP requests, web page content retrieval  | Fetch docs, API responses, external resources      |
 
 ### When to Use MCPs
 
@@ -103,9 +104,41 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
    - Automate form submissions
 
 4. **GitKraken MCP** - For Git operations:
+
    - `mcp_gitkraken_git_add_or_commit` - Stage and commit
    - `mcp_gitkraken_git_push` - Push changes
    - Create/manage pull requests
+
+5. **Fetch MCP** - For external web requests:
+   - `mcp_fetch_fetch` - Fetch URL content as markdown
+   - Retrieve external documentation (Svelte, Supabase, Tailwind docs)
+   - Check API responses or external resources
+   - Verify external links or references
+
+### ⚠️ Fetch MCP Usage Guidelines
+
+**✅ APPROPRIATE Uses:**
+
+- Fetching official documentation (Svelte, Supabase, Tailwind, shadcn)
+- Checking TTC service pages or transit APIs
+- Retrieving specific technical references when needed
+- Verifying external URLs mentioned in code/docs
+
+**❌ DO NOT Use For:**
+
+- General web browsing or research that isn't task-specific
+- Fetching large pages repeatedly (cache mentally, don't re-fetch)
+- Scraping content that could be found in project docs first
+- Fetching user-provided URLs without clear purpose
+- Downloading files or binary content
+
+**Best Practices:**
+
+1. **Check project docs first** - Most answers are in `APP_IMPLEMENTATION.md`, `DESIGN_SYSTEM.md`, etc.
+2. **Be specific** - Fetch only when you need exact syntax/API details not in context
+3. **Fetch once** - Don't repeatedly fetch the same documentation
+4. **Prefer official sources** - Use official docs over random blogs/tutorials
+5. **Keep requests minimal** - Use `max_length` parameter to limit response size when possible
 
 ### MCP vs Terminal
 
@@ -116,6 +149,7 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 | Git commit/push       | Either works                           | Either works                   |
 | npm install/build     | ❌                                     | ✅ `run_in_terminal`           |
 | Check Cloudflare logs | ✅ Cloudflare observability MCP        | ❌                             |
+| Fetch external docs   | ✅ `mcp_fetch_fetch`                   | ❌ `curl` commands             |
 
 ---
 
