@@ -536,7 +536,7 @@ This system provides:
 ✅ **Keyword-based categorization** - 6 categories with priority ordering  
 ✅ **Incident threading** - Jaccard similarity + exact route number matching  
 ✅ **Cross-route prevention** - Route 46 cannot match with 996, 39 cannot match with 939  
-✅ **Smart SERVICE_RESUMED** - Lower threshold (25%) for different vocabulary  
+✅ **Smart SERVICE_RESUMED** - Lower threshold (20%) for different vocabulary  
 ✅ **Auto-resolve** - SERVICE_RESUMED closes threads  
 ✅ **Mutually exclusive filters** - One category filter at a time  
 ✅ **Planned alert separation** - Maintenance excluded from main feed  
@@ -554,6 +554,63 @@ Bluesky API → poll-alerts Edge Function → Supabase PostgreSQL
                                               ↓
                                        AlertCard.svelte UI
 ```
+
+---
+
+## Capacity Planning
+
+### Supabase Free Tier Limits
+
+| Resource | Limit | Period |
+|----------|-------|--------|
+| **Egress (Data Transfer)** | 5 GB | Monthly |
+| **Database Size** | 500 MB | Total |
+| **Edge Function Invocations** | 500,000 | Monthly |
+
+### Data Transfer Per User Session
+
+**Initial Page Load:**
+```typescript
+// 100 alerts with selected columns (no raw_data JSONB)
+.select('alert_id, text, category, affected_routes, thread_id, is_latest, created_at, indexed_at')
+.limit(100)
+```
+- ~500 bytes per alert × 100 = **~50 KB**
+
+**Polling (every 30 seconds):**
+```typescript
+// Lightweight - only IDs
+.select('alert_id, created_at').limit(50)
+```
+- ~50 bytes per alert × 50 = **~2.5 KB per poll**
+
+**Average 10-minute session:** ~115 KB total
+
+### Monthly User Capacity
+
+| User Type | Sessions/Month | Max Users |
+|-----------|----------------|-----------|
+| Casual (2x/week) | 8 | ~5,500 |
+| Regular (daily) | 30 | ~1,480 |
+| Power (3x/day) | 90 | ~495 |
+| **Mixed (realistic)** | ~23 avg | **~1,950** |
+
+### Edge Function Usage
+
+`poll-alerts` runs every 2 minutes:
+```
+30 days × 24 hours × 30/hour = 21,600 invocations/month
+```
+✅ Well under 500,000 limit
+
+### Scaling Options
+
+1. **Service Worker caching** - Reduce refetches
+2. **Reduce polling** - 60s instead of 30s (halves egress)
+3. **Realtime-only** - Push instead of poll (90% less egress)
+4. **Upgrade** - Pro plan ($25/mo) = 250 GB egress
+
+**Current safe capacity:** ~2,000 monthly active users on free tier
 
 ---
 
