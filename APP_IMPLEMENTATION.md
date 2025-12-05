@@ -30,20 +30,20 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Feature Availability
 
-| Feature                    | Version A | Version B  |
-| -------------------------- | --------- | ---------- |
-| Real-time alerts           | ✅        | ✅         |
-| WebAuthn authentication    | ✅        | ✅         |
-| Planned maintenance widget | ✅        | ✅         |
-| Accessibility settings     | ❌        | ✅         |
-| Visibility-aware polling   | ❌        | ✅         |
-| Stop search (9,346 stops)  | ❌        | ✅         |
-| Stop bookmarks             | ❌        | ✅         |
-| Nearby stops (geolocation) | ❌        | ✅         |
-| ETA predictions            | ❌        | ✅         |
-| Route Browser              | ❌        | ✅         |
-| Weather warnings           | ❌        | ✅         |
-| French language (i18n)     | ❌        | ✅         |
+| Feature                    | Version A | Version B |
+| -------------------------- | --------- | --------- |
+| Real-time alerts           | ✅        | ✅        |
+| WebAuthn authentication    | ✅        | ✅        |
+| Planned maintenance widget | ✅        | ✅        |
+| Accessibility settings     | ❌        | ✅        |
+| Visibility-aware polling   | ❌        | ✅        |
+| Stop search (9,346 stops)  | ❌        | ✅        |
+| Stop bookmarks             | ❌        | ✅        |
+| Nearby stops (geolocation) | ❌        | ✅        |
+| ETA predictions            | ❌        | ✅        |
+| Route Browser              | ❌        | ✅        |
+| Weather warnings           | ❌        | ✅        |
+| French language (i18n)     | ❌        | ✅        |
 
 ---
 
@@ -97,13 +97,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Pages (`src/routes/`)
 
-| File                         | Status | Purpose                           |
-| ---------------------------- | ------ | --------------------------------- |
-| `+layout.svelte`             | ✅     | App layout, auth init, dialogs    |
-| `+page.svelte`               | ✅     | Homepage with alert tabs + ETA    |
-| `preferences/+page.svelte`   | ✅     | Route/mode preferences            |
-| `routes/+page.svelte`        | ✅     | Route browser by category 🆕 **B**|
-| `auth/callback/+page.svelte` | ✅     | Auth callback handler             |
+| File                         | Status | Purpose                            |
+| ---------------------------- | ------ | ---------------------------------- |
+| `+layout.svelte`             | ✅     | App layout, auth init, dialogs     |
+| `+page.svelte`               | ✅     | Homepage with alert tabs + ETA     |
+| `preferences/+page.svelte`   | ✅     | Route/mode preferences             |
+| `routes/+page.svelte`        | ✅     | Route browser by category 🆕 **B** |
+| `auth/callback/+page.svelte` | ✅     | Auth callback handler              |
 
 ### Backend (`supabase/`)
 
@@ -157,25 +157,25 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
 
-| File              | Status | Purpose                                     |
-| ----------------- | ------ | ------------------------------------------- |
-| `ETABadge.svelte` | ✅     | Individual arrival time badge with urgency  |
-| `ETACard.svelte`  | ✅     | Route-grouped ETA card with directions      |
-| `ETAWidget.svelte`| ✅     | Homepage widget showing bookmarked stop ETAs|
+| File               | Status | Purpose                                      |
+| ------------------ | ------ | -------------------------------------------- |
+| `ETABadge.svelte`  | ✅     | Individual arrival time badge with urgency   |
+| `ETACard.svelte`   | ✅     | Route-grouped ETA card with directions       |
+| `ETAWidget.svelte` | ✅     | Homepage widget showing bookmarked stop ETAs |
 
 ### Weather Components (`src/lib/components/weather/`) 🆕 **Version B Only**
 
-| File                        | Status | Purpose                                         |
-| --------------------------- | ------ | ----------------------------------------------- |
-| `WeatherWarningBanner.svelte` | ✅   | Transit-relevant weather alerts from Environment Canada |
+| File                          | Status | Purpose                                                 |
+| ----------------------------- | ------ | ------------------------------------------------------- |
+| `WeatherWarningBanner.svelte` | ✅     | Transit-relevant weather alerts from Environment Canada |
 
 ### i18n (`src/lib/i18n/`) 🆕 **Version B Only**
 
-| File       | Status | Purpose                                     |
-| ---------- | ------ | ------------------------------------------- |
-| `index.ts` | ✅     | svelte-i18n setup with locale detection     |
-| `en.json`  | ✅     | English translations                        |
-| `fr.json`  | ✅     | French translations                         |
+| File       | Status | Purpose                                 |
+| ---------- | ------ | --------------------------------------- |
+| `index.ts` | ✅     | svelte-i18n setup with locale detection |
+| `en.json`  | ✅     | English translations                    |
+| `fr.json`  | ✅     | French translations                     |
 
 ### Stores (`src/lib/stores/`) 🆕 **Version B additions**
 

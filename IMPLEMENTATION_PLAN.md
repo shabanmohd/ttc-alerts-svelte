@@ -15,7 +15,7 @@ Comprehensive plan for ETA feature, stop search, accessibility enhancements, and
 | 2     | Stop Database & Search       | ✅ Complete    | 100%     |
 | 3     | ETA Feature                  | ✅ Complete    | 100%     |
 | 4     | i18n & Additional Features   | ✅ Complete    | 100%     |
-| 5     | Polish & Testing             | ❌ Not Started | 0%       |
+| 5     | Polish & Testing             | ⚠️ In Progress | 80%      |
 
 **Last Updated**: December 4, 2025
 
@@ -1277,17 +1277,17 @@ async function fetchWeatherWarnings(): Promise<WeatherWarning[]> {
 
 - [x] Test new user onboarding flow
 - [x] Test returning user daily commute flow
-- [ ] Test accessibility settings flow
+- [x] Test accessibility settings flow
 - [ ] Test offline functionality
 - [ ] Test ETA refresh behavior
 - [x] Test stop search performance with 11K stops
-- [ ] Test text scaling at all sizes on various devices
+- [x] Test text scaling at all sizes on various devices
 
 ### 5.2 Performance Optimization
 
-- [ ] Measure IndexedDB init time
+- [x] Measure IndexedDB init time (~1s for 9,346 stops)
 - [x] Optimize stop search query performance
-- [ ] Add loading skeletons throughout
+- [x] Add loading skeletons throughout
 - [ ] Implement virtual scrolling if needed for route browser
 - [ ] Profile memory usage with large ETA datasets
 
@@ -1296,13 +1296,13 @@ async function fetchWeatherWarnings(): Promise<WeatherWarning[]> {
 - [x] Run axe-core automated tests (via Svelte build warnings)
 - [ ] Test with VoiceOver (iOS) and TalkBack (Android)
 - [x] Verify keyboard navigation throughout
-- [ ] Check color contrast at all text scales
-- [ ] Test reduced motion with actual animations
+- [x] Check color contrast at all text scales
+- [x] Test reduced motion with actual animations
 
 ### 5.4 Documentation
 
 - [x] Update `APP_IMPLEMENTATION.md` with new files
-- [ ] Update `DESIGN_SYSTEM.md` with new components
+- [x] Update `DESIGN_SYSTEM.md` with new components
 - [ ] Update `FEATURE_RECOMMENDATIONS.md` status
 - [ ] Add inline code comments for complex logic
 - [ ] Create user-facing help documentation

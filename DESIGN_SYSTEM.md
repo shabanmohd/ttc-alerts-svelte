@@ -488,4 +488,158 @@ Components install to `src/lib/components/ui/`.
 
 ---
 
+## 14. Version B Components 🅱️
+
+### ETA Widget & Card
+
+Live arrival times for bookmarked stops.
+
+```svelte
+<!-- Widget with empty state -->
+<ETAWidget onAddStop={() => showSearch = true} />
+
+<!-- Individual ETA card -->
+<ETACard eta={etaData} />
+```
+
+**ETA Card Layout:**
+- Stop name with route badge
+- Direction indicator
+- Live arrival times (up to 3)
+- Auto-refresh indicator (spinning icon)
+- Error state with retry
+
+**CSS Classes:**
+- `.eta-card` - Card container with hover state
+- `.eta-time` - Countdown display (green < 5min, amber < 2min, red approaching)
+
+### Stop Search
+
+Autocomplete search for 9,346 TTC stops using Dexie.js (IndexedDB).
+
+```svelte
+<StopSearch 
+  onSelect={(stop) => bookmarks.add(stop)} 
+  onClose={() => showSearch = false}
+/>
+```
+
+**Features:**
+- Fuzzy search by stop name
+- Debounced input (150ms)
+- Keyboard navigation (↑/↓/Enter/Escape)
+- Shows route badges for each stop
+- Accessible listbox pattern
+
+### Weather Warning Banner
+
+Collapsible banner for transit-relevant weather alerts from Environment Canada.
+
+```svelte
+<WeatherWarningBanner />
+```
+
+**Alert Types:**
+- `warning` - Red border (severe weather)
+- `watch` - Amber border (potential impact)
+- `advisory` - Blue border (informational)
+- `forecast` - Default (current conditions)
+
+**Features:**
+- Fetches RSS from weather.gc.ca
+- Filters for Toronto (on-143)
+- Dismissible with localStorage persistence
+- Expand/collapse for full text
+- 15-minute cache TTL
+
+### Route Browser Page
+
+Browse all TTC routes organized by category.
+
+```svelte
+<!-- Category buttons -->
+<Button onclick={() => scrollTo('subway')}>Subway</Button>
+
+<!-- Route grid -->
+{#each routes as route}
+  <button onclick={() => filterByRoute(route)}>
+    <RouteBadge route={route.number} />
+    {route.name}
+  </button>
+{/each}
+```
+
+**Categories:**
+| Category | Routes | Color |
+|----------|--------|-------|
+| Subway | Lines 1, 2, 4 | Yellow/Green/Purple |
+| Streetcar | 501-512 | TTC Red |
+| Express | 900-996 | TTC Green |
+| Night | 300-385 | White + Blue border |
+| Community | 400-405 | White + Gray border |
+| Popular Bus | 7, 25, 29, etc. | TTC Red |
+
+### Language Toggle (i18n)
+
+Simple button group for EN/FR switching.
+
+```svelte
+<div class="flex border rounded-md overflow-hidden">
+  <button 
+    class:bg-primary={$locale === 'en'}"
+    onclick={() => setLocale('en')}
+  >
+    EN
+  </button>
+  <button 
+    class:bg-primary={$locale === 'fr'}"
+    onclick={() => setLocale('fr')}
+  >
+    FR
+  </button>
+</div>
+```
+
+**Implementation:**
+- Uses `svelte-i18n` library
+- Locale persisted in localStorage (`ttc-locale`)
+- Falls back to browser preference
+- Translation files: `src/lib/i18n/{en,fr}.json`
+
+### Accessibility Settings
+
+Text scaling and reduced motion controls in Preferences.
+
+```svelte
+<!-- Text Size -->
+<RadioGroup value={textScale} onValueChange={setTextScale}>
+  <RadioGroupItem value="small">A</RadioGroupItem>
+  <RadioGroupItem value="medium">A</RadioGroupItem>  <!-- Larger font -->
+  <RadioGroupItem value="large">A</RadioGroupItem>   <!-- Largest font -->
+</RadioGroup>
+
+<!-- Reduce Motion -->
+<Switch checked={reduceMotion} onCheckedChange={setReduceMotion} />
+```
+
+**CSS Variables:**
+```css
+/* Text scaling */
+:root {
+  --text-scale: 1;      /* small */
+  --text-scale: 1.125;  /* medium */
+  --text-scale: 1.25;   /* large */
+}
+
+html { font-size: calc(16px * var(--text-scale)); }
+
+/* Reduce motion */
+.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+```
+
+---
+
 _Last updated: December 4, 2025_
