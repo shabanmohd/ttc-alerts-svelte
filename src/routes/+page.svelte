@@ -24,6 +24,7 @@
   import { isAuthenticated, userName, signOut } from '$lib/stores/auth';
   import { isVisible } from '$lib/stores/visibility';
   import { bookmarks } from '$lib/stores/bookmarks';
+  import { showWeatherWarnings } from '$lib/stores/preferences';
   import type { TTCStop } from '$lib/data/stops-db';
   
   // Import dialogs
@@ -119,10 +120,10 @@
   onSignOut={handleSignOut}
 />
 
-<main class="content-area">
-  <!-- Stop Search Overlay -->
-  {#if showStopSearch}
-    <div class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20 px-4">
+<!-- Stop Search Overlay - Full screen coverage -->
+{#if showStopSearch}
+  <div class="fullscreen-overlay overflow-y-auto">
+    <div class="min-h-full flex items-start justify-center pt-16 px-4 pb-8">
       <div class="w-full max-w-lg bg-card rounded-lg border shadow-lg">
         <StopSearch 
           onSelect={handleStopSelect} 
@@ -130,10 +131,14 @@
         />
       </div>
     </div>
-  {/if}
+  </div>
+{/if}
 
+<main class="content-area">
   <!-- Weather Warnings - Transit-relevant alerts from Environment Canada -->
-  <WeatherWarningBanner />
+  {#if $showWeatherWarnings}
+    <WeatherWarningBanner />
+  {/if}
 
   <!-- ETA Widget - Live Arrivals for Bookmarked Stops -->
   <div class="mb-4">

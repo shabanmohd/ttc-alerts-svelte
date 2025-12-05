@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Save, Home, Check, Plus, Trash2, Search, CheckCircle, XCircle, LogIn, HelpCircle, Bug, Lightbulb, Info, Eye, Type, Zap } from 'lucide-svelte';
+  import { Save, Home, Check, Plus, Trash2, Search, CheckCircle, XCircle, LogIn, HelpCircle, Bug, Lightbulb, Info, Eye, Type, Zap, CloudSun } from 'lucide-svelte';
   import Header from '$lib/components/layout/Header.svelte';
   import { Button } from '$lib/components/ui/button';
   import * as Card from '$lib/components/ui/card';
@@ -16,6 +16,7 @@
     modes as userModes, 
     alertTypes as userAlertTypes,
     schedules as userSchedules,
+    showWeatherWarnings as userShowWeatherWarnings,
     savePreferences,
     resetPreferences
   } from '$lib/stores/preferences';
@@ -53,12 +54,16 @@
   let schedules = $state<Schedule[]>([]);
   let nextScheduleId = $state(1);
   
+  // Weather warnings toggle
+  let showWeatherWarnings = $state(false);
+  
   // Initialize from preferences store on mount
   onMount(() => {
     // Initialize from stores
     selectedModes = new Set($userModes);
     selectedRoutes = new Set($userRoutes);
     selectedAlertTypes = new Set($userAlertTypes);
+    showWeatherWarnings = $userShowWeatherWarnings;
     
     // Initialize schedules
     if ($userSchedules.length > 0) {
@@ -233,7 +238,8 @@
       modes: Array.from(selectedModes),
       routes: Array.from(selectedRoutes),
       alertTypes: Array.from(selectedAlertTypes),
-      schedules: schedulesData
+      schedules: schedulesData,
+      showWeatherWarnings
     });
     
     toast.success('Preferences saved successfully!');
@@ -246,6 +252,7 @@
       selectedModes = new Set();
       selectedRoutes = new Set();
       selectedAlertTypes = new Set();
+      showWeatherWarnings = false;
       schedules = [{ id: 1, days: new Set(['mon', 'tue', 'wed', 'thu', 'fri']), startTime: '07:00', endTime: '09:00' }];
       nextScheduleId = 2;
       toast.success('Preferences reset successfully!');
@@ -756,6 +763,30 @@
         >
           <span 
             class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform {$accessibility.reduceMotion ? 'translate-x-5' : 'translate-x-0'}"
+          ></span>
+        </button>
+      </div>
+
+      <!-- Weather Warnings Toggle -->
+      <div class="flex items-center justify-between">
+        <div class="space-y-0.5">
+          <span id="weather-warnings-label" class="text-sm font-medium flex items-center gap-2">
+            <CloudSun class="h-4 w-4" />
+            Weather Warnings
+          </span>
+          <p id="weather-warnings-desc" class="text-xs text-muted-foreground">Show transit-relevant weather alerts on homepage</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={showWeatherWarnings}
+          aria-labelledby="weather-warnings-label"
+          aria-describedby="weather-warnings-desc"
+          class="relative h-6 w-11 rounded-full transition-colors {showWeatherWarnings ? 'bg-primary' : 'bg-muted'}"
+          onclick={() => showWeatherWarnings = !showWeatherWarnings}
+        >
+          <span 
+            class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform {showWeatherWarnings ? 'translate-x-5' : 'translate-x-0'}"
           ></span>
         </button>
       </div>

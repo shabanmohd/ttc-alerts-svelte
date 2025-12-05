@@ -277,6 +277,77 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
 - `.alert-border-info` - Blue (planned)
 - `.alert-border-resumed` - Teal (resolved)
 
+### Maintenance Widget Cards
+
+The Maintenance Widget displays planned subway closures. Each maintenance item uses a **specific grid layout** that must be preserved.
+
+#### Layout Structure
+
+```
+┌─────────────────────────────────────────────────────┐
+│  ┌─────────────────────────┐  ┌──────────────────┐  │
+│  │ Stations Text           │  │ Date (top-right) │  │
+│  │ (font-size: 1rem, 600)  │  │ Time (below)     │  │
+│  ├─────────────────────────┤  └──────────────────┘  │
+│  │ [8px gap]               │                        │
+│  ├─────────────────────────┤                        │
+│  │ [Line Badge] [Badge]... │                        │
+│  └─────────────────────────┘                        │
+│  ┌──────────────────────────────────────────────┐   │
+│  │ [Closure Badge]              [Details Link]  │   │
+│  └──────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
+```
+
+#### CSS Classes & Spacing
+
+| Class                          | Purpose               | Key Properties                           |
+| ------------------------------ | --------------------- | ---------------------------------------- |
+| `.maintenance-item`            | Card container        | `padding: 0.75rem (12px)`                |
+| `.maintenance-item-grid`       | 2-column grid         | `grid-template-columns: 1fr auto`        |
+| `.maintenance-item-left`       | Left column (stacked) | `flex-direction: column; gap: 8px`       |
+| `.maintenance-item-stations`   | Station names         | `font-size: 1rem; font-weight: 600`      |
+| `.maintenance-item-badges`     | Route badges row      | `display: flex; gap: 0.25rem`            |
+| `.maintenance-item-datetime`   | Right column          | `align-items: flex-end`                  |
+| `.maintenance-item-date`       | Date text             | `font-size: 1rem; font-weight: 600`      |
+| `.maintenance-item-start-time` | Time text             | `font-size: 0.8125rem; font-weight: 500` |
+| `.maintenance-item-footer`     | Bottom row            | `margin-top: 0.5rem (8px)`               |
+
+#### Component Structure (Svelte)
+
+```svelte
+<article class="maintenance-item">
+  <div class="maintenance-item-grid">
+    <!-- Left column: Stations + Badges stacked vertically -->
+    <div class="maintenance-item-left">
+      <p class="maintenance-item-stations">{item.affected_stations}</p>
+      <div class="maintenance-item-badges">
+        {#each item.routes as route}
+          <RouteBadge {route} />
+        {/each}
+      </div>
+    </div>
+    <!-- Right column: Date/Time -->
+    <div class="maintenance-item-datetime">
+      <time class="maintenance-item-date">{formatDateRange(...)}</time>
+      <span class="maintenance-item-start-time">from {startTime}</span>
+    </div>
+  </div>
+  <!-- Footer: Closure badge + Details link -->
+  <div class="maintenance-item-footer">
+    <span class="maintenance-item-closure-badge">{closureBadge.label}</span>
+    <a class="maintenance-item-link">Details</a>
+  </div>
+</article>
+```
+
+#### ⚠️ Critical: Do NOT Change
+
+1. **8px gap** between stations text and line badges (`.maintenance-item-left { gap: 8px }`)
+2. **Vertical stacking** of stations + badges in left column
+3. **Date/time alignment** to top-right corner
+4. **12px padding** on `.maintenance-item` container
+
 ### Filter Chips
 
 ```svelte
@@ -307,6 +378,102 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
   <span>Buses</span>
 </button>
 ```
+
+### ETA Cards (Swipeable Direction Carousel)
+
+The ETA Cards display real-time arrival predictions for bookmarked stops. Each card features a **horizontal swipeable carousel** of direction slides with pagination dots.
+
+#### Layout Structure (Horizontal)
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Stop Name                                    [✕]   │
+│  ⏱ 30s ago                                          │
+├─────────────────────────────────────────────────────┤
+│  ┌─────────────────────────────────────────────┐    │
+│  │ ┌────┐  Queen East         3, 8, 12 min    │    │
+│  │ │501 │  📡 Live           ←─────────────→  │    │
+│  │ └────┘  (pulsing yellow)    (large red)    │    │
+│  │  Badge   Direction          Arrival Times  │    │
+│  └─────────────────────────────────────────────┘    │
+│                    ● ○ ○      ← Pagination Dots     │
+└─────────────────────────────────────────────────────┘
+```
+
+#### CSS Classes & Styling
+
+| Class                      | Purpose              | Key Properties                                          |
+| -------------------------- | -------------------- | ------------------------------------------------------- |
+| `.eta-carousel`            | Scroll container     | `scroll-snap-type: x mandatory; overflow-x: auto`       |
+| `.eta-slide`               | Individual slide     | `min-width: 100%; scroll-snap-align: start; padding: 0` |
+| `.eta-dots`                | Pagination container | `display: flex; gap: 0.5rem; justify-content: center`   |
+| `.eta-dot`                 | Inactive dot         | `8px circle, muted-foreground/30`                       |
+| `.eta-dot.active`          | Active dot           | `primary color, scale(1.25)`                            |
+| `.eta-live-indicator`      | Live signal          | `color: #EAB308 (yellow); pulsing Radio icon`           |
+| `.eta-scheduled-indicator` | Scheduled label      | `color: muted-foreground`                               |
+| `.eta-primary-time`        | Main arrival time    | `font-size: 3rem; font-weight: 700; color: destructive` |
+| `.eta-secondary-times`     | Additional times     | `font-size: 1.125rem; color: muted-foreground; inline`  |
+| `.eta-no-data`             | Dash for no data     | `font-size: 3rem; color: muted-foreground/50`           |
+| `.eta-direction`           | Direction label      | `font-size: 0.9375rem; font-weight: 500`                |
+| `.route-badge-lg`          | Large route badge    | `padding: 8px 16px; font-size: 1.25rem`                 |
+
+#### Live vs Scheduled Indicators
+
+| State         | Icon             | Color            | Animation                 | Text Format         |
+| ------------- | ---------------- | ---------------- | ------------------------- | ------------------- |
+| **Live**      | `Radio` (lucide) | `#EAB308` yellow | Pulsing (opacity 0.7→1.0) | "Live"              |
+| **Scheduled** | `Clock` (lucide) | muted-foreground | None                      | "Scheduled 8:15 PM" |
+
+#### Component Structure (Svelte)
+
+```svelte
+<!-- ETACard.svelte -->
+<div class="eta-carousel" bind:this={carouselRef} onscroll={handleScroll}>
+  {#each flatPredictions as prediction}
+    <ETADirectionSlide {prediction} />
+  {/each}
+</div>
+
+{#if showDots}
+  <div class="eta-dots">
+    {#each flatPredictions as _, i}
+      <button
+        class="eta-dot {activeSlideIndex === i ? 'active' : ''}"
+        onclick={() => scrollToSlide(i)}
+      />
+    {/each}
+  </div>
+{/if}
+```
+
+```svelte
+<!-- ETADirectionSlide.svelte -->
+<div class="eta-slide">
+  <RouteBadge route={prediction.route} size="lg" />
+  <p class="eta-direction">{formatDirection(prediction.direction)}</p>
+
+  {#if hasData}
+    <span class="eta-primary-time">{primaryTime}</span> min
+    <p class="eta-secondary-times">then {secondaryTimes.join(', ')} min</p>
+
+    {#if prediction.isLive}
+      <span class="eta-live-indicator"><Radio /> Live</span>
+    {:else}
+      <span class="eta-scheduled-indicator"><Clock /> Scheduled {prediction.scheduledTime}</span>
+    {/if}
+  {:else}
+    <span class="eta-no-data">–</span>
+  {/if}
+</div>
+```
+
+#### ⚠️ Critical: Do NOT Change
+
+1. **CSS scroll-snap** on `.eta-carousel` - enables native swipe behavior
+2. **100% min-width** on `.eta-slide` - ensures single slide per view
+3. **Yellow color (#EAB308)** for live indicator - matches reference design
+4. **Pagination dots** visible only when 2+ directions exist
+5. **Large route badge (size="lg")** maintains TTC brand styling at larger size
 
 ---
 

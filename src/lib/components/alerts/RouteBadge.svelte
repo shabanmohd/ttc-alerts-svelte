@@ -10,7 +10,7 @@
     class: className = ''
   }: { 
     route: string; 
-    size?: 'sm' | 'default';
+    size?: 'sm' | 'default' | 'lg';
     selectable?: boolean;
     selected?: boolean;
     class?: string;
@@ -106,6 +106,7 @@
       'route-badge',
       getRouteClass(route),
       size === 'sm' && 'route-badge-sm',
+      size === 'lg' && 'route-badge-lg',
       'route-badge-selectable',
       selected && 'selected',
       className
@@ -125,6 +126,7 @@
       'route-badge',
       getRouteClass(route),
       size === 'sm' && 'route-badge-sm',
+      size === 'lg' && 'route-badge-lg',
       className
     )}
     role="status"

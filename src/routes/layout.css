@@ -211,6 +211,9 @@ html.reduce-motion *::after {
 
 html {
   color-scheme: light;
+  background-color: hsl(var(--background));
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
 html.dark {
@@ -223,6 +226,11 @@ body {
   font-family: "Lexend", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  /* Prevent iOS Safari bounce showing white background */
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* ============================================
@@ -231,10 +239,8 @@ body {
 
 /* Main Wrapper */
 .main-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
   padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
 
@@ -260,6 +266,10 @@ body {
 }
 
 /* Header Layout */
+header.sticky {
+  background-color: hsl(var(--background));
+}
+
 .header-container {
   display: flex;
   height: 3.5rem;
@@ -423,23 +433,7 @@ body {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  z-index: 9999;
-  /* Transform trick to extend beyond viewport on iOS */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-/* Pseudo-element to cover gap below nav on iOS */
-.mobile-bottom-nav::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 150px;
-  background: inherit;
-  transform: translateY(100%);
-  pointer-events: none;
+  z-index: 50;
 }
 
 @media (min-width: 1024px) {
@@ -522,6 +516,29 @@ body {
   transition: all 0.15s;
   min-width: 1.75rem;
   border: 0px solid transparent;
+}
+
+/* Small route badge */
+.route-badge-sm {
+  padding: 4px 8px;
+  font-size: 0.6875rem; /* 11px */
+  min-width: 1.5rem;
+  border-radius: 4px;
+}
+
+/* Large route badge for ETA cards */
+.route-badge-lg {
+  padding: 8px 16px;
+  font-size: 1.25rem; /* 20px */
+  min-width: 2.5rem;
+  border-radius: 8px;
+}
+
+/* Fixed-width badge for alert cards - ensures uniform alignment */
+.alert-badge-fixed {
+  width: 100%;
+  justify-content: center;
+  padding: 10px 8px;
 }
 
 /* Checkmark container for selectable badges */
@@ -1075,27 +1092,42 @@ body {
 }
 
 .maintenance-items {
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem; /* 12px - consistent with shadcn card spacing */
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.5rem; /* 8px between items */
 }
 
 .maintenance-item {
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem; /* 12px - shadcn standard internal padding */
   border-radius: calc(var(--radius) - 2px);
   background-color: rgb(139 92 246 / 0.08);
   border: 1px solid rgb(139 92 246 / 0.15);
 }
 
-.maintenance-item-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
+.maintenance-item-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
 }
 
-.maintenance-item-header {
+.maintenance-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Exactly 8px between stations and badges */
+}
+
+.maintenance-item-stations {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+  margin: 0;
+  padding: 0;
+}
+
+.maintenance-item-badges {
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -1106,12 +1138,26 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  flex-shrink: 0;
-  gap: 0;
+  gap: 0.125rem;
+}
+
+.maintenance-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem; /* 12px gap between stations and datetime */
+}
+
+.maintenance-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem; /* 4px between multiple badges */
+  flex-wrap: wrap;
+  margin-top: 0.5rem; /* 8px gap between stations and line badges */
 }
 
 .maintenance-item-date {
-  font-size: 0.8125rem; /* 13px */
+  font-size: 1rem; /* 16px - larger for better visibility */
   font-weight: 600; /* Semibold for dates - key info */
   letter-spacing: -0.01em;
   color: hsl(var(--foreground));
@@ -1119,8 +1165,8 @@ body {
 }
 
 .maintenance-item-start-time {
-  font-size: 0.6875rem; /* 11px */
-  font-weight: 400; /* Regular for secondary time info */
+  font-size: 0.8125rem; /* 13px - proportionally larger */
+  font-weight: 500; /* Medium weight for better readability */
   color: hsl(var(--muted-foreground));
   white-space: nowrap;
 }
@@ -1158,20 +1204,11 @@ body {
   border-color: rgb(161 161 170);
 }
 
-.maintenance-item-stations {
-  font-size: 0.9375rem; /* 15px */
-  font-weight: 500; /* Medium for station names - scannable */
-  line-height: 1.4;
-  letter-spacing: -0.01em;
-  color: hsl(var(--foreground));
-  margin-top: 0.5rem;
-}
-
 .maintenance-item-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 0.5rem;
+  margin-top: 0.5rem; /* 8px - consistent spacing */
 }
 
 .maintenance-item-link {
@@ -1230,7 +1267,6 @@ body {
    ============================================ */
 
 .content-area {
-  flex: 1;
   max-width: 40rem; /* 640px for better readability */
   margin: 0 auto;
   padding: 0.875rem;
@@ -1415,4 +1451,163 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* ============================================
+   FULLSCREEN OVERLAY
+   ============================================ */
+
+.fullscreen-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+  background-color: hsl(var(--background) / 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* ============================================
+   ETA CAROUSEL / SWIPEABLE CARDS
+   ============================================ */
+
+.eta-carousel {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 0;
+}
+
+.eta-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.eta-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+  width: 100%;
+  scroll-snap-align: start;
+  padding: 0; /* Padding handled by internal flex container */
+}
+
+/* Pagination dots */
+.eta-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+}
+
+.eta-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: hsl(var(--muted-foreground) / 0.3);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.eta-dot.active {
+  background-color: hsl(var(--primary));
+  transform: scale(1.25);
+}
+
+.eta-dot:hover:not(.active) {
+  background-color: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Live indicator - yellow radio signal icon */
+.eta-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: #eab308; /* Tailwind yellow-500 */
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.eta-live-indicator svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  animation: eta-live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes eta-live-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .eta-live-indicator svg {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+html.reduce-motion .eta-live-indicator svg {
+  animation: none;
+  opacity: 1;
+}
+
+/* Scheduled indicator */
+.eta-scheduled-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.eta-scheduled-indicator svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ETA primary time display */
+.eta-primary-time {
+  font-size: 3rem; /* 48px - larger for horizontal layout */
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: hsl(var(--foreground));
+}
+
+/* ETA secondary times */
+.eta-secondary-times {
+  font-size: 1.125rem; /* 18px - slightly larger inline */
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground) / 0.7);
+}
+
+/* ETA no data dash */
+.eta-no-data {
+  font-size: 3rem; /* 48px */
+  font-weight: 700;
+  line-height: 1;
+  color: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* ETA direction label */
+.eta-direction {
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  line-height: 1.4;
 }

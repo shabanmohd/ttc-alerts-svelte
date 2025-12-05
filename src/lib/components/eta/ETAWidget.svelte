@@ -93,9 +93,9 @@
     </div>
 
     <!-- ETA Cards -->
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="flex flex-col gap-3">
       {#each etas.slice(0, maxDisplay) as eta (eta.stopId)}
-        <ETACard {eta} />
+        <ETACard {eta} class="w-full" />
       {/each}
     </div>
 

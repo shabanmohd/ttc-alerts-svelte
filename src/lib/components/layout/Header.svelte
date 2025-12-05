@@ -66,7 +66,7 @@
   }
 </script>
 
-<header class="sticky top-0 z-50 w-full border-b border-border bg-background backdrop-blur relative">
+<header class="sticky top-0 z-40 w-full border-b border-border bg-background">
   <div class="header-container">
     <!-- Logo (mobile only) -->
     <a href="/" class="header-left">

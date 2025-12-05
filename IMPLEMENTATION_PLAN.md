@@ -27,15 +27,15 @@ Deploy the current stable app as **Version A** (production) while developing new
 
 ### Deployment Architecture
 
-| Component               | Version A (Stable)     | Version B (Beta)                 |
-| ----------------------- | ---------------------- | -------------------------------- |
-| Git Branch              | `main`                 | `version-b`                      |
+| Component               | Version A (Stable)            | Version B (Beta)                        |
+| ----------------------- | ----------------------------- | --------------------------------------- |
+| Git Branch              | `main`                        | `version-b`                             |
 | Cloudflare URL          | `ttc-alerts-svelte.pages.dev` | `version-b.ttc-alerts-svelte.pages.dev` |
-| Supabase Database       | Shared                 | Shared                           |
-| Supabase Edge Functions | Shared                 | Shared                           |
-| WebAuthn Auth           | Separate credentials   | Separate credentials             |
-| PWA Name                | "TTC Alerts"           | "TTC Alerts Beta"                |
-| SW Cache Prefix         | `ttc-alerts-v2`        | `ttc-alerts-beta-v1`             |
+| Supabase Database       | Shared                        | Shared                                  |
+| Supabase Edge Functions | Shared                        | Shared                                  |
+| WebAuthn Auth           | Separate credentials          | Separate credentials                    |
+| PWA Name                | "TTC Alerts"                  | "TTC Alerts Beta"                       |
+| SW Cache Prefix         | `ttc-alerts-v2`               | `ttc-alerts-beta-v1`                    |
 
 > ⚠️ **Note:** WebAuthn credentials are domain-specific. Users must register separately on each version.
 

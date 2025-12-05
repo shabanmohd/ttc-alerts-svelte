@@ -298,11 +298,14 @@
               {@const closureBadge = getClosureBadge(item)}
               {@const startTime = formatTime(item.start_time)}
               <article class="maintenance-item">
-                <div class="maintenance-item-top">
-                  <div class="maintenance-item-header">
-                    {#each item.routes as route}
-                      <RouteBadge {route} />
-                    {/each}
+                <div class="maintenance-item-grid">
+                  <div class="maintenance-item-left">
+                    <p class="maintenance-item-stations">{item.affected_stations}</p>
+                    <div class="maintenance-item-badges">
+                      {#each item.routes as route}
+                        <RouteBadge {route} />
+                      {/each}
+                    </div>
                   </div>
                   <div class="maintenance-item-datetime">
                     <time class="maintenance-item-date" datetime={item.start_date}>
@@ -313,7 +316,6 @@
                     {/if}
                   </div>
                 </div>
-                <p class="maintenance-item-stations">{item.affected_stations}</p>
                 <div class="maintenance-item-footer">
                   {#if closureBadge}
                     <span class="maintenance-item-closure-badge {closureBadge.type}">

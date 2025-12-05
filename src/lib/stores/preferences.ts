@@ -50,7 +50,8 @@ const defaultPreferences = {
   routes: [],
   alert_types: ['disruption', 'delay', 'detour'],
   schedule: null,
-  push_enabled: false
+  push_enabled: false,
+  show_weather_warnings: false
 };
 
 // Load preferences (checks user auth, then device)
@@ -107,6 +108,7 @@ export async function savePreferences(updates: {
   alertTypes?: string[];
   schedules?: Array<{ days: string[]; startTime: string; endTime: string }>;
   pushEnabled?: boolean;
+  showWeatherWarnings?: boolean;
 }) {
   isSaving.set(true);
   
@@ -121,6 +123,7 @@ export async function savePreferences(updates: {
     if (updates.alertTypes !== undefined) dbUpdates.alert_types = updates.alertTypes;
     if (updates.schedules !== undefined) dbUpdates.schedule = updates.schedules;
     if (updates.pushEnabled !== undefined) dbUpdates.push_enabled = updates.pushEnabled;
+    if (updates.showWeatherWarnings !== undefined) dbUpdates.show_weather_warnings = updates.showWeatherWarnings;
     
     if (currentUserId) {
       // Save to user_preferences
@@ -216,6 +219,7 @@ export const schedules = derived(preferences, $p => {
   return [schedule];
 });
 export const pushEnabled = derived(preferences, $p => getPrefsData($p)?.push_enabled ?? false);
+export const showWeatherWarnings = derived(preferences, $p => getPrefsData($p)?.show_weather_warnings ?? false);
 
 // Reset preferences to defaults
 export async function resetPreferences() {

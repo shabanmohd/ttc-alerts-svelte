@@ -18,13 +18,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## 🔀 Version A/B Deployment
 
-| Attribute    | Version A (Stable)           | Version B (Beta)                       |
-| ------------ | ---------------------------- | -------------------------------------- |
-| **Branch**   | `main`                       | `version-b`                            |
+| Attribute    | Version A (Stable)                  | Version B (Beta)                              |
+| ------------ | ----------------------------------- | --------------------------------------------- |
+| **Branch**   | `main`                              | `version-b`                                   |
 | **URL**      | https://ttc-alerts-svelte.pages.dev | https://version-b.ttc-alerts-svelte.pages.dev |
-| **PWA Name** | "TTC Alerts"                 | "TTC Alerts Beta"                      |
-| **SW Cache** | `ttc-alerts-v2`              | `ttc-alerts-beta-v1`                   |
-| **Status**   | ✅ Production                | 🚧 Development                         |
+| **PWA Name** | "TTC Alerts"                        | "TTC Alerts Beta"                             |
+| **SW Cache** | `ttc-alerts-v2`                     | `ttc-alerts-beta-v1`                          |
+| **Status**   | ✅ Production                       | 🚧 Development                                |
 
 > ⚠️ **This document tracks Version B (`version-b` branch)**. Version A features are a subset.
 

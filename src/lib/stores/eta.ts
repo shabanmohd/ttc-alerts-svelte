@@ -23,6 +23,8 @@ export interface ETAPrediction {
 	routeTitle: string;
 	direction: string;
 	arrivals: number[]; // Minutes until arrival
+	isLive: boolean; // true if real-time GPS data, false if scheduled
+	scheduledTime?: string; // AM/PM format for scheduled predictions
 }
 
 export interface StopETA {

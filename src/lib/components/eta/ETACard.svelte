@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { RefreshCw, AlertCircle, Clock, X } from 'lucide-svelte';
+  import { AlertCircle, MapPin, X } from 'lucide-svelte';
   import { bookmarks } from '$lib/stores/bookmarks';
-  import { etaStore, type StopETA, type ETAPrediction } from '$lib/stores/eta';
+  import { type StopETA, type ETAPrediction } from '$lib/stores/eta';
   import RouteBadge from '$lib/components/alerts/RouteBadge.svelte';
-  import ETABadge from './ETABadge.svelte';
   import { Button } from '$lib/components/ui/button';
   import { cn } from '$lib/utils';
 
@@ -22,140 +21,161 @@
   }: Props = $props();
 
   /**
-   * Format the last updated time
+   * Sort predictions by route number
    */
-  function formatLastUpdated(date: Date): string {
-    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (seconds < 10) return 'Just now';
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes}m ago`;
+  function sortPredictions(predictions: ETAPrediction[]): ETAPrediction[] {
+    return [...predictions].sort((a, b) => {
+      const aNum = parseInt(a.route, 10);
+      const bNum = parseInt(b.route, 10);
+      if (!isNaN(aNum) && !isNaN(bNum)) return aNum - bNum;
+      return a.route.localeCompare(b.route);
+    });
   }
 
   /**
-   * Group predictions by route for cleaner display
+   * Parse direction into multiple lines
    */
-  function groupByRoute(predictions: ETAPrediction[]): Map<string, ETAPrediction[]> {
-    const grouped = new Map<string, ETAPrediction[]>();
-    for (const pred of predictions) {
-      const existing = grouped.get(pred.route) || [];
-      existing.push(pred);
-      grouped.set(pred.route, existing);
+  function parseDirection(direction: string): { line1: string; line2: string; line3: string } {
+    const cleaned = direction.replace(/bound$/i, '').trim();
+    
+    const towardsIndex = cleaned.toLowerCase().indexOf(' towards ');
+    if (towardsIndex > -1) {
+      const beforeTowards = cleaned.substring(0, towardsIndex).trim();
+      const afterTowards = cleaned.substring(towardsIndex + 9).trim();
+      
+      const viaIndex = afterTowards.toLowerCase().indexOf(' via ');
+      if (viaIndex > -1) {
+        const destination = afterTowards.substring(0, viaIndex).trim();
+        const viaDetails = afterTowards.substring(viaIndex + 5).trim();
+        return {
+          line1: beforeTowards,
+          line2: `towards ${destination}`,
+          line3: `via ${viaDetails}`
+        };
+      }
+      
+      return {
+        line1: beforeTowards,
+        line2: `towards ${afterTowards}`,
+        line3: ''
+      };
     }
-    return grouped;
+    
+    const dashMatch = cleaned.match(/^(\w+)\s*-\s*(.+)$/);
+    if (dashMatch) {
+      return {
+        line1: dashMatch[1].trim(),
+        line2: dashMatch[2].trim(),
+        line3: ''
+      };
+    }
+    
+    return { line1: cleaned, line2: '', line3: '' };
   }
 
   function handleRemove() {
     bookmarks.remove(eta.stopId);
   }
 
-  function handleRefresh() {
-    etaStore.refreshStop(eta.stopId);
-  }
-
-  let groupedPredictions = $derived(groupByRoute(eta.predictions));
-  let lastUpdatedText = $derived(formatLastUpdated(eta.lastUpdated));
+  let sortedPredictions = $derived(sortPredictions(eta.predictions));
 </script>
 
 <div
   class={cn(
-    'rounded-lg border bg-card overflow-hidden',
+    'w-full rounded-lg border bg-card overflow-hidden',
     eta.error && 'border-destructive/30',
     className
   )}
 >
   <!-- Header -->
-  <div class="flex items-center justify-between gap-2 p-3 bg-muted/30 border-b">
-    <div class="min-w-0 flex-1">
-      <h4 class="font-medium text-sm truncate">{eta.stopName}</h4>
-      <p class="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-        <Clock class="h-3 w-3" />
-        Updated {lastUpdatedText}
-      </p>
+  <div class="flex items-center justify-between gap-2 px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 border-b">
+    <div class="flex items-center gap-2 min-w-0 flex-1">
+      <MapPin class="h-4 w-4 text-muted-foreground flex-shrink-0" />
+      <h4 class="font-medium text-base truncate">{eta.stopName}</h4>
     </div>
-    <div class="flex items-center gap-1 flex-shrink-0">
+    {#if showRemove}
       <Button
         variant="ghost"
         size="icon"
-        class="h-7 w-7"
-        onclick={handleRefresh}
-        disabled={eta.isLoading}
-        aria-label="Refresh predictions"
+        class="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
+        onclick={handleRemove}
+        aria-label="Remove stop"
       >
-        <RefreshCw class={cn('h-3.5 w-3.5', eta.isLoading && 'animate-spin')} />
+        <X class="h-4 w-4" />
       </Button>
-      {#if showRemove}
-        <Button
-          variant="ghost"
-          size="icon"
-          class="h-7 w-7 text-muted-foreground hover:text-destructive"
-          onclick={handleRemove}
-          aria-label="Remove stop"
-        >
-          <X class="h-3.5 w-3.5" />
-        </Button>
-      {/if}
-    </div>
+    {/if}
   </div>
 
   <!-- Content -->
-  <div class="p-3">
-    {#if eta.error}
-      <!-- Error State -->
-      <div class="flex items-center gap-2 text-destructive text-sm">
-        <AlertCircle class="h-4 w-4 flex-shrink-0" />
-        <span>{eta.error}</span>
-      </div>
-    {:else if eta.isLoading && eta.predictions.length === 0}
-      <!-- Loading State (no cached data) -->
-      <div class="space-y-3">
-        {#each [1, 2] as _}
-          <div class="animate-pulse">
-            <div class="h-4 bg-muted rounded w-24 mb-2"></div>
-            <div class="flex gap-2">
-              <div class="h-6 bg-muted rounded w-14"></div>
-              <div class="h-6 bg-muted rounded w-14"></div>
-              <div class="h-6 bg-muted rounded w-14"></div>
+  {#if eta.error}
+    <!-- Error State -->
+    <div class="flex items-center gap-2 text-destructive text-sm p-4">
+      <AlertCircle class="h-4 w-4 flex-shrink-0" />
+      <span>{eta.error}</span>
+    </div>
+  {:else if eta.isLoading && eta.predictions.length === 0}
+    <!-- Loading State -->
+    <div class="p-4 space-y-3">
+      {#each [1, 2] as _}
+        <div class="animate-pulse flex items-center gap-3">
+          <div class="h-10 w-14 bg-muted rounded-lg flex-shrink-0"></div>
+          <div class="flex-1 space-y-2">
+            <div class="h-4 w-32 bg-muted rounded"></div>
+            <div class="h-3 w-24 bg-muted rounded"></div>
+          </div>
+          <div class="h-8 w-16 bg-muted rounded"></div>
+        </div>
+      {/each}
+    </div>
+  {:else if sortedPredictions.length === 0}
+    <!-- No Predictions -->
+    <div class="p-6 flex flex-col items-center gap-2">
+      <span class="text-3xl font-bold text-muted-foreground/50">–</span>
+      <p class="text-sm text-muted-foreground">No predictions available</p>
+    </div>
+  {:else}
+    <!-- Stacked Route Cards -->
+    <div class="divide-y divide-border">
+      {#each sortedPredictions as prediction (prediction.route + prediction.direction)}
+        {@const parsed = parseDirection(prediction.direction)}
+        {@const primaryTime = prediction.arrivals[0]}
+        {@const secondaryTimes = prediction.arrivals.slice(1)}
+        
+        <div class="flex items-center justify-between gap-4 px-4 py-3">
+          <!-- Left: Route Badge + Direction -->
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <RouteBadge route={prediction.route} size="lg" class="flex-shrink-0" />
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-foreground leading-tight truncate">
+                {parsed.line1}
+              </p>
+              {#if parsed.line2}
+                <p class="text-xs text-muted-foreground mt-0.5 truncate">
+                  {parsed.line2}
+                </p>
+              {/if}
+              {#if parsed.line3}
+                <p class="text-xs text-muted-foreground/70 truncate">
+                  {parsed.line3}
+                </p>
+              {/if}
             </div>
           </div>
-        {/each}
-      </div>
-    {:else if eta.predictions.length === 0}
-      <!-- No Predictions -->
-      <p class="text-sm text-muted-foreground text-center py-2">
-        No predictions available
-      </p>
-    {:else}
-      <!-- Predictions -->
-      <div class="space-y-3">
-        {#each [...groupedPredictions] as [route, predictions] (route)}
-          <div>
-            <!-- Route header -->
-            <div class="flex items-center gap-2 mb-1.5">
-              <RouteBadge {route} size="sm" />
-              <span class="text-xs text-muted-foreground truncate">
-                {predictions[0]?.routeTitle || route}
-              </span>
+          
+          <!-- Right: Arrival Times -->
+          {#if prediction.arrivals.length > 0}
+            <div class="flex items-baseline gap-1 flex-shrink-0">
+              <span class="text-4xl font-bold text-foreground tabular-nums">{primaryTime}</span>
+              {#if secondaryTimes.length > 0}
+                <span class="text-base text-foreground/70 tabular-nums">, {secondaryTimes.join(', ')}</span>
+              {/if}
+              <span class="text-base text-foreground/70 ml-1">min</span>
             </div>
-            
-            <!-- Directions -->
-            <div class="space-y-1.5 ml-1">
-              {#each predictions as pred (pred.direction)}
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-muted-foreground w-24 truncate flex-shrink-0" title={pred.direction}>
-                    {pred.direction.replace(/bound$/, '').trim()}
-                  </span>
-                  <div class="flex gap-1.5 flex-wrap">
-                    {#each pred.arrivals as minutes, i (i)}
-                      <ETABadge {minutes} size="sm" />
-                    {/each}
-                  </div>
-                </div>
-              {/each}
-            </div>
-          </div>
-        {/each}
-      </div>
-    {/if}
-  </div>
+          {:else}
+            <span class="text-4xl font-bold text-muted-foreground/50">–</span>
+          {/if}
+        </div>
+      {/each}
+    </div>
+  {/if}
 </div>

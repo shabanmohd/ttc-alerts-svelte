@@ -123,32 +123,37 @@
   aria-labelledby="{cardId}-title"
 >
   <div class="alert-card-content">
-    <!-- Header: Badges + Timestamp -->
-    <div class="alert-card-header">
-      <div class="alert-card-badges">
-        {#each routes.slice(0, 3) as route}
-          <RouteBadge {route} size="sm" />
+    <!-- Main content: Badge on left, details on right -->
+    <div class="flex gap-3">
+      <!-- Route badge(s) on left - fixed width for uniform alignment -->
+      <div class="w-20 flex flex-col items-center gap-2 flex-shrink-0">
+        {#each rawRoutes.slice(0, 2) as route}
+          <RouteBadge {route} size="lg" class="alert-badge-fixed" />
         {/each}
-        {#if routes.length > 3}
-          <span class="text-xs text-muted-foreground">+{routes.length - 3} more</span>
+        {#if rawRoutes.length > 2}
+          <span class="text-xs text-muted-foreground">+{rawRoutes.length - 2}</span>
         {/if}
-        <StatusBadge category={getMainCategory(categories)} />
       </div>
-      <time 
-        class="alert-card-timestamp" 
-        datetime={latestAlert?.created_at || ''}
-      >
-        {formatTimestamp(latestAlert?.created_at || '')}
-      </time>
+      
+      <!-- Status + Description on right -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-2 mb-1.5">
+          <StatusBadge category={getMainCategory(categories)} />
+          <time 
+            class="alert-card-timestamp" 
+            datetime={latestAlert?.created_at || ''}
+          >
+            {formatTimestamp(latestAlert?.created_at || '')}
+          </time>
+        </div>
+        <p 
+          class="text-sm leading-relaxed" 
+          id="{cardId}-title"
+        >
+          {latestAlert?.description_text || latestAlert?.header_text || ''}
+        </p>
+      </div>
     </div>
-    
-    <!-- Description (showing header_text as description per reference UI) -->
-    <p 
-      class="alert-card-description" 
-      id="{cardId}-title"
-    >
-      {latestAlert?.description_text || latestAlert?.header_text || ''}
-    </p>
   </div>
   
   <!-- Earlier Updates -->

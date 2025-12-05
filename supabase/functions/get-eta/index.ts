@@ -20,6 +20,8 @@ interface Prediction {
 	routeTitle: string;
 	direction: string;
 	arrivals: number[]; // Minutes until arrival
+	isLive: boolean; // true if real-time GPS data, false if scheduled
+	scheduledTime?: string; // AM/PM format for scheduled predictions
 }
 
 interface ETAResponse {
@@ -64,18 +66,36 @@ function parsePredictions(data: any): { predictions: Prediction[]; stopTitle?: s
 			// Normalize predictions to array
 			const preds = Array.isArray(dir.prediction) ? dir.prediction : [dir.prediction];
 
+			// Check if any prediction has epochTime (indicates live GPS data)
+			const hasEpochTime = preds.some((p: any) => p.epochTime != null);
+
 			// Extract arrival times (limit to 3)
 			const arrivals = preds
 				.slice(0, 3)
 				.map((p: any) => parseInt(p.minutes, 10))
 				.filter((m: number) => !isNaN(m));
 
+			// For scheduled predictions, format the first arrival time in AM/PM
+			let scheduledTime: string | undefined;
+			if (!hasEpochTime && preds[0]?.epochTime == null && arrivals.length > 0) {
+				// Calculate the scheduled arrival time
+				const now = new Date();
+				const arrivalDate = new Date(now.getTime() + arrivals[0] * 60 * 1000);
+				scheduledTime = arrivalDate.toLocaleTimeString('en-US', {
+					hour: 'numeric',
+					minute: '2-digit',
+					hour12: true
+				});
+			}
+
 			if (arrivals.length > 0) {
 				predictions.push({
 					route: pred.routeTag || '',
 					routeTitle: pred.routeTitle || pred.routeTag || '',
 					direction: dir.title || '',
-					arrivals
+					arrivals,
+					isLive: hasEpochTime,
+					scheduledTime
 				});
 			}
 		}

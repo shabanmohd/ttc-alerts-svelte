@@ -75,8 +75,8 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 
 ### Branch Structure
 
-| Version   | Branch      | URL                            | Purpose      |
-| --------- | ----------- | ------------------------------ | ------------ |
+| Version   | Branch      | URL                                   | Purpose      |
+| --------- | ----------- | ------------------------------------- | ------------ |
 | Version A | `main`      | ttc-alerts-svelte.pages.dev           | Stable/Prod  |
 | Version B | `version-b` | version-b.ttc-alerts-svelte.pages.dev | Beta/Testing |
 
