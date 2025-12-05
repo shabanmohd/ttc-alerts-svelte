@@ -255,10 +255,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 3. Configure build:
    - **Build command**: `npm run build`
    - **Build output directory**: `build`
-   - **Environment variables**:
+   - **Environment variables** (⚠️ CRITICAL - must match Supabase project):
      - `VITE_SUPABASE_URL` = `https://wmchvmegxcpyfjcuzqzk.supabase.co`
-     - `VITE_SUPABASE_ANON_KEY` = (your anon key)
+     - `VITE_SUPABASE_ANON_KEY` = (your anon key from Supabase project settings)
 4. Deploy!
+
+> ⚠️ **IMPORTANT**: Ensure `VITE_SUPABASE_URL` matches the project where Edge Functions are deployed.
+> Current production Supabase: `wmchvmegxcpyfjcuzqzk` (NOT `ttgytjgpbmkobqvrtbvx`)
 
 ### Environment Variables (Set in Supabase Dashboard)
 
