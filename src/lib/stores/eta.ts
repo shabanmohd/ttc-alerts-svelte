@@ -318,6 +318,43 @@ function createETAStore() {
 		return get({ subscribe }).stops.get(stopId);
 	}
 
+	/**
+	 * Add loading placeholders for newly bookmarked stops.
+	 * This immediately shows the stop in the UI with a loading state.
+	 */
+	function addLoadingPlaceholders(stops: BookmarkedStop[]) {
+		update((state) => {
+			const newStops = new Map(state.stops);
+			for (const stop of stops) {
+				// Only add if not already in store
+				if (!newStops.has(stop.id)) {
+					newStops.set(stop.id, {
+						stopId: stop.id,
+						stopName: stop.name,
+						predictions: [],
+						lastUpdated: new Date(),
+						isLoading: true
+					});
+				}
+			}
+			return { ...state, stops: newStops };
+		});
+	}
+
+	/**
+	 * Remove stops from the ETA store (when unbookmarked)
+	 */
+	function removeStops(stopIds: string[]) {
+		update((state) => {
+			const newStops = new Map(state.stops);
+			for (const id of stopIds) {
+				newStops.delete(id);
+			}
+			saveCache(newStops);
+			return { ...state, stops: newStops };
+		});
+	}
+
 	return {
 		subscribe,
 		refreshAll,
@@ -325,11 +362,50 @@ function createETAStore() {
 		startAutoRefresh,
 		stopAutoRefresh,
 		clearCache,
-		getStopETA
+		getStopETA,
+		addLoadingPlaceholders,
+		removeStops
 	};
 }
 
 export const etaStore = createETAStore();
+
+// ============================================
+// Bookmark Subscription
+// ============================================
+
+/**
+ * Subscribe to bookmark changes to immediately show loading state
+ * for newly added stops and fetch their ETAs.
+ */
+if (browser) {
+	let previousStopIds = new Set<string>();
+
+	bookmarks.subscribe((stops) => {
+		const currentStopIds = new Set(stops.map((s) => s.id));
+
+		// Find newly added stops
+		const newStops = stops.filter((s) => !previousStopIds.has(s.id));
+
+		if (newStops.length > 0) {
+			// Immediately add loading placeholders for new stops
+			etaStore.addLoadingPlaceholders(newStops);
+
+			// Fetch ETAs for new stops only
+			newStops.forEach((stop) => {
+				etaStore.refreshStop(stop.id);
+			});
+		}
+
+		// Find removed stops
+		const removedIds = [...previousStopIds].filter((id) => !currentStopIds.has(id));
+		if (removedIds.length > 0) {
+			etaStore.removeStops(removedIds);
+		}
+
+		previousStopIds = currentStopIds;
+	});
+}
 
 // ============================================
 // Derived Stores
