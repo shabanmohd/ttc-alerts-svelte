@@ -21,7 +21,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | Attribute    | Version A (Stable)           | Version B (Beta)                       |
 | ------------ | ---------------------------- | -------------------------------------- |
 | **Branch**   | `main`                       | `version-b`                            |
-| **URL**      | https://ttc-alerts.pages.dev | https://version-b.ttc-alerts.pages.dev |
+| **URL**      | https://ttc-alerts-svelte.pages.dev | https://version-b.ttc-alerts-svelte.pages.dev |
 | **PWA Name** | "TTC Alerts"                 | "TTC Alerts Beta"                      |
 | **SW Cache** | `ttc-alerts-v2`              | `ttc-alerts-beta-v1`                   |
 | **Status**   | ✅ Production                | 🚧 Development                         |
@@ -61,8 +61,8 @@ Real-time Toronto Transit alerts with biometric authentication.
 | Phase 4: i18n & Features        | ✅ Complete | 100% |
 | Phase 5: Polish & Testing       | 🚧 Progress | 50%  |
 
-**Version A URL**: https://ttc-alerts.pages.dev  
-**Version B URL**: https://version-b.ttc-alerts.pages.dev
+**Version A URL**: https://ttc-alerts-svelte.pages.dev  
+**Version B URL**: https://version-b.ttc-alerts-svelte.pages.dev
 
 ---
 
@@ -265,9 +265,9 @@ Real-time Toronto Transit alerts with biometric authentication.
 Go to: **Project Settings → Edge Functions → Secrets**
 
 ```
-WEBAUTHN_RP_ID=ttc-alerts.pages.dev
+WEBAUTHN_RP_ID=ttc-alerts-svelte.pages.dev
 WEBAUTHN_RP_NAME=TTC Alerts
-WEBAUTHN_ORIGIN=https://ttc-alerts.pages.dev
+WEBAUTHN_ORIGIN=https://ttc-alerts-svelte.pages.dev
 ```
 
 For local development, use `localhost` and `http://localhost:5173`.

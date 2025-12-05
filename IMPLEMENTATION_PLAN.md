@@ -30,7 +30,7 @@ Deploy the current stable app as **Version A** (production) while developing new
 | Component               | Version A (Stable)     | Version B (Beta)                 |
 | ----------------------- | ---------------------- | -------------------------------- |
 | Git Branch              | `main`                 | `version-b`                      |
-| Cloudflare URL          | `ttc-alerts.pages.dev` | `version-b.ttc-alerts.pages.dev` |
+| Cloudflare URL          | `ttc-alerts-svelte.pages.dev` | `version-b.ttc-alerts-svelte.pages.dev` |
 | Supabase Database       | Shared                 | Shared                           |
 | Supabase Edge Functions | Shared                 | Shared                           |
 | WebAuthn Auth           | Separate credentials   | Separate credentials             |
@@ -45,7 +45,7 @@ Deploy the current stable app as **Version A** (production) while developing new
 
 - [x] Create new branch from main: `git checkout -b version-b`
 - [x] Push branch to remote: `git push -u origin version-b`
-- [x] Verify Cloudflare Pages auto-deploys to `version-b.ttc-alerts.pages.dev`
+- [x] Verify Cloudflare Pages auto-deploys to `version-b.ttc-alerts-svelte.pages.dev`
 
 **Commands:**
 
@@ -110,7 +110,7 @@ const DYNAMIC_CACHE = "ttc-dynamic-beta-v1";
 - [ ] Go to Cloudflare Dashboard → Pages → `ttc-alerts` project
 - [ ] Navigate to Settings → Builds & deployments
 - [ ] Under "Branch deployments", ensure preview deployments are enabled
-- [ ] Verify `version-b` branch auto-deploys to `version-b.ttc-alerts.pages.dev`
+- [ ] Verify `version-b` branch auto-deploys to `version-b.ttc-alerts-svelte.pages.dev`
 
 **Cloudflare Dashboard Steps:**
 
@@ -128,7 +128,7 @@ const DYNAMIC_CACHE = "ttc-dynamic-beta-v1";
 
 - [x] Update Supabase Edge Function secrets to support both origins
 - [x] Modify `supabase/functions/_shared/auth-utils.ts` to accept multiple origins
-- [x] Add `version-b.ttc-alerts.pages.dev` to allowed origins
+- [x] Add `version-b.ttc-alerts-svelte.pages.dev` to allowed origins
 
 **Option A: Environment-based (Recommended)**
 
@@ -138,8 +138,8 @@ Add new Supabase secrets for the beta domain:
 # In Supabase Dashboard → Edge Functions → Secrets
 # Add these alongside existing secrets:
 
-WEBAUTHN_RP_ID_BETA=version-b.ttc-alerts.pages.dev
-WEBAUTHN_ORIGIN_BETA=https://version-b.ttc-alerts.pages.dev
+WEBAUTHN_RP_ID_BETA=version-b.ttc-alerts-svelte.pages.dev
+WEBAUTHN_ORIGIN_BETA=https://version-b.ttc-alerts-svelte.pages.dev
 ```
 
 **Option B: Multi-origin in auth-utils.ts**
@@ -147,8 +147,8 @@ WEBAUTHN_ORIGIN_BETA=https://version-b.ttc-alerts.pages.dev
 ```typescript
 // supabase/functions/_shared/auth-utils.ts
 const ALLOWED_ORIGINS = [
-  "https://ttc-alerts.pages.dev",
-  "https://version-b.ttc-alerts.pages.dev",
+  "https://ttc-alerts-svelte.pages.dev",
+  "https://version-b.ttc-alerts-svelte.pages.dev",
 ];
 
 export function getWebAuthnConfig(requestOrigin: string) {
@@ -192,7 +192,7 @@ git add .
 git commit -m "feat: add ETA feature"
 git push origin version-b
 
-# Cloudflare auto-deploys to version-b.ttc-alerts.pages.dev
+# Cloudflare auto-deploys to version-b.ttc-alerts-svelte.pages.dev
 ```
 
 **Keeping Version A stable:**
@@ -223,7 +223,7 @@ git push origin version-b
 - [x] Update `static/sw.js` cache names
 - [x] Verify Cloudflare branch deployment works
 - [x] Add WebAuthn multi-origin support
-- [ ] Test beta deployment at `version-b.ttc-alerts.pages.dev`
+- [x] Test beta deployment at `version-b.ttc-alerts-svelte.pages.dev`
 - [ ] Document workflow for team (if applicable)
 
 ---

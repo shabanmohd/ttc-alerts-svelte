@@ -67,8 +67,8 @@ export function isValidUsername(username: string): boolean {
 
 // Allowed origins for WebAuthn
 const ALLOWED_ORIGINS = [
-  'https://ttc-alerts.pages.dev',
-  'https://version-b.ttc-alerts.pages.dev',
+  'https://ttc-alerts-svelte.pages.dev',
+  'https://version-b.ttc-alerts-svelte.pages.dev',
   'http://localhost:5173',
   'http://localhost:4173',
 ];

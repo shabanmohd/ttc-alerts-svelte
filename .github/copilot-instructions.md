@@ -17,6 +17,7 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 | File                                    | Purpose                                         | When to Update                                               |
 | --------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
 | `APP_IMPLEMENTATION.md`                 | File inventory, completion status, architecture | New files, status changes, feature completion                |
+| `IMPLEMENTATION_PLAN.md`                | **Version B ONLY** - Feature roadmap & phases   | Phase progress, Version B feature completion                 |
 | `DESIGN_SYSTEM.md`                      | Colors, typography, spacing, components         | Colors, typography, spacing, components, layout changes      |
 | `alert-categorization-and-threading.md` | Edge Function logic, threading algorithm        | Categorization logic, threading algorithm, filtering changes |
 | `TTC-ROUTE-CONFLICTS.md`                | Route number conflicts (39/939, 46/996, etc.)   | Route matching bugs, new conflict patterns                   |
@@ -67,6 +68,92 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 - Update when fixing route threading bugs
 - Add new test cases for discovered edge cases
 - Update code examples to match actual implementation
+
+---
+
+## 🔀 Version A/B Documentation Rules
+
+### Branch Structure
+
+| Version   | Branch      | URL                            | Purpose      |
+| --------- | ----------- | ------------------------------ | ------------ |
+| Version A | `main`      | ttc-alerts-svelte.pages.dev           | Stable/Prod  |
+| Version B | `version-b` | version-b.ttc-alerts-svelte.pages.dev | Beta/Testing |
+
+### Documentation Scope
+
+| Document                 | Scope              | Notes                                   |
+| ------------------------ | ------------------ | --------------------------------------- |
+| `APP_IMPLEMENTATION.md`  | **Both Versions**  | Use 🅰️/🅱️ markers and comparison tables |
+| `IMPLEMENTATION_PLAN.md` | **Version B ONLY** | Beta feature roadmap, NOT for Version A |
+| `DESIGN_SYSTEM.md`       | **Both Versions**  | Note version differences if any         |
+| Other docs               | **Both Versions**  | Specify version if behavior differs     |
+
+### 📝 Update Rules for Version Changes
+
+#### When Making Changes to Version A (`main` branch):
+
+1. Update `APP_IMPLEMENTATION.md` Version A sections
+2. **DO NOT** update `IMPLEMENTATION_PLAN.md` (Version B only)
+3. Mark files with 🅰️ if Version A specific
+
+#### When Making Changes to Version B (`version-b` branch):
+
+1. Update `APP_IMPLEMENTATION.md` Version B sections
+2. Update `IMPLEMENTATION_PLAN.md` progress tables and file checklists
+3. Mark new files with 🆕🅱️ in APP_IMPLEMENTATION.md
+4. Update Phase completion status in IMPLEMENTATION_PLAN.md
+
+#### Cross-Reference Rules:
+
+1. **Always check both docs** when making Version B changes
+2. `IMPLEMENTATION_PLAN.md` Phase → corresponds to → `APP_IMPLEMENTATION.md` files
+3. When a Phase is complete in IMPLEMENTATION_PLAN, verify files listed in APP_IMPLEMENTATION
+4. Keep Progress Summary table in IMPLEMENTATION_PLAN.md current
+
+### Version Markers Reference
+
+| Marker | Meaning                    |
+| ------ | -------------------------- |
+| 🆕     | New file (either version)  |
+| 🅰️     | Version A specific         |
+| 🅱️     | Version B specific         |
+| 🆕🅱️   | New file in Version B only |
+| ✅     | Complete                   |
+| ⚠️     | Partial/In Progress        |
+| ❌     | Not Started                |
+
+### APP_IMPLEMENTATION.md File Organization
+
+When documenting files, organize them into these categories:
+
+1. **Shared Files (Both Versions)** - Files that exist in both Version A and Version B
+
+   - Core components, stores, types, utilities
+   - Mark with no special marker (they're the default)
+
+2. **Version A Exclusive** - Files only in Version A (`main` branch)
+
+   - Mark with 🅰️
+   - Rare - most Version A files become shared when merged
+
+3. **Version B Exclusive** - Files only in Version B (`version-b` branch)
+   - Mark with 🅱️ or 🆕🅱️ for new files
+   - These are beta features not yet in production
+   - Example: Stop search, bookmarks, ETA features
+
+**Example structure in APP_IMPLEMENTATION.md:**
+
+```markdown
+### Stores (`src/lib/stores/`)
+
+| File                | Status | Description                    |
+| ------------------- | ------ | ------------------------------ |
+| `alerts.ts`         | ✅     | Alert filtering - Shared       |
+| `auth.ts`           | ✅     | Auth state - Shared            |
+| `stops.ts` 🆕🅱️     | ✅     | Stop database - Version B only |
+| `bookmarks.ts` 🆕🅱️ | ✅     | Bookmarks - Version B only     |
+```
 
 ---
 

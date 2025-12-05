@@ -503,6 +503,7 @@ Live arrival times for bookmarked stops.
 ```
 
 **ETA Card Layout:**
+
 - Stop name with route badge
 - Direction indicator
 - Live arrival times (up to 3)
@@ -510,6 +511,7 @@ Live arrival times for bookmarked stops.
 - Error state with retry
 
 **CSS Classes:**
+
 - `.eta-card` - Card container with hover state
 - `.eta-time` - Countdown display (green < 5min, amber < 2min, red approaching)
 
@@ -518,13 +520,14 @@ Live arrival times for bookmarked stops.
 Autocomplete search for 9,346 TTC stops using Dexie.js (IndexedDB).
 
 ```svelte
-<StopSearch 
-  onSelect={(stop) => bookmarks.add(stop)} 
+<StopSearch
+  onSelect={(stop) => bookmarks.add(stop)}
   onClose={() => showSearch = false}
 />
 ```
 
 **Features:**
+
 - Fuzzy search by stop name
 - Debounced input (150ms)
 - Keyboard navigation (↑/↓/Enter/Escape)
@@ -540,12 +543,14 @@ Collapsible banner for transit-relevant weather alerts from Environment Canada.
 ```
 
 **Alert Types:**
+
 - `warning` - Red border (severe weather)
 - `watch` - Amber border (potential impact)
 - `advisory` - Blue border (informational)
 - `forecast` - Default (current conditions)
 
 **Features:**
+
 - Fetches RSS from weather.gc.ca
 - Filters for Toronto (on-143)
 - Dismissible with localStorage persistence
@@ -585,13 +590,13 @@ Simple button group for EN/FR switching.
 
 ```svelte
 <div class="flex border rounded-md overflow-hidden">
-  <button 
+  <button
     class:bg-primary={$locale === 'en'}"
     onclick={() => setLocale('en')}
   >
     EN
   </button>
-  <button 
+  <button
     class:bg-primary={$locale === 'fr'}"
     onclick={() => setLocale('fr')}
   >
@@ -601,6 +606,7 @@ Simple button group for EN/FR switching.
 ```
 
 **Implementation:**
+
 - Uses `svelte-i18n` library
 - Locale persisted in localStorage (`ttc-locale`)
 - Falls back to browser preference
@@ -623,15 +629,18 @@ Text scaling and reduced motion controls in Preferences.
 ```
 
 **CSS Variables:**
+
 ```css
 /* Text scaling */
 :root {
-  --text-scale: 1;      /* small */
-  --text-scale: 1.125;  /* medium */
-  --text-scale: 1.25;   /* large */
+  --text-scale: 1; /* small */
+  --text-scale: 1.125; /* medium */
+  --text-scale: 1.25; /* large */
 }
 
-html { font-size: calc(16px * var(--text-scale)); }
+html {
+  font-size: calc(16px * var(--text-scale));
+}
 
 /* Reduce motion */
 .reduce-motion * {
