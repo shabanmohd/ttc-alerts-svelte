@@ -1,7 +1,8 @@
 <script lang="ts">
   import { AlertCircle, MapPin, X, Moon, Clock } from 'lucide-svelte';
-  import { bookmarks } from '$lib/stores/bookmarks';
+  import { savedStops } from '$lib/stores/savedStops';
   import { type StopETA, type ETAPrediction } from '$lib/stores/eta';
+  import LiveSignalIcon from './LiveSignalIcon.svelte';
   import RouteBadge from '$lib/components/alerts/RouteBadge.svelte';
   import { Button } from '$lib/components/ui/button';
   import { cn } from '$lib/utils';
@@ -107,10 +108,43 @@
   }
 
   function handleRemove() {
-    bookmarks.remove(eta.stopId);
+    savedStops.remove(eta.stopId);
+  }
+
+  /**
+   * Extract primary direction from predictions for display in header
+   * Returns simplified direction like "Westbound" or "towards Kennedy Station"
+   */
+  function getPrimaryDirection(predictions: ETAPrediction[]): string | null {
+    if (predictions.length === 0) return null;
+    
+    // Get the first prediction's direction
+    const direction = predictions[0].direction;
+    if (!direction) return null;
+    
+    // Try to extract just the direction part (e.g., "West" from "West - 116 Morningside")
+    const dashMatch = direction.match(/^(North|South|East|West)\s*-/i);
+    if (dashMatch) {
+      return `${dashMatch[1]}bound`;
+    }
+    
+    // Try "towards X" pattern
+    const towardsMatch = direction.match(/towards\s+(.+?)(?:\s+via|$)/i);
+    if (towardsMatch) {
+      return `towards ${towardsMatch[1]}`;
+    }
+    
+    // Fallback: check for directional keywords at start
+    const dirMatch = direction.match(/^(North|South|East|West)(?:bound)?/i);
+    if (dirMatch) {
+      return `${dirMatch[1]}bound`;
+    }
+    
+    return null;
   }
 
   let sortedPredictions = $derived(sortPredictions(eta.predictions));
+  let primaryDirection = $derived(getPrimaryDirection(eta.predictions));
 </script>
 
 <div
@@ -122,9 +156,24 @@
 >
   <!-- Header -->
   <div class="flex items-center justify-between gap-2 px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 border-b">
-    <div class="flex items-center gap-2 min-w-0 flex-1">
-      <MapPin class="h-4 w-4 text-muted-foreground flex-shrink-0" />
-      <h4 class="font-medium text-base truncate">{eta.stopName}</h4>
+    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+      <MapPin class="h-8 w-8 text-muted-foreground flex-shrink-0" />
+      <div class="min-w-0 flex-1">
+        <h4 class="font-medium text-base truncate">{eta.stopName}</h4>
+        <div class="flex items-center gap-2 mt-0.5">
+          {#if primaryDirection}
+            {@const dirColor = primaryDirection.toLowerCase().includes('east') ? 'bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40' 
+              : primaryDirection.toLowerCase().includes('west') ? 'bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-600/40'
+              : primaryDirection.toLowerCase().includes('north') ? 'bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40'
+              : primaryDirection.toLowerCase().includes('south') ? 'bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40'
+              : 'bg-muted text-muted-foreground border-muted-foreground/30'}
+            <span class="text-[10px] font-medium px-1.5 py-0.5 rounded border uppercase {dirColor}">
+              {primaryDirection}
+            </span>
+          {/if}
+          <span class="text-xs text-muted-foreground/60">#{eta.stopId}</span>
+        </div>
+      </div>
     </div>
     {#if showRemove}
       <Button
@@ -201,12 +250,22 @@
             </div>
           </div>
           
-          <!-- Right: Arrival Times -->
+          <!-- Right: Arrival Times with Live/Scheduled indicator -->
           {#if prediction.arrivals.length > 0}
             <div class="flex items-baseline gap-1 flex-shrink-0">
-              <span class="text-4xl font-bold text-foreground tabular-nums">{primaryTime}</span>
+              <!-- Primary time with icon -->
+              <span class="inline-flex items-start gap-0.5">
+                <span class="text-4xl font-bold text-foreground tabular-nums">{primaryTime}</span>
+                <LiveSignalIcon size="md" class="mt-1" />
+              </span>
+              <!-- Secondary times with icons -->
               {#if secondaryTimes.length > 0}
-                <span class="text-base text-foreground/70 tabular-nums">, {secondaryTimes.join(', ')}</span>
+                {#each secondaryTimes as time}
+                  <span class="inline-flex items-center gap-0.5">
+                    <span class="text-base text-foreground/70 tabular-nums">, {time}</span>
+                    <LiveSignalIcon size="sm" class="mb-0.5" />
+                  </span>
+                {/each}
               {/if}
               <span class="text-base text-foreground/70 ml-1">min</span>
             </div>

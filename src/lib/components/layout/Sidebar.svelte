@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Bell, Star, Settings, HelpCircle, Bug, Lightbulb, Info, LogOut, Map } from 'lucide-svelte';
+  import { Home, AlertTriangle, Settings, HelpCircle, Bug, Lightbulb, Info, LogOut, Route } from 'lucide-svelte';
   import { Separator } from '$lib/components/ui/separator';
   import { Button } from '$lib/components/ui/button';
   import { page } from '$app/stores';
@@ -15,20 +15,24 @@
     await signOut();
   }
   
-  function isNavActive(href: string, tab: string | null): boolean {
+  function isNavActive(href: string): boolean {
     const currentPath = $page.url.pathname;
-    const currentTab = $page.url.searchParams.get('tab');
     
-    if (href === '/preferences') {
-      return currentPath === '/preferences';
+    if (href === '/settings') {
+      return currentPath === '/settings';
     }
     if (href === '/routes') {
+      // Active for /routes but not /routes/[route] detail pages
       return currentPath === '/routes';
     }
-    if (tab === 'my') {
-      return currentPath === '/' && currentTab === 'my';
+    if (href === '/alerts') {
+      return currentPath === '/alerts';
     }
-    return currentPath === '/' && !currentTab;
+    // Home: active when on / with any ?home= param or no param
+    if (href === '/') {
+      return currentPath === '/' || currentPath === '';
+    }
+    return false;
   }
 </script>
 
@@ -41,31 +45,31 @@
   <nav class="sidebar-nav">
     <a 
       href="/"
-      class="sidebar-nav-item {isNavActive('/', null) ? 'active' : ''}"
+      class="sidebar-nav-item {isNavActive('/') ? 'active' : ''}"
     >
-      <Bell />
-      <span>All Alerts</span>
+      <Home />
+      <span>Home</span>
     </a>
     <a 
-      href="/?tab=my"
-      class="sidebar-nav-item {isNavActive('/', 'my') ? 'active' : ''}"
+      href="/alerts"
+      class="sidebar-nav-item {isNavActive('/alerts') ? 'active' : ''}"
     >
-      <Star />
-      <span>My Alerts</span>
+      <AlertTriangle />
+      <span>Service Alerts</span>
     </a>
     <a 
       href="/routes"
-      class="sidebar-nav-item {isNavActive('/routes', null) ? 'active' : ''}"
+      class="sidebar-nav-item {isNavActive('/routes') ? 'active' : ''}"
     >
-      <Map />
+      <Route />
       <span>Routes</span>
     </a>
     <a 
-      href="/preferences"
-      class="sidebar-nav-item {isNavActive('/preferences', null) ? 'active' : ''}"
+      href="/settings"
+      class="sidebar-nav-item {isNavActive('/settings') ? 'active' : ''}"
     >
       <Settings />
-      <span>Preferences</span>
+      <span>Settings</span>
     </a>
   </nav>
   

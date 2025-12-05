@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Bookmark, MapPin, ChevronRight, X } from 'lucide-svelte';
-  import { bookmarks, bookmarkCount } from '$lib/stores/bookmarks';
+  import { savedStops, savedStopsCount } from '$lib/stores/savedStops';
   import RouteBadge from '$lib/components/alerts/RouteBadge.svelte';
   import { Button } from '$lib/components/ui/button';
 
@@ -16,15 +16,15 @@
     maxDisplay = 3
   }: Props = $props();
 
-  let stops = $state<typeof $bookmarks>([]);
+  let stops = $state<typeof $savedStops>([]);
   let count = $state(0);
 
-  // Subscribe to bookmarks
+  // Subscribe to saved stops
   $effect(() => {
-    const unsubscribeStops = bookmarks.subscribe(value => {
+    const unsubscribeStops = savedStops.subscribe(value => {
       stops = value;
     });
-    const unsubscribeCount = bookmarkCount.subscribe(value => {
+    const unsubscribeCount = savedStopsCount.subscribe(value => {
       count = value;
     });
     return () => {
@@ -35,7 +35,7 @@
 
   function handleRemove(stopId: string, e: MouseEvent) {
     e.stopPropagation();
-    bookmarks.remove(stopId);
+    savedStops.remove(stopId);
   }
 </script>
 

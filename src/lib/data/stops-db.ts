@@ -18,6 +18,7 @@ export interface TTCStop {
 	lon: number;
 	routes: string[];
 	type: 'subway' | 'streetcar' | 'bus';
+	dir?: string; // Direction (e.g., "Eastbound", "Westbound") - only present if stop serves single direction
 }
 
 // Dexie database class
@@ -42,8 +43,8 @@ export const db = new TTCStopsDatabase();
 let isInitialized = false;
 let initPromise: Promise<void> | null = null;
 
-// Data version - increment when stops data changes
-const DATA_VERSION = '2025-01-05';
+// Data version - increment when stops data changes to force reload
+const DATA_VERSION = '2025-12-05-dir';
 
 /**
  * Initialize the stops database, loading data if needed
@@ -96,7 +97,7 @@ async function loadStopsData(): Promise<void> {
 }
 
 /**
- * Search stops by name (fuzzy search)
+ * Search stops by name or ID (fuzzy search)
  */
 export async function searchStops(query: string, limit = 20): Promise<TTCStop[]> {
 	if (!query || query.length < 2) return [];
@@ -108,11 +109,12 @@ export async function searchStops(query: string, limit = 20): Promise<TTCStop[]>
 	const stops = await db.stops.toArray();
 
 	// Score and filter stops - with defensive checks for malformed data
+	// Supports searching by name OR stop ID
 	const scored = stops
 		.filter((stop) => stop && typeof stop.name === 'string' && stop.name.trim())
 		.map((stop) => ({
 			stop,
-			score: getSearchScore(stop.name.toLowerCase().trim(), normalizedQuery)
+			score: getSearchScore(stop.name.toLowerCase().trim(), stop.id, normalizedQuery)
 		}))
 		.filter((item) => item.score > 0)
 		.sort((a, b) => b.score - a.score)
@@ -123,15 +125,22 @@ export async function searchStops(query: string, limit = 20): Promise<TTCStop[]>
 
 /**
  * Calculate search relevance score
+ * Supports searching by name OR stop ID
  */
-function getSearchScore(name: string | undefined | null, query: string): number {
+function getSearchScore(name: string | undefined | null, stopId: string, query: string): number {
 	// Safety check for undefined/null names
 	if (!name || typeof name !== 'string') return 0;
 
-	// Exact match
+	// Exact stop ID match (highest priority)
+	if (stopId === query) return 150;
+	
+	// Stop ID starts with query (high priority for numeric searches)
+	if (stopId.startsWith(query)) return 120;
+
+	// Exact name match
 	if (name === query) return 100;
 
-	// Starts with query
+	// Name starts with query
 	if (name.startsWith(query)) return 80;
 
 	// Word starts with query

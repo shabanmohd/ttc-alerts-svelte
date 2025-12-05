@@ -8,7 +8,10 @@
   import { onMount, onDestroy } from 'svelte';
   import { initAuth, subscribeToAuth, isAuthenticated, userName } from '$lib/stores/auth';
   import { subscribeToAlerts, fetchAlerts } from '$lib/stores/alerts';
-  import { loadPreferences } from '$lib/stores/preferences';
+  import { initializeStorage } from '$lib/services/storage';
+  import { savedStops } from '$lib/stores/savedStops';
+  import { savedRoutes } from '$lib/stores/savedRoutes';
+  import { localPreferences } from '$lib/stores/localPreferences';
   import { setupI18n } from '$lib/i18n';
   
   // Initialize i18n
@@ -38,6 +41,16 @@
   
   // Initialize app on mount
   onMount(async () => {
+    // Initialize IndexedDB storage (with migration from old localStorage)
+    await initializeStorage();
+    
+    // Initialize stores from IndexedDB
+    await Promise.all([
+      savedStops.init(),
+      savedRoutes.init(),
+      localPreferences.init()
+    ]);
+    
     // Initialize theme from localStorage
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -51,9 +64,6 @@
     // Initialize auth and subscribe to changes
     await initAuth();
     unsubscribeAuth = subscribeToAuth();
-    
-    // Load user preferences
-    await loadPreferences();
     
     // Fetch initial alerts
     await fetchAlerts();

@@ -7,8 +7,8 @@
  * 
  * This script:
  * 1. Reads stops.txt, routes.txt, trips.txt, and stop_times.txt
- * 2. Maps routes to stops
- * 3. Outputs a compact JSON file with stop data
+ * 2. Maps routes to stops with direction information
+ * 3. Outputs a compact JSON file with stop data including direction
  */
 
 import fs from 'fs';
@@ -34,6 +34,31 @@ const ROUTE_TYPES = {
   '2': 'rail',
   '3': 'bus',
 };
+
+/**
+ * Extract direction from trip headsign
+ * Examples:
+ * - "East - 116 Morningside towards Finch" → "East"
+ * - "West - 116 Morningside towards Kennedy" → "West"
+ * - "Line 1 (Yonge-University) towards Vaughan" → null (subway, no cardinal direction)
+ */
+function extractDirectionFromHeadsign(headsign) {
+  if (!headsign) return null;
+  
+  // Match "North/South/East/West - " at the start
+  const match = headsign.match(/^(North|South|East|West)\s*-/i);
+  if (match) {
+    return match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+  }
+  
+  // Match "Northbound/Southbound/Eastbound/Westbound" anywhere
+  const boundMatch = headsign.match(/(North|South|East|West)bound/i);
+  if (boundMatch) {
+    return boundMatch[1].charAt(0).toUpperCase() + boundMatch[1].slice(1).toLowerCase();
+  }
+  
+  return null;
+}
 
 try {
   // Read all files
@@ -62,32 +87,73 @@ try {
     });
   }
 
-  // Build trip_id -> route_id map
-  const tripToRoute = new Map();
+  // Build trip_id -> { route_id, direction_id, direction } map
+  console.log('🧭 Extracting direction information from trips...');
+  const tripInfo = new Map();
+  let tripsWithDirection = 0;
   for (const trip of trips) {
-    tripToRoute.set(trip.trip_id, trip.route_id);
+    const direction = extractDirectionFromHeadsign(trip.trip_headsign);
+    if (direction) tripsWithDirection++;
+    tripInfo.set(trip.trip_id, {
+      routeId: trip.route_id,
+      directionId: trip.direction_id,
+      direction: direction,
+    });
+  }
+  console.log(`   ${tripsWithDirection} trips have cardinal direction info`);
+
+  // Build stop_id -> { routes: Set, directions: Set } map
+  console.log('🔗 Mapping routes and directions to stops...');
+  const stopData = new Map();
+  for (const st of stopTimes) {
+    const trip = tripInfo.get(st.trip_id);
+    if (!trip) continue;
+    
+    const routeInfo = routeMap.get(trip.routeId);
+    if (!routeInfo) continue;
+    
+    if (!stopData.has(st.stop_id)) {
+      stopData.set(st.stop_id, {
+        routes: new Set(),
+        directions: new Set(),
+      });
+    }
+    
+    const data = stopData.get(st.stop_id);
+    data.routes.add(routeInfo.name);
+    
+    // Add direction if available
+    if (trip.direction) {
+      data.directions.add(trip.direction);
+    }
   }
 
-  // Build stop_id -> Set of route names
-  console.log('🔗 Mapping routes to stops...');
-  const stopRoutes = new Map();
-  for (const st of stopTimes) {
-    const routeId = tripToRoute.get(st.trip_id);
-    if (routeId) {
-      const routeInfo = routeMap.get(routeId);
-      if (routeInfo) {
-        if (!stopRoutes.has(st.stop_id)) {
-          stopRoutes.set(st.stop_id, new Set());
-        }
-        stopRoutes.get(st.stop_id).add(routeInfo.name);
-      }
+  /**
+   * Get primary direction for a stop
+   * If a stop has only one direction, return it (e.g., "Eastbound")
+   * If multiple or none, return null
+   */
+  function getPrimaryDirection(stopId) {
+    const data = stopData.get(stopId);
+    if (!data || data.directions.size === 0) return null;
+    
+    // If only one direction serves this stop, that's the primary direction
+    if (data.directions.size === 1) {
+      const dir = [...data.directions][0];
+      return `${dir}bound`;
     }
+    
+    // Multiple directions - this is likely a terminal or complex stop
+    // Return null, the UI can show multiple if needed
+    return null;
   }
 
   // Determine stop type based on routes that serve it
   function getStopType(stopId) {
-    const routeNames = stopRoutes.get(stopId);
-    if (!routeNames) return 'bus';
+    const data = stopData.get(stopId);
+    if (!data) return 'bus';
+    
+    const routeNames = data.routes;
     
     // Check if any subway lines serve this stop
     for (const routeName of routeNames) {
@@ -112,13 +178,15 @@ try {
   const ttcStops = stops
     .filter(stop => stop.stop_id && stop.stop_name && stop.stop_lat && stop.stop_lon)
     .map(stop => {
-      const routes = stopRoutes.get(stop.stop_id);
-      return {
+      const data = stopData.get(stop.stop_id);
+      const direction = getPrimaryDirection(stop.stop_id);
+      
+      const result = {
         id: stop.stop_id,
         name: stop.stop_name,
         lat: parseFloat(stop.stop_lat),
         lon: parseFloat(stop.stop_lon),
-        routes: routes ? [...routes].sort((a, b) => {
+        routes: data ? [...data.routes].sort((a, b) => {
           // Sort numerically where possible
           const numA = parseInt(a, 10);
           const numB = parseInt(b, 10);
@@ -127,10 +195,20 @@ try {
         }) : [],
         type: getStopType(stop.stop_id),
       };
+      
+      // Only add direction if available (keeps JSON smaller)
+      if (direction) {
+        result.dir = direction;
+      }
+      
+      return result;
     })
     .filter(stop => stop.routes.length > 0); // Only include stops with routes
 
+  // Count stops with direction info
+  const stopsWithDirection = ttcStops.filter(s => s.dir).length;
   console.log(`✅ Processed ${ttcStops.length} stops with routes`);
+  console.log(`   🧭 ${stopsWithDirection} stops have direction info`);
 
   // Create output directory if needed
   const outputDir = path.dirname(outputPath);

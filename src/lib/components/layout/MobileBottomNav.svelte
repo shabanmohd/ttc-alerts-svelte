@@ -1,49 +1,54 @@
 <script lang="ts">
-  import { Bell, Star, Settings, Map } from 'lucide-svelte';
+  import { Home, AlertTriangle, Settings, Route } from 'lucide-svelte';
   import { page } from '$app/stores';
   
-  function isActive(href: string, tab: string | null): boolean {
+  function isActive(href: string): boolean {
     const currentPath = $page.url.pathname;
-    const currentTab = $page.url.searchParams.get('tab');
+    const homeParam = $page.url.searchParams.get('home');
     
-    if (href === '/preferences') {
-      return currentPath === '/preferences';
+    if (href === '/settings') {
+      return currentPath === '/settings';
     }
     if (href === '/routes') {
+      // Active for /routes but not /routes/[route] detail pages
       return currentPath === '/routes';
     }
-    if (tab === 'my') {
-      return currentPath === '/' && currentTab === 'my';
+    if (href === '/alerts') {
+      return currentPath === '/alerts';
     }
-    return currentPath === '/' && !currentTab;
+    // Home tab: active when on / with any ?home= param or no param
+    if (href === '/') {
+      return currentPath === '/' || currentPath === '';
+    }
+    return false;
   }
 </script>
 
 <nav class="mobile-bottom-nav">
   <a 
     href="/"
-    class="nav-item {isActive('/', null) ? 'active' : ''}"
+    class="nav-item {isActive('/') ? 'active' : ''}"
   >
-    <Bell />
-    <span>Alerts</span>
+    <Home />
+    <span>Home</span>
   </a>
   <a 
-    href="/?tab=my"
-    class="nav-item {isActive('/', 'my') ? 'active' : ''}"
+    href="/alerts"
+    class="nav-item {isActive('/alerts') ? 'active' : ''}"
   >
-    <Star />
-    <span>My Alerts</span>
+    <AlertTriangle />
+    <span>Service Alerts</span>
   </a>
   <a 
     href="/routes"
-    class="nav-item {isActive('/routes', null) ? 'active' : ''}"
+    class="nav-item {isActive('/routes') ? 'active' : ''}"
   >
-    <Map />
+    <Route />
     <span>Routes</span>
   </a>
   <a 
-    href="/preferences"
-    class="nav-item {isActive('/preferences', null) ? 'active' : ''}"
+    href="/settings"
+    class="nav-item {isActive('/settings') ? 'active' : ''}"
   >
     <Settings />
     <span>Settings</span>

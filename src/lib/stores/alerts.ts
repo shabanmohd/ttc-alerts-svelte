@@ -355,3 +355,37 @@ export function toggleFilter(category: string): void {
 export function setRouteFilter(route: string): void {
   activeFilters.set(new Set([route]));
 }
+
+// Filter threads by a list of routes (used for My Routes feature)
+export function getThreadsForRoutes(routes: string[]): ThreadWithAlerts[] {
+  if (!routes || routes.length === 0) return [];
+  
+  const allThreads = get(threadsWithAlerts);
+  
+  return allThreads.filter(thread => {
+    // Check thread's affected_routes
+    const threadRoutes = extractRoutes(thread.affected_routes);
+    // Also check latest alert's affected_routes
+    const alertRoutes = extractRoutes(thread.latestAlert?.affected_routes);
+    const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
+    
+    // Match if any of the user's saved routes is in the thread's routes
+    return routes.some(savedRoute => 
+      allRoutes.some(threadRoute => 
+        threadRoute.toLowerCase() === savedRoute.toLowerCase() ||
+        threadRoute.includes(savedRoute) ||
+        savedRoute.includes(threadRoute)
+      )
+    );
+  });
+}
+
+// Derived store for alerts filtered by user's saved routes
+export const myRouteAlerts = derived(
+  [threadsWithAlerts],
+  ([$threadsWithAlerts]) => {
+    // This will be populated by the component that subscribes to preferences
+    // Return empty for now - the actual filtering happens in the component
+    return $threadsWithAlerts;
+  }
+);

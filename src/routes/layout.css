@@ -616,6 +616,15 @@ header.sticky {
   box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #6b7280;
 }
 
+/* No border variant for inline toggles */
+.route-badge.route-badge-selectable.no-border {
+  margin: 0;
+}
+
+.route-badge.route-badge-selectable.no-border.selected {
+  box-shadow: none;
+}
+
 /* Check icon color based on badge background */
 .route-line-1 .route-check {
   border-color: #000000;

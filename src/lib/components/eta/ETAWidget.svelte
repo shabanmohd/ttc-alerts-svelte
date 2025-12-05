@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { Clock, Plus, RefreshCw, AlertCircle } from 'lucide-svelte';
-  import { bookmarks, bookmarkCount } from '$lib/stores/bookmarks';
+  import { savedStops, savedStopsCount } from '$lib/stores/savedStops';
   import { etaStore, etaList, isAnyLoading } from '$lib/stores/eta';
   import ETACard from './ETACard.svelte';
   import { Button } from '$lib/components/ui/button';
@@ -25,7 +25,7 @@
 
   // Subscribe to stores
   $effect(() => {
-    const unsubscribeCount = bookmarkCount.subscribe(value => {
+    const unsubscribeCount = savedStopsCount.subscribe(value => {
       count = value;
     });
     const unsubscribeEtas = etaList.subscribe(value => {

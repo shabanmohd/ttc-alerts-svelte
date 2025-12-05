@@ -142,26 +142,26 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Data (`src/lib/data/`) 🆕 **Version B Only**
 
-| File          | Status | Purpose                                       |
-| ------------- | ------ | --------------------------------------------- |
-| `stops-db.ts` | ✅     | IndexedDB layer with Dexie.js for stop search |
+| File          | Status | Purpose                                                      |
+| ------------- | ------ | ------------------------------------------------------------ |
+| `stops-db.ts` | ✅     | IndexedDB layer with Dexie.js, direction field, ID search    |
 
 ### Stops Components (`src/lib/components/stops/`) 🆕 **Version B Only**
 
-| File                        | Status | Purpose                                     |
-| --------------------------- | ------ | ------------------------------------------- |
-| `StopSearch.svelte`         | ✅     | Stop search with autocomplete & geolocation |
-| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops            |
-| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage        |
-| `index.ts`                  | ✅     | Component exports                           |
+| File                        | Status | Purpose                                                     |
+| --------------------------- | ------ | ----------------------------------------------------------- |
+| `StopSearch.svelte`         | ✅     | Stop search with autocomplete, direction badges, ID search  |
+| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops                            |
+| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                        |
+| `index.ts`                  | ✅     | Component exports                                           |
 
 ### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
 
-| File               | Status | Purpose                                      |
-| ------------------ | ------ | -------------------------------------------- |
-| `ETABadge.svelte`  | ✅     | Individual arrival time badge with urgency   |
-| `ETACard.svelte`   | ✅     | Route-grouped ETA card with directions       |
-| `ETAWidget.svelte` | ✅     | Homepage widget showing bookmarked stop ETAs |
+| File               | Status | Purpose                                                      |
+| ------------------ | ------ | ------------------------------------------------------------ |
+| `ETABadge.svelte`  | ✅     | Individual arrival time badge with urgency                   |
+| `ETACard.svelte`   | ✅     | Route-grouped ETA card with direction badge + stop ID header |
+| `ETAWidget.svelte` | ✅     | Homepage widget showing bookmarked stop ETAs                 |
 
 ### Weather Components (`src/lib/components/weather/`) 🆕 **Version B Only**
 
@@ -198,10 +198,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
-| File                | Status | Purpose                                         |
-| ------------------- | ------ | ----------------------------------------------- |
-| `transform-gtfs.js` | ✅     | Transform TTC GTFS data to JSON for stop search |
-| `generate-icons.js` | ✅     | Generate PWA icons from source                  |
+| File                | Status | Purpose                                                        |
+| ------------------- | ------ | -------------------------------------------------------------- |
+| `transform-gtfs.js` | ✅     | Transform TTC GTFS data, extract direction from trip headsigns |
+| `generate-icons.js` | ✅     | Generate PWA icons from source                                 |
 
 ### Migrations (`supabase/migrations/`)
 

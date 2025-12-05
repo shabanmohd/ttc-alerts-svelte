@@ -8,7 +8,8 @@
 		findNearbyStops,
 		type TTCStop
 	} from '$lib/data/stops-db';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import { browser } from '$app/environment';
 	import RouteBadge from '$lib/components/alerts/RouteBadge.svelte';
 	import BookmarkStopButton from './BookmarkStopButton.svelte';
 
@@ -23,7 +24,7 @@
 	let { 
 		onSelect,
 		onClose,
-		placeholder = 'Search stops...', 
+		placeholder = 'Search by name or stop ID...', 
 		showNearbyButton = true,
 		showBookmarkButton = true
 	}: Props = $props();
@@ -36,17 +37,35 @@
 	let isInitialized = $state(false);
 	let showResults = $state(false);
 	let inputRef = $state<HTMLInputElement | null>(null);
+	let containerRef = $state<HTMLDivElement | null>(null);
 	let highlightedIndex = $state(-1);
 	let hasSearched = $state(false);
 
+	// Handle click outside to close dropdown
+	function handleClickOutside(event: MouseEvent) {
+		if (containerRef && !containerRef.contains(event.target as Node)) {
+			showResults = false;
+			highlightedIndex = -1;
+		}
+	}
+
 	// Initialize database on mount
 	onMount(async () => {
+		if (browser) {
+			document.addEventListener('click', handleClickOutside);
+		}
 		try {
 			await initStopsDB();
 			isInitialized = true;
 		} catch (e) {
 			error = 'Failed to load stops database';
 			console.error(e);
+		}
+	});
+
+	onDestroy(() => {
+		if (browser) {
+			document.removeEventListener('click', handleClickOutside);
 		}
 	});
 
@@ -208,7 +227,7 @@
 	}
 </script>
 
-<div class="relative w-full">
+<div class="relative w-full" bind:this={containerRef}>
 	{#if onClose}
 		<div class="flex items-center justify-between mb-3 p-3 pb-0">
 			<h3 class="font-semibold">Add a Stop</h3>
@@ -279,7 +298,8 @@
 	{#if showResults}
 		<div
 			data-stop-results
-			class="bg-popover text-popover-foreground border-border absolute top-full z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-md border shadow-lg"
+			class="absolute top-full z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-md border shadow-lg"
+			style="background-color: hsl(var(--popover)); color: hsl(var(--popover-foreground)); border-color: hsl(var(--border));"
 			role="listbox"
 		>
 			{#if results.length > 0}
@@ -291,11 +311,24 @@
 						role="option"
 						aria-selected={highlightedIndex === index}
 						onclick={() => selectStop(stop)}
-						class="flex w-full items-start gap-3 px-3 py-2 text-left outline-none transition-colors {highlightedIndex === index ? 'bg-accent' : 'hover:bg-accent'}"
+						class="stop-result-item flex w-full items-start gap-3 px-3 py-2.5 text-left outline-none transition-colors"
+						class:highlighted={highlightedIndex === index}
 					>
 						<span class="mt-0.5 text-lg" aria-hidden="true">{getStopIcon(stop.type)}</span>
 						<div class="min-w-0 flex-1">
-							<p class="truncate text-sm font-medium">{stop.name}</p>
+							<div class="flex items-center gap-2 flex-wrap">
+								<p class="truncate text-sm font-medium">{stop.name}</p>
+								{#if stop.dir}
+									{@const dirColor = stop.dir === 'Eastbound' ? 'bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40' 
+										: stop.dir === 'Westbound' ? 'bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-600/40'
+										: stop.dir === 'Northbound' ? 'bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40'
+										: 'bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40'}
+									<span class="text-[10px] font-medium px-1.5 py-0.5 rounded border flex-shrink-0 uppercase {dirColor}">
+										{stop.dir}
+									</span>
+								{/if}
+								<span class="text-xs text-muted-foreground/60 flex-shrink-0">#{stop.id}</span>
+							</div>
 							<div class="mt-1 flex flex-wrap gap-1">
 								{#each stop.routes.slice(0, 5) as route}
 									<RouteBadge route={route} size="sm" />
@@ -323,3 +356,27 @@
 		<p class="text-muted-foreground mt-1 text-sm">Loading stops database...</p>
 	{/if}
 </div>
+
+<style>
+	.stop-result-item {
+		background-color: transparent;
+	}
+	
+	.stop-result-item:hover {
+		background-color: rgba(255, 255, 255, 0.08);
+	}
+	
+	.stop-result-item.highlighted {
+		background-color: rgba(255, 255, 255, 0.12);
+	}
+	
+	:global(.light) .stop-result-item:hover,
+	:root:not(.dark) .stop-result-item:hover {
+		background-color: rgba(0, 0, 0, 0.05);
+	}
+	
+	:global(.light) .stop-result-item.highlighted,
+	:root:not(.dark) .stop-result-item.highlighted {
+		background-color: rgba(0, 0, 0, 0.08);
+	}
+</style>

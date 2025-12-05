@@ -11,7 +11,7 @@
 import { writable, get, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import { supabase } from '$lib/supabase';
-import { bookmarks, type BookmarkedStop } from '$lib/stores/bookmarks';
+import { savedStops, type SavedStop } from '$lib/stores/savedStops';
 import { isVisible } from '$lib/stores/visibility';
 
 // ============================================
@@ -161,10 +161,10 @@ function createETAStore() {
 	let isAutoRefreshEnabled = false;
 
 	/**
-	 * Fetch ETAs for all bookmarked stops
+	 * Fetch ETAs for all saved stops
 	 */
 	async function refreshAll() {
-		const stops = get(bookmarks);
+		const stops = get(savedStops);
 
 		if (stops.length === 0) {
 			update((state) => ({
@@ -220,7 +220,7 @@ function createETAStore() {
 	 * Fetch ETA for a single stop (useful for manual refresh)
 	 */
 	async function refreshStop(stopId: string) {
-		const stops = get(bookmarks);
+		const stops = get(savedStops);
 		const stop = stops.find((s) => s.id === stopId);
 		if (!stop) return;
 
@@ -375,13 +375,13 @@ export const etaStore = createETAStore();
 // ============================================
 
 /**
- * Subscribe to bookmark changes to immediately show loading state
+ * Subscribe to savedStops changes to immediately show loading state
  * for newly added stops and fetch their ETAs.
  */
 if (browser) {
 	let previousStopIds = new Set<string>();
 
-	bookmarks.subscribe((stops) => {
+	savedStops.subscribe((stops) => {
 		const currentStopIds = new Set(stops.map((s) => s.id));
 
 		// Find newly added stops

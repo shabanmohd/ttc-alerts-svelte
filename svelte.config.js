@@ -14,7 +14,10 @@ const config = {
 			fallback: 'index.html', // SPA mode for client-side routing
 			precompress: false,
 			strict: true
-		})
+		}),
+		prerender: {
+			handleUnseenRoutes: 'ignore'
+		}
 	}
 };
 

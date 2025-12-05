@@ -431,7 +431,7 @@
         </div>
         <StopSearch 
           onSelect={handleStopSelect}
-          placeholder="Search stops (e.g., 'Bloor Station')" 
+          placeholder="Search by name or stop ID..." 
         />
         {#if selectedStop}
           <div class="mt-3 p-3 rounded-md bg-muted/50">
