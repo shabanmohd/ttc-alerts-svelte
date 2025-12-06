@@ -64,6 +64,12 @@
       selectedRouteFilter = null;
     }
   }
+
+  function openSearchModal(event: FocusEvent) {
+    showSearchModal = true;
+    // Blur trigger so keyboard dismisses, then modal input can get focus
+    (event.target as HTMLInputElement)?.blur();
+  }
   
   // Get saved route IDs
   let routeIds = $derived($savedRoutes.map(r => r.id));
@@ -179,14 +185,13 @@
   <div class="search-section">
     {#if isMobile}
       <!-- Mobile: Tap to open fullscreen modal -->
-      <button 
-        type="button"
+      <input 
+        type="text"
+        readonly
         class="mobile-search-trigger"
-        onclick={() => showSearchModal = true}
-      >
-        <Search class="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-        <span class="trigger-text">Search routes by number or name...</span>
-      </button>
+        placeholder="Search routes by number or name..."
+        onfocus={openSearchModal}
+      />
     {:else}
       <!-- Desktop: Inline search -->
       <RouteSearch placeholder="Search by route number or name..." />
@@ -348,19 +353,20 @@
     border-radius: var(--radius);
     cursor: pointer;
     transition: all 0.15s;
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    caret-color: transparent;
   }
 
-  .mobile-search-trigger:hover {
+  .mobile-search-trigger::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .mobile-search-trigger:hover,
+  .mobile-search-trigger:focus {
     border-color: hsl(var(--ring));
     background-color: hsl(var(--muted) / 0.8);
-  }
-
-  .trigger-text {
-    color: hsl(var(--muted-foreground));
-    font-size: 0.875rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    outline: none;
   }
 
   /* Route tabs container with fade indicator on mobile */
