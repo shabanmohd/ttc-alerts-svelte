@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { RefreshCw, Sun, Moon, User, Menu, HelpCircle, LogOut, ChevronDown, Settings, Wifi, WifiOff } from 'lucide-svelte';
+  import { RefreshCw, Sun, Moon, Menu, HelpCircle, LogOut, ChevronDown, Settings, Wifi, WifiOff, X } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
   import { lastUpdated, refreshAlerts, isConnected } from '$lib/stores/alerts';
@@ -11,13 +11,11 @@
     isAuthenticated = false,
     username = '',
     onOpenDialog,
-    onSignIn,
     onSignOut
   }: {
     isAuthenticated?: boolean;
     username?: string;
     onOpenDialog?: (dialog: string) => void;
-    onSignIn?: () => void;
     onSignOut?: () => void;
   } = $props();
   
@@ -149,7 +147,7 @@
         {/each}
       </div>
       
-      <!-- Sign In / User Menu (hidden on mobile) -->
+      <!-- User Menu (hidden on mobile, only when authenticated) -->
       {#if isAuthenticated}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger
@@ -176,113 +174,135 @@
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Root>
-      {:else}
-        <button
-          class="hidden sm:inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border border-border bg-transparent text-sm font-medium tracking-tight hover:bg-accent transition-colors gap-2"
-          onclick={onSignIn}
-        >
-          <User class="w-4 h-4" aria-hidden="true" />
-          <span>Sign In</span>
-        </button>
       {/if}
       
       <!-- Mobile Menu Button (only on mobile) -->
-      <button 
-        class="sm:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
-        onclick={() => mobileMenuOpen = !mobileMenuOpen}
-        title="Menu"
-        aria-label="Open menu"
-        aria-expanded={mobileMenuOpen}
-      >
-        <Menu class="w-5 h-5" aria-hidden="true" />
-      </button>
+      {#if !mobileMenuOpen}
+        <button 
+          class="sm:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
+          onclick={() => mobileMenuOpen = true}
+          title="Menu"
+          aria-label="Open menu"
+          aria-expanded={mobileMenuOpen}
+        >
+          <Menu class="w-5 h-5" aria-hidden="true" />
+        </button>
+      {/if}
     </div>
   </div>
+</header>
+
+<!-- Mobile Menu Dropdown (OUTSIDE header for proper z-index stacking) -->
+{#if mobileMenuOpen}
+  <!-- Backdrop to close menu when clicking outside -->
+  <button 
+    class="sm:hidden fixed inset-0 z-[100]" 
+    style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);"
+    onclick={() => mobileMenuOpen = false}
+    aria-label="Close menu"
+  ></button>
   
-  <!-- Mobile Menu Dropdown (overlay) -->
-  {#if mobileMenuOpen}
-    <!-- Backdrop to close menu when clicking outside -->
+  <!-- Close button header bar -->
+  <div 
+    class="sm:hidden fixed left-0 right-0 top-0 z-[102] flex items-center justify-between px-4 h-[57px] border-b"
+    style="background: white; border-color: #e5e5e5;"
+  >
+    <div class="dark:hidden absolute inset-0" style="background: white;"></div>
+    <div class="hidden dark:block absolute inset-0" style="background: #0a0a0a;"></div>
+    <div class="relative flex items-center gap-2">
+      <span class="text-xl">🚇</span>
+      <span class="font-bold tracking-tight">TTC Alerts</span>
+    </div>
     <button 
-      class="sm:hidden fixed inset-0 z-40 bg-black/50" 
+      class="relative flex items-center justify-center w-9 h-9 rounded-full bg-foreground text-background hover:opacity-80 transition-opacity"
       onclick={() => mobileMenuOpen = false}
       aria-label="Close menu"
-    ></button>
-    <div class="sm:hidden absolute left-0 right-0 top-full border-t border-border shadow-lg z-50" style="background-color: hsl(var(--card));">
-      <div class="px-4 py-3 space-y-1">
-        {#if isAuthenticated}
-          <div class="flex items-center gap-3 px-3 py-2.5 border-b border-border mb-2">
-            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span class="text-sm font-bold text-primary-foreground">{getUserInitial(username)}</span>
-            </div>
-            <div>
-              <p class="text-sm font-semibold">{username}</p>
-              <p class="text-xs text-muted-foreground font-normal">Signed in</p>
-            </div>
+    >
+      <X class="w-5 h-5" aria-hidden="true" />
+    </button>
+  </div>
+  
+  <div 
+    class="sm:hidden fixed left-0 right-0 top-[57px] z-[101] border-t shadow-xl max-h-[calc(100vh-57px)] overflow-y-auto"
+    style="background: white; border-color: #e5e5e5;"
+  >
+    <div class="dark:hidden absolute inset-0" style="background: white;"></div>
+    <div class="hidden dark:block absolute inset-0" style="background: #0a0a0a;"></div>
+    <nav class="relative px-4 py-3 space-y-1">
+      {#if isAuthenticated}
+        <div class="flex items-center gap-3 px-3 py-3 border-b border-border mb-2">
+          <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+            <span class="text-sm font-bold text-primary-foreground">{getUserInitial(username)}</span>
           </div>
-        {:else}
-          <button
-            onclick={() => { mobileMenuOpen = false; onSignIn?.(); }}
-            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
-          >
-            <User class="w-5 h-5" aria-hidden="true" />
-            <span class="text-sm font-semibold">Sign In</span>
-          </button>
-        {/if}
-        
-        <button
-          onclick={() => { mobileMenuOpen = false; onOpenDialog?.('how-to-use'); }}
-          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
-        >
-          <HelpCircle class="w-5 h-5" aria-hidden="true" />
-          <span class="text-sm">How to Use</span>
-        </button>
-        
-        <button
-          onclick={() => { mobileMenuOpen = false; toggleTheme(); }}
-          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
-        >
-          {#if isDark}
-            <Sun class="w-5 h-5" aria-hidden="true" />
-            <span class="text-sm">Light Mode</span>
-          {:else}
-            <Moon class="w-5 h-5" aria-hidden="true" />
-            <span class="text-sm">Dark Mode</span>
-          {/if}
-        </button>
-
-        <!-- Language toggle (mobile) -->
-        <div class="px-3 py-2">
-          <p class="text-xs text-muted-foreground mb-2 font-normal">Language</p>
-          <div class="flex gap-2">
-            {#each getSupportedLocales() as lang}
-              <button
-                onclick={() => { setLocale(lang.code); }}
-                class="flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors {$locale === lang.code ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-accent'}"
-              >
-                {lang.name}
-              </button>
-            {/each}
+          <div>
+            <p class="text-sm font-semibold">{username}</p>
+            <p class="text-xs text-muted-foreground font-normal">Signed in</p>
           </div>
         </div>
-        
-        {#if isAuthenticated}
-          <a
-            href="/preferences"
-            onclick={() => mobileMenuOpen = false}
-            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left"
-          >
-            <Settings class="w-5 h-5" aria-hidden="true" />
-            <span class="text-sm">Preferences</span>
-          </a>
-          <button
-            onclick={() => { mobileMenuOpen = false; onSignOut?.(); }}
-            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-md hover:bg-accent transition-colors text-left text-destructive"
-          >
-            <LogOut class="w-5 h-5" aria-hidden="true" />
-            <span class="text-sm">Sign Out</span>
-          </button>
-        {/if}
+      {/if}
+      
+      <button
+        onclick={() => { mobileMenuOpen = false; onOpenDialog?.('how-to-use'); }}
+        class="flex items-center gap-3 w-full px-3 py-3 rounded-lg hover:bg-accent transition-colors text-left"
+      >
+        <HelpCircle class="w-5 h-5" aria-hidden="true" />
+        <span class="text-sm">How to Use</span>
+      </button>
+      
+      <!-- Divider -->
+      <div class="h-px bg-border my-2"></div>
+      
+      <!-- Theme toggle -->
+      <div class="px-3 py-2">
+        <p class="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">Appearance</p>
+        <button
+          onclick={() => { toggleTheme(); }}
+          class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg bg-muted/50 hover:bg-accent transition-colors"
+        >
+          <span class="text-sm">{isDark ? 'Dark Mode' : 'Light Mode'}</span>
+          {#if isDark}
+            <Sun class="w-5 h-5 text-muted-foreground" aria-hidden="true" />
+          {:else}
+            <Moon class="w-5 h-5 text-muted-foreground" aria-hidden="true" />
+          {/if}
+        </button>
       </div>
-    </div>
-  {/if}
-</header>
+
+      <!-- Language toggle (mobile) -->
+      <div class="px-3 py-2">
+        <p class="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">Language</p>
+        <div class="flex gap-2">
+          {#each getSupportedLocales() as lang}
+            <button
+              onclick={() => { setLocale(lang.code); }}
+              class="flex-1 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {$locale === lang.code ? 'bg-primary text-primary-foreground' : 'bg-muted/50 hover:bg-accent'}"
+            >
+              {lang.name}
+            </button>
+          {/each}
+        </div>
+      </div>
+      
+      {#if isAuthenticated}
+        <!-- Divider -->
+        <div class="h-px bg-border my-2"></div>
+        
+        <a
+          href="/preferences"
+          onclick={() => mobileMenuOpen = false}
+          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg hover:bg-accent transition-colors text-left"
+        >
+          <Settings class="w-5 h-5" aria-hidden="true" />
+          <span class="text-sm">Preferences</span>
+        </a>
+        <button
+          onclick={() => { mobileMenuOpen = false; onSignOut?.(); }}
+          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg hover:bg-destructive/10 transition-colors text-left text-destructive"
+        >
+          <LogOut class="w-5 h-5" aria-hidden="true" />
+          <span class="text-sm font-medium">Sign Out</span>
+        </button>
+      {/if}
+    </nav>
+  </div>
+{/if}

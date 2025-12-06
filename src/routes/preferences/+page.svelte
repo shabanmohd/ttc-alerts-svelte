@@ -7,7 +7,7 @@
   import * as Accordion from '$lib/components/ui/accordion';
   import { toast } from 'svelte-sonner';
   import RouteBadge from '$lib/components/alerts/RouteBadge.svelte';
-  import { HowToUseDialog, SignInDialog, AuthRequiredDialog, CreateAccountDialog } from '$lib/components/dialogs';
+  import { HowToUseDialog } from '$lib/components/dialogs';
   import { isAuthenticated, userName, signOut } from '$lib/stores/auth';
   import { accessibility, type TextScale } from '$lib/stores/accessibility';
   import { StopSearch } from '$lib/components/stops';
@@ -209,25 +209,11 @@
     activeDialog = dialog;
   }
   
-  function handleSignIn() {
-    activeDialog = 'sign-in';
-  }
-  
-  function handleCreateAccount() {
-    activeDialog = 'create-account';
-  }
-  
   async function handleSignOut() {
     await signOut();
   }
   
   async function handleSave() {
-    // Check if user is authenticated
-    if (!$isAuthenticated) {
-      activeDialog = 'auth-required';
-      return;
-    }
-    
     // Convert schedules to the format expected by the store
     const schedulesData = schedules.map(s => ({
       days: Array.from(s.days),
@@ -275,7 +261,6 @@
   isAuthenticated={$isAuthenticated}
   username={$userName || ''}
   onOpenDialog={handleOpenDialog}
-  onSignIn={handleSignIn}
   onSignOut={handleSignOut}
 />
 
@@ -808,23 +793,4 @@
 <HowToUseDialog 
   open={activeDialog === 'how-to-use'} 
   onOpenChange={(open) => { if (!open) activeDialog = null; }} 
-/>
-
-<SignInDialog 
-  open={activeDialog === 'sign-in'} 
-  onOpenChange={(open) => { if (!open) activeDialog = null; }}
-/>
-
-<AuthRequiredDialog 
-  open={activeDialog === 'auth-required'} 
-  onOpenChange={(open) => { if (!open) activeDialog = null; }}
-  onSignIn={handleSignIn}
-  onSignUp={handleCreateAccount}
-  title="Account Required to Save"
-  description="Create an account to save your preferences and access personalized alerts."
-/>
-
-<CreateAccountDialog 
-  open={activeDialog === 'create-account'} 
-  onOpenChange={(open) => { if (!open) activeDialog = null; }}
 />

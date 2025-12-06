@@ -14,7 +14,7 @@
   import type { ThreadWithAlerts } from '$lib/types/database';
   
   // Import dialogs
-  import { HowToUseDialog, SignInDialog, InstallPWADialog } from '$lib/components/dialogs';
+  import { HowToUseDialog, InstallPWADialog } from '$lib/components/dialogs';
   
   // Get route from URL param
   let routeId = $derived($page.params.route);
@@ -123,10 +123,6 @@
     activeDialog = dialog;
   }
   
-  function handleSignIn() {
-    activeDialog = 'sign-in';
-  }
-  
   async function handleSignOut() {
     await signOut();
   }
@@ -141,7 +137,6 @@
   isAuthenticated={$isAuthenticated}
   username={$userName || ''}
   onOpenDialog={handleOpenDialog}
-  onSignIn={handleSignIn}
   onSignOut={handleSignOut}
 />
 
@@ -240,11 +235,6 @@
 <HowToUseDialog 
   open={activeDialog === 'how-to-use'} 
   onOpenChange={(open) => { if (!open) activeDialog = null; }} 
-/>
-
-<SignInDialog 
-  open={activeDialog === 'sign-in'} 
-  onOpenChange={(open) => { if (!open) activeDialog = null; }}
 />
 
 <InstallPWADialog 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { MapPin, Clock, Plus, RefreshCw, X, Pencil, Search } from 'lucide-svelte';
+  import { MapPin, Clock, Plus, RefreshCw, X, Pencil, Search, Loader2 } from 'lucide-svelte';
   import { browser } from '$app/environment';
   import { savedStops, savedStopsCount } from '$lib/stores/savedStops';
   import { etaStore, etaList, isAnyLoading } from '$lib/stores/eta';
@@ -10,6 +10,7 @@
   import { Button } from '$lib/components/ui/button';
   import { cn } from '$lib/utils';
   import type { TTCStop } from '$lib/data/stops-db';
+  import { initStopsDB, findNearbyStops } from '$lib/data/stops-db';
 
   interface Props {
     maxDisplay?: number;
@@ -31,6 +32,11 @@
   
   // Check if mobile
   let isMobile = $state(false);
+  
+  // Nearby button state
+  let isLoadingNearby = $state(false);
+  let isStopsInitialized = $state(false);
+  let nearbyError = $state<string | null>(null);
 
   // Subscribe to stores
   $effect(() => {
@@ -50,10 +56,16 @@
     };
   });
 
-  // Check if mobile on mount
-  onMount(() => {
+  // Check if mobile on mount and initialize stops DB
+  onMount(async () => {
     if (browser) {
       isMobile = window.innerWidth < 640;
+      try {
+        await initStopsDB();
+        isStopsInitialized = true;
+      } catch (e) {
+        console.error('Failed to initialize stops database:', e);
+      }
     }
     etaStore.startAutoRefresh();
   });
@@ -81,6 +93,45 @@
 
   function toggleEditMode() {
     isEditMode = !isEditMode;
+  }
+  
+  async function handleNearbyClick() {
+    if (!navigator.geolocation) {
+      nearbyError = 'Geolocation not supported';
+      return;
+    }
+
+    isLoadingNearby = true;
+    nearbyError = null;
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const nearby = await findNearbyStops(
+            position.coords.latitude,
+            position.coords.longitude,
+            1, // 1km radius
+            15
+          );
+          // Open the search modal with nearby results
+          showSearchModal = true;
+        } catch (e) {
+          nearbyError = 'Failed to find nearby stops';
+          console.error(e);
+        } finally {
+          isLoadingNearby = false;
+        }
+      },
+      (geoError) => {
+        isLoadingNearby = false;
+        if (geoError.code === geoError.PERMISSION_DENIED) {
+          nearbyError = 'Location access denied';
+        } else {
+          nearbyError = 'Could not get location';
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }
 
   let hasStops = $derived(count > 0);
@@ -137,6 +188,20 @@
         <Search class="h-4 w-4 flex-shrink-0 text-muted-foreground" />
         <span class="trigger-text">Search stops by name or ID...</span>
       </button>
+      <Button
+        variant="outline"
+        size="icon"
+        onclick={handleNearbyClick}
+        disabled={!isStopsInitialized || isLoadingNearby}
+        aria-label="Find nearby stops"
+        title="Find stops near me"
+      >
+        {#if isLoadingNearby}
+          <Loader2 class="h-4 w-4 animate-spin" />
+        {:else}
+          <MapPin class="h-4 w-4" />
+        {/if}
+      </Button>
     {:else}
       <!-- Desktop: Inline search -->
       <StopSearch 

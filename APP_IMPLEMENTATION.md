@@ -78,12 +78,9 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/MyRouteAlerts.svelte`        | ✅     | My Routes tab with responsive route badge tabs   |
 | `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)    |
 | `components/alerts/StatusBadge.svelte`          | ✅     | Status indicators (Delay, Detour, Resumed, etc.) |
-| `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback             |
-| `components/dialogs/CreateAccountDialog.svelte` | ✅     | Registration + recovery codes                    |
-| `components/dialogs/AuthRequiredDialog.svelte`  | ✅     | Auth prompt for protected features               |
 | `components/dialogs/HowToUseDialog.svelte`      | ✅     | User guide                                       |
 | `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                               |
-| `components/layout/Header.svelte`               | ✅     | App header with auth controls                    |
+| `components/layout/Header.svelte`               | ✅     | App header with hamburger menu (mobile)          |
 | `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation                               |
 | `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation                                |
 | `components/ui/*`                               | ✅     | shadcn-svelte base components                    |
@@ -372,19 +369,17 @@ For local development, use `localhost` and `http://localhost:5173`.
 **Header Responsive Layout:**
 
 - ✅ Mobile (< 640px): Last updated + refresh + hamburger menu only
-- ✅ Non-mobile (≥ 640px): Last updated + refresh + How to Use + Theme toggle + Sign In
+- ✅ Non-mobile (≥ 640px): Last updated + refresh + How to Use + Theme toggle + Language selector
 - ✅ Fixed responsive class inconsistencies (`hidden sm:flex` pattern)
 
 **Sidebar Cleanup:**
 
-- ✅ Removed Sign In button from sidebar (now in header for non-mobile)
-- ✅ Removed Dark Mode toggle from sidebar (now in header for non-mobile)
 - ✅ Sidebar now shows: Navigation + Help links (+ User info when authenticated)
 
 **Files Updated:**
 
 - `src/lib/components/layout/Header.svelte` - Fixed responsive visibility classes
-- `src/lib/components/layout/Sidebar.svelte` - Removed redundant Sign In and theme toggle
+- `src/lib/components/layout/Sidebar.svelte` - Desktop navigation only
 
 ### Dec 4, 2025 - Planned Alerts & Filter UX Improvements
 
@@ -397,6 +392,31 @@ For local development, use `localhost` and `http://localhost:5173`.
 - ✅ Fixed time parsing to handle HH:MM:SS format → displays as "11:59 PM"
 - ✅ Consistent vertical alignment for dates across all cards
 - ✅ Background polling every 5 minutes (data updates without page refresh)
+
+### Dec 5, 2025 - Mobile UI & Auth Cleanup
+
+**Mobile Menu Improvements:**
+
+- ✅ Fixed hamburger menu z-index stacking (moved outside header element)
+- ✅ Added X close button with circular background when menu is open
+- ✅ Proper backdrop blur and dark overlay when menu is open
+- ✅ Menu shows: How to Use, Appearance toggle, Language selector
+
+**Sign In Removal:**
+
+- ✅ Removed Sign In button from all pages (feature not in use)
+- ✅ Removed SignInDialog, CreateAccountDialog, AuthRequiredDialog components from exports
+- ✅ Cleaned up unused auth-related props and functions
+- ✅ Preferences now save locally without auth requirement
+
+**Input Placeholder Styling:**
+
+- ✅ Added global placeholder color styling in ttc-theme.css
+- ✅ Consistent muted-foreground color for all input placeholders
+
+**My Stops Mobile:**
+
+- ✅ Added location button next to search for finding nearby stops
 
 ### Dec 5, 2025 - My Routes Tab Improvements
 

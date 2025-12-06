@@ -23,7 +23,7 @@
   import { isVisible } from '$lib/stores/visibility';
   
   // Import dialogs
-  import { HowToUseDialog, SignInDialog, InstallPWADialog } from '$lib/components/dialogs';
+  import { HowToUseDialog, InstallPWADialog } from '$lib/components/dialogs';
   
   type AlertsTab = 'active' | 'closures';
   
@@ -85,10 +85,6 @@
     activeDialog = dialog;
   }
   
-  function handleSignIn() {
-    activeDialog = 'sign-in';
-  }
-  
   async function handleSignOut() {
     await signOut();
   }
@@ -113,7 +109,6 @@
   isAuthenticated={$isAuthenticated}
   username={$userName || ''}
   onOpenDialog={handleOpenDialog}
-  onSignIn={handleSignIn}
   onSignOut={handleSignOut}
 />
 
@@ -203,11 +198,6 @@
 <HowToUseDialog 
   open={activeDialog === 'how-to-use'} 
   onOpenChange={(open) => { if (!open) activeDialog = null; }} 
-/>
-
-<SignInDialog 
-  open={activeDialog === 'sign-in'} 
-  onOpenChange={(open) => { if (!open) activeDialog = null; }}
 />
 
 <InstallPWADialog 

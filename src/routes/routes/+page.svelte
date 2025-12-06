@@ -294,11 +294,6 @@
     goto(`/routes/${encodeURIComponent(route)}`);
   }
 
-  function handleSignIn() {
-    // Navigate to preferences for sign in
-    goto('/preferences');
-  }
-
   async function handleSignOut() {
     await signOut();
   }
@@ -335,7 +330,6 @@
 <Header 
   isAuthenticated={$isAuthenticated}
   username={$userName || ''}
-  onSignIn={handleSignIn}
   onSignOut={handleSignOut}
 />
 
