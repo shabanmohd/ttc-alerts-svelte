@@ -259,7 +259,7 @@ Direction badges indicate the travel direction of a stop (extracted from GTFS tr
 
 ```svelte
 <!-- Tailwind classes for direction colors -->
-{@const dirColor = direction === 'Eastbound' ? 'bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40' 
+{@const dirColor = direction === 'Eastbound' ? 'bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40'
   : direction === 'Westbound' ? 'bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-600/40'
   : direction === 'Northbound' ? 'bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40'
   : 'bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40'}
@@ -271,12 +271,12 @@ Direction badges indicate the travel direction of a stop (extracted from GTFS tr
 
 **Color Mapping (WCAG AA Compliant):**
 
-| Direction     | Background        | Light Text    | Dark Text        | Border             |
-| ------------- | ----------------- | ------------- | ---------------- | ------------------ |
-| **Eastbound** | `sky-600/20`      | `sky-700`     | `sky-400`        | `sky-600/40`       |
-| **Westbound** | `amber-600/20`    | `amber-700`   | `amber-400`      | `amber-600/40`     |
-| **Northbound**| `emerald-600/20`  | `emerald-700` | `emerald-400`    | `emerald-600/40`   |
-| **Southbound**| `rose-600/20`     | `rose-700`    | `rose-400`       | `rose-600/40`      |
+| Direction      | Background       | Light Text    | Dark Text     | Border           |
+| -------------- | ---------------- | ------------- | ------------- | ---------------- |
+| **Eastbound**  | `sky-600/20`     | `sky-700`     | `sky-400`     | `sky-600/40`     |
+| **Westbound**  | `amber-600/20`   | `amber-700`   | `amber-400`   | `amber-600/40`   |
+| **Northbound** | `emerald-600/20` | `emerald-700` | `emerald-400` | `emerald-600/40` |
+| **Southbound** | `rose-600/20`    | `rose-700`    | `rose-400`    | `rose-600/40`    |
 
 **Usage Locations:**
 
@@ -781,49 +781,120 @@ Browse all TTC routes organized by category.
 | Community | 400-405 | White + Gray border |
 | Popular Bus | 7, 25, 29, etc. | TTC Red |
 
-### Language Toggle (i18n)
+### Selection Buttons (Option Groups)
 
-Simple button group for EN/FR switching.
+For mutually exclusive options like Language, Theme, Text Size.
+
+**Selected State:**
+
+- Border: `border-2` with `hsl(var(--foreground))` (thick, dark border)
+- Circle indicator: Filled circle with foreground color + white checkmark inside
+- Text: After the circle indicator
+
+**Unselected State:**
+
+- Border: `border border-input` (thin, light border)
+- Circle indicator: Empty circle with `border-2 border-muted-foreground/30`
+- Hover: `hover:bg-accent/50`
 
 ```svelte
-<div class="flex border rounded-md overflow-hidden">
-  <button
-    class:bg-primary={$locale === 'en'}"
-    onclick={() => setLocale('en')}
-  >
-    EN
-  </button>
-  <button
-    class:bg-primary={$locale === 'fr'}"
-    onclick={() => setLocale('fr')}
-  >
-    FR
-  </button>
+<!-- Selection Button Pattern -->
+{@const isSelected = currentValue === option.value}
+<button
+  class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {isSelected ? 'border-2' : 'border border-input hover:bg-accent/50'}"
+  style={isSelected ? 'border-color: hsl(var(--foreground));' : ''}
+  onclick={() => handleSelect(option.value)}
+>
+  {#if isSelected}
+    <span class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: hsl(var(--foreground));">
+      <Check class="h-3 w-3" style="color: hsl(var(--background));" />
+    </span>
+  {:else}
+    <span class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"></span>
+  {/if}
+  <span>{option.label}</span>
+</button>
+```
+
+**Key Features:**
+
+- `rounded-xl` matches other buttons (Export/Import Data buttons)
+- Circle placeholder on unselected prevents layout shift
+- Inline styles for border/fill colors (Tailwind v4 workaround)
+- Works in both light and dark mode
+
+**Usage Locations:**
+
+- `settings/+page.svelte` - Language, Theme, Text Size
+- `preferences/+page.svelte` - Transport Modes, Days, Alert Types (uses `.mode-card` CSS class)
+
+### Switch Component (Toggles)
+
+Custom styled toggle switch with checkmark/X icons inside the thumb.
+
+```svelte
+import { Switch } from '$lib/components/ui/switch';
+
+<Switch
+  checked={value}
+  onCheckedChange={(checked) => setValue(checked)}
+  aria-labelledby="label-id"
+  aria-describedby="desc-id"
+/>
+```
+
+**Visual Design:**
+
+The switch has distinct on/off states with icons inside the thumb:
+
+| State                | Track Color                | Thumb Color           | Icon                       |
+| -------------------- | -------------------------- | --------------------- | -------------------------- |
+| **Light Mode - Off** | Light gray (`#e5e5e5`)     | Dark gray (`#737373`) | White X                    |
+| **Light Mode - On**  | Black (foreground)         | White                 | Black checkmark            |
+| **Dark Mode - Off**  | Muted gray (30% opacity)   | Gray (70% opacity)    | Dark X                     |
+| **Dark Mode - On**   | Light border (15% opacity) | White                 | Dark checkmark (`#171717`) |
+
+**Size:** `h-7 w-12` (larger than default for better touch targets)
+
+**Implementation Notes:**
+
+- Uses `bits-ui` Switch primitive with custom styling
+- Icons from `lucide-svelte` (Check, X)
+- Scoped CSS with `:global()` selectors for theme support
+- Hardcoded colors used where CSS variables don't work in Tailwind v4
+
+**Usage Locations:**
+
+- `settings/+page.svelte` - Reduce Motion
+- `preferences/+page.svelte` - Reduce Motion, Weather Warnings
+
+### Step Indicators (Accordion Headers)
+
+For multi-step wizards/accordions showing completion status. Uses **primary color** to indicate completed steps.
+
+**Pattern:**
+
+```svelte
+<div class="flex h-7 w-7 items-center justify-center rounded-full {stepComplete ? 'bg-primary' : 'bg-muted'} text-xs font-semibold">
+  {#if stepComplete}
+    <Check class="h-4 w-4 text-primary-foreground" />
+  {:else}
+    <span class="text-muted-foreground">{stepNumber}</span>
+  {/if}
 </div>
 ```
 
-**Implementation:**
+**Note:** Step indicators use `bg-primary` and `text-primary-foreground` intentionally - this is different from selection buttons which use `foreground` color.
 
-- Uses `svelte-i18n` library
-- Locale persisted in localStorage (`ttc-locale`)
-- Falls back to browser preference
-- Translation files: `src/lib/i18n/{en,fr}.json`
+**Usage Locations:**
+
+- `preferences/+page.svelte` - Steps 1-4 accordion headers
 
 ### Accessibility Settings
 
-Text scaling and reduced motion controls in Preferences.
+Text scaling and reduced motion controls in Preferences/Settings.
 
-```svelte
-<!-- Text Size -->
-<RadioGroup value={textScale} onValueChange={setTextScale}>
-  <RadioGroupItem value="small">A</RadioGroupItem>
-  <RadioGroupItem value="medium">A</RadioGroupItem>  <!-- Larger font -->
-  <RadioGroupItem value="large">A</RadioGroupItem>   <!-- Largest font -->
-</RadioGroup>
-
-<!-- Reduce Motion -->
-<Switch checked={reduceMotion} onCheckedChange={setReduceMotion} />
-```
+The Text Size selector follows the **Selection Buttons** pattern (see above).
 
 **CSS Variables:**
 
@@ -848,4 +919,4 @@ html {
 
 ---
 
-_Last updated: December 4, 2025_
+_Last updated: December 5, 2025_

@@ -142,18 +142,18 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Data (`src/lib/data/`) 🆕 **Version B Only**
 
-| File          | Status | Purpose                                                      |
-| ------------- | ------ | ------------------------------------------------------------ |
-| `stops-db.ts` | ✅     | IndexedDB layer with Dexie.js, direction field, ID search    |
+| File          | Status | Purpose                                                   |
+| ------------- | ------ | --------------------------------------------------------- |
+| `stops-db.ts` | ✅     | IndexedDB layer with Dexie.js, direction field, ID search |
 
 ### Stops Components (`src/lib/components/stops/`) 🆕 **Version B Only**
 
-| File                        | Status | Purpose                                                     |
-| --------------------------- | ------ | ----------------------------------------------------------- |
-| `StopSearch.svelte`         | ✅     | Stop search with autocomplete, direction badges, ID search  |
-| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops                            |
-| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                        |
-| `index.ts`                  | ✅     | Component exports                                           |
+| File                        | Status | Purpose                                                    |
+| --------------------------- | ------ | ---------------------------------------------------------- |
+| `StopSearch.svelte`         | ✅     | Stop search with autocomplete, direction badges, ID search |
+| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops                           |
+| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                       |
+| `index.ts`                  | ✅     | Component exports                                          |
 
 ### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
 

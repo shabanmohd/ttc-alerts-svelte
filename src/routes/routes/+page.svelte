@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { Search, Train, TramFront, Bus, Moon, Zap, Users } from 'lucide-svelte';
+  import { Search, TrainFrontTunnel, TramFront, Bus, Moon, Zap, Users, LayoutGrid } from 'lucide-svelte';
   import Header from '$lib/components/layout/Header.svelte';
   import RouteBadge from '$lib/components/alerts/RouteBadge.svelte';
+  import BookmarkRouteButton from '$lib/components/alerts/BookmarkRouteButton.svelte';
   import { Input } from '$lib/components/ui/input';
   import { Button } from '$lib/components/ui/button';
+  import { Toggle } from '$lib/components/ui/toggle';
   import { isAuthenticated, userName, signOut } from '$lib/stores/auth';
   import { activeFilters, setRouteFilter } from '$lib/stores/alerts';
   import { goto } from '$app/navigation';
@@ -57,14 +59,8 @@
 
   const NIGHT_ROUTES = [
     { route: '300', name: 'Bloor-Danforth' },
-    { route: '301', name: 'Queen' },
     { route: '302', name: 'Danforth Rd-Kingston Rd' },
-    { route: '304', name: 'King' },
-    { route: '305', name: 'Dundas' },
-    { route: '306', name: 'Carlton' },
     { route: '307', name: 'Bathurst' },
-    { route: '310', name: 'Spadina' },
-    { route: '312', name: 'St Clair' },
     { route: '313', name: 'Jane' },
     { route: '314', name: 'Glencairn' },
     { route: '315', name: 'Evans' },
@@ -89,6 +85,16 @@
     { route: '363', name: 'Ossington' },
     { route: '368', name: 'Warden' },
     { route: '385', name: 'Sheppard East' }
+  ];
+
+  // Blue Night Streetcar routes (replace streetcar service at night)
+  const NIGHT_STREETCAR_ROUTES = [
+    { route: '301', name: 'Queen' },
+    { route: '304', name: 'King' },
+    { route: '305', name: 'Dundas' },
+    { route: '306', name: 'Carlton' },
+    { route: '310', name: 'Spadina' },
+    { route: '312', name: 'St Clair' }
   ];
 
   const COMMUNITY_ROUTES = [
@@ -249,18 +255,19 @@
   let activeCategory = $state<string | null>(null);
 
   // All routes combined for search
-  const allRoutes = [
+  const allRoutesForSearch = [
     ...SUBWAY_LINES.map(r => ({ ...r, category: 'subway' })),
     ...STREETCAR_ROUTES.map(r => ({ ...r, category: 'streetcar' })),
     ...EXPRESS_ROUTES.map(r => ({ ...r, category: 'express' })),
-    ...NIGHT_ROUTES.map(r => ({ ...r, category: 'night' })),
+    ...NIGHT_ROUTES.map(r => ({ ...r, category: 'night-bus' })),
+    ...NIGHT_STREETCAR_ROUTES.map(r => ({ ...r, category: 'night-streetcar' })),
     ...COMMUNITY_ROUTES.map(r => ({ ...r, category: 'community' })),
     ...REGULAR_BUS_ROUTES.map(r => ({ ...r, category: 'bus' }))
   ];
 
   let filteredRoutes = $derived(
     searchQuery.length > 0
-      ? allRoutes.filter(r => 
+      ? allRoutesForSearch.filter(r => 
           r.route.toLowerCase().includes(searchQuery.toLowerCase()) ||
           r.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
@@ -282,13 +289,22 @@
   }
 
   const categories = [
-    { id: 'subway', label: 'Subway', icon: Train, routes: SUBWAY_LINES },
+    { id: 'all', label: 'All', icon: LayoutGrid, routes: [] }, // Special "All" option
+    { id: 'subway', label: 'Subway', icon: TrainFrontTunnel, routes: SUBWAY_LINES },
     { id: 'streetcar', label: 'Streetcars', icon: TramFront, routes: STREETCAR_ROUTES },
-    { id: 'express', label: 'Express', icon: Zap, routes: EXPRESS_ROUTES },
-    { id: 'night', label: 'Night', icon: Moon, routes: NIGHT_ROUTES },
-    { id: 'community', label: 'Community', icon: Users, routes: COMMUNITY_ROUTES },
-    { id: 'bus', label: 'Regular Bus', icon: Bus, routes: REGULAR_BUS_ROUTES }
+    { id: 'bus', label: 'Regular Bus', icon: Bus, routes: REGULAR_BUS_ROUTES },
+    { id: 'express', label: 'Express Bus', icon: Zap, routes: EXPRESS_ROUTES },
+    { id: 'night-bus', label: 'Blue Night Bus', icon: Moon, routes: NIGHT_ROUTES },
+    { id: 'night-streetcar', label: 'Blue Night Streetcar', icon: Moon, routes: NIGHT_STREETCAR_ROUTES },
+    { id: 'community', label: 'Community Bus', icon: Users, routes: COMMUNITY_ROUTES }
   ];
+
+  // Filtered categories based on selection (skip "all" for section display)
+  let displayCategories = $derived(
+    activeCategory === 'all' || activeCategory === null
+      ? categories.filter(c => c.id !== 'all')
+      : categories.filter(c => c.id === activeCategory)
+  );
 </script>
 
 <svelte:head>
@@ -325,15 +341,19 @@
           </p>
         {:else}
           <div class="flex flex-wrap gap-2">
-            {#each filteredRoutes as { route, name } (route)}
-              <button
-                type="button"
-                onclick={() => handleRouteClick(route)}
-                class="flex items-center gap-2 p-2 rounded-md border bg-card hover:bg-accent transition-colors text-left"
-              >
-                <RouteBadge {route} size="sm" />
-                <span class="text-sm">{name}</span>
-              </button>
+            {#each filteredRoutes as { route, name, category } (route)}
+              {@const routeType = category === 'subway' ? 'subway' : category === 'streetcar' || category === 'night-streetcar' ? 'streetcar' : 'bus'}
+              <div class="flex items-center gap-1 p-2 rounded-md border bg-card hover:bg-accent transition-colors">
+                <button
+                  type="button"
+                  onclick={() => handleRouteClick(route)}
+                  class="flex items-center gap-2 text-left"
+                >
+                  <RouteBadge {route} size="sm" />
+                  <span class="text-sm">{name}</span>
+                </button>
+                <BookmarkRouteButton {route} {name} type={routeType} size="sm" />
+              </div>
             {/each}
           </div>
         {/if}
@@ -341,26 +361,32 @@
     {/if}
   </div>
 
-  <!-- Category Quick Jump -->
+  <!-- Category Filter Toggles -->
   <div class="flex flex-wrap gap-2 mb-6">
     {#each categories as { id, label, icon: Icon }}
-      <Button
-        variant={activeCategory === id ? 'default' : 'outline'}
-        size="sm"
+      {@const isSelected = activeCategory === id || (id === 'all' && activeCategory === null)}
+      <button
+        type="button"
         onclick={() => {
-          activeCategory = activeCategory === id ? null : id;
-          document.getElementById(`category-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (id === 'all') {
+            activeCategory = null;
+          } else {
+            activeCategory = activeCategory === id ? null : id;
+          }
         }}
+        class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors h-9 px-3 border"
+        style={isSelected ? 'background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-color: hsl(var(--primary));' : ''}
       >
-        <Icon class="h-4 w-4 mr-1" />
+        <Icon class="h-4 w-4" />
         {label}
-      </Button>
+      </button>
     {/each}
   </div>
 
   <!-- Route Categories -->
   <div class="space-y-8">
-    {#each categories as { id, label, icon: Icon, routes }}
+    {#each displayCategories as { id, label, icon: Icon, routes }}
+      {@const routeType = id === 'subway' ? 'subway' : id === 'streetcar' || id === 'night-streetcar' ? 'streetcar' : 'bus'}
       <section id="category-{id}" class="scroll-mt-20">
         <h2 class="text-lg font-semibold flex items-center gap-2 mb-3">
           <Icon class="h-5 w-5" />
@@ -370,14 +396,17 @@
         
         <div class="flex flex-wrap gap-2">
           {#each routes as { route, name } (route)}
-            <button
-              type="button"
-              onclick={() => handleRouteClick(route)}
-              class="flex items-center gap-2 p-3 rounded-lg border bg-card hover:bg-accent transition-colors text-left"
-            >
-              <RouteBadge {route} />
-              <span class="text-sm">{name}</span>
-            </button>
+            <div class="flex items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent transition-colors">
+              <button
+                type="button"
+                onclick={() => handleRouteClick(route)}
+                class="flex items-center gap-2 text-left"
+              >
+                <RouteBadge {route} />
+                <span class="text-sm">{name}</span>
+              </button>
+              <BookmarkRouteButton {route} {name} type={routeType} size="sm" />
+            </div>
           {/each}
         </div>
       </section>

@@ -69,12 +69,9 @@
             <div class="min-w-0 flex-1">
               <p class="text-sm font-medium truncate">{stop.name}</p>
               <div class="mt-1 flex flex-wrap gap-1">
-                {#each stop.routes.slice(0, 4) as route}
+                {#each stop.routes as route}
                   <RouteBadge {route} size="sm" />
                 {/each}
-                {#if stop.routes.length > 4}
-                  <span class="text-muted-foreground text-xs">+{stop.routes.length - 4}</span>
-                {/if}
               </div>
             </div>
           </button>

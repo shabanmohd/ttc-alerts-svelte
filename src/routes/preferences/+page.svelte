@@ -2,6 +2,7 @@
   import { Save, Home, Check, Plus, Trash2, Search, CheckCircle, XCircle, LogIn, HelpCircle, Bug, Lightbulb, Info, Eye, Type, Zap, CloudSun } from 'lucide-svelte';
   import Header from '$lib/components/layout/Header.svelte';
   import { Button } from '$lib/components/ui/button';
+  import { Switch } from '$lib/components/ui/switch';
   import * as Card from '$lib/components/ui/card';
   import * as Accordion from '$lib/components/ui/accordion';
   import { toast } from 'svelte-sonner';
@@ -329,11 +330,13 @@
                       <div class="font-semibold">{mode.name}</div>
                       <div class="text-xs sm:text-sm text-muted-foreground">{mode.description}</div>
                     </div>
-                    <div class="mode-check w-5 h-5 rounded-full border-2 {isSelected ? 'border-primary bg-primary' : 'border-muted-foreground'} flex items-center justify-center transition-all shrink-0" aria-hidden="true">
-                      {#if isSelected}
-                        <Check class="h-3 w-3 text-primary-foreground" />
-                      {/if}
-                    </div>
+                    {#if isSelected}
+                      <span class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: hsl(var(--foreground));" aria-hidden="true">
+                        <Check class="h-3 w-3" style="color: hsl(var(--background));" />
+                      </span>
+                    {:else}
+                      <span class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30" aria-hidden="true"></span>
+                    {/if}
                   </button>
                 {/each}
               </div>
@@ -375,7 +378,7 @@
                   <input 
                     type="text" 
                     id="route-search"
-                    placeholder="Search routes..." 
+                    placeholder="Search routes by number or name..." 
                     class="input pl-10 w-full"
                     bind:value={routeSearch}
                   />
@@ -502,11 +505,13 @@
                             aria-pressed={isSelected}
                             aria-label={day.label}
                           >
-                            <div class="mode-check w-5 h-5 rounded-full border-2 {isSelected ? 'border-primary bg-primary' : 'border-muted-foreground'} flex items-center justify-center transition-all shrink-0" aria-hidden="true">
-                              {#if isSelected}
-                                <Check class="h-3 w-3 text-primary-foreground" />
-                              {/if}
-                            </div>
+                            {#if isSelected}
+                              <span class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: hsl(var(--foreground));" aria-hidden="true">
+                                <Check class="h-3 w-3" style="color: hsl(var(--background));" />
+                              </span>
+                            {:else}
+                              <span class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30" aria-hidden="true"></span>
+                            {/if}
                             <span class="font-medium text-sm">{day.label}</span>
                           </button>
                         {/each}
@@ -590,9 +595,9 @@
                       <div class="font-semibold">{alertType.name}</div>
                       <div class="text-xs sm:text-sm text-muted-foreground">{alertType.description}</div>
                     </div>
-                    <div class="mode-check w-5 h-5 rounded-full border-2 {isSelected ? 'border-primary bg-primary' : 'border-muted-foreground'} flex items-center justify-center transition-all shrink-0" aria-hidden="true">
+                    <div class="mode-check w-5 h-5 rounded-full flex items-center justify-center transition-all shrink-0 {isSelected ? '' : 'border-2 border-muted-foreground/30'}" style={isSelected ? 'background-color: hsl(var(--foreground));' : ''} aria-hidden="true">
                       {#if isSelected}
-                        <Check class="h-3 w-3 text-primary-foreground" />
+                        <Check class="h-3 w-3" style="color: hsl(var(--background));" />
                       {/if}
                     </div>
                   </button>
@@ -723,16 +728,24 @@
             { scale: 'medium' as TextScale, label: 'A', size: 'text-base', name: 'Medium' },
             { scale: 'large' as TextScale, label: 'A', size: 'text-lg', name: 'Large' }
           ] as option}
+            {@const isSelected = $accessibility.textScale === option.scale}
             <button
               type="button"
               role="radio"
-              aria-checked={$accessibility.textScale === option.scale}
+              aria-checked={isSelected}
               aria-label="{option.name} text size"
-              class="flex-1 h-12 rounded-lg border-2 transition-all font-semibold {$accessibility.textScale === option.scale ? 'border-primary bg-primary/10' : 'border-muted hover:border-muted-foreground/50'}"
-              class:text-primary={$accessibility.textScale === option.scale}
+              class="flex-1 h-12 px-3 rounded-xl transition-all font-semibold flex items-center justify-between {isSelected ? 'border-2' : 'border border-input hover:bg-accent/50'}"
+              style={isSelected ? 'border-color: hsl(var(--foreground));' : ''}
               onclick={() => accessibility.setTextScale(option.scale)}
             >
               <span class={option.size}>{option.label}</span>
+              {#if isSelected}
+                <span class="h-5 w-5 rounded-full flex items-center justify-center" style="background-color: hsl(var(--foreground));">
+                  <Check class="h-3 w-3" style="color: hsl(var(--background));" />
+                </span>
+              {:else}
+                <span class="h-5 w-5 rounded-full border-2 border-muted-foreground/30"></span>
+              {/if}
             </button>
           {/each}
         </div>
@@ -752,19 +765,12 @@
           </span>
           <p id="reduce-motion-desc" class="text-xs text-muted-foreground">Minimize animations and transitions</p>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={$accessibility.reduceMotion}
+        <Switch
+          checked={$accessibility.reduceMotion}
+          onCheckedChange={(checked) => accessibility.setReduceMotion(checked)}
           aria-labelledby="reduce-motion-label"
           aria-describedby="reduce-motion-desc"
-          class="relative h-6 w-11 rounded-full transition-colors {$accessibility.reduceMotion ? 'bg-primary' : 'bg-muted'}"
-          onclick={() => accessibility.setReduceMotion(!$accessibility.reduceMotion)}
-        >
-          <span 
-            class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform {$accessibility.reduceMotion ? 'translate-x-5' : 'translate-x-0'}"
-          ></span>
-        </button>
+        />
       </div>
 
       <!-- Weather Warnings Toggle -->
@@ -776,19 +782,12 @@
           </span>
           <p id="weather-warnings-desc" class="text-xs text-muted-foreground">Show transit-relevant weather alerts on homepage</p>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={showWeatherWarnings}
+        <Switch
+          checked={showWeatherWarnings}
+          onCheckedChange={(checked) => showWeatherWarnings = checked}
           aria-labelledby="weather-warnings-label"
           aria-describedby="weather-warnings-desc"
-          class="relative h-6 w-11 rounded-full transition-colors {showWeatherWarnings ? 'bg-primary' : 'bg-muted'}"
-          onclick={() => showWeatherWarnings = !showWeatherWarnings}
-        >
-          <span 
-            class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform {showWeatherWarnings ? 'translate-x-5' : 'translate-x-0'}"
-          ></span>
-        </button>
+        />
       </div>
     </Card.Content>
   </Card.Root>

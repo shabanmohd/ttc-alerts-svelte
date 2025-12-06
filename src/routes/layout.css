@@ -1003,7 +1003,7 @@ header.sticky {
 .maintenance-toggle-icon {
   width: 1.125rem;
   height: 1.125rem;
-  color: rgb(139 92 246);
+  color: hsl(var(--foreground));
 }
 
 .maintenance-toggle-title {
@@ -1241,8 +1241,8 @@ header.sticky {
    ============================================ */
 
 .mode-card {
-  border: 2px solid hsl(var(--border));
-  border-radius: var(--radius);
+  border: 1px solid hsl(var(--input));
+  border-radius: 0.75rem; /* rounded-xl */
   padding: 1rem;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1251,8 +1251,7 @@ header.sticky {
 }
 
 .mode-card:hover {
-  background-color: hsl(var(--accent));
-  border-color: hsl(var(--accent-foreground) / 0.2);
+  background-color: hsl(var(--accent) / 0.5);
 }
 
 .mode-card:focus-visible {
@@ -1262,8 +1261,9 @@ header.sticky {
 
 .mode-card[data-selected="true"],
 .mode-card.selected {
-  border-color: hsl(var(--primary));
-  background-color: hsl(var(--primary) / 0.08);
+  border-width: 2px;
+  border-color: hsl(var(--foreground));
+  background-color: hsl(var(--card));
 }
 
 /* Day card variant (smaller for schedule days) */

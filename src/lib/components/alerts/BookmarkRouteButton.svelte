@@ -1,28 +1,31 @@
 <script lang="ts">
   import { Bookmark } from 'lucide-svelte';
-  import { savedStops, isAtMaxSavedStops, type SavedStop } from '$lib/stores/savedStops';
-  import type { TTCStop } from '$lib/data/stops-db';
+  import { savedRoutes, isAtMaxSavedRoutes } from '$lib/stores/savedRoutes';
   import { cn } from '$lib/utils';
 
   let {
-    stop,
+    route,
+    name,
+    type = 'bus',
     size = 'md',
     class: className = '',
     showLabel = false
   }: {
-    stop: TTCStop | SavedStop;
+    route: string;
+    name: string;
+    type?: 'bus' | 'streetcar' | 'subway';
     size?: 'sm' | 'md' | 'lg';
     class?: string;
     showLabel?: boolean;
   } = $props();
 
   // Track saved state reactively
-  let isSaved = $derived(savedStops.isSaved(stop.id));
+  let isSaved = $derived(savedRoutes.isSaved(route));
   let atMax = $state(false);
 
   // Subscribe to max state
   $effect(() => {
-    const unsubscribe = isAtMaxSavedStops.subscribe(value => {
+    const unsubscribe = isAtMaxSavedRoutes.subscribe(value => {
       atMax = value;
     });
     return unsubscribe;
@@ -44,15 +47,7 @@
     e.stopPropagation();
     e.preventDefault();
     
-    if (isSaved) {
-      savedStops.remove(stop.id);
-    } else if (!atMax) {
-      savedStops.add({
-        id: stop.id,
-        name: stop.name,
-        routes: stop.routes
-      });
-    }
+    savedRoutes.toggle({ id: route, name, type });
   }
 </script>
 
@@ -70,8 +65,8 @@
     sizeClasses[size],
     className
   )}
-  aria-label={isSaved ? `Remove ${stop.name} from saved stops` : `Add ${stop.name} to saved stops`}
-  title={!isSaved && atMax ? 'Maximum 20 saved stops reached' : isSaved ? 'Remove from saved stops' : 'Save stop'}
+  aria-label={isSaved ? `Remove route ${route} from saved routes` : `Add route ${route} to saved routes`}
+  title={!isSaved && atMax ? 'Maximum 20 saved routes reached' : isSaved ? 'Remove from saved routes' : 'Save route'}
 >
   {#if isSaved}
     <Bookmark size={iconSizes[size]} class="fill-current" />

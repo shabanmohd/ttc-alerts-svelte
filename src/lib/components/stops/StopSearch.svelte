@@ -314,7 +314,7 @@
 						class="stop-result-item flex w-full items-start gap-3 px-3 py-2.5 text-left outline-none transition-colors"
 						class:highlighted={highlightedIndex === index}
 					>
-						<span class="mt-0.5 text-lg" aria-hidden="true">{getStopIcon(stop.type)}</span>
+						<MapPin class="h-5 w-5 mt-0.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center gap-2 flex-wrap">
 								<p class="truncate text-sm font-medium">{stop.name}</p>

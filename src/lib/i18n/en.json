@@ -76,7 +76,7 @@
   },
   "routes": {
     "title": "Browse Routes",
-    "search": "Search routes...",
+    "search": "Search routes by number or name...",
     "noResults": "No routes match your search",
     "categories": {
       "subway": "Subway",

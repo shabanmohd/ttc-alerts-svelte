@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Wrench, ChevronDown, ExternalLink } from 'lucide-svelte';
+  import { AlarmClock, ChevronDown, ExternalLink } from 'lucide-svelte';
   import RouteBadge from './RouteBadge.svelte';
   import { cn } from '$lib/utils';
   import type { PlannedMaintenance } from '$lib/types/database';
@@ -239,7 +239,7 @@
       type="button"
     >
       <div class="maintenance-toggle-content">
-        <Wrench class="maintenance-toggle-icon" aria-hidden="true" />
+        <AlarmClock class="maintenance-toggle-icon" aria-hidden="true" />
         <span class="maintenance-toggle-title" id="maintenance-heading">Planned Subway Closures</span>
         <span class="maintenance-toggle-badge" aria-label="{totalCount} upcoming maintenance items">
           {totalCount} upcoming
