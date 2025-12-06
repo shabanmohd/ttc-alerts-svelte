@@ -627,35 +627,46 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
 The app supports three theme modes: **Light**, **Dark**, and **System** (default).
 
 **Architecture:**
+
 1. **Blocking script** in `app.html` prevents flash of wrong theme on page load
 2. **localStorage** (`ttc-theme`) stores the user's preference for fast sync access
 3. **IndexedDB** (`localPreferences` store) is the source of truth for all preferences
 4. **System preference** is detected via `window.matchMedia('(prefers-color-scheme: dark)')`
 
 **Theme Toggle Flow:**
+
 ```javascript
 // In localPreferences store
-function applyTheme(theme: 'light' | 'dark' | 'system') {
-  localStorage.setItem('ttc-theme', theme); // Sync for blocking script
-  
-  if (theme === 'system') {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.classList.toggle('dark', prefersDark);
+function applyTheme(theme: "light" | "dark" | "system") {
+  localStorage.setItem("ttc-theme", theme); // Sync for blocking script
+
+  if (theme === "system") {
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    document.documentElement.classList.toggle("dark", prefersDark);
   } else {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }
 }
 ```
 
 **Blocking Script (app.html):**
+
 ```html
 <script>
-  (function() {
-    const stored = localStorage.getItem('ttc-theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (stored === 'dark' || (stored === 'system' && prefersDark) || (!stored && prefersDark)) {
-      document.documentElement.classList.add('dark');
+  (function () {
+    const stored = localStorage.getItem("ttc-theme");
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+
+    if (
+      stored === "dark" ||
+      (stored === "system" && prefersDark) ||
+      (!stored && prefersDark)
+    ) {
+      document.documentElement.classList.add("dark");
     }
   })();
 </script>
@@ -813,6 +824,54 @@ Browse all TTC routes organized by category.
 | Night | 300-385 | White + Blue border |
 | Community | 400-405 | White + Gray border |
 | Popular Bus | 7, 25, 29, etc. | TTC Red |
+
+**Features:**
+- Bookmarked routes appear first in each category
+- Uses `savedRoutes` store for bookmark state
+
+### My Routes Tab (Responsive Route Badge Tabs)
+
+Horizontal scrollable tabs on mobile, wrapping rows on desktop.
+
+```svelte
+<!-- Container with responsive behavior -->
+<div class="route-tabs-container relative">
+  <div class="route-tabs flex gap-2 overflow-x-auto md:overflow-x-visible md:flex-wrap">
+    {#each routes as route}
+      <button class="route-tab flex-shrink-0 whitespace-nowrap">
+        <RouteBadge route={route} />
+      </button>
+    {/each}
+  </div>
+  <!-- Fade gradient for mobile scroll indicator -->
+  <div class="route-tabs-fade absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
+</div>
+```
+
+**Responsive Behavior:**
+
+| Viewport | Behavior | Visual Cue |
+|----------|----------|------------|
+| Mobile (<768px) | Horizontal scroll | Right fade gradient |
+| Desktop (≥768px) | Flex wrap, multi-row | No gradient, all visible |
+
+**CSS Pattern:**
+```css
+.route-tabs {
+  overflow-x: auto;
+  scrollbar-width: none; /* Hide scrollbar */
+  -webkit-overflow-scrolling: touch; /* Smooth iOS scroll */
+}
+.route-tabs::-webkit-scrollbar { display: none; }
+
+@media (min-width: 768px) {
+  .route-tabs {
+    overflow-x: visible;
+    flex-wrap: wrap;
+  }
+  .route-tabs-fade { display: none; }
+}
+```
 
 ### Selection Buttons (Option Groups)
 

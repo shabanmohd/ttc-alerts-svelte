@@ -75,6 +75,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/AlertCard.svelte`            | ✅     | Alert cards w/ route extraction from header_text |
 | `components/alerts/FilterChips.svelte`          | ✅     | Category filter buttons                          |
 | `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display                    |
+| `components/alerts/MyRouteAlerts.svelte`        | ✅     | My Routes tab with responsive route badge tabs   |
 | `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)    |
 | `components/alerts/StatusBadge.svelte`          | ✅     | Status indicators (Delay, Detour, Resumed, etc.) |
 | `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback             |
@@ -179,32 +180,32 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Stores (`src/lib/stores/`) 🆕 **Version B additions**
 
-| File                  | Status | Purpose                                                  | Version |
-| --------------------- | ------ | -------------------------------------------------------- | ------- |
-| `alerts.ts`           | ✅     | Alerts state + date validation filter                    | A & B   |
-| `auth.ts`             | ✅     | Custom WebAuthn auth store                               | A & B   |
-| `preferences.ts`      | ✅     | User preferences state (cloud sync)                      | A & B   |
-| `localPreferences.ts` | ✅     | Local preferences (theme, text size, reduce motion, i18n)| **B**   |
-| `visibility.ts`       | ✅     | Track document visibility for polling control            | **B**   |
-| `accessibility.ts`    | ✅     | Text scaling and reduce motion settings                  | **B**   |
-| `bookmarks.ts`        | ✅     | Bookmarked stops (localStorage + Supabase sync)          | **B**   |
-| `savedStops.ts`       | ✅     | Saved stops (IndexedDB storage)                          | **B**   |
-| `savedRoutes.ts`      | ✅     | Saved routes (IndexedDB storage)                         | **B**   |
-| `eta.ts`              | ✅     | ETA state with auto-refresh & caching                    | **B**   |
+| File                  | Status | Purpose                                                   | Version |
+| --------------------- | ------ | --------------------------------------------------------- | ------- |
+| `alerts.ts`           | ✅     | Alerts state + date validation filter                     | A & B   |
+| `auth.ts`             | ✅     | Custom WebAuthn auth store                                | A & B   |
+| `preferences.ts`      | ✅     | User preferences state (cloud sync)                       | A & B   |
+| `localPreferences.ts` | ✅     | Local preferences (theme, text size, reduce motion, i18n) | **B**   |
+| `visibility.ts`       | ✅     | Track document visibility for polling control             | **B**   |
+| `accessibility.ts`    | ✅     | Text scaling and reduce motion settings                   | **B**   |
+| `bookmarks.ts`        | ✅     | Bookmarked stops (localStorage + Supabase sync)           | **B**   |
+| `savedStops.ts`       | ✅     | Saved stops (IndexedDB storage)                           | **B**   |
+| `savedRoutes.ts`      | ✅     | Saved routes (IndexedDB storage)                          | **B**   |
+| `eta.ts`              | ✅     | ETA state with auto-refresh & caching                     | **B**   |
 
 ### Services (`src/lib/services/`)
 
-| File          | Status | Purpose                                                | Version |
-| ------------- | ------ | ------------------------------------------------------ | ------- |
-| `webauthn.ts` | ✅     | WebAuthn browser API wrapper                           | A & B   |
-| `storage.ts`  | ✅     | IndexedDB storage for stops, routes, preferences       | **B**   |
+| File          | Status | Purpose                                          | Version |
+| ------------- | ------ | ------------------------------------------------ | ------- |
+| `webauthn.ts` | ✅     | WebAuthn browser API wrapper                     | A & B   |
+| `storage.ts`  | ✅     | IndexedDB storage for stops, routes, preferences | **B**   |
 
 ### Configuration (`src/`)
 
-| File       | Status | Purpose                                                     |
-| ---------- | ------ | ----------------------------------------------------------- |
-| `app.html` | ✅     | HTML template, Lexend font, blocking theme script           |
-| `app.d.ts` | ✅     | SvelteKit app type declarations                             |
+| File       | Status | Purpose                                           |
+| ---------- | ------ | ------------------------------------------------- |
+| `app.html` | ✅     | HTML template, Lexend font, blocking theme script |
+| `app.d.ts` | ✅     | SvelteKit app type declarations                   |
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
@@ -396,6 +397,28 @@ For local development, use `localhost` and `http://localhost:5173`.
 - ✅ Fixed time parsing to handle HH:MM:SS format → displays as "11:59 PM"
 - ✅ Consistent vertical alignment for dates across all cards
 - ✅ Background polling every 5 minutes (data updates without page refresh)
+
+### Dec 5, 2025 - My Routes Tab Improvements
+
+**Responsive Route Badge Tabs:**
+
+- ✅ Mobile (<768px): Horizontal scroll with right fade indicator
+- ✅ Desktop (≥768px): Flex-wrap to show all routes on multiple rows
+- ✅ Smooth scrolling with fade gradient visual cue
+- ✅ Touch-friendly tap targets for route badges
+
+**Route Browser - Bookmarked Routes First:**
+
+- ✅ Bookmarked routes now appear first in each category section
+- ✅ Uses `savedRoutes` store for bookmark state
+- ✅ Sort helper function preserves original order for non-bookmarked routes
+
+**Files Updated:**
+
+- `src/lib/components/alerts/MyRouteAlerts.svelte` - Responsive route tabs with scroll/wrap
+- `src/routes/routes/+page.svelte` - Show bookmarked routes first in categories
+
+---
 
 **Filter Improvements:**
 
