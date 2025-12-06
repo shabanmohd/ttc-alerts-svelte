@@ -186,9 +186,9 @@
   const totalCount = $derived($maintenanceItems.length);
   
   const tabs = [
-    { id: 'starting-soon', label: 'Starting Soon', ariaLabel: 'View maintenance starting soon' },
-    { id: 'weekend', label: 'This Weekend', ariaLabel: 'View weekend maintenance' },
-    { id: 'coming-up', label: 'Coming Up', ariaLabel: 'View upcoming maintenance' }
+    { id: 'starting-soon', label: 'Starting Soon', shortLabel: 'Soon', ariaLabel: 'View maintenance starting soon' },
+    { id: 'weekend', label: 'This Weekend', shortLabel: 'Weekend', ariaLabel: 'View weekend maintenance' },
+    { id: 'coming-up', label: 'Coming Up', shortLabel: 'Coming', ariaLabel: 'View upcoming maintenance' }
   ] as const;
 </script>
 
@@ -197,7 +197,10 @@
   <div class="closures-header">
     <div class="closures-header-content">
       <AlarmClock class="h-5 w-5 text-foreground" aria-hidden="true" />
-      <h2 id="closures-heading" class="closures-title">Planned Subway Closures</h2>
+      <h2 id="closures-heading" class="closures-title">
+        <span class="closures-title-short">Subway Closures</span>
+        <span class="closures-title-full">Planned Subway Closures</span>
+      </h2>
     </div>
     {#if totalCount > 0}
       <span class="closures-badge">{totalCount} scheduled</span>
@@ -230,9 +233,11 @@
             onclick={() => activeTab = tab.id}
             role="tab"
             aria-selected={activeTab === tab.id}
+            aria-label={tab.ariaLabel}
             type="button"
           >
-            <span>{tab.label}</span>
+            <span class="closures-tab-label-short">{tab.shortLabel}</span>
+            <span class="closures-tab-label-full">{tab.label}</span>
             <span class="closures-tab-count">{count}</span>
           </button>
         {/each}
@@ -323,6 +328,26 @@
     color: hsl(var(--foreground));
   }
   
+  /* Mobile: show short title */
+  .closures-title-short {
+    display: inline;
+  }
+  
+  .closures-title-full {
+    display: none;
+  }
+  
+  /* Desktop: show full title */
+  @media (min-width: 640px) {
+    .closures-title-short {
+      display: none;
+    }
+    
+    .closures-title-full {
+      display: inline;
+    }
+  }
+  
   .closures-badge {
     font-size: 0.75rem;
     font-weight: 500;
@@ -385,8 +410,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    gap: 0.375rem;
+    padding: 0.5rem 0.5rem;
     border-radius: var(--radius);
     font-size: 0.8125rem;
     font-weight: 500;
@@ -396,6 +421,31 @@
     cursor: pointer;
     transition: all 0.15s ease;
     white-space: nowrap;
+  }
+  
+  /* Mobile: show short labels */
+  .closures-tab-label-short {
+    display: inline;
+  }
+  
+  .closures-tab-label-full {
+    display: none;
+  }
+  
+  /* Desktop: show full labels */
+  @media (min-width: 640px) {
+    .closures-tab {
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .closures-tab-label-short {
+      display: none;
+    }
+    
+    .closures-tab-label-full {
+      display: inline;
+    }
   }
   
   .closures-tab:hover:not(.active) {

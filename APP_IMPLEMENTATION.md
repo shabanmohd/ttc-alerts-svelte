@@ -70,28 +70,28 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Frontend (`src/lib/`)
 
-| File                                            | Status | Purpose                                          |
-| ----------------------------------------------- | ------ | ------------------------------------------------ |
-| `components/alerts/AlertCard.svelte`            | ✅     | Alert cards w/ route extraction from header_text |
-| `components/alerts/FilterChips.svelte`          | ✅     | Category filter buttons                          |
-| `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display                    |
-| `components/alerts/MyRouteAlerts.svelte`        | ✅     | My Routes tab with responsive route badge tabs   |
-| `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)    |
-| `components/alerts/StatusBadge.svelte`          | ✅     | Status indicators (Delay, Detour, Resumed, etc.) |
-| `components/dialogs/HowToUseDialog.svelte`      | ✅     | User guide                                       |
-| `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                               |
-| `components/layout/Header.svelte`               | ✅     | App header with hamburger menu (mobile)          |
-| `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation                               |
-| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation                                |
-| `components/ui/*`                               | ✅     | shadcn-svelte base components                    |
-| `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                     |
-| `stores/alerts.ts`                              | ✅     | Alerts state + date validation filter            |
-| `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store                       |
-| `stores/preferences.ts`                         | ✅     | User preferences state                           |
-| `types/auth.ts`                                 | ✅     | Auth TypeScript types                            |
-| `types/database.ts`                             | ✅     | Database types (JSONB fields)                    |
-| `supabase.ts`                                   | ✅     | Supabase client config                           |
-| `utils.ts`                                      | ✅     | Utility functions                                |
+| File                                         | Status | Purpose                                          |
+| -------------------------------------------- | ------ | ------------------------------------------------ |
+| `components/alerts/AlertCard.svelte`         | ✅     | Alert cards w/ route extraction from header_text |
+| `components/alerts/FilterChips.svelte`       | ✅     | Category filter buttons                          |
+| `components/alerts/MaintenanceWidget.svelte` | ✅     | Scheduled maintenance display                    |
+| `components/alerts/MyRouteAlerts.svelte`     | ✅     | My Routes tab with responsive route badge tabs   |
+| `components/alerts/RouteBadge.svelte`        | ✅     | TTC-branded route badges (full names, colors)    |
+| `components/alerts/StatusBadge.svelte`       | ✅     | Status indicators (Delay, Detour, Resumed, etc.) |
+| `components/dialogs/HowToUseDialog.svelte`   | ✅     | User guide                                       |
+| `components/dialogs/InstallPWADialog.svelte` | ✅     | PWA install prompt                               |
+| `components/layout/Header.svelte`            | ✅     | App header with hamburger menu (mobile)          |
+| `components/layout/Sidebar.svelte`           | ✅     | Desktop navigation                               |
+| `components/layout/MobileBottomNav.svelte`   | ✅     | Mobile navigation                                |
+| `components/ui/*`                            | ✅     | shadcn-svelte base components                    |
+| `services/webauthn.ts`                       | ✅     | WebAuthn browser API wrapper                     |
+| `stores/alerts.ts`                           | ✅     | Alerts state + date validation filter            |
+| `stores/auth.ts`                             | ✅     | Custom WebAuthn auth store                       |
+| `stores/preferences.ts`                      | ✅     | User preferences state                           |
+| `types/auth.ts`                              | ✅     | Auth TypeScript types                            |
+| `types/database.ts`                          | ✅     | Database types (JSONB fields)                    |
+| `supabase.ts`                                | ✅     | Supabase client config                           |
+| `utils.ts`                                   | ✅     | Utility functions                                |
 
 ### Pages (`src/routes/`)
 

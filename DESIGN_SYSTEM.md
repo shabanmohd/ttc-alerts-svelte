@@ -332,6 +332,16 @@ Direction badges indicate the travel direction of a stop (extracted from GTFS tr
 
 The Maintenance Widget displays planned subway closures. Each maintenance item uses a **specific grid layout** that must be preserved.
 
+#### Header (Responsive)
+
+**Mobile (< 640px):**
+- Title: "Subway Closures"
+- Tab labels: "Soon", "Weekend", "Coming"
+
+**Desktop (≥ 640px):**
+- Title: "Planned Subway Closures"
+- Tab labels: "Starting Soon", "This Weekend", "Coming Up"
+
 #### Layout Structure
 
 ```
@@ -802,13 +812,26 @@ Live arrival times for bookmarked stops.
 <ETACard eta={etaData} />
 ```
 
-**ETA Card Layout:**
+**ETA Card Layout (Responsive):**
 
-- Stop name with route badge
-- Direction indicator
-- Live arrival times (up to 3)
-- Auto-refresh indicator (spinning icon)
-- Error state with retry
+**Mobile (< 640px):**
+- Stop header: cross-streets format + direction badge + stop ID
+- Route card Row 1: Route badge + direction + destination (wraps naturally)
+- Route card Row 2: ETA times right-aligned (primary large, secondary smaller)
+
+**Desktop (≥ 640px):**
+- Stop header: cross-streets format + direction badge + stop ID
+- Route card: Single row with badge + direction left, times right
+
+**Cross-streets Formatting:**
+- "Morningside Ave At Sheppard Ave" → "Morningside Ave / Sheppard Ave"
+- Also handles: "Opp", "Near", "North Side", "South Side", etc.
+
+**ETA Times Display:**
+- Primary time: `text-5xl` bold (mobile) / `text-4xl` bold (desktop)
+- Secondary times: `text-3xl` semibold (mobile) / `text-base` (desktop)
+- Live signal icon next to each time
+- Shared "min" label at end
 
 **CSS Classes:**
 

@@ -22,6 +22,22 @@
   }: Props = $props();
 
   /**
+   * Format stop name as cross-streets
+   * "Morningside Ave At Sheppard Ave" → "Morningside Ave / Sheppard Ave"
+   * Also handles: "Opp", "Near", "North Side", "South Side", etc.
+   */
+  function formatCrossStreets(stopName: string): string {
+    return stopName
+      .replace(/\s+At\s+/gi, ' / ')
+      .replace(/\s+Opp\s+/gi, ' / Opp ')
+      .replace(/\s+Near\s+/gi, ' / Near ')
+      .replace(/\s+North Side\s*/gi, ' (North Side)')
+      .replace(/\s+South Side\s*/gi, ' (South Side)')
+      .replace(/\s+East Side\s*/gi, ' (East Side)')
+      .replace(/\s+West Side\s*/gi, ' (West Side)');
+  }
+
+  /**
    * Get context-aware empty state message based on time of day
    */
   function getEmptyStateMessage(): { icon: 'moon' | 'clock'; title: string; subtitle: string } {
@@ -67,44 +83,48 @@
   }
 
   /**
-   * Parse direction into multiple lines
+   * Parse direction into a single destination line
+   * "North - 133 Neilson towards Morningside Heights via Scarborough Centre Stn" 
+   * → { direction: "North", destination: "Morningside Heights via Scarborough Centre Stn" }
    */
-  function parseDirection(direction: string): { line1: string; line2: string; line3: string } {
+  function parseDirection(direction: string): { direction: string; destination: string } {
     const cleaned = direction.replace(/bound$/i, '').trim();
     
+    // Pattern: "Direction - Route towards Destination via Details"
     const towardsIndex = cleaned.toLowerCase().indexOf(' towards ');
     if (towardsIndex > -1) {
       const beforeTowards = cleaned.substring(0, towardsIndex).trim();
-      const afterTowards = cleaned.substring(towardsIndex + 9).trim();
+      const afterTowards = cleaned.substring(towardsIndex + 9).trim(); // 9 = " towards ".length
       
-      const viaIndex = afterTowards.toLowerCase().indexOf(' via ');
-      if (viaIndex > -1) {
-        const destination = afterTowards.substring(0, viaIndex).trim();
-        const viaDetails = afterTowards.substring(viaIndex + 5).trim();
-        return {
-          line1: beforeTowards,
-          line2: `towards ${destination}`,
-          line3: `via ${viaDetails}`
-        };
-      }
+      // Extract direction from "North - 133 Neilson" → "North"
+      const dashMatch = beforeTowards.match(/^(North|South|East|West)\s*-/i);
+      const dir = dashMatch ? dashMatch[1] : beforeTowards.split(/\s+/)[0];
       
       return {
-        line1: beforeTowards,
-        line2: `towards ${afterTowards}`,
-        line3: ''
+        direction: dir,
+        destination: afterTowards
       };
     }
     
-    const dashMatch = cleaned.match(/^(\w+)\s*-\s*(.+)$/);
+    // Pattern: "Direction - Route" (no towards)
+    const dashMatch = cleaned.match(/^(North|South|East|West)\s*-\s*(.+)$/i);
     if (dashMatch) {
       return {
-        line1: dashMatch[1].trim(),
-        line2: dashMatch[2].trim(),
-        line3: ''
+        direction: dashMatch[1].trim(),
+        destination: dashMatch[2].trim()
       };
     }
     
-    return { line1: cleaned, line2: '', line3: '' };
+    // Fallback: check for directional keywords at start
+    const dirMatch = cleaned.match(/^(North|South|East|West)/i);
+    if (dirMatch) {
+      return {
+        direction: dirMatch[1],
+        destination: cleaned.substring(dirMatch[1].length).trim()
+      };
+    }
+    
+    return { direction: '', destination: cleaned };
   }
 
   function handleRemove() {
@@ -113,7 +133,7 @@
 
   /**
    * Extract primary direction from predictions for display in header
-   * Returns simplified direction like "Westbound" or "towards Kennedy Station"
+   * Returns simplified direction like "Eastbound" or "Westbound"
    */
   function getPrimaryDirection(predictions: ETAPrediction[]): string | null {
     if (predictions.length === 0) return null;
@@ -128,12 +148,6 @@
       return `${dashMatch[1]}bound`;
     }
     
-    // Try "towards X" pattern
-    const towardsMatch = direction.match(/towards\s+(.+?)(?:\s+via|$)/i);
-    if (towardsMatch) {
-      return `towards ${towardsMatch[1]}`;
-    }
-    
     // Fallback: check for directional keywords at start
     const dirMatch = direction.match(/^(North|South|East|West)(?:bound)?/i);
     if (dirMatch) {
@@ -145,6 +159,7 @@
 
   let sortedPredictions = $derived(sortPredictions(eta.predictions));
   let primaryDirection = $derived(getPrimaryDirection(eta.predictions));
+  let crossStreets = $derived(formatCrossStreets(eta.stopName));
 </script>
 
 <div
@@ -154,24 +169,24 @@
     className
   )}
 >
-  <!-- Header -->
-  <div class="flex items-center justify-between gap-2 px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 border-b">
-    <div class="flex items-center gap-2.5 min-w-0 flex-1">
-      <MapPin class="h-8 w-8 text-muted-foreground flex-shrink-0" />
+  <!-- Header: Stop Name + Direction Badge + Stop ID -->
+  <div class="flex items-start justify-between gap-2 px-4 py-3 bg-zinc-100 dark:bg-zinc-800 border-b">
+    <div class="flex items-start gap-2.5 min-w-0 flex-1">
+      <MapPin class="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
       <div class="min-w-0 flex-1">
-        <h4 class="font-medium text-base truncate">{eta.stopName}</h4>
-        <div class="flex items-center gap-2 mt-0.5">
+        <h4 class="font-medium text-base leading-tight">{crossStreets}</h4>
+        <div class="flex items-center gap-2 mt-1">
           {#if primaryDirection}
             {@const dirColor = primaryDirection.toLowerCase().includes('east') ? 'bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40' 
               : primaryDirection.toLowerCase().includes('west') ? 'bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-600/40'
               : primaryDirection.toLowerCase().includes('north') ? 'bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40'
               : primaryDirection.toLowerCase().includes('south') ? 'bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40'
               : 'bg-muted text-muted-foreground border-muted-foreground/30'}
-            <span class="text-[10px] font-medium px-1.5 py-0.5 rounded border uppercase {dirColor}">
+            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded border uppercase {dirColor}">
               {primaryDirection}
             </span>
           {/if}
-          <span class="text-xs text-muted-foreground/60">#{eta.stopId}</span>
+          <span class="text-xs text-muted-foreground">#{eta.stopId}</span>
         </div>
       </div>
     </div>
@@ -222,56 +237,79 @@
       <p class="text-xs text-muted-foreground/70">{emptyState.subtitle}</p>
     </div>
   {:else}
-    <!-- Stacked Route Cards -->
+    <!-- Stacked Route Cards with Dividers -->
     <div class="divide-y divide-border">
       {#each sortedPredictions as prediction (prediction.route + prediction.direction)}
         {@const parsed = parseDirection(prediction.direction)}
         {@const primaryTime = prediction.arrivals[0]}
         {@const secondaryTimes = prediction.arrivals.slice(1)}
         
-        <div class="flex items-center justify-between gap-4 px-4 py-3">
-          <!-- Left: Route Badge + Direction -->
-          <div class="flex items-center gap-3 min-w-0 flex-1">
-            <RouteBadge route={prediction.route} size="lg" class="flex-shrink-0" />
-            <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium text-foreground leading-tight truncate">
-                {parsed.line1}
-              </p>
-              {#if parsed.line2}
-                <p class="text-xs text-muted-foreground mt-0.5 truncate">
-                  {parsed.line2}
+        <!-- Mobile: Vertical layout | Desktop: Original horizontal layout -->
+        <div class="px-4 py-3">
+          <!-- Desktop: Single row with badge + direction left, times right -->
+          <div class="hidden sm:flex items-center justify-between gap-4">
+            <!-- Left: Route Badge + Direction -->
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <RouteBadge route={prediction.route} size="lg" class="flex-shrink-0" />
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-foreground leading-snug">
+                  {parsed.direction}{parsed.direction && parsed.destination ? ' to ' : ''}{parsed.destination}
                 </p>
-              {/if}
-              {#if parsed.line3}
-                <p class="text-xs text-muted-foreground/70 truncate">
-                  {parsed.line3}
+                <p class="text-xs text-muted-foreground mt-0.5">
+                  {crossStreets}
                 </p>
+              </div>
+            </div>
+            <!-- Right: Arrival Times -->
+            {#if prediction.arrivals.length > 0}
+              <div class="flex items-baseline gap-1 flex-shrink-0">
+                <span class="text-4xl font-bold text-foreground tabular-nums">{primaryTime}</span>
+                <LiveSignalIcon size="md" class="self-start mt-1" />
+                {#if secondaryTimes.length > 0}
+                  {#each secondaryTimes as time}
+                    <span class="text-base text-foreground/70 tabular-nums">, {time}</span>
+                    <LiveSignalIcon size="sm" class="self-center" />
+                  {/each}
+                {/if}
+                <span class="text-base text-foreground/70 ml-1">min</span>
+              </div>
+            {:else}
+              <span class="text-4xl font-bold text-muted-foreground/50">–</span>
+            {/if}
+          </div>
+
+          <!-- Mobile: Vertical layout with text on top, ETAs below -->
+          <div class="sm:hidden">
+            <!-- Row 1: Route Badge + Direction/Destination Text -->
+            <div class="flex items-start gap-3">
+              <RouteBadge route={prediction.route} size="lg" class="flex-shrink-0" />
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-foreground leading-snug">
+                  {parsed.direction}{parsed.direction && parsed.destination ? ' to ' : ''}{parsed.destination}
+                </p>
+                <p class="text-xs text-muted-foreground mt-0.5">
+                  {crossStreets}
+                </p>
+              </div>
+            </div>
+            <!-- Row 2: ETA Times (right aligned) -->
+            <div class="flex items-baseline justify-end gap-2 mt-2">
+              {#if prediction.arrivals.length > 0}
+                <span class="text-5xl font-bold text-foreground tabular-nums">{primaryTime}</span>
+                <LiveSignalIcon size="lg" class="self-start mt-1.5" />
+                {#if secondaryTimes.length > 0}
+                  {#each secondaryTimes as time}
+                    <span class="text-3xl font-semibold text-muted-foreground tabular-nums">, {time}</span>
+                    <LiveSignalIcon size="md" class="self-start mt-1" />
+                  {/each}
+                {/if}
+                <span class="text-lg text-muted-foreground ml-1">min</span>
+              {:else}
+                <span class="text-5xl font-bold text-muted-foreground/50">–</span>
+                <span class="text-lg text-muted-foreground">min</span>
               {/if}
             </div>
           </div>
-          
-          <!-- Right: Arrival Times with Live/Scheduled indicator -->
-          {#if prediction.arrivals.length > 0}
-            <div class="flex items-baseline gap-1 flex-shrink-0">
-              <!-- Primary time with icon -->
-              <span class="inline-flex items-start gap-0.5">
-                <span class="text-4xl font-bold text-foreground tabular-nums">{primaryTime}</span>
-                <LiveSignalIcon size="md" class="mt-1" />
-              </span>
-              <!-- Secondary times with icons -->
-              {#if secondaryTimes.length > 0}
-                {#each secondaryTimes as time}
-                  <span class="inline-flex items-center gap-0.5">
-                    <span class="text-base text-foreground/70 tabular-nums">, {time}</span>
-                    <LiveSignalIcon size="sm" class="mb-0.5" />
-                  </span>
-                {/each}
-              {/if}
-              <span class="text-base text-foreground/70 ml-1">min</span>
-            </div>
-          {:else}
-            <span class="text-4xl font-bold text-muted-foreground/50">–</span>
-          {/if}
         </div>
       {/each}
     </div>
