@@ -19,6 +19,7 @@
 		placeholder?: string;
 		showNearbyButton?: boolean;
 		showBookmarkButton?: boolean;
+		autoFocus?: boolean;
 	}
 
 	let { 
@@ -26,7 +27,8 @@
 		onClose,
 		placeholder = 'Search by name or stop ID...', 
 		showNearbyButton = true,
-		showBookmarkButton = true
+		showBookmarkButton = true,
+		autoFocus = false
 	}: Props = $props();
 
 	let query = $state('');
@@ -53,6 +55,10 @@
 	onMount(async () => {
 		if (browser) {
 			document.addEventListener('click', handleClickOutside);
+			// Auto-focus input for mobile keyboard trigger
+			if (autoFocus) {
+				setTimeout(() => inputRef?.focus(), 100);
+			}
 		}
 		try {
 			await initStopsDB();

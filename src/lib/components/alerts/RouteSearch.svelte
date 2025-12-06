@@ -10,6 +10,7 @@
     onSelect?: (route: RouteInfo) => void;
     onClose?: () => void;
     placeholder?: string;
+    autoFocus?: boolean;
   }
 
   interface RouteInfo {
@@ -21,7 +22,8 @@
   let { 
     onSelect,
     onClose,
-    placeholder = 'Search routes by number or name...'
+    placeholder = 'Search routes by number or name...',
+    autoFocus = false
   }: Props = $props();
 
   // Route data - Complete TTC route list
@@ -284,6 +286,10 @@
   onMount(() => {
     if (browser) {
       document.addEventListener('click', handleClickOutside);
+      // Auto-focus input for mobile keyboard trigger
+      if (autoFocus) {
+        setTimeout(() => inputRef?.focus(), 100);
+      }
     }
   });
 

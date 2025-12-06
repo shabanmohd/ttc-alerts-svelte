@@ -144,6 +144,7 @@
     showNearbyButton={true}
     showBookmarkButton={true}
     onSelect={handleStopSelect}
+    autoFocus={true}
   />
   
   {#if hasStops}

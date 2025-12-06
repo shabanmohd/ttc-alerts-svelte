@@ -148,6 +148,8 @@
   <RouteSearch 
     placeholder="Search by route number or name..."
     onClose={() => showSearchModal = false}
+    onSelect={() => showSearchModal = false}
+    autoFocus={true}
   />
   
   {#if hasRoutes}
