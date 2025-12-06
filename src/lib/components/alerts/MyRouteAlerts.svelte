@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search, Plus, Bell, X, Pencil, RefreshCw } from 'lucide-svelte';
+  import { Search, Plus, Bell, X, Pencil, RefreshCw, MapPinned } from 'lucide-svelte';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
@@ -280,7 +280,7 @@
     <!-- Empty State: No Routes Saved -->
     <div class="empty-state">
       <div class="empty-state-icon">
-        <Route class="h-8 w-8" />
+        <MapPinned class="h-8 w-8" />
       </div>
       <h3 class="empty-state-title">No routes saved yet</h3>
       <p class="empty-state-description">
