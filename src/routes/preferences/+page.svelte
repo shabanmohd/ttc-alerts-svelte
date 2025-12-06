@@ -374,12 +374,12 @@
               <div class="mt-4 mb-4">
                 <label for="route-search" class="sr-only">Search routes</label>
                 <div class="relative">
-                  <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
                   <input 
                     type="text" 
                     id="route-search"
                     placeholder="Search routes by number or name..." 
-                    class="input pl-10 w-full"
+                    class="input pl-10 w-full bg-muted"
                     bind:value={routeSearch}
                   />
                 </div>

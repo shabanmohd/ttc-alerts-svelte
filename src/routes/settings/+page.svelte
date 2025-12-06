@@ -485,36 +485,30 @@
   <!-- Hidden on desktop (lg+) since it's in the sidebar -->
   <Card.Root class="mb-6 lg:hidden">
     <Card.Header>
-      <Card.Title class="text-lg">Help & Info</Card.Title>
+      <Card.Title class="text-lg flex items-center gap-2">
+        <HelpCircle class="h-5 w-5 text-primary" />
+        Help & Info
+      </Card.Title>
+      <Card.Description>
+        Get help, report issues, or learn more about the app.
+      </Card.Description>
     </Card.Header>
-    <Card.Content class="space-y-2">
-      <Button variant="ghost" class="w-full justify-start gap-3" onclick={() => activeDialog = 'how-to-use'}>
-        <HelpCircle class="h-5 w-5 opacity-70" />
-        <div class="text-left">
-          <div class="font-medium">How to Use</div>
-          <div class="text-xs text-muted-foreground">Step-by-step guide</div>
-        </div>
+    <Card.Content class="space-y-3">
+      <Button variant="outline" class="w-full gap-2" onclick={() => activeDialog = 'how-to-use'}>
+        <HelpCircle class="h-4 w-4" />
+        How to Use
       </Button>
-      <Button variant="ghost" class="w-full justify-start gap-3" href="mailto:feedback@ttc-alerts.app">
-        <Bug class="h-5 w-5 opacity-70" />
-        <div class="text-left">
-          <div class="font-medium">Report a Bug</div>
-          <div class="text-xs text-muted-foreground">Something not working?</div>
-        </div>
+      <Button variant="outline" class="w-full gap-2" href="mailto:feedback@ttc-alerts.app">
+        <Bug class="h-4 w-4" />
+        Report a Bug
       </Button>
-      <Button variant="ghost" class="w-full justify-start gap-3" href="mailto:feedback@ttc-alerts.app">
-        <Lightbulb class="h-5 w-5 opacity-70" />
-        <div class="text-left">
-          <div class="font-medium">Request a Feature</div>
-          <div class="text-xs text-muted-foreground">Have an idea?</div>
-        </div>
+      <Button variant="outline" class="w-full gap-2" href="mailto:feedback@ttc-alerts.app">
+        <Lightbulb class="h-4 w-4" />
+        Request a Feature
       </Button>
-      <Button variant="ghost" class="w-full justify-start gap-3">
-        <Info class="h-5 w-5 opacity-70" />
-        <div class="text-left">
-          <div class="font-medium">About</div>
-          <div class="text-xs text-muted-foreground">Version 2.0.0 • Made in Toronto</div>
-        </div>
+      <Button variant="outline" class="w-full gap-2" onclick={() => activeDialog = 'about'}>
+        <Info class="h-4 w-4" />
+        About
       </Button>
     </Card.Content>
   </Card.Root>

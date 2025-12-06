@@ -239,7 +239,7 @@
 	<div class="relative flex items-center gap-2 {onClose ? 'px-3 pb-3' : ''}">
 		<div class="relative flex-1">
 			<Search
-				class="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+				class="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 flex-shrink-0 -translate-y-1/2"
 			/>
 			<Input
 				bind:ref={inputRef}

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { MapPin, Clock, Plus, RefreshCw, X, Pencil } from 'lucide-svelte';
+  import { MapPin, Clock, Plus, RefreshCw, X, Pencil, Search } from 'lucide-svelte';
   import { browser } from '$app/environment';
   import { savedStops, savedStopsCount } from '$lib/stores/savedStops';
   import { etaStore, etaList, isAnyLoading } from '$lib/stores/eta';
@@ -134,11 +134,8 @@
         class="mobile-search-trigger"
         onclick={() => showSearchModal = true}
       >
-        <MapPin class="h-4 w-4 text-muted-foreground" />
-        <span class="trigger-text">Search stops...</span>
-        <span class="nearby-hint">
-          <MapPin class="h-3 w-3" />
-        </span>
+        <Search class="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+        <span class="trigger-text">Search stops by name or ID...</span>
       </button>
     {:else}
       <!-- Desktop: Inline search -->
@@ -234,6 +231,9 @@
   }
 
   .search-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 1rem;
     position: relative;
     z-index: 50;
@@ -243,17 +243,18 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    width: 100%;
+    flex: 1;
     padding: 0.625rem 0.75rem;
-    background-color: hsl(var(--background));
+    background-color: hsl(var(--muted));
     border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
     cursor: pointer;
-    transition: border-color 0.15s;
+    transition: all 0.15s;
   }
 
   .mobile-search-trigger:hover {
     border-color: hsl(var(--ring));
+    background-color: hsl(var(--muted) / 0.8);
   }
 
   .trigger-text {
@@ -261,17 +262,9 @@
     text-align: left;
     color: hsl(var(--muted-foreground));
     font-size: 0.875rem;
-  }
-
-  .nearby-hint {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: var(--radius);
-    background-color: hsl(var(--muted));
-    color: hsl(var(--muted-foreground));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .stops-header {

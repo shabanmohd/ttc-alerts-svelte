@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Route, Plus, Bell, X, Pencil, RefreshCw } from 'lucide-svelte';
+  import { Search, Plus, Bell, X, Pencil, RefreshCw } from 'lucide-svelte';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
@@ -182,7 +182,7 @@
         class="mobile-search-trigger"
         onclick={() => showSearchModal = true}
       >
-        <Route class="h-4 w-4 text-muted-foreground" />
+        <Search class="h-4 w-4 flex-shrink-0 text-muted-foreground" />
         <span class="trigger-text">Search routes by number or name...</span>
       </button>
     {:else}
@@ -339,21 +339,26 @@
     align-items: center;
     gap: 0.5rem;
     flex: 1;
+    min-width: 0;
     padding: 0.625rem 0.75rem;
-    background-color: hsl(var(--background));
+    background-color: hsl(var(--muted));
     border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
     cursor: pointer;
-    transition: border-color 0.15s;
+    transition: all 0.15s;
   }
 
   .mobile-search-trigger:hover {
     border-color: hsl(var(--ring));
+    background-color: hsl(var(--muted) / 0.8);
   }
 
   .trigger-text {
     color: hsl(var(--muted-foreground));
     font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Route tabs container with fade indicator on mobile */

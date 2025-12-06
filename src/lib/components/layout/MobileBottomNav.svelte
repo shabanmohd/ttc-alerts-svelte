@@ -37,7 +37,7 @@
     class="nav-item {isActive('/alerts') ? 'active' : ''}"
   >
     <AlertTriangle />
-    <span>Service Alerts</span>
+    <span>Alerts</span>
   </a>
   <a 
     href="/routes"

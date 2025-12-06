@@ -343,7 +343,7 @@
   <!-- Search -->
   <div class="mb-6">
     <div class="relative">
-      <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 flex-shrink-0 text-muted-foreground" />
       <Input
         type="text"
         placeholder="Search routes by number or name..."

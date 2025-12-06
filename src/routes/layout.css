@@ -471,6 +471,7 @@ header.sticky {
   font-size: 0.7rem;
   font-weight: 500;
   transition: all 0.2s ease;
+  text-align: center;
 }
 
 .mobile-bottom-nav .nav-item.active {
@@ -1307,7 +1308,7 @@ header.sticky {
   width: 100%;
   border-radius: calc(var(--radius) - 2px);
   border: 1px solid hsl(var(--input));
-  background-color: hsl(var(--background));
+  background-color: hsl(var(--muted));
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;

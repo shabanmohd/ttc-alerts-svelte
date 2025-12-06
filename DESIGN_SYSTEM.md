@@ -214,6 +214,27 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
 - Small: `h-9 px-3`
 - Icon: `h-10 w-10`
 
+### Input Fields
+
+All input fields use a muted gray background for better contrast and consistency.
+
+```svelte
+<Input
+  type="text"
+  placeholder="Search..."
+  class="pl-9" <!-- If using search icon -->
+/>
+```
+
+**Styling (via inline styles for Tailwind 4 compatibility):**
+
+```css
+background-color: hsl(var(--muted));
+border-color: hsl(var(--border));
+```
+
+**Note:** Due to Tailwind 4 color handling differences, the Input component uses inline `style` attributes rather than utility classes for background and border colors.
+
 ### Route Badges
 
 ```svelte
@@ -389,16 +410,35 @@ The Maintenance Widget displays planned subway closures. Each maintenance item u
 ### Cards
 
 ```svelte
-<Card>
+<Card.Root>
   <Card.Header>
-    <Card.Title>Title</Card.Title>
-    <Card.Description>Description</Card.Description>
+    <Card.Title class="text-lg flex items-center gap-2">
+      <Icon class="h-5 w-5 text-primary" />
+      Card Title
+    </Card.Title>
+    <Card.Description>
+      Brief description of the card's purpose.
+    </Card.Description>
   </Card.Header>
   <Card.Content>
     Content here
   </Card.Content>
-</Card>
+</Card.Root>
 ```
+
+**Card Header Pattern (Settings Page):**
+
+All settings cards follow a consistent header structure:
+
+1. **Icon** - Primary color, `h-5 w-5`
+2. **Title** - `text-lg`, inline with icon via `flex items-center gap-2`
+3. **Description** - Gray text below title
+
+**Card Content Buttons:**
+
+- Use `variant="outline"` for consistent button styling
+- Full width with `class="w-full gap-2"`
+- Icon + text layout with `h-4 w-4` icons
 
 ### Mode Cards (Transport Selection)
 
@@ -618,6 +658,25 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
 - Bottom nav items: Full flex width
 - Buttons: `h-10` (40px) minimum
 
+### Mobile Bottom Navigation
+
+```svelte
+<nav class="mobile-bottom-nav">
+  <a class="nav-item" href="/">
+    <Home class="h-5 w-5" />
+    <span>Home</span>
+  </a>
+  <!-- ... more items -->
+</nav>
+```
+
+**Guidelines:**
+
+- Labels should be **single words** for consistent alignment (e.g., "Alerts" not "Service Alerts")
+- Text centered under icons via `text-align: center`
+- Active state uses primary color
+- 4 tabs max for mobile usability
+
 ---
 
 ## 10. Dark Mode
@@ -826,6 +885,7 @@ Browse all TTC routes organized by category.
 | Popular Bus | 7, 25, 29, etc. | TTC Red |
 
 **Features:**
+
 - Bookmarked routes appear first in each category
 - Uses `savedRoutes` store for bookmark state
 
@@ -850,26 +910,31 @@ Horizontal scrollable tabs on mobile, wrapping rows on desktop.
 
 **Responsive Behavior:**
 
-| Viewport | Behavior | Visual Cue |
-|----------|----------|------------|
-| Mobile (<768px) | Horizontal scroll | Right fade gradient |
+| Viewport         | Behavior             | Visual Cue               |
+| ---------------- | -------------------- | ------------------------ |
+| Mobile (<768px)  | Horizontal scroll    | Right fade gradient      |
 | Desktop (≥768px) | Flex wrap, multi-row | No gradient, all visible |
 
 **CSS Pattern:**
+
 ```css
 .route-tabs {
   overflow-x: auto;
   scrollbar-width: none; /* Hide scrollbar */
   -webkit-overflow-scrolling: touch; /* Smooth iOS scroll */
 }
-.route-tabs::-webkit-scrollbar { display: none; }
+.route-tabs::-webkit-scrollbar {
+  display: none;
+}
 
 @media (min-width: 768px) {
   .route-tabs {
     overflow-x: visible;
     flex-wrap: wrap;
   }
-  .route-tabs-fade { display: none; }
+  .route-tabs-fade {
+    display: none;
+  }
 }
 ```
 
