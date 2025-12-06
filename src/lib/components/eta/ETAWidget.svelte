@@ -50,10 +50,6 @@
   onDestroy(() => {
     etaStore.stopAutoRefresh();
   });
-
-  function handleRefreshAll() {
-    etaStore.refreshAll();
-  }
 </script>
 
 {#if count > 0}
@@ -67,29 +63,17 @@
           <RefreshCw class="h-3 w-3 animate-spin text-muted-foreground" />
         {/if}
       </h2>
-      <div class="flex items-center gap-1">
+      {#if onAddStop}
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           class="h-8 text-xs"
-          onclick={handleRefreshAll}
-          disabled={loading}
+          onclick={onAddStop}
         >
-          <RefreshCw class={cn('h-3 w-3 mr-1', loading && 'animate-spin')} />
-          Refresh
+          <Plus class="h-3 w-3 mr-1" />
+          Add Stop
         </Button>
-        {#if onAddStop}
-          <Button
-            variant="outline"
-            size="sm"
-            class="h-8 text-xs"
-            onclick={onAddStop}
-          >
-            <Plus class="h-3 w-3 mr-1" />
-            Add Stop
-          </Button>
-        {/if}
-      </div>
+      {/if}
     </div>
 
     <!-- ETA Cards -->

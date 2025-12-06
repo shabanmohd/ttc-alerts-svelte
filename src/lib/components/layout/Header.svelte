@@ -3,6 +3,7 @@
   import { Button } from '$lib/components/ui/button';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
   import { lastUpdated, refreshAlerts, isConnected } from '$lib/stores/alerts';
+  import { etaStore } from '$lib/stores/eta';
   import { locale, setLocale, getSupportedLocales } from '$lib/i18n';
   import { localPreferences } from '$lib/stores/localPreferences';
   import { onMount } from 'svelte';
@@ -54,7 +55,11 @@
     if (isRefreshing) return;
     
     isRefreshing = true;
-    await refreshAlerts();
+    // Refresh both alerts and ETAs (context-aware - each handles its own state)
+    await Promise.all([
+      refreshAlerts(),
+      etaStore.refreshAll()
+    ]);
     isRefreshing = false;
   }
   
