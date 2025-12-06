@@ -8,6 +8,7 @@
   import { Toggle } from '$lib/components/ui/toggle';
   import { isAuthenticated, userName, signOut } from '$lib/stores/auth';
   import { activeFilters, setRouteFilter } from '$lib/stores/alerts';
+  import { savedRoutes } from '$lib/stores/savedRoutes';
   import { goto } from '$app/navigation';
 
   // Route data organized by category
@@ -254,6 +255,20 @@
   let searchQuery = $state('');
   let activeCategory = $state<string | null>(null);
 
+  // Get set of bookmarked route IDs for fast lookup
+  let bookmarkedRouteIds = $derived(new Set($savedRoutes.map(r => r.id)));
+
+  // Sort routes with bookmarked first
+  function sortWithBookmarksFirst<T extends { route: string }>(routes: T[]): T[] {
+    return [...routes].sort((a, b) => {
+      const aBookmarked = bookmarkedRouteIds.has(a.route);
+      const bBookmarked = bookmarkedRouteIds.has(b.route);
+      if (aBookmarked && !bBookmarked) return -1;
+      if (!aBookmarked && bBookmarked) return 1;
+      return 0; // Keep original order for routes with same bookmark status
+    });
+  }
+
   // All routes combined for search
   const allRoutesForSearch = [
     ...SUBWAY_LINES.map(r => ({ ...r, category: 'subway' })),
@@ -267,10 +282,10 @@
 
   let filteredRoutes = $derived(
     searchQuery.length > 0
-      ? allRoutesForSearch.filter(r => 
+      ? sortWithBookmarksFirst(allRoutesForSearch.filter(r => 
           r.route.toLowerCase().includes(searchQuery.toLowerCase()) ||
           r.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        ))
       : []
   );
 
@@ -300,10 +315,15 @@
   ];
 
   // Filtered categories based on selection (skip "all" for section display)
+  // Also sorts routes with bookmarked first
   let displayCategories = $derived(
-    activeCategory === 'all' || activeCategory === null
+    (activeCategory === 'all' || activeCategory === null
       ? categories.filter(c => c.id !== 'all')
       : categories.filter(c => c.id === activeCategory)
+    ).map(c => ({
+      ...c,
+      routes: sortWithBookmarksFirst(c.routes)
+    }))
   );
 </script>
 
