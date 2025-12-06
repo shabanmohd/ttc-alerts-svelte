@@ -208,49 +208,52 @@
 
   <!-- Route Filter Tabs -->
   {#if hasRoutes}
-    <div class="route-tabs" role="tablist" aria-label="Filter by route">
-      {#if isEditMode}
-        <!-- Edit Mode: Show removable chips -->
-        <div class="edit-mode-chips">
-          {#each $savedRoutes as route (route.id)}
-            <div class="saved-chip editing">
-              <RouteBadge route={route.id} size="sm" />
-              <button
-                type="button"
-                class="chip-remove"
-                onclick={() => handleRemoveRoute(route.id)}
-                aria-label="Remove {route.id}"
-              >
-                <X class="h-3 w-3" />
-              </button>
-            </div>
-          {/each}
-        </div>
-      {:else}
-        <!-- Normal Mode: Show tabs -->
-        <button
-          type="button"
-          role="tab"
-          class="route-tab"
-          class:active={selectedRouteFilter === null}
-          aria-selected={selectedRouteFilter === null}
-          onclick={() => selectedRouteFilter = null}
-        >
-          All saved routes
-        </button>
-        {#each $savedRoutes as route (route.id)}
+    <div class="route-tabs-container">
+      <div class="route-tabs" role="tablist" aria-label="Filter by route">
+        {#if isEditMode}
+          <!-- Edit Mode: Show removable chips -->
+          <div class="edit-mode-chips">
+            {#each $savedRoutes as route (route.id)}
+              <div class="saved-chip editing">
+                <RouteBadge route={route.id} size="sm" />
+                <button
+                  type="button"
+                  class="chip-remove"
+                  onclick={() => handleRemoveRoute(route.id)}
+                  aria-label="Remove {route.id}"
+                >
+                  <X class="h-3 w-3" />
+                </button>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <!-- Normal Mode: Show tabs -->
           <button
             type="button"
             role="tab"
             class="route-tab"
-            class:active={selectedRouteFilter === route.id}
-            aria-selected={selectedRouteFilter === route.id}
-            onclick={() => selectedRouteFilter = route.id}
+            class:active={selectedRouteFilter === null}
+            aria-selected={selectedRouteFilter === null}
+            onclick={() => selectedRouteFilter = null}
           >
-            <RouteBadge route={route.id} size="sm" />
+            All saved routes
           </button>
-        {/each}
-      {/if}
+          {#each $savedRoutes as route (route.id)}
+            <button
+              type="button"
+              role="tab"
+              class="route-tab"
+              class:active={selectedRouteFilter === route.id}
+              aria-selected={selectedRouteFilter === route.id}
+              onclick={() => selectedRouteFilter = route.id}
+            >
+              <RouteBadge route={route.id} size="sm" />
+            </button>
+          {/each}
+        {/if}
+      </div>
+      <div class="route-tabs-fade" aria-hidden="true"></div>
     </div>
   {/if}
 
@@ -353,10 +356,15 @@
     font-size: 0.875rem;
   }
 
+  /* Route tabs container with fade indicator on mobile */
+  .route-tabs-container {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
   .route-tabs {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
     overflow-x: auto;
     padding-bottom: 0.25rem;
     -webkit-overflow-scrolling: touch;
@@ -365,6 +373,29 @@
 
   .route-tabs::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Fade indicator on mobile to show more content */
+  .route-tabs-fade {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0.25rem;
+    width: 2rem;
+    pointer-events: none;
+    background: linear-gradient(to right, transparent, hsl(var(--background)));
+  }
+
+  /* Desktop: wrap instead of scroll, hide fade */
+  @media (min-width: 768px) {
+    .route-tabs {
+      flex-wrap: wrap;
+      overflow-x: visible;
+    }
+    
+    .route-tabs-fade {
+      display: none;
+    }
   }
 
   .route-tab {
@@ -396,8 +427,23 @@
 
   .edit-mode-chips {
     display: flex;
-    flex-wrap: wrap;
     gap: 0.5rem;
+    /* Mobile: scroll horizontally */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .edit-mode-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Desktop: wrap instead of scroll */
+  @media (min-width: 768px) {
+    .edit-mode-chips {
+      flex-wrap: wrap;
+      overflow-x: visible;
+    }
   }
 
   :global(.edit-button) {
