@@ -1,7 +1,8 @@
 <script lang="ts">
   import { 
     MapPin, Route, Settings, Download, Upload, Trash2,
-    Globe, Palette, Type, Zap, HelpCircle, Bug, Lightbulb, Info, Home, Check
+    Globe, Palette, Type, HelpCircle, Bug, Lightbulb, Info, Home, Check,
+    SlidersHorizontal, CirclePause
   } from 'lucide-svelte';
   import Header from '$lib/components/layout/Header.svelte';
   import { Button } from '$lib/components/ui/button';
@@ -310,7 +311,7 @@
   <Card.Root class="mb-6">
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
-        <Palette class="h-5 w-5 text-primary" />
+        <SlidersHorizontal class="h-5 w-5 text-primary" />
         Preferences
       </Card.Title>
       <Card.Description>
@@ -423,7 +424,7 @@
       <div class="flex items-center justify-between">
         <div class="space-y-0.5">
           <span id="reduce-motion-label" class="text-sm font-medium flex items-center gap-2">
-            <Zap class="h-4 w-4" />
+            <CirclePause class="h-4 w-4" />
             Reduce Motion
           </span>
           <p id="reduce-motion-desc" class="text-xs text-muted-foreground">Minimize animations</p>

@@ -8,6 +8,7 @@
 import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { preferencesStorage, type UserPreferences, DEFAULT_PREFERENCES } from '$lib/services/storage';
+import { setLocale } from '$lib/i18n';
 
 // Re-export types
 export type { UserPreferences };
@@ -34,6 +35,7 @@ function createLocalPreferencesStore() {
       applyTheme(prefs.theme);
       applyTextSize(prefs.textSize);
       applyReduceMotion(prefs.reduceMotion);
+      applyLanguage(prefs.language);
     } catch (error) {
       console.error('Failed to load preferences:', error);
     }
@@ -44,6 +46,9 @@ function createLocalPreferencesStore() {
     if (!browser) return;
     
     const root = document.documentElement;
+    
+    // Sync to localStorage for the blocking script in app.html
+    localStorage.setItem('ttc-theme', theme);
     
     if (theme === 'system') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -68,6 +73,12 @@ function createLocalPreferencesStore() {
     
     const root = document.documentElement;
     root.classList.toggle('reduce-motion', reduce);
+  }
+
+  // Apply language/locale
+  function applyLanguage(lang: UserPreferences['language']) {
+    if (!browser) return;
+    setLocale(lang);
   }
 
   // Auto-initialize
@@ -109,6 +120,7 @@ function createLocalPreferencesStore() {
         if (key === 'theme') applyTheme(value as UserPreferences['theme']);
         if (key === 'textSize') applyTextSize(value as UserPreferences['textSize']);
         if (key === 'reduceMotion') applyReduceMotion(value as boolean);
+        if (key === 'language') applyLanguage(value as UserPreferences['language']);
         
         return true;
       } catch (error) {
@@ -132,6 +144,7 @@ function createLocalPreferencesStore() {
         if (partial.theme !== undefined) applyTheme(partial.theme);
         if (partial.textSize !== undefined) applyTextSize(partial.textSize);
         if (partial.reduceMotion !== undefined) applyReduceMotion(partial.reduceMotion);
+        if (partial.language !== undefined) applyLanguage(partial.language);
         
         return true;
       } catch (error) {

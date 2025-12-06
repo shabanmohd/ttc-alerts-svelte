@@ -179,22 +179,32 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Stores (`src/lib/stores/`) 🆕 **Version B additions**
 
-| File               | Status | Purpose                                         | Version |
-| ------------------ | ------ | ----------------------------------------------- | ------- |
-| `alerts.ts`        | ✅     | Alerts state + date validation filter           | A & B   |
-| `auth.ts`          | ✅     | Custom WebAuthn auth store                      | A & B   |
-| `preferences.ts`   | ✅     | User preferences state                          | A & B   |
-| `visibility.ts`    | ✅     | Track document visibility for polling control   | **B**   |
-| `accessibility.ts` | ✅     | Text scaling and reduce motion settings         | **B**   |
-| `bookmarks.ts`     | ✅     | Bookmarked stops (localStorage + Supabase sync) | **B**   |
-| `eta.ts`           | ✅     | ETA state with auto-refresh & caching           | **B**   |
+| File                  | Status | Purpose                                                  | Version |
+| --------------------- | ------ | -------------------------------------------------------- | ------- |
+| `alerts.ts`           | ✅     | Alerts state + date validation filter                    | A & B   |
+| `auth.ts`             | ✅     | Custom WebAuthn auth store                               | A & B   |
+| `preferences.ts`      | ✅     | User preferences state (cloud sync)                      | A & B   |
+| `localPreferences.ts` | ✅     | Local preferences (theme, text size, reduce motion, i18n)| **B**   |
+| `visibility.ts`       | ✅     | Track document visibility for polling control            | **B**   |
+| `accessibility.ts`    | ✅     | Text scaling and reduce motion settings                  | **B**   |
+| `bookmarks.ts`        | ✅     | Bookmarked stops (localStorage + Supabase sync)          | **B**   |
+| `savedStops.ts`       | ✅     | Saved stops (IndexedDB storage)                          | **B**   |
+| `savedRoutes.ts`      | ✅     | Saved routes (IndexedDB storage)                         | **B**   |
+| `eta.ts`              | ✅     | ETA state with auto-refresh & caching                    | **B**   |
+
+### Services (`src/lib/services/`)
+
+| File          | Status | Purpose                                                | Version |
+| ------------- | ------ | ------------------------------------------------------ | ------- |
+| `webauthn.ts` | ✅     | WebAuthn browser API wrapper                           | A & B   |
+| `storage.ts`  | ✅     | IndexedDB storage for stops, routes, preferences       | **B**   |
 
 ### Configuration (`src/`)
 
-| File       | Status | Purpose                                     |
-| ---------- | ------ | ------------------------------------------- |
-| `app.html` | ✅     | HTML template, Lexend font via Google Fonts |
-| `app.d.ts` | ✅     | SvelteKit app type declarations             |
+| File       | Status | Purpose                                                     |
+| ---------- | ------ | ----------------------------------------------------------- |
+| `app.html` | ✅     | HTML template, Lexend font, blocking theme script           |
+| `app.d.ts` | ✅     | SvelteKit app type declarations                             |
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 

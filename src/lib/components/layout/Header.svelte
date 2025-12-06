@@ -4,6 +4,7 @@
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
   import { lastUpdated, refreshAlerts, isConnected } from '$lib/stores/alerts';
   import { locale, setLocale, getSupportedLocales } from '$lib/i18n';
+  import { localPreferences } from '$lib/stores/localPreferences';
   import { onMount } from 'svelte';
   
   let { 
@@ -25,8 +26,11 @@
   let mobileMenuOpen = $state(false);
   let tick = $state(0); // Force re-render for relative time
   
+  // Track dark mode state reactively
   $effect(() => {
-    isDark = document.documentElement.classList.contains('dark');
+    // Re-check when tick changes (which happens on theme toggle or interval)
+    tick; // dependency
+    isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
   });
   
   // Update relative time every 30 seconds
@@ -37,10 +41,15 @@
     return () => clearInterval(interval);
   });
   
-  function toggleTheme() {
-    isDark = !isDark;
-    document.documentElement.classList.toggle('dark', isDark);
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  async function toggleTheme() {
+    // Toggle between light and dark, respecting current state
+    const currentlyDark = document.documentElement.classList.contains('dark');
+    
+    // If on system, switch to explicit light/dark based on current appearance
+    // Otherwise toggle between light and dark
+    const newTheme = currentlyDark ? 'light' : 'dark';
+    await localPreferences.updatePreference('theme', newTheme);
+    tick++; // Trigger effect to update isDark state
   }
   
   async function handleRefresh() {

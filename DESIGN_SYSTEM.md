@@ -622,10 +622,43 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
 
 ## 10. Dark Mode
 
-Toggle with class on `<html>`:
+### Theme System
 
+The app supports three theme modes: **Light**, **Dark**, and **System** (default).
+
+**Architecture:**
+1. **Blocking script** in `app.html` prevents flash of wrong theme on page load
+2. **localStorage** (`ttc-theme`) stores the user's preference for fast sync access
+3. **IndexedDB** (`localPreferences` store) is the source of truth for all preferences
+4. **System preference** is detected via `window.matchMedia('(prefers-color-scheme: dark)')`
+
+**Theme Toggle Flow:**
 ```javascript
-document.documentElement.classList.toggle("dark");
+// In localPreferences store
+function applyTheme(theme: 'light' | 'dark' | 'system') {
+  localStorage.setItem('ttc-theme', theme); // Sync for blocking script
+  
+  if (theme === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', prefersDark);
+  } else {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }
+}
+```
+
+**Blocking Script (app.html):**
+```html
+<script>
+  (function() {
+    const stored = localStorage.getItem('ttc-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (stored === 'dark' || (stored === 'system' && prefersDark) || (!stored && prefersDark)) {
+      document.documentElement.classList.add('dark');
+    }
+  })();
+</script>
 ```
 
 All colors use CSS custom properties that update in `.dark` context.

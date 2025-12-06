@@ -45,21 +45,12 @@
     await initializeStorage();
     
     // Initialize stores from IndexedDB
+    // Note: localPreferences.init() handles theme application automatically
     await Promise.all([
       savedStops.init(),
       savedRoutes.init(),
       localPreferences.init()
     ]);
-    
-    // Initialize theme from localStorage
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
     
     // Initialize auth and subscribe to changes
     await initAuth();
