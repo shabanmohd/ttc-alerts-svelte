@@ -74,10 +74,6 @@
     etaStore.stopAutoRefresh();
   });
 
-  function handleRefreshAll() {
-    etaStore.refreshAll();
-  }
-
   function handleStopSelect(stop: TTCStop) {
     savedStops.add({
       id: stop.id,
@@ -226,16 +222,6 @@
         </h2>
       </div>
       <div class="header-right">
-        <Button
-          variant="ghost"
-          size="sm"
-          class="h-8 text-xs"
-          onclick={handleRefreshAll}
-          disabled={loading}
-        >
-          <RefreshCw class={cn('h-3 w-3 mr-1', loading && 'animate-spin')} />
-          Refresh
-        </Button>
         <Button 
           variant="ghost" 
           size="sm" 
