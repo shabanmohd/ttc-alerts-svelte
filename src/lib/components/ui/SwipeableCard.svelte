@@ -12,23 +12,25 @@
 
     // Fixed values matching edit mode exactly
     const DELETE_BUTTON_WIDTH = 40; // 2.5rem = 40px
-    const SWIPE_THRESHOLD = 30; // Trigger reveal after 30px swipe
+    const SWIPE_THRESHOLD = 20; // Trigger reveal after 20px swipe
 
     // State
     let translateX = $state(0);
     let isDragging = $state(false);
     let startX = $state(0);
     let startY = $state(0);
+    let lastX = $state(0);
     let containerRef = $state<HTMLDivElement | null>(null);
-    let isVerticalScroll = $state(false);
     let isRevealed = $state(false);
+    let directionLocked = $state<"horizontal" | "vertical" | null>(null);
 
     // Touch event handlers
     function handleTouchStart(e: TouchEvent) {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
+        lastX = startX;
         isDragging = true;
-        isVerticalScroll = false;
+        directionLocked = null;
     }
 
     function handleTouchMove(e: TouchEvent) {
@@ -38,53 +40,71 @@
         const currentY = e.touches[0].clientY;
         const diffX = currentX - startX;
         const diffY = currentY - startY;
+        const deltaX = currentX - lastX;
 
-        // First movement - determine direction
-        if (
-            !isVerticalScroll &&
-            Math.abs(diffY) > Math.abs(diffX) &&
-            Math.abs(diffY) > 5
-        ) {
-            isVerticalScroll = true;
-            isDragging = false;
-            return;
+        // Lock direction on first significant movement
+        if (!directionLocked) {
+            if (Math.abs(diffY) > 10 && Math.abs(diffY) > Math.abs(diffX)) {
+                // Vertical scroll - let browser handle it
+                directionLocked = "vertical";
+                isDragging = false;
+                return;
+            }
+            if (Math.abs(diffX) > 10) {
+                // Horizontal swipe - we handle it
+                directionLocked = "horizontal";
+            }
         }
 
-        // Horizontal swipe - prevent scrolling
-        if (Math.abs(diffX) > 5) {
+        // Only handle horizontal swipes
+        if (directionLocked === "horizontal") {
             e.preventDefault();
-        }
 
-        // Calculate new position
-        if (isRevealed) {
-            // Already revealed - allow swiping back
-            const newTranslateX = -DELETE_BUTTON_WIDTH + diffX;
+            // Calculate new position based on current state
+            let newTranslateX: number;
+
+            if (isRevealed) {
+                // Already revealed - start from revealed position
+                newTranslateX = -DELETE_BUTTON_WIDTH + diffX;
+            } else {
+                // Not revealed - start from 0
+                newTranslateX = diffX;
+            }
+
+            // Clamp the value
             translateX = Math.max(
                 -DELETE_BUTTON_WIDTH,
                 Math.min(0, newTranslateX),
             );
-        } else {
-            // Not revealed - only allow left swipe
-            if (diffX < 0) {
-                translateX = Math.max(diffX, -DELETE_BUTTON_WIDTH);
-            }
         }
+
+        lastX = currentX;
     }
 
     function handleTouchEnd() {
-        if (!isDragging) return;
+        if (!isDragging && directionLocked !== "horizontal") return;
         isDragging = false;
+        directionLocked = null;
 
-        // Snap logic
-        if (Math.abs(translateX) > SWIPE_THRESHOLD) {
+        // Snap logic based on position
+        if (translateX < -SWIPE_THRESHOLD) {
             // Show delete button
             translateX = -DELETE_BUTTON_WIDTH;
             isRevealed = true;
+            // Close other open cards
+            closeOtherCards();
         } else {
             // Hide delete button
             translateX = 0;
             isRevealed = false;
         }
+    }
+
+    // Close other cards
+    function closeOtherCards() {
+        document.dispatchEvent(
+            new CustomEvent("swipecard:close", { detail: containerRef }),
+        );
     }
 
     // Click outside to close
@@ -108,9 +128,10 @@
         }, 150);
     }
 
-    // Close other cards when this one opens (via event)
-    function closeCard() {
-        if (isRevealed) {
+    // Close this card when another opens
+    function handleOtherCardOpened(event: CustomEvent) {
+        // Only close if it's a different card
+        if (event.detail !== containerRef && isRevealed) {
             translateX = 0;
             isRevealed = false;
         }
@@ -118,19 +139,18 @@
 
     onMount(() => {
         document.addEventListener("click", handleClickOutside);
-        document.addEventListener("swipecard:close", closeCard);
+        document.addEventListener(
+            "swipecard:close",
+            handleOtherCardOpened as EventListener,
+        );
     });
 
     onDestroy(() => {
         document.removeEventListener("click", handleClickOutside);
-        document.removeEventListener("swipecard:close", closeCard);
-    });
-
-    // When revealed, dispatch event to close other cards
-    $effect(() => {
-        if (isRevealed) {
-            document.dispatchEvent(new CustomEvent("swipecard:close"));
-        }
+        document.removeEventListener(
+            "swipecard:close",
+            handleOtherCardOpened as EventListener,
+        );
     });
 </script>
 
@@ -141,6 +161,7 @@
     ontouchstart={handleTouchStart}
     ontouchmove={handleTouchMove}
     ontouchend={handleTouchEnd}
+    ontouchcancel={handleTouchEnd}
 >
     <!-- Delete button (matching edit mode exactly) -->
     <div class="delete-action">
@@ -168,7 +189,7 @@
     .swipeable-container {
         position: relative;
         overflow: hidden;
-        touch-action: pan-y;
+        touch-action: pan-y pinch-zoom;
     }
 
     .swipeable-content {
