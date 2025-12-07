@@ -6,7 +6,6 @@
   import AlertCard from './AlertCard.svelte';
   import RouteSearch from './RouteSearch.svelte';
   import RouteBadge from './RouteBadge.svelte';
-  import FullscreenSearchModal from '$lib/components/ui/FullscreenSearchModal.svelte';
   import { Button } from '$lib/components/ui/button';
   import { Skeleton } from '$lib/components/ui/skeleton';
   import { threadsWithAlerts, isLoading, refreshAlerts } from '$lib/stores/alerts';
@@ -16,8 +15,6 @@
   // Route filter state - which specific route to show (null = all saved routes)
   let selectedRouteFilter = $state<string | null>(null);
   
-  // Search modal state
-  let showSearchModal = $state(false);
   let isEditMode = $state(false);
   let isRefreshing = $state(false);
   
@@ -30,17 +27,6 @@
       isRefreshing = false;
     }
   }
-  
-  // Check if mobile
-  let isMobile = $state(false);
-  
-  onMount(() => {
-    if (browser) {
-      // Check if mobile
-      isMobile = window.innerWidth < 640;
-    }
-  });
-  
   // Handle route removal
   function handleRemoveRoute(routeId: string) {
     savedRoutes.remove(routeId);
@@ -63,12 +49,6 @@
     if (isEditMode) {
       selectedRouteFilter = null;
     }
-  }
-
-  function openSearchModal(event: FocusEvent) {
-    showSearchModal = true;
-    // Blur trigger so keyboard dismisses, then modal input can get focus
-    (event.target as HTMLInputElement)?.blur();
   }
   
   // Get saved route IDs
@@ -145,57 +125,12 @@
   }
 </script>
 
-<!-- Fullscreen Search Modal (Mobile) -->
-<FullscreenSearchModal 
-  open={showSearchModal} 
-  title="Add Routes"
-  onClose={() => showSearchModal = false}
->
-  <RouteSearch 
-    placeholder="Search by route number or name..."
-    onClose={() => showSearchModal = false}
-    onSelect={() => showSearchModal = false}
-    autoFocus={true}
-  />
-  
-  {#if hasRoutes}
-    <div class="modal-saved-routes">
-      <h3 class="modal-section-title">Saved Routes ({$savedRoutes.length}/20)</h3>
-      <div class="saved-chips">
-        {#each $savedRoutes as route (route.id)}
-          <div class="saved-chip">
-            <RouteBadge route={route.id} size="sm" />
-            <button
-              type="button"
-              class="chip-remove"
-              onclick={() => handleRemoveRoute(route.id)}
-              aria-label="Remove {route.id}"
-            >
-              <X class="h-3 w-3" />
-            </button>
-          </div>
-        {/each}
-      </div>
-    </div>
-  {/if}
-</FullscreenSearchModal>
+
 
 <div class="my-route-alerts">
-  <!-- Search Bar (Always Visible) -->
+  <!-- Search Bar with Inline Dropdown -->
   <div class="search-section">
-    {#if isMobile}
-      <!-- Mobile: Tap to open fullscreen modal -->
-      <input 
-        type="text"
-        readonly
-        class="mobile-search-trigger"
-        placeholder="Search routes by number or name..."
-        onfocus={openSearchModal}
-      />
-    {:else}
-      <!-- Desktop: Inline search -->
-      <RouteSearch placeholder="Search by route number or name..." />
-    {/if}
+    <RouteSearch placeholder="Search by route number or name..." />
     {#if hasRoutes}
       <Button 
         variant="ghost" 
@@ -341,33 +276,7 @@
     margin-bottom: 1rem;
   }
 
-  .mobile-search-trigger {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
-    min-width: 0;
-    padding: 0.625rem 0.75rem;
-    background-color: hsl(var(--muted));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all 0.15s;
-    font-size: 0.875rem;
-    color: hsl(var(--muted-foreground));
-    caret-color: transparent;
-  }
 
-  .mobile-search-trigger::placeholder {
-    color: hsl(var(--muted-foreground));
-  }
-
-  .mobile-search-trigger:hover,
-  .mobile-search-trigger:focus {
-    border-color: hsl(var(--ring));
-    background-color: hsl(var(--muted) / 0.8);
-    outline: none;
-  }
 
   /* Route tabs container with fade indicator on mobile */
   .route-tabs-container {
@@ -498,18 +407,7 @@
     color: hsl(var(--destructive-foreground));
   }
 
-  .modal-saved-routes {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid hsl(var(--border));
-  }
 
-  .modal-section-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: hsl(var(--foreground));
-    margin-bottom: 0.75rem;
-  }
 
   .empty-state {
     display: flex;

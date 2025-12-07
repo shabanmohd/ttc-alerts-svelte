@@ -6,7 +6,6 @@
   import { etaStore, etaList, isAnyLoading } from '$lib/stores/eta';
   import StopSearch from '$lib/components/stops/StopSearch.svelte';
   import ETACard from '$lib/components/eta/ETACard.svelte';
-  import FullscreenSearchModal from '$lib/components/ui/FullscreenSearchModal.svelte';
   import { Button } from '$lib/components/ui/button';
   import { cn } from '$lib/utils';
   import type { TTCStop } from '$lib/data/stops-db';
@@ -26,16 +25,7 @@
   let etas = $state<typeof $etaList>([]);
   let loading = $state(false);
   
-  // Search modal state
-  let showSearchModal = $state(false);
   let isEditMode = $state(false);
-  
-  // Check if mobile
-  let isMobile = $state(false);
-  
-  // Nearby button state
-  let isLoadingNearby = $state(false);
-  let isStopsInitialized = $state(false);
   let nearbyError = $state<string | null>(null);
 
   // Subscribe to stores
@@ -56,17 +46,8 @@
     };
   });
 
-  // Check if mobile on mount and initialize stops DB
+  // Initialize on mount
   onMount(async () => {
-    if (browser) {
-      isMobile = window.innerWidth < 640;
-      try {
-        await initStopsDB();
-        isStopsInitialized = true;
-      } catch (e) {
-        console.error('Failed to initialize stops database:', e);
-      }
-    }
     etaStore.startAutoRefresh();
   });
 
@@ -80,7 +61,6 @@
       name: stop.name,
       routes: stop.routes
     });
-    showSearchModal = false;
   }
 
   function handleRemoveStop(stopId: string) {
@@ -91,128 +71,20 @@
     isEditMode = !isEditMode;
   }
 
-  function openSearchModal(event: FocusEvent) {
-    showSearchModal = true;
-    // Blur trigger so keyboard dismisses, then modal input can get focus
-    (event.target as HTMLInputElement)?.blur();
-  }
-  
-  async function handleNearbyClick() {
-    if (!navigator.geolocation) {
-      nearbyError = 'Geolocation not supported';
-      return;
-    }
-
-    isLoadingNearby = true;
-    nearbyError = null;
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const nearby = await findNearbyStops(
-            position.coords.latitude,
-            position.coords.longitude,
-            1, // 1km radius
-            15
-          );
-          // Open the search modal with nearby results
-          showSearchModal = true;
-        } catch (e) {
-          nearbyError = 'Failed to find nearby stops';
-          console.error(e);
-        } finally {
-          isLoadingNearby = false;
-        }
-      },
-      (geoError) => {
-        isLoadingNearby = false;
-        if (geoError.code === geoError.PERMISSION_DENIED) {
-          nearbyError = 'Location access denied';
-        } else {
-          nearbyError = 'Could not get location';
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }
-
   let hasStops = $derived(count > 0);
 </script>
 
-<!-- Fullscreen Search Modal (Mobile) -->
-<FullscreenSearchModal 
-  open={showSearchModal} 
-  title="Add Stops"
-  onClose={() => showSearchModal = false}
->
-  <StopSearch 
-    placeholder="Search by name or stop ID..."
-    showNearbyButton={true}
-    showBookmarkButton={true}
-    onSelect={handleStopSelect}
-    autoFocus={true}
-  />
-  
-  {#if hasStops}
-    <div class="modal-saved-stops">
-      <h3 class="modal-section-title">Saved Stops ({count}/20)</h3>
-      <div class="saved-stops-list">
-        {#each $savedStops as stop (stop.id)}
-          <div class="saved-stop-item">
-            <div class="stop-info">
-              <span class="stop-name">{stop.name}</span>
-              <span class="stop-routes">{stop.routes.slice(0, 3).join(', ')}{stop.routes.length > 3 ? '...' : ''}</span>
-            </div>
-            <button
-              type="button"
-              class="remove-button"
-              onclick={() => handleRemoveStop(stop.id)}
-              aria-label="Remove {stop.name}"
-            >
-              <X class="h-4 w-4" />
-            </button>
-          </div>
-        {/each}
-      </div>
-    </div>
-  {/if}
-</FullscreenSearchModal>
+
 
 <div class={cn('my-stops', className)}>
-  <!-- Search Bar (Always Visible) -->
+  <!-- Search Bar with Inline Dropdown -->
   <div class="search-section">
-    {#if isMobile}
-      <!-- Mobile: Tap to open fullscreen modal -->
-      <input 
-        type="text"
-        readonly
-        class="mobile-search-trigger"
-        placeholder="Search stops by name or ID..."
-        onfocus={openSearchModal}
-      />
-      <Button
-        variant="outline"
-        size="icon"
-        onclick={handleNearbyClick}
-        disabled={!isStopsInitialized || isLoadingNearby}
-        aria-label="Find nearby stops"
-        title="Find stops near me"
-      >
-        {#if isLoadingNearby}
-          <Loader2 class="h-4 w-4 animate-spin" />
-        {:else}
-          <MapPin class="h-4 w-4" />
-        {/if}
-      </Button>
-    {:else}
-      <!-- Desktop: Inline search -->
-      <StopSearch 
-        placeholder="Search by name or stop ID..."
-        showNearbyButton={true}
-        showBookmarkButton={true}
-        onSelect={handleStopSelect}
-      />
-    {/if}
+    <StopSearch 
+      placeholder="Search by name or stop ID..."
+      showNearbyButton={true}
+      showBookmarkButton={true}
+      onSelect={handleStopSelect}
+    />
   </div>
 
   {#if hasStops}
@@ -296,42 +168,7 @@
     z-index: 50;
   }
 
-  .mobile-search-trigger {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
-    padding: 0.625rem 0.75rem;
-    background-color: hsl(var(--muted));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all 0.15s;
-    font-size: 0.875rem;
-    color: hsl(var(--muted-foreground));
-    caret-color: transparent;
-  }
 
-  .mobile-search-trigger::placeholder {
-    color: hsl(var(--muted-foreground));
-  }
-
-  .mobile-search-trigger:hover,
-  .mobile-search-trigger:focus {
-    border-color: hsl(var(--ring));
-    background-color: hsl(var(--muted) / 0.8);
-    outline: none;
-  }
-
-  .trigger-text {
-    flex: 1;
-    text-align: left;
-    color: hsl(var(--muted-foreground));
-    font-size: 0.875rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 
   .stops-header {
     display: flex;
@@ -400,73 +237,7 @@
     color: hsl(var(--destructive-foreground));
   }
 
-  .modal-saved-stops {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid hsl(var(--border));
-  }
 
-  .modal-section-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: hsl(var(--foreground));
-    margin-bottom: 0.75rem;
-  }
-
-  .saved-stops-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .saved-stop-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.625rem 0.75rem;
-    background-color: hsl(var(--muted) / 0.5);
-    border-radius: var(--radius);
-  }
-
-  .stop-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    min-width: 0;
-  }
-
-  .stop-name {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: hsl(var(--foreground));
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .stop-routes {
-    font-size: 0.75rem;
-    color: hsl(var(--muted-foreground));
-  }
-
-  .remove-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 50%;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: hsl(var(--muted-foreground));
-    transition: all 0.15s;
-  }
-
-  .remove-button:hover {
-    background-color: hsl(var(--destructive));
-    color: hsl(var(--destructive-foreground));
-  }
 
   .empty-state {
     display: flex;
