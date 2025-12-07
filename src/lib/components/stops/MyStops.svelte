@@ -1,42 +1,49 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { MapPin, Clock, Plus, RefreshCw, X, Pencil, Search, Loader2 } from 'lucide-svelte';
-  import { browser } from '$app/environment';
-  import { savedStops, savedStopsCount } from '$lib/stores/savedStops';
-  import { etaStore, etaList, isAnyLoading } from '$lib/stores/eta';
-  import StopSearch from '$lib/components/stops/StopSearch.svelte';
-  import ETACard from '$lib/components/eta/ETACard.svelte';
-  import { Button } from '$lib/components/ui/button';
-  import { cn } from '$lib/utils';
-  import type { TTCStop } from '$lib/data/stops-db';
-  import { initStopsDB, findNearbyStops } from '$lib/data/stops-db';
+  import { onMount, onDestroy } from "svelte";
+  import {
+    MapPin,
+    Clock,
+    Plus,
+    RefreshCw,
+    X,
+    Pencil,
+    Search,
+    Loader2,
+  } from "lucide-svelte";
+  import { browser } from "$app/environment";
+  import { savedStops, savedStopsCount } from "$lib/stores/savedStops";
+  import { etaStore, etaList, isAnyLoading } from "$lib/stores/eta";
+  import StopSearch from "$lib/components/stops/StopSearch.svelte";
+  import ETACard from "$lib/components/eta/ETACard.svelte";
+  import SwipeableCard from "$lib/components/ui/SwipeableCard.svelte";
+  import { Button } from "$lib/components/ui/button";
+  import { cn } from "$lib/utils";
+  import type { TTCStop } from "$lib/data/stops-db";
+  import { initStopsDB, findNearbyStops } from "$lib/data/stops-db";
 
   interface Props {
     maxDisplay?: number;
     class?: string;
   }
 
-  let { 
-    maxDisplay = 10,
-    class: className = ''
-  }: Props = $props();
+  let { maxDisplay = 10, class: className = "" }: Props = $props();
 
   let count = $state(0);
   let etas = $state<typeof $etaList>([]);
   let loading = $state(false);
-  
+
   let isEditMode = $state(false);
   let nearbyError = $state<string | null>(null);
 
   // Subscribe to stores
   $effect(() => {
-    const unsubscribeCount = savedStopsCount.subscribe(value => {
+    const unsubscribeCount = savedStopsCount.subscribe((value) => {
       count = value;
     });
-    const unsubscribeEtas = etaList.subscribe(value => {
+    const unsubscribeEtas = etaList.subscribe((value) => {
       etas = value;
     });
-    const unsubscribeLoading = isAnyLoading.subscribe(value => {
+    const unsubscribeLoading = isAnyLoading.subscribe((value) => {
       loading = value;
     });
     return () => {
@@ -59,7 +66,7 @@
     savedStops.add({
       id: stop.id,
       name: stop.name,
-      routes: stop.routes
+      routes: stop.routes,
     });
   }
 
@@ -74,12 +81,10 @@
   let hasStops = $derived(count > 0);
 </script>
 
-
-
-<div class={cn('my-stops', className)}>
+<div class={cn("my-stops", className)}>
   <!-- Search Bar with Inline Dropdown -->
   <div class="search-section">
-    <StopSearch 
+    <StopSearch
       placeholder="Search by name or stop ID..."
       showNearbyButton={true}
       showBookmarkButton={true}
@@ -100,9 +105,9 @@
         </h2>
       </div>
       <div class="header-right">
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           class="h-8 text-xs"
           onclick={toggleEditMode}
         >
@@ -119,19 +124,21 @@
     <!-- ETA Cards -->
     <div class="eta-cards-section">
       {#each etas.slice(0, maxDisplay) as eta (eta.stopId)}
-        <div class="eta-card-wrapper" class:editing={isEditMode}>
-          <ETACard {eta} showRemove={false} class="flex-1" />
-          {#if isEditMode}
-            <button
-              type="button"
-              class="card-remove-button"
-              onclick={() => handleRemoveStop(eta.stopId)}
-              aria-label="Remove stop"
-            >
-              <X class="h-4 w-4" />
-            </button>
-          {/if}
-        </div>
+        <SwipeableCard onDelete={() => handleRemoveStop(eta.stopId)}>
+          <div class="eta-card-wrapper" class:editing={isEditMode}>
+            <ETACard {eta} showRemove={false} class="flex-1" />
+            {#if isEditMode}
+              <button
+                type="button"
+                class="card-remove-button"
+                onclick={() => handleRemoveStop(eta.stopId)}
+                aria-label="Remove stop"
+              >
+                <X class="h-4 w-4" />
+              </button>
+            {/if}
+          </div>
+        </SwipeableCard>
       {/each}
     </div>
 
@@ -148,7 +155,8 @@
       </div>
       <h3 class="empty-state-title">Add your first stop</h3>
       <p class="empty-state-description">
-        Use the search bar above to find stops. Tap the location icon to find nearby stops.
+        Use the search bar above to find stops. Tap the location icon to find
+        nearby stops.
       </p>
     </div>
   {/if}
@@ -167,8 +175,6 @@
     position: relative;
     z-index: 50;
   }
-
-
 
   .stops-header {
     display: flex;
@@ -237,8 +243,6 @@
     color: hsl(var(--destructive-foreground));
   }
 
-
-
   .empty-state {
     display: flex;
     flex-direction: column;
@@ -250,7 +254,7 @@
     border-radius: var(--radius);
     border: 1px dashed hsl(var(--border));
   }
-  
+
   .empty-state-icon {
     display: flex;
     align-items: center;
@@ -262,14 +266,14 @@
     color: hsl(var(--primary));
     margin-bottom: 1rem;
   }
-  
+
   .empty-state-title {
     font-size: 1.125rem;
     font-weight: 600;
     color: hsl(var(--foreground));
     margin-bottom: 0.5rem;
   }
-  
+
   .empty-state-description {
     font-size: 0.875rem;
     color: hsl(var(--muted-foreground));
