@@ -254,10 +254,12 @@
     align-items: center;
     justify-content: center;
     text-align: center;
+    width: 100%;
     padding: 3rem 1.5rem;
     background-color: hsl(var(--muted) / 0.3);
     border-radius: var(--radius);
     border: 1px dashed hsl(var(--border));
+    cursor: pointer;
   }
 
   .empty-state-icon {

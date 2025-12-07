@@ -42,10 +42,16 @@
 	let containerRef = $state<HTMLDivElement | null>(null);
 	let highlightedIndex = $state(-1);
 	let hasSearched = $state(false);
+	let isHighlighted = $state(false);
 
 	// Export focus function for parent components
 	export function focus() {
 		inputRef?.focus();
+		// Trigger highlight animation
+		isHighlighted = true;
+		setTimeout(() => {
+			isHighlighted = false;
+		}, 600);
 	}
 
 	// Handle click outside to close dropdown
@@ -276,7 +282,7 @@
 				onkeydown={handleKeydown}
 				{placeholder}
 				disabled={!isInitialized}
-				class="pl-9 pr-8"
+				class="pl-9 pr-8 {isHighlighted ? 'focus-highlight' : ''}"
 				aria-label="Search for a TTC stop"
 				aria-autocomplete="list"
 				aria-expanded={showResults}
@@ -427,5 +433,25 @@
 	:global(.light) .stop-result-item.highlighted,
 	:root:not(.dark) .stop-result-item.highlighted {
 		background-color: rgba(0, 0, 0, 0.08);
+	}
+
+	/* Focus highlight animation */
+	:global(.focus-highlight) {
+		animation: focus-glow 1.5s ease-in-out forwards;
+	}
+
+	@keyframes focus-glow {
+		0% {
+			border-color: hsl(var(--border));
+			box-shadow: 0 0 0 0px hsl(var(--primary) / 0);
+		}
+		40% {
+			border-color: hsl(var(--primary));
+			box-shadow: 0 0 0 3px hsl(var(--primary) / 0.35);
+		}
+		100% {
+			border-color: hsl(var(--border));
+			box-shadow: 0 0 0 0px hsl(var(--primary) / 0);
+		}
 	}
 </style>

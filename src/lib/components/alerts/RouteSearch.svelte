@@ -274,10 +274,16 @@
   let inputRef = $state<HTMLInputElement | null>(null);
   let containerRef = $state<HTMLDivElement | null>(null);
   let highlightedIndex = $state(-1);
+  let isHighlighted = $state(false);
 
   // Export focus function for parent components
   export function focus() {
     inputRef?.focus();
+    // Trigger highlight animation
+    isHighlighted = true;
+    setTimeout(() => {
+      isHighlighted = false;
+    }, 600);
   }
 
   // Handle click outside to close dropdown
@@ -423,7 +429,7 @@
       onfocus={handleFocus}
       onblur={handleBlur}
       onkeydown={handleKeydown}
-      class="pl-9 pr-8"
+      class="pl-9 pr-8 {isHighlighted ? 'focus-highlight' : ''}"
       autocomplete="off"
       aria-label="Search routes"
       aria-controls="route-results"
