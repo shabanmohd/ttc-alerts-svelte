@@ -11,15 +11,14 @@
     let { onDelete, children }: Props = $props();
 
     // Fixed values matching edit mode exactly
-    const DELETE_BUTTON_WIDTH = 40; // 2.5rem = 40px
-    const SWIPE_THRESHOLD = 20; // Trigger reveal after 20px swipe
+    const DELETE_BUTTON_WIDTH = 48; // 2.5rem + gap = ~48px total
+    const SWIPE_THRESHOLD = 20;
 
     // State
     let translateX = $state(0);
     let isDragging = $state(false);
     let startX = $state(0);
     let startY = $state(0);
-    let lastX = $state(0);
     let containerRef = $state<HTMLDivElement | null>(null);
     let isRevealed = $state(false);
     let directionLocked = $state<"horizontal" | "vertical" | null>(null);
@@ -28,7 +27,6 @@
     function handleTouchStart(e: TouchEvent) {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
-        lastX = startX;
         isDragging = true;
         directionLocked = null;
     }
@@ -40,45 +38,34 @@
         const currentY = e.touches[0].clientY;
         const diffX = currentX - startX;
         const diffY = currentY - startY;
-        const deltaX = currentX - lastX;
 
         // Lock direction on first significant movement
         if (!directionLocked) {
             if (Math.abs(diffY) > 10 && Math.abs(diffY) > Math.abs(diffX)) {
-                // Vertical scroll - let browser handle it
                 directionLocked = "vertical";
                 isDragging = false;
                 return;
             }
             if (Math.abs(diffX) > 10) {
-                // Horizontal swipe - we handle it
                 directionLocked = "horizontal";
             }
         }
 
-        // Only handle horizontal swipes
         if (directionLocked === "horizontal") {
             e.preventDefault();
 
-            // Calculate new position based on current state
             let newTranslateX: number;
-
             if (isRevealed) {
-                // Already revealed - start from revealed position
                 newTranslateX = -DELETE_BUTTON_WIDTH + diffX;
             } else {
-                // Not revealed - start from 0
                 newTranslateX = diffX;
             }
 
-            // Clamp the value
             translateX = Math.max(
                 -DELETE_BUTTON_WIDTH,
                 Math.min(0, newTranslateX),
             );
         }
-
-        lastX = currentX;
     }
 
     function handleTouchEnd() {
@@ -86,28 +73,22 @@
         isDragging = false;
         directionLocked = null;
 
-        // Snap logic based on position
         if (translateX < -SWIPE_THRESHOLD) {
-            // Show delete button
             translateX = -DELETE_BUTTON_WIDTH;
             isRevealed = true;
-            // Close other open cards
             closeOtherCards();
         } else {
-            // Hide delete button
             translateX = 0;
             isRevealed = false;
         }
     }
 
-    // Close other cards
     function closeOtherCards() {
         document.dispatchEvent(
             new CustomEvent("swipecard:close", { detail: containerRef }),
         );
     }
 
-    // Click outside to close
     function handleClickOutside(event: MouseEvent) {
         if (
             containerRef &&
@@ -119,7 +100,6 @@
         }
     }
 
-    // Delete handler
     function handleDelete() {
         translateX = 0;
         isRevealed = false;
@@ -128,9 +108,7 @@
         }, 150);
     }
 
-    // Close this card when another opens
     function handleOtherCardOpened(event: CustomEvent) {
-        // Only close if it's a different card
         if (event.detail !== containerRef && isRevealed) {
             translateX = 0;
             isRevealed = false;
@@ -163,66 +141,61 @@
     ontouchend={handleTouchEnd}
     ontouchcancel={handleTouchEnd}
 >
-    <!-- Delete button (matching edit mode exactly) -->
-    <div class="delete-action">
+    <!-- Wrapper that mimics .eta-card-wrapper.editing background -->
+    <div class="swipe-wrapper" class:active={isRevealed || translateX < 0}>
+        <!-- Card content that slides -->
+        <div
+            class="swipeable-content"
+            class:dragging={isDragging}
+            style="transform: translateX({translateX}px)"
+        >
+            {@render children()}
+        </div>
+
+        <!-- Delete button (matching edit mode exactly) -->
         <button
             type="button"
             onclick={handleDelete}
             aria-label="Remove stop"
             class="delete-button"
+            class:visible={isRevealed || translateX < 0}
         >
             <X class="h-4 w-4" />
         </button>
-    </div>
-
-    <!-- Swipeable content -->
-    <div
-        class="swipeable-content"
-        class:dragging={isDragging}
-        style="transform: translateX({translateX}px)"
-    >
-        {@render children()}
     </div>
 </div>
 
 <style>
     .swipeable-container {
         position: relative;
-        overflow: hidden;
         touch-action: pan-y pinch-zoom;
     }
 
+    /* Wrapper mimics .eta-card-wrapper.editing */
+    .swipe-wrapper {
+        display: flex;
+        align-items: stretch;
+        gap: 0.5rem; /* Same gap as edit mode */
+        border-radius: var(--radius);
+        transition:
+            background-color 0.15s ease-out,
+            padding 0.15s ease-out;
+    }
+
+    .swipe-wrapper.active {
+        background-color: hsl(var(--destructive) / 0.05);
+        padding: 0.25rem;
+    }
+
     .swipeable-content {
+        flex: 1;
+        min-width: 0;
         transition: transform 0.2s ease-out;
         will-change: transform;
-        position: relative;
-        z-index: 2;
-        background: hsl(var(--background));
     }
 
     .swipeable-content.dragging {
         transition: none;
-    }
-
-    /* Delete action container - positioned behind content */
-    .delete-action {
-        position: absolute;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        width: 2.5rem; /* Matches edit mode exactly */
-        display: flex;
-        align-items: stretch;
-        justify-content: center;
-        z-index: 1;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.15s ease-out;
-    }
-
-    .swipeable-container.revealed .delete-action {
-        opacity: 1;
-        pointer-events: auto;
     }
 
     /* Delete button - exact copy of .card-remove-button from edit mode */
@@ -230,13 +203,19 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 100%;
+        width: 0;
+        overflow: hidden;
         background-color: hsl(var(--destructive) / 0.1);
         border: none;
         border-radius: var(--radius);
         cursor: pointer;
         color: hsl(var(--destructive));
-        transition: all 0.15s;
+        transition: all 0.2s ease-out;
+        flex-shrink: 0;
+    }
+
+    .delete-button.visible {
+        width: 2.5rem; /* Same as edit mode */
     }
 
     .delete-button:hover,
