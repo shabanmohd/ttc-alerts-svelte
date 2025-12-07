@@ -435,23 +435,5 @@
 		background-color: rgba(0, 0, 0, 0.08);
 	}
 
-	/* Focus highlight animation */
-	:global(.focus-highlight) {
-		animation: focus-glow 1.5s ease-in-out forwards;
-	}
-
-	@keyframes focus-glow {
-		0% {
-			border-color: hsl(var(--border));
-			box-shadow: 0 0 0 0px hsl(var(--primary) / 0);
-		}
-		40% {
-			border-color: hsl(var(--primary));
-			box-shadow: 0 0 0 3px hsl(var(--primary) / 0.35);
-		}
-		100% {
-			border-color: hsl(var(--border));
-			box-shadow: 0 0 0 0px hsl(var(--primary) / 0);
-		}
-	}
+	/* Focus highlight animation is defined globally in layout.css */
 </style>

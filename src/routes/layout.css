@@ -1565,7 +1565,8 @@ header.sticky {
 
 /* Subtle bounce for feedback */
 @keyframes subtleBounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -1585,7 +1586,8 @@ header.sticky {
 
 /* Pulse for loading states */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -1595,13 +1597,21 @@ header.sticky {
 
 /* Shake for errors */
 @keyframes shake {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0);
   }
-  10%, 30%, 50%, 70%, 90% {
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
     transform: translateX(-4px);
   }
-  20%, 40%, 60%, 80% {
+  20%,
+  40%,
+  60%,
+  80% {
     transform: translateX(4px);
   }
 }
@@ -1670,11 +1680,21 @@ header.sticky {
 }
 
 /* Staggered animation delays for lists */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+.stagger-5 {
+  animation-delay: 0.25s;
+}
 
 /* Default transition for interactive elements */
 .transition-default {
@@ -1682,7 +1702,8 @@ header.sticky {
 }
 
 .transition-colors {
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .transition-transform {
@@ -1691,6 +1712,29 @@ header.sticky {
 
 .transition-opacity {
   transition: opacity 0.15s ease;
+}
+
+/* Focus highlight animation for input autofocus */
+.focus-highlight {
+  animation: focusPulse 0.6s ease-out forwards;
+}
+
+@keyframes focusPulse {
+  0% {
+    border-color: hsl(var(--border));
+    box-shadow: 0 0 0 0px hsl(var(--primary) / 0);
+    transform: scale(1);
+  }
+  30% {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+    transform: scale(1.01);
+  }
+  100% {
+    border-color: hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 0 0px hsl(var(--primary) / 0);
+    transform: scale(1);
+  }
 }
 
 .refresh-pulse {

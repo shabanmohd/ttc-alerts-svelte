@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Bookmark, MapPin, ChevronRight, X } from 'lucide-svelte';
-  import { savedStops, savedStopsCount } from '$lib/stores/savedStops';
-  import RouteBadge from '$lib/components/alerts/RouteBadge.svelte';
-  import { Button } from '$lib/components/ui/button';
+  import { Bookmark, MapPin, ChevronRight, X } from "lucide-svelte";
+  import { savedStops, savedStopsCount } from "$lib/stores/savedStops";
+  import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
+  import { Button } from "$lib/components/ui/button";
 
   interface Props {
     onStopClick?: (stopId: string) => void;
@@ -10,21 +10,17 @@
     maxDisplay?: number;
   }
 
-  let { 
-    onStopClick,
-    onViewAll,
-    maxDisplay = 3
-  }: Props = $props();
+  let { onStopClick, onViewAll, maxDisplay = 3 }: Props = $props();
 
   let stops = $state<typeof $savedStops>([]);
   let count = $state(0);
 
   // Subscribe to saved stops
   $effect(() => {
-    const unsubscribeStops = savedStops.subscribe(value => {
+    const unsubscribeStops = savedStops.subscribe((value) => {
       stops = value;
     });
-    const unsubscribeCount = savedStopsCount.subscribe(value => {
+    const unsubscribeCount = savedStopsCount.subscribe((value) => {
       count = value;
     });
     return () => {
@@ -66,7 +62,9 @@
             onclick={() => onStopClick?.(stop.id)}
             class="flex items-start gap-3 text-left flex-1 min-w-0"
           >
-            <MapPin class="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <MapPin
+              class="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0"
+            />
             <div class="min-w-0 flex-1">
               <p class="text-sm font-medium truncate">{stop.name}</p>
               <div class="mt-1 flex flex-wrap gap-1">
@@ -96,7 +94,9 @@
   </div>
 {:else}
   <!-- Empty state - optionally show prompt -->
-  <div class="rounded-lg border border-dashed bg-muted/30 p-4 text-center animate-fade-in">
+  <div
+    class="rounded-lg border border-dashed bg-muted/30 p-4 text-center animate-fade-in"
+  >
     <Bookmark class="h-8 w-8 text-muted-foreground mx-auto mb-2" />
     <p class="text-sm text-muted-foreground">No saved stops yet</p>
     <p class="text-xs text-muted-foreground mt-1">

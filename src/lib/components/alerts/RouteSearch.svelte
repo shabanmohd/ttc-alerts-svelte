@@ -275,7 +275,7 @@
   let containerRef = $state<HTMLDivElement | null>(null);
   let highlightedIndex = $state(-1);
   let isHighlighted = $state(false);
-  
+
   // Track recently toggled routes for animation feedback
   let recentlyAddedRoute = $state<string | null>(null);
   let recentlyRemovedRoute = $state<string | null>(null);
@@ -320,9 +320,9 @@
       ? ALL_ROUTES.filter(
           (r) =>
             r.route.toLowerCase().includes(query.toLowerCase()) ||
-            r.name.toLowerCase().includes(query.toLowerCase()),
+            r.name.toLowerCase().includes(query.toLowerCase())
         ).slice(0, 15)
-      : [],
+      : []
   );
 
   // Check if route is saved
@@ -344,7 +344,9 @@
       // Show removal animation
       recentlyRemovedRoute = route.route;
       recentlyAddedRoute = null;
-      setTimeout(() => { recentlyRemovedRoute = null; }, 500);
+      setTimeout(() => {
+        recentlyRemovedRoute = null;
+      }, 500);
     } else {
       // Add if not saved
       const type =
@@ -361,7 +363,9 @@
       // Show added animation
       recentlyAddedRoute = route.route;
       recentlyRemovedRoute = null;
-      setTimeout(() => { recentlyAddedRoute = null; }, 500);
+      setTimeout(() => {
+        recentlyAddedRoute = null;
+      }, 500);
     }
 
     onSelect?.(route);
@@ -403,7 +407,7 @@
         event.preventDefault();
         highlightedIndex = Math.min(
           highlightedIndex + 1,
-          filteredRoutes.length - 1,
+          filteredRoutes.length - 1
         );
         break;
       case "ArrowUp":
@@ -478,7 +482,9 @@
           class="flex w-full items-center justify-between px-3 py-2 text-left outline-none transition-colors {index ===
           highlightedIndex
             ? 'bg-accent'
-            : 'hover:bg-accent'} {saved ? 'bg-primary/5' : ''} {justAdded ? 'animate-success-flash' : ''}"
+            : 'hover:bg-accent'} {saved ? 'bg-primary/5' : ''} {justAdded
+            ? 'animate-success-flash'
+            : ''}"
           role="option"
           aria-selected={index === highlightedIndex}
           onclick={() => selectRoute(route)}
@@ -494,7 +500,9 @@
               <Bookmark
                 class="h-4 w-4 transition-all duration-200 {saved
                   ? 'text-amber-500 fill-current'
-                  : 'text-muted-foreground'} {justRemoved ? 'animate-fade-out' : ''}"
+                  : 'text-muted-foreground'} {justRemoved
+                  ? 'animate-fade-out'
+                  : ''}"
               />
             {/if}
           </span>

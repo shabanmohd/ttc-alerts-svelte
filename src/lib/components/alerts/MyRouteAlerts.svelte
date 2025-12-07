@@ -70,7 +70,7 @@
 
   // Helper to extract routes from various formats
   function extractRoutes(
-    routes: string | string[] | null | undefined,
+    routes: string | string[] | null | undefined
   ): string[] {
     if (!routes) return [];
     if (Array.isArray(routes)) return routes;
@@ -88,7 +88,7 @@
   // Helper to check if thread matches a specific route
   function matchesSpecificRoute(
     thread: ThreadWithAlerts,
-    routeId: string,
+    routeId: string
   ): boolean {
     const threadRoutes = extractRoutes(thread.affected_routes);
     const alertRoutes = extractRoutes(thread.latestAlert?.affected_routes);
@@ -98,7 +98,7 @@
       (threadRoute) =>
         threadRoute.toLowerCase() === routeId.toLowerCase() ||
         threadRoute.includes(routeId) ||
-        routeId.includes(threadRoute),
+        routeId.includes(threadRoute)
     );
   }
 
@@ -113,8 +113,8 @@
         (threadRoute) =>
           threadRoute.toLowerCase() === savedRoute.toLowerCase() ||
           threadRoute.includes(savedRoute) ||
-          savedRoute.includes(threadRoute),
-      ),
+          savedRoute.includes(threadRoute)
+      )
     );
   }
 
@@ -134,7 +134,7 @@
     // Apply specific route filter if selected
     if (routeFilter) {
       filtered = filtered.filter((thread) =>
-        matchesSpecificRoute(thread, routeFilter),
+        matchesSpecificRoute(thread, routeFilter)
       );
     }
 
@@ -228,7 +228,10 @@
     <!-- Loading State with stagger animation -->
     <div class="space-y-3">
       {#each Array(2) as _, i}
-        <div class="alert-card animate-fade-in stagger-{i + 1}" aria-hidden="true">
+        <div
+          class="alert-card animate-fade-in stagger-{i + 1}"
+          aria-hidden="true"
+        >
           <div class="alert-card-content">
             <div class="alert-card-header">
               <div class="alert-card-badges">
@@ -290,7 +293,10 @@
       aria-label="Alerts for your saved routes"
     >
       {#each myAlerts as thread, i (thread.thread_id)}
-        <div class="animate-fade-in-up" style="animation-delay: {Math.min(i * 50, 300)}ms">
+        <div
+          class="animate-fade-in-up"
+          style="animation-delay: {Math.min(i * 50, 300)}ms"
+        >
           <AlertCard {thread} />
         </div>
       {/each}

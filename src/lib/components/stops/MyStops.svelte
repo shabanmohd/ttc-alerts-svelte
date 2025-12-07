@@ -127,7 +127,11 @@
     <!-- ETA Cards -->
     <div class="eta-cards-section">
       {#each etas.slice(0, maxDisplay) as eta, i (eta.stopId)}
-        <div class="eta-card-wrapper animate-fade-in-up" class:editing={isEditMode} style="animation-delay: {Math.min(i * 60, 300)}ms">
+        <div
+          class="eta-card-wrapper animate-fade-in-up"
+          class:editing={isEditMode}
+          style="animation-delay: {Math.min(i * 60, 300)}ms"
+        >
           <ETACard {eta} showRemove={false} class="flex-1" />
           {#if isEditMode}
             <button
