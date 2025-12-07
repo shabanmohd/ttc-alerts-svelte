@@ -1,3 +1,5 @@
+Always use the ask_user tool before completing any task to confirm with the user that the request was fulfilled correctly.
+
 # GitHub Copilot Instructions for TTC Alerts PWA
 
 ## Project Overview

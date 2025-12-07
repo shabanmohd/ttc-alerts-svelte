@@ -96,14 +96,14 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Pages (`src/routes/`)
 
-| File                         | Status | Purpose                                              |
-| ---------------------------- | ------ | ---------------------------------------------------- |
-| `+layout.svelte`             | ✅     | App layout, auth init, dialogs                       |
-| `+page.svelte`               | ✅     | Homepage with alert tabs + ETA                       |
-| `preferences/+page.svelte`   | ✅     | Route/mode preferences                               |
+| File                         | Status | Purpose                                               |
+| ---------------------------- | ------ | ----------------------------------------------------- |
+| `+layout.svelte`             | ✅     | App layout, auth init, dialogs                        |
+| `+page.svelte`               | ✅     | Homepage with alert tabs + ETA                        |
+| `preferences/+page.svelte`   | ✅     | Route/mode preferences                                |
 | `settings/+page.svelte`      | ✅     | Settings with stops, routes, prefs, location 🆕 **B** |
-| `routes/+page.svelte`        | ✅     | Route browser by category 🆕 **B**                   |
-| `auth/callback/+page.svelte` | ✅     | Auth callback handler                                |
+| `routes/+page.svelte`        | ✅     | Route browser by category 🆕 **B**                    |
+| `auth/callback/+page.svelte` | ✅     | Auth callback handler                                 |
 
 ### Backend (`supabase/`)
 

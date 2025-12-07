@@ -61,6 +61,18 @@
   color: #ffffff !important;
 }
 
+/* Line 5 - Orange */
+.route-line-5 {
+  background-color: #f26522 !important;
+  color: #ffffff !important;
+}
+
+/* Line 6 - Grey */
+.route-line-6 {
+  background-color: #808285 !important;
+  color: #ffffff !important;
+}
+
 /* Regular Bus & Streetcar - TTC Red */
 .route-bus,
 .route-streetcar {

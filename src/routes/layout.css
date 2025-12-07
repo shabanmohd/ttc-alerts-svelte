@@ -596,6 +596,14 @@ header.sticky {
   box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #a12f7d;
 }
 
+.route-line-5.route-badge-selectable.selected {
+  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #f26522;
+}
+
+.route-line-6.route-badge-selectable.selected {
+  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #808285;
+}
+
 .route-bus.route-badge-selectable.selected,
 .route-streetcar.route-badge-selectable.selected {
   box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #c8102e;
@@ -660,6 +668,26 @@ header.sticky {
   color: #a12f7d;
 }
 
+.route-line-5 .route-check {
+  border-color: #ffffff;
+}
+.route-line-5.selected .route-check {
+  background-color: #ffffff;
+}
+.route-line-5 .route-check .check-icon {
+  color: #f26522;
+}
+
+.route-line-6 .route-check {
+  border-color: #ffffff;
+}
+.route-line-6.selected .route-check {
+  background-color: #ffffff;
+}
+.route-line-6 .route-check .check-icon {
+  color: #808285;
+}
+
 .route-bus .route-check,
 .route-streetcar .route-check {
   border-color: #ffffff;
@@ -716,6 +744,16 @@ header.sticky {
 
 .route-line-4 {
   background-color: #a12f7d;
+  color: #ffffff;
+}
+
+.route-line-5 {
+  background-color: #f26522;
+  color: #ffffff;
+}
+
+.route-line-6 {
+  background-color: #808285;
   color: #ffffff;
 }
 
