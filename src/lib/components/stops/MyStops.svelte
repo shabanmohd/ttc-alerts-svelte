@@ -15,7 +15,6 @@
   import { etaStore, etaList, isAnyLoading } from "$lib/stores/eta";
   import StopSearch from "$lib/components/stops/StopSearch.svelte";
   import ETACard from "$lib/components/eta/ETACard.svelte";
-  import SwipeableCard from "$lib/components/ui/SwipeableCard.svelte";
   import { Button } from "$lib/components/ui/button";
   import { cn } from "$lib/utils";
   import type { TTCStop } from "$lib/data/stops-db";
@@ -124,21 +123,19 @@
     <!-- ETA Cards -->
     <div class="eta-cards-section">
       {#each etas.slice(0, maxDisplay) as eta (eta.stopId)}
-        <SwipeableCard onDelete={() => handleRemoveStop(eta.stopId)}>
-          <div class="eta-card-wrapper" class:editing={isEditMode}>
-            <ETACard {eta} showRemove={false} class="flex-1" />
-            {#if isEditMode}
-              <button
-                type="button"
-                class="card-remove-button"
-                onclick={() => handleRemoveStop(eta.stopId)}
-                aria-label="Remove stop"
-              >
-                <X class="h-4 w-4" />
-              </button>
-            {/if}
-          </div>
-        </SwipeableCard>
+        <div class="eta-card-wrapper" class:editing={isEditMode}>
+          <ETACard {eta} showRemove={false} class="flex-1" />
+          {#if isEditMode}
+            <button
+              type="button"
+              class="card-remove-button"
+              onclick={() => handleRemoveStop(eta.stopId)}
+              aria-label="Remove stop"
+            >
+              <X class="h-4 w-4" />
+            </button>
+          {/if}
+        </div>
       {/each}
     </div>
 
