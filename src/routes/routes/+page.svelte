@@ -404,7 +404,7 @@
           </p>
         {:else}
           <div class="flex flex-wrap gap-2">
-            {#each filteredRoutes as { route, name, category } (route)}
+            {#each filteredRoutes as { route, name, category }, i (route)}
               {@const routeType =
                 category === "subway"
                   ? "subway"
@@ -412,7 +412,8 @@
                     ? "streetcar"
                     : "bus"}
               <div
-                class="flex items-center gap-1 p-2 rounded-md border bg-card hover:bg-accent transition-colors"
+                class="flex items-center gap-1 p-2 rounded-md border bg-card hover:bg-accent transition-colors animate-fade-in"
+                style="animation-delay: {Math.min(i * 30, 150)}ms"
               >
                 <button
                   type="button"
@@ -480,9 +481,10 @@
         </h2>
 
         <div class="flex flex-wrap gap-2">
-          {#each routes as { route, name } (route)}
+          {#each routes as { route, name }, i (route)}
             <div
-              class="flex items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent transition-colors"
+              class="flex items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent transition-colors animate-fade-in"
+              style="animation-delay: {Math.min(i * 20, 200)}ms"
             >
               <button
                 type="button"

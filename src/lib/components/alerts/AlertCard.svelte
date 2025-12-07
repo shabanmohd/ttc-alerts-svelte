@@ -176,9 +176,9 @@
     </button>
     
     {#if showEarlierUpdates}
-      <div class="earlier-updates-content" id="{cardId}-updates">
+      <div class="earlier-updates-content animate-fade-in-down" id="{cardId}-updates">
         {#each earlierAlerts as alert, i}
-          <div class="earlier-update-item">
+          <div class="earlier-update-item animate-fade-in" style="animation-delay: {i * 80}ms">
             <div class="flex justify-between items-start mb-1.5">
               <StatusBadge category={getMainCategory(alert.categories)} />
               <time 

@@ -225,10 +225,10 @@
   {/if}
 
   {#if $isLoading && !hasRoutes}
-    <!-- Loading State -->
+    <!-- Loading State with stagger animation -->
     <div class="space-y-3">
       {#each Array(2) as _, i}
-        <div class="alert-card" aria-hidden="true">
+        <div class="alert-card animate-fade-in stagger-{i + 1}" aria-hidden="true">
           <div class="alert-card-content">
             <div class="alert-card-header">
               <div class="alert-card-badges">
@@ -247,7 +247,7 @@
     <!-- Empty State: No Routes Saved -->
     <button
       type="button"
-      class="empty-state"
+      class="empty-state animate-fade-in"
       onclick={() => routeSearchRef?.focus()}
     >
       <div class="empty-state-icon">
@@ -261,7 +261,7 @@
     </button>
   {:else if myAlerts.length === 0}
     <!-- Empty State: Routes Saved but No Active Alerts -->
-    <div class="empty-state success">
+    <div class="empty-state success animate-fade-in">
       <div class="empty-state-icon success">
         <Bell class="h-8 w-8" />
       </div>
@@ -289,8 +289,10 @@
       role="feed"
       aria-label="Alerts for your saved routes"
     >
-      {#each myAlerts as thread (thread.thread_id)}
-        <AlertCard {thread} />
+      {#each myAlerts as thread, i (thread.thread_id)}
+        <div class="animate-fade-in-up" style="animation-delay: {Math.min(i * 50, 300)}ms">
+          <AlertCard {thread} />
+        </div>
       {/each}
     </div>
   {/if}

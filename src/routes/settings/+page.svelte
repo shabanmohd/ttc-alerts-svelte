@@ -297,9 +297,10 @@
             >
           </p>
           <div class="space-y-2">
-            {#each $savedStops as stop (stop.id)}
+            {#each $savedStops as stop, i (stop.id)}
               <div
-                class="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                class="flex items-center justify-between p-3 rounded-lg bg-muted/50 animate-fade-in-up"
+                style="animation-delay: {Math.min(i * 40, 200)}ms"
               >
                 <div class="min-w-0 flex-1">
                   <p class="font-medium text-sm truncate">{stop.name}</p>
@@ -356,9 +357,10 @@
             >
           </p>
           <div class="space-y-2">
-            {#each $savedRoutes as route (route.id)}
+            {#each $savedRoutes as route, i (route.id)}
               <div
-                class="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                class="flex items-center justify-between p-3 rounded-lg bg-muted/50 animate-fade-in-up"
+                style="animation-delay: {Math.min(i * 40, 200)}ms"
               >
                 <div class="flex items-center gap-2 min-w-0 flex-1">
                   <RouteBadge route={route.id} size="sm" />

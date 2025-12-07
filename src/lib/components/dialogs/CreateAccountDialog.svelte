@@ -186,7 +186,7 @@
       
       <!-- Step: Display Name -->
       {#if step === 'displayName'}
-        <div class="space-y-3">
+        <div class="space-y-3 animate-fade-in">
           <div class="space-y-2">
             <Label for="create-displayName">Choose a display name</Label>
             <div class="relative">
@@ -201,6 +201,7 @@
                 onkeydown={handleKeydown}
                 autocomplete="nickname"
                 autocapitalize="words"
+                autofocus
               />
               {#if isCheckingName}
                 <div class="absolute right-3 top-1/2 -translate-y-1/2">

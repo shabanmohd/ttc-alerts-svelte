@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search, X, Bookmark } from "lucide-svelte";
+  import { Search, X, Bookmark, Check } from "lucide-svelte";
   import { onMount, onDestroy } from "svelte";
   import { browser } from "$app/environment";
   import { Input } from "$lib/components/ui/input";
@@ -275,6 +275,10 @@
   let containerRef = $state<HTMLDivElement | null>(null);
   let highlightedIndex = $state(-1);
   let isHighlighted = $state(false);
+  
+  // Track recently toggled routes for animation feedback
+  let recentlyAddedRoute = $state<string | null>(null);
+  let recentlyRemovedRoute = $state<string | null>(null);
 
   // Export focus function for parent components
   export function focus() {
@@ -337,6 +341,10 @@
     if (isSaved) {
       // Remove if already saved
       savedRoutes.remove(route.route);
+      // Show removal animation
+      recentlyRemovedRoute = route.route;
+      recentlyAddedRoute = null;
+      setTimeout(() => { recentlyRemovedRoute = null; }, 500);
     } else {
       // Add if not saved
       const type =
@@ -350,6 +358,10 @@
         name: `${route.route} ${route.name}`,
         type,
       });
+      // Show added animation
+      recentlyAddedRoute = route.route;
+      recentlyRemovedRoute = null;
+      setTimeout(() => { recentlyAddedRoute = null; }, 500);
     }
 
     onSelect?.(route);
@@ -459,12 +471,14 @@
     >
       {#each filteredRoutes as route, index (route.route)}
         {@const saved = isRouteSaved(route.route)}
+        {@const justAdded = recentlyAddedRoute === route.route}
+        {@const justRemoved = recentlyRemovedRoute === route.route}
         <button
           type="button"
           class="flex w-full items-center justify-between px-3 py-2 text-left outline-none transition-colors {index ===
           highlightedIndex
             ? 'bg-accent'
-            : 'hover:bg-accent'} {saved ? 'bg-primary/5' : ''}"
+            : 'hover:bg-accent'} {saved ? 'bg-primary/5' : ''} {justAdded ? 'animate-success-flash' : ''}"
           role="option"
           aria-selected={index === highlightedIndex}
           onclick={() => selectRoute(route)}
@@ -473,11 +487,17 @@
             <RouteBadge route={route.route} size="sm" />
             <span class="text-sm">{route.name}</span>
           </div>
-          <Bookmark
-            class="h-4 w-4 {saved
-              ? 'text-amber-500 fill-current'
-              : 'text-muted-foreground'}"
-          />
+          <span class="relative">
+            {#if justAdded}
+              <Check class="h-4 w-4 text-green-500 animate-scale-in" />
+            {:else}
+              <Bookmark
+                class="h-4 w-4 transition-all duration-200 {saved
+                  ? 'text-amber-500 fill-current'
+                  : 'text-muted-foreground'} {justRemoved ? 'animate-fade-out' : ''}"
+              />
+            {/if}
+          </span>
         </button>
       {/each}
     </div>

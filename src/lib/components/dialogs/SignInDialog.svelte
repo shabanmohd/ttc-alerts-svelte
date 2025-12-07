@@ -151,7 +151,7 @@
       
       <!-- Step: Display Name -->
       {#if step === 'displayName'}
-        <div class="space-y-3">
+        <div class="space-y-3 animate-fade-in">
           <div class="space-y-2">
             <Label for="displayName">Display Name</Label>
             <Input 
@@ -164,6 +164,7 @@
               onkeydown={handleKeydown}
               autocomplete="nickname"
               autocapitalize="words"
+              autofocus
             />
             {#if displayNameError}
               <p class="text-xs text-destructive">{displayNameError}</p>
@@ -197,7 +198,7 @@
       
       <!-- Step: Biometric -->
       {:else if step === 'biometric'}
-        <div class="text-center space-y-4 py-4">
+        <div class="text-center space-y-4 py-4 animate-fade-in">
           {#if isLoading}
             <div class="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
               <Fingerprint class="h-10 w-10 text-primary" />
@@ -238,7 +239,7 @@
       
       <!-- Step: Recovery -->
       {:else if step === 'recovery'}
-        <div class="space-y-3">
+        <div class="space-y-3 animate-fade-in">
           <div class="space-y-2">
             <Label for="recovery-code">Recovery Code</Label>
             <Input 
@@ -251,6 +252,7 @@
               onkeydown={handleKeydown}
               autocomplete="off"
               autocapitalize="characters"
+              autofocus
             />
             <p class="text-xs text-muted-foreground">
               Enter one of the 8-character recovery codes you saved when creating your account.
@@ -283,7 +285,7 @@
       {/if}
     </div>
     
-    {#if step === 'username' && !$biometricsAvailable}
+    {#if step === 'displayName' && !$biometricsAvailable}
       <div class="p-3 rounded-lg bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 text-xs">
         <strong>Note:</strong> Biometric authentication may not be available on this device. 
         You may need to use a recovery code to sign in.

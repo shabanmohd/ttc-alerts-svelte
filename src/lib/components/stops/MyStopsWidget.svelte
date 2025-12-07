@@ -56,9 +56,10 @@
     </div>
 
     <div class="space-y-2">
-      {#each stops.slice(0, maxDisplay) as stop (stop.id)}
+      {#each stops.slice(0, maxDisplay) as stop, i (stop.id)}
         <div
-          class="group flex w-full items-start gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors"
+          class="group flex w-full items-start gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors animate-fade-in-up"
+          style="animation-delay: {i * 60}ms"
         >
           <button
             type="button"
@@ -95,7 +96,7 @@
   </div>
 {:else}
   <!-- Empty state - optionally show prompt -->
-  <div class="rounded-lg border border-dashed bg-muted/30 p-4 text-center">
+  <div class="rounded-lg border border-dashed bg-muted/30 p-4 text-center animate-fade-in">
     <Bookmark class="h-8 w-8 text-muted-foreground mx-auto mb-2" />
     <p class="text-sm text-muted-foreground">No saved stops yet</p>
     <p class="text-xs text-muted-foreground mt-1">

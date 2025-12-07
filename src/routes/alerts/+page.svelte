@@ -147,9 +147,9 @@
     <!-- Alert Cards -->
     <div class="space-y-3" id="alerts-container" role="feed" aria-label="Service alerts">
       {#if $isLoading}
-        <!-- Loading skeletons -->
+        <!-- Loading skeletons with stagger animation -->
         {#each Array(3) as _, i}
-          <div class="alert-card" aria-hidden="true">
+          <div class="alert-card animate-fade-in stagger-{i + 1}" aria-hidden="true">
             <div class="alert-card-content">
               <div class="alert-card-header">
                 <div class="alert-card-badges">
@@ -183,8 +183,10 @@
           {/if}
         </div>
       {:else}
-        {#each $filteredThreads as thread (thread.thread_id)}
-          <AlertCard {thread} />
+        {#each $filteredThreads as thread, i (thread.thread_id)}
+          <div class="animate-fade-in-up" style="animation-delay: {Math.min(i * 50, 300)}ms">
+            <AlertCard {thread} />
+          </div>
         {/each}
       {/if}
     </div>

@@ -251,10 +251,10 @@
           No {activeTab === 'starting-soon' ? 'imminent' : activeTab === 'weekend' ? 'weekend' : 'upcoming'} closures scheduled.
         </p>
       {:else}
-        {#each currentItems() as item}
+        {#each currentItems() as item, i}
           {@const closureBadge = getClosureBadge(item)}
           {@const startTime = formatTime(item.start_time)}
-          <article class="closure-card">
+          <article class="closure-card animate-fade-in-up" style="animation-delay: {Math.min(i * 50, 200)}ms">
             <div class="closure-card-grid">
               <div class="closure-card-left">
                 <p class="closure-card-stations">{item.affected_stations}</p>
