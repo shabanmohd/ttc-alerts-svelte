@@ -10,11 +10,9 @@
 
     let { onDelete, children }: Props = $props();
 
-    // Fixed values matching edit mode exactly
-    const DELETE_BUTTON_WIDTH = 48; // 2.5rem + gap = ~48px total
+    const DELETE_BUTTON_WIDTH = 48;
     const SWIPE_THRESHOLD = 20;
 
-    // State
     let translateX = $state(0);
     let isDragging = $state(false);
     let startX = $state(0);
@@ -23,7 +21,6 @@
     let isRevealed = $state(false);
     let directionLocked = $state<"horizontal" | "vertical" | null>(null);
 
-    // Touch event handlers
     function handleTouchStart(e: TouchEvent) {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
@@ -39,7 +36,6 @@
         const diffX = currentX - startX;
         const diffY = currentY - startY;
 
-        // Lock direction on first significant movement
         if (!directionLocked) {
             if (Math.abs(diffY) > 10 && Math.abs(diffY) > Math.abs(diffX)) {
                 directionLocked = "vertical";
@@ -132,74 +128,70 @@
     });
 </script>
 
+<!-- 
+  This mimics the exact structure of edit mode:
+  .eta-card-wrapper.editing { display: flex; gap: 0.5rem; background: destructive/0.05; padding: 0.25rem }
+-->
 <div
     bind:this={containerRef}
-    class="swipeable-container"
+    class="swipeable-row"
     class:revealed={isRevealed}
     ontouchstart={handleTouchStart}
     ontouchmove={handleTouchMove}
     ontouchend={handleTouchEnd}
     ontouchcancel={handleTouchEnd}
 >
-    <!-- Wrapper that mimics .eta-card-wrapper.editing background -->
-    <div class="swipe-wrapper" class:active={isRevealed || translateX < 0}>
-        <!-- Card content that slides -->
-        <div
-            class="swipeable-content"
-            class:dragging={isDragging}
-            style="transform: translateX({translateX}px)"
-        >
-            {@render children()}
-        </div>
-
-        <!-- Delete button (matching edit mode exactly) -->
-        <button
-            type="button"
-            onclick={handleDelete}
-            aria-label="Remove stop"
-            class="delete-button"
-            class:visible={isRevealed || translateX < 0}
-        >
-            <X class="h-4 w-4" />
-        </button>
+    <!-- Card content -->
+    <div
+        class="card-content"
+        class:dragging={isDragging}
+        style="transform: translateX({translateX}px)"
+    >
+        {@render children()}
     </div>
+
+    <!-- Delete button - same as .card-remove-button -->
+    <button
+        type="button"
+        onclick={handleDelete}
+        aria-label="Remove stop"
+        class="card-remove-button"
+    >
+        <X class="h-4 w-4" />
+    </button>
 </div>
 
 <style>
-    .swipeable-container {
-        position: relative;
-        touch-action: pan-y pinch-zoom;
-    }
-
-    /* Wrapper mimics .eta-card-wrapper.editing */
-    .swipe-wrapper {
+    /* Exact copy of .eta-card-wrapper.editing from MyStops */
+    .swipeable-row {
         display: flex;
         align-items: stretch;
-        gap: 0.5rem; /* Same gap as edit mode */
+        gap: 0.5rem;
         border-radius: var(--radius);
+        touch-action: pan-y pinch-zoom;
         transition:
-            background-color 0.15s ease-out,
-            padding 0.15s ease-out;
+            background-color 0.15s,
+            padding 0.15s;
     }
 
-    .swipe-wrapper.active {
+    .swipeable-row.revealed {
         background-color: hsl(var(--destructive) / 0.05);
         padding: 0.25rem;
     }
 
-    .swipeable-content {
+    .card-content {
         flex: 1;
         min-width: 0;
         transition: transform 0.2s ease-out;
         will-change: transform;
     }
 
-    .swipeable-content.dragging {
+    .card-content.dragging {
         transition: none;
     }
 
-    /* Delete button - exact copy of .card-remove-button from edit mode */
-    .delete-button {
+    /* Exact copy of .card-remove-button from MyStops */
+    .card-remove-button {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -210,16 +202,18 @@
         border-radius: var(--radius);
         cursor: pointer;
         color: hsl(var(--destructive));
-        transition: all 0.2s ease-out;
+        transition: all 0.15s;
         flex-shrink: 0;
+        opacity: 0;
     }
 
-    .delete-button.visible {
-        width: 2.5rem; /* Same as edit mode */
+    .swipeable-row.revealed .card-remove-button {
+        width: 2.5rem;
+        opacity: 1;
     }
 
-    .delete-button:hover,
-    .delete-button:active {
+    .card-remove-button:hover,
+    .card-remove-button:active {
         background-color: hsl(var(--destructive));
         color: hsl(var(--destructive-foreground));
     }
