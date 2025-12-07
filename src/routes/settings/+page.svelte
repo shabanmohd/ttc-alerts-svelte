@@ -13,6 +13,7 @@
     Info,
     Home,
     Check,
+    X,
     SlidersHorizontal,
     CirclePause,
     MapPinned,
@@ -577,15 +578,33 @@
             >Unavailable</span
           >
         {:else}
-          {#key locationSwitchChecked}
-            <Switch
-              checked={locationSwitchChecked}
-              onCheckedChange={handleLocationToggle}
-              disabled={isCheckingLocation}
-              aria-labelledby="location-label"
-              aria-describedby="location-desc"
-            />
-          {/key}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={locationPermission === "granted"}
+            aria-labelledby="location-label"
+            aria-describedby="location-desc"
+            disabled={isCheckingLocation}
+            onclick={() =>
+              handleLocationToggle(locationPermission !== "granted")}
+            class="switch-track focus-visible:ring-ring/50 peer inline-flex h-7 w-12 shrink-0 items-center rounded-full border-2 outline-none transition-all focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 {locationPermission ===
+            'granted'
+              ? 'switch-checked'
+              : 'switch-unchecked'}"
+          >
+            <span
+              class="pointer-events-none flex items-center justify-center size-5 rounded-full shadow-md ring-0 transition-transform {locationPermission ===
+              'granted'
+                ? 'translate-x-[1.35rem] switch-thumb-checked'
+                : 'translate-x-0.5 switch-thumb-unchecked'}"
+            >
+              {#if locationPermission === "granted"}
+                <Check class="h-3 w-3 switch-icon-checked" strokeWidth={3} />
+              {:else}
+                <X class="h-3 w-3 switch-icon-unchecked" strokeWidth={3} />
+              {/if}
+            </span>
+          </button>
         {/if}
       </div>
     </Card.Content>

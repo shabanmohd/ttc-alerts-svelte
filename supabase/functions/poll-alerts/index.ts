@@ -213,8 +213,17 @@ serve(async (req) => {
             break;
           }
           
-          // Even lower threshold (20%) for SERVICE_RESUMED with route overlap
-          if (category === 'SERVICE_RESUMED' && similarity >= 0.2) {
+          // Very low threshold (10%) for SERVICE_RESUMED with route overlap
+          // SERVICE_RESUMED alerts have very different vocabulary ("resumed", "regular service")
+          // than the original alert ("detour", "no service", "delay")
+          if (category === 'SERVICE_RESUMED' && similarity >= 0.1) {
+            matchedThread = thread;
+            break;
+          }
+          
+          // For DIVERSION/DETOUR alerts, use lower threshold (30%) since they 
+          // may update existing incidents with different wording
+          if ((category === 'DIVERSION' || category === 'DELAY') && similarity >= 0.3) {
             matchedThread = thread;
             break;
           }

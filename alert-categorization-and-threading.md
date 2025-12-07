@@ -272,8 +272,16 @@ for (const thread of unresolvedThreads || []) {
       break;
     }
 
-    // Lower threshold (20%) for SERVICE_RESUMED with route overlap
-    if (category === "SERVICE_RESUMED" && similarity >= 0.2) {
+    // Very low threshold (10%) for SERVICE_RESUMED with route overlap
+    // SERVICE_RESUMED alerts have very different vocabulary ("resumed", "regular service")
+    // than the original alert ("detour", "no service", "delay")
+    if (category === "SERVICE_RESUMED" && similarity >= 0.1) {
+      matchedThread = thread;
+      break;
+    }
+
+    // For DIVERSION/DETOUR alerts, use lower threshold (30%)
+    if ((category === "DIVERSION" || category === "DELAY") && similarity >= 0.3) {
       matchedThread = thread;
       break;
     }
@@ -285,9 +293,10 @@ for (const thread of unresolvedThreads || []) {
 
 1. **Exact route number match required** - Route NUMBERS must match (e.g., "46" = "46 Martin Grove", but "46" ≠ "996")
 2. **Medium similarity (≥50%)** - For general alert matching
-3. **Low similarity (≥20%)** - For SERVICE_RESUMED (different vocabulary)
-4. **6-hour window** - Only match unresolved threads updated within 6 hours
-5. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
+3. **Low similarity (≥30%)** - For DIVERSION/DELAY updates
+4. **Very low similarity (≥10%)** - For SERVICE_RESUMED (very different vocabulary)
+5. **6-hour window** - Only match unresolved threads updated within 6 hours
+6. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
 
 ### Text Similarity Calculation
 
