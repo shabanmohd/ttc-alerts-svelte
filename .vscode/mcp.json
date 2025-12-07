@@ -2,11 +2,30 @@
   "servers": {
     "cloudflare": {
       "command": "npx",
-      "args": ["-y", "@cloudflare/mcp-server-cloudflare"]
+      "args": [
+        "-y",
+        "@cloudflare/mcp-server-cloudflare"
+      ]
     },
     "fetch": {
       "command": "uvx",
-      "args": ["mcp-server-fetch"]
+      "args": [
+        "mcp-server-fetch"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@executeautomation/playwright-mcp-server"
+      ]
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-supabase"
+      ]
     }
   }
 }

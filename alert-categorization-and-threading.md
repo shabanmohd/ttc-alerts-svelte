@@ -281,7 +281,10 @@ for (const thread of unresolvedThreads || []) {
     }
 
     // For DIVERSION/DETOUR alerts, use lower threshold (30%)
-    if ((category === "DIVERSION" || category === "DELAY") && similarity >= 0.3) {
+    if (
+      (category === "DIVERSION" || category === "DELAY") &&
+      similarity >= 0.3
+    ) {
       matchedThread = thread;
       break;
     }
