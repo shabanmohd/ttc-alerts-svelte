@@ -169,8 +169,7 @@
     right: 0;
     top: 0;
     bottom: 0;
-    width: 80px;
-    background: hsl(var(--destructive));
+    width: 2.5rem; /* Match edit mode button width */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -178,7 +177,6 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease-in-out;
-    border-radius: var(--radius);
   }
 
   .swipeable-container:has(.swipeable-content[style*="--translate-x: -"]) .delete-button {
@@ -192,14 +190,16 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    background: none;
+    background-color: hsl(var(--destructive) / 0.1); /* Match edit mode */
     border: none;
-    color: hsl(var(--destructive-foreground));
+    border-radius: var(--radius);
+    color: hsl(var(--destructive)); /* Match edit mode */
     cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
+    transition: all 0.15s; /* Match edit mode */
   }
 
-  .delete-button-inner:active {
-    background-color: hsl(var(--destructive) / 0.9);
+  .delete-button-inner:hover {
+    background-color: hsl(var(--destructive));
+    color: hsl(var(--destructive-foreground));
   }
 </style>
