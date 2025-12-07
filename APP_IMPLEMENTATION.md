@@ -30,20 +30,21 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Feature Availability
 
-| Feature                    | Version A | Version B |
-| -------------------------- | --------- | --------- |
-| Real-time alerts           | ✅        | ✅        |
-| WebAuthn authentication    | ✅        | ✅        |
-| Planned maintenance widget | ✅        | ✅        |
-| Accessibility settings     | ❌        | ✅        |
-| Visibility-aware polling   | ❌        | ✅        |
-| Stop search (9,346 stops)  | ❌        | ✅        |
-| Stop bookmarks             | ❌        | ✅        |
-| Nearby stops (geolocation) | ❌        | ✅        |
-| ETA predictions            | ❌        | ✅        |
-| Route Browser              | ❌        | ✅        |
-| Weather warnings           | ❌        | ✅        |
-| French language (i18n)     | ❌        | ✅        |
+| Feature                      | Version A | Version B |
+| ---------------------------- | --------- | --------- |
+| Real-time alerts             | ✅        | ✅        |
+| WebAuthn authentication      | ✅        | ✅        |
+| Planned maintenance widget   | ✅        | ✅        |
+| Accessibility settings       | ❌        | ✅        |
+| Visibility-aware polling     | ❌        | ✅        |
+| Stop search (9,346 stops)    | ❌        | ✅        |
+| Stop bookmarks               | ❌        | ✅        |
+| Nearby stops (geolocation)   | ❌        | ✅        |
+| Location permission settings | ❌        | ✅        |
+| ETA predictions              | ❌        | ✅        |
+| Route Browser                | ❌        | ✅        |
+| Weather warnings             | ❌        | ✅        |
+| French language (i18n)       | ❌        | ✅        |
 
 ---
 
@@ -95,13 +96,14 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Pages (`src/routes/`)
 
-| File                         | Status | Purpose                            |
-| ---------------------------- | ------ | ---------------------------------- |
-| `+layout.svelte`             | ✅     | App layout, auth init, dialogs     |
-| `+page.svelte`               | ✅     | Homepage with alert tabs + ETA     |
-| `preferences/+page.svelte`   | ✅     | Route/mode preferences             |
-| `routes/+page.svelte`        | ✅     | Route browser by category 🆕 **B** |
-| `auth/callback/+page.svelte` | ✅     | Auth callback handler              |
+| File                         | Status | Purpose                                              |
+| ---------------------------- | ------ | ---------------------------------------------------- |
+| `+layout.svelte`             | ✅     | App layout, auth init, dialogs                       |
+| `+page.svelte`               | ✅     | Homepage with alert tabs + ETA                       |
+| `preferences/+page.svelte`   | ✅     | Route/mode preferences                               |
+| `settings/+page.svelte`      | ✅     | Settings with stops, routes, prefs, location 🆕 **B** |
+| `routes/+page.svelte`        | ✅     | Route browser by category 🆕 **B**                   |
+| `auth/callback/+page.svelte` | ✅     | Auth callback handler                                |
 
 ### Backend (`supabase/`)
 

@@ -2,7 +2,7 @@
   import { 
     MapPin, Route, Settings, Download, Upload, Trash2,
     Globe, Palette, Type, HelpCircle, Bug, Lightbulb, Info, Home, Check,
-    SlidersHorizontal, CirclePause
+    SlidersHorizontal, CirclePause, MapPinned, ExternalLink
   } from 'lucide-svelte';
   import Header from '$lib/components/layout/Header.svelte';
   import { Button } from '$lib/components/ui/button';
@@ -30,8 +30,88 @@
   let confirmDeleteRoute = $state<{ id: string; name: string } | null>(null);
   let showClearAllDialog = $state(false);
   
+  // Location permission state
+  let locationPermission = $state<'granted' | 'denied' | 'prompt' | 'unsupported'>('prompt');
+  let isCheckingLocation = $state(false);
+  
   // File input reference
   let fileInput: HTMLInputElement;
+  
+  // Check location permission status
+  async function checkLocationPermission() {
+    if (!browser) return;
+    
+    if (!('geolocation' in navigator)) {
+      locationPermission = 'unsupported';
+      return;
+    }
+    
+    try {
+      // Use Permissions API if available
+      if ('permissions' in navigator) {
+        const result = await navigator.permissions.query({ name: 'geolocation' });
+        locationPermission = result.state as 'granted' | 'denied' | 'prompt';
+        
+        // Listen for permission changes
+        result.onchange = () => {
+          locationPermission = result.state as 'granted' | 'denied' | 'prompt';
+        };
+      }
+    } catch (error) {
+      console.error('Error checking location permission:', error);
+    }
+  }
+  
+  // Request location permission
+  async function handleLocationToggle() {
+    if (!browser || !('geolocation' in navigator)) {
+      toast.error('Location is not supported on this device');
+      return;
+    }
+    
+    if (locationPermission === 'granted') {
+      // Can't programmatically revoke - direct user to browser settings
+      toast.info('To disable location, use your browser settings', {
+        description: 'Look for the location/site settings in your browser menu',
+        duration: 5000
+      });
+      return;
+    }
+    
+    if (locationPermission === 'denied') {
+      // Permission was denied - direct user to browser settings
+      toast.info('Location access was blocked', {
+        description: 'Enable location in your browser settings to use this feature',
+        duration: 5000
+      });
+      return;
+    }
+    
+    // Request permission by trying to get location
+    isCheckingLocation = true;
+    try {
+      await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      });
+      
+      locationPermission = 'granted';
+      toast.success('Location access enabled');
+    } catch (error) {
+      const geoError = error as GeolocationPositionError;
+      if (geoError.code === geoError.PERMISSION_DENIED) {
+        locationPermission = 'denied';
+        toast.error('Location access denied');
+      } else {
+        toast.error('Failed to get location');
+      }
+    } finally {
+      isCheckingLocation = false;
+    }
+  }
   
   // Initialize stores on mount
   onMount(async () => {
@@ -39,6 +119,7 @@
       await savedStops.init();
       await savedRoutes.init();
       await localPreferences.init();
+      await checkLocationPermission();
     }
   });
   
@@ -435,6 +516,38 @@
           aria-labelledby="reduce-motion-label"
           aria-describedby="reduce-motion-desc"
         />
+      </div>
+      
+      <!-- Location Permission -->
+      <div class="flex items-center justify-between">
+        <div class="space-y-0.5">
+          <span id="location-label" class="text-sm font-medium flex items-center gap-2">
+            <MapPinned class="h-4 w-4" />
+            Location Access
+          </span>
+          <p id="location-desc" class="text-xs text-muted-foreground">
+            {#if locationPermission === 'granted'}
+              Enabled - used for nearby stops
+            {:else if locationPermission === 'denied'}
+              Blocked - update in browser settings
+            {:else if locationPermission === 'unsupported'}
+              Not supported on this device
+            {:else}
+              Enable to find nearby stops
+            {/if}
+          </p>
+        </div>
+        {#if locationPermission === 'unsupported'}
+          <span class="text-xs text-muted-foreground px-2 py-1 rounded bg-muted">Unavailable</span>
+        {:else}
+          <Switch
+            checked={locationPermission === 'granted'}
+            onCheckedChange={handleLocationToggle}
+            disabled={isCheckingLocation}
+            aria-labelledby="location-label"
+            aria-describedby="location-desc"
+          />
+        {/if}
       </div>
     </Card.Content>
   </Card.Root>

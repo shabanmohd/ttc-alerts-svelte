@@ -1282,6 +1282,7 @@ async function fetchWeatherWarnings(): Promise<WeatherWarning[]> {
 - [ ] Test ETA refresh behavior
 - [x] Test stop search performance with 11K stops
 - [x] Test text scaling at all sizes on various devices
+- [x] Add location permission toggle to Settings page
 
 ### 5.2 Performance Optimization
 
