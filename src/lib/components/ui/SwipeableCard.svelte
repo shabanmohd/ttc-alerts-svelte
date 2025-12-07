@@ -173,6 +173,14 @@
     align-items: center;
     justify-content: center;
     z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .swipeable-container:has(.swipeable-content[style*="--translate-x: -"]) .delete-button {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .delete-button-inner {
