@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Trash2 } from 'lucide-svelte';
+  import { X } from 'lucide-svelte';
   import { onMount, onDestroy } from 'svelte';
   import type { Snippet } from 'svelte';
 
@@ -14,7 +14,7 @@
   let {
     onDelete,
     threshold = 70,
-    deleteButtonWidth = 80,
+    deleteButtonWidth = 48,
     disabled = false,
     children
   }: Props = $props();
@@ -131,7 +131,7 @@
       aria-label="Delete stop"
       class="delete-button-inner"
     >
-      <Trash2 class="h-5 w-5" />
+      <X class="h-4 w-4" />
     </button>
   </div>
 
@@ -169,7 +169,8 @@
     right: 0;
     top: 0;
     bottom: 0;
-    width: 2.5rem; /* Match edit mode button width */
+    width: 3rem; /* Match edit mode button width */
+    background-color: hsl(var(--destructive) / 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -177,6 +178,7 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease-in-out;
+    border-radius: var(--radius);
   }
 
   .swipeable-container:has(.swipeable-content[style*="--translate-x: -"]) .delete-button {
@@ -190,15 +192,19 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    background-color: hsl(var(--destructive) / 0.1); /* Match edit mode */
+    background: none;
     border: none;
-    border-radius: var(--radius);
-    color: hsl(var(--destructive)); /* Match edit mode */
+    color: hsl(var(--destructive));
     cursor: pointer;
-    transition: all 0.15s; /* Match edit mode */
+    transition: all 0.15s ease-in-out;
   }
 
   .delete-button-inner:hover {
+    background-color: hsl(var(--destructive));
+    color: hsl(var(--destructive-foreground));
+  }
+
+  .delete-button-inner:active {
     background-color: hsl(var(--destructive));
     color: hsl(var(--destructive-foreground));
   }
