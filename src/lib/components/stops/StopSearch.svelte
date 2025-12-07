@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { Search, MapPin, Loader2, X } from 'lucide-svelte';
-	import { Input } from '$lib/components/ui/input';
-	import { Button } from '$lib/components/ui/button';
+	import { Search, MapPin, Loader2, X } from "lucide-svelte";
+	import { Input } from "$lib/components/ui/input";
+	import { Button } from "$lib/components/ui/button";
 	import {
 		initStopsDB,
 		searchStops,
 		findNearbyStops,
-		type TTCStop
-	} from '$lib/data/stops-db';
-	import { onMount, onDestroy } from 'svelte';
-	import { browser } from '$app/environment';
-	import RouteBadge from '$lib/components/alerts/RouteBadge.svelte';
-	import BookmarkStopButton from './BookmarkStopButton.svelte';
+		type TTCStop,
+	} from "$lib/data/stops-db";
+	import { onMount, onDestroy } from "svelte";
+	import { browser } from "$app/environment";
+	import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
+	import BookmarkStopButton from "./BookmarkStopButton.svelte";
 
 	interface Props {
 		onSelect?: (stop: TTCStop) => void;
@@ -22,16 +22,16 @@
 		autoFocus?: boolean;
 	}
 
-	let { 
+	let {
 		onSelect,
 		onClose,
-		placeholder = 'Search by name or stop ID...', 
+		placeholder = "Search by name or stop ID...",
 		showNearbyButton = true,
 		showBookmarkButton = true,
-		autoFocus = false
+		autoFocus = false,
 	}: Props = $props();
 
-	let query = $state('');
+	let query = $state("");
 	let results = $state<TTCStop[]>([]);
 	let isLoading = $state(false);
 	let isLoadingNearby = $state(false);
@@ -42,6 +42,11 @@
 	let containerRef = $state<HTMLDivElement | null>(null);
 	let highlightedIndex = $state(-1);
 	let hasSearched = $state(false);
+
+	// Export focus function for parent components
+	export function focus() {
+		inputRef?.focus();
+	}
 
 	// Handle click outside to close dropdown
 	function handleClickOutside(event: MouseEvent) {
@@ -54,7 +59,7 @@
 	// Initialize database on mount
 	onMount(async () => {
 		if (browser) {
-			document.addEventListener('click', handleClickOutside);
+			document.addEventListener("click", handleClickOutside);
 			// Auto-focus input for mobile keyboard trigger
 			if (autoFocus) {
 				setTimeout(() => inputRef?.focus(), 100);
@@ -64,14 +69,14 @@
 			await initStopsDB();
 			isInitialized = true;
 		} catch (e) {
-			error = 'Failed to load stops database';
+			error = "Failed to load stops database";
 			console.error(e);
 		}
 	});
 
 	onDestroy(() => {
 		if (browser) {
-			document.removeEventListener('click', handleClickOutside);
+			document.removeEventListener("click", handleClickOutside);
 		}
 	});
 
@@ -97,8 +102,8 @@
 				hasSearched = true;
 				error = null;
 			} catch (e) {
-				error = 'Search failed';
-				console.error('Stop search error:', e);
+				error = "Search failed";
+				console.error("Stop search error:", e);
 			} finally {
 				isLoading = false;
 			}
@@ -107,7 +112,7 @@
 
 	async function handleNearbyClick() {
 		if (!navigator.geolocation) {
-			error = 'Geolocation not supported';
+			error = "Geolocation not supported";
 			return;
 		}
 
@@ -121,15 +126,15 @@
 						position.coords.latitude,
 						position.coords.longitude,
 						1, // 1km radius
-						15
+						15,
 					);
 					results = nearby.map(({ distance, ...stop }) => stop);
 					showResults = true;
 					hasSearched = true;
-					query = '';
+					query = "";
 					highlightedIndex = -1;
 				} catch (e) {
-					error = 'Failed to find nearby stops';
+					error = "Failed to find nearby stops";
 					console.error(e);
 				} finally {
 					isLoadingNearby = false;
@@ -138,12 +143,12 @@
 			(geoError) => {
 				isLoadingNearby = false;
 				if (geoError.code === geoError.PERMISSION_DENIED) {
-					error = 'Location access denied';
+					error = "Location access denied";
 				} else {
-					error = 'Could not get location';
+					error = "Could not get location";
 				}
 			},
-			{ enableHighAccuracy: true, timeout: 10000 }
+			{ enableHighAccuracy: true, timeout: 10000 },
 		);
 	}
 
@@ -156,7 +161,7 @@
 	}
 
 	function clearSearch() {
-		query = '';
+		query = "";
 		results = [];
 		showResults = false;
 		highlightedIndex = -1;
@@ -173,7 +178,7 @@
 	function handleBlur(event: FocusEvent) {
 		// Don't hide if clicking on results
 		const relatedTarget = event.relatedTarget as HTMLElement;
-		if (relatedTarget?.closest('[data-stop-results]')) {
+		if (relatedTarget?.closest("[data-stop-results]")) {
 			return;
 		}
 		// Delay hiding to allow click events
@@ -187,23 +192,29 @@
 		if (!showResults || results.length === 0) return;
 
 		switch (event.key) {
-			case 'ArrowDown':
+			case "ArrowDown":
 				event.preventDefault();
 				highlightedIndex = (highlightedIndex + 1) % results.length;
 				scrollToHighlighted();
 				break;
-			case 'ArrowUp':
+			case "ArrowUp":
 				event.preventDefault();
-				highlightedIndex = highlightedIndex <= 0 ? results.length - 1 : highlightedIndex - 1;
+				highlightedIndex =
+					highlightedIndex <= 0
+						? results.length - 1
+						: highlightedIndex - 1;
 				scrollToHighlighted();
 				break;
-			case 'Enter':
+			case "Enter":
 				event.preventDefault();
-				if (highlightedIndex >= 0 && highlightedIndex < results.length) {
+				if (
+					highlightedIndex >= 0 &&
+					highlightedIndex < results.length
+				) {
 					selectStop(results[highlightedIndex]);
 				}
 				break;
-			case 'Escape':
+			case "Escape":
 				event.preventDefault();
 				if (showResults) {
 					showResults = false;
@@ -216,19 +227,21 @@
 	}
 
 	function scrollToHighlighted() {
-		const container = document.querySelector('[data-stop-results]');
-		const highlighted = container?.querySelector(`[data-index="${highlightedIndex}"]`);
-		highlighted?.scrollIntoView({ block: 'nearest' });
+		const container = document.querySelector("[data-stop-results]");
+		const highlighted = container?.querySelector(
+			`[data-index="${highlightedIndex}"]`,
+		);
+		highlighted?.scrollIntoView({ block: "nearest" });
 	}
 
-	function getStopIcon(type: TTCStop['type']) {
+	function getStopIcon(type: TTCStop["type"]) {
 		switch (type) {
-			case 'subway':
-				return '🚇';
-			case 'streetcar':
-				return '🚋';
+			case "subway":
+				return "🚇";
+			case "streetcar":
+				return "🚋";
 			default:
-				return '🚌';
+				return "🚌";
 		}
 	}
 </script>
@@ -237,7 +250,13 @@
 	{#if onClose}
 		<div class="flex items-center justify-between mb-3 p-3 pb-0">
 			<h3 class="font-semibold">Add a Stop</h3>
-			<Button variant="ghost" size="icon" class="h-8 w-8" onclick={onClose} aria-label="Close">
+			<Button
+				variant="ghost"
+				size="icon"
+				class="h-8 w-8"
+				onclick={onClose}
+				aria-label="Close"
+			>
 				<X class="h-4 w-4" />
 			</Button>
 		</div>
@@ -261,7 +280,9 @@
 				aria-label="Search for a TTC stop"
 				aria-autocomplete="list"
 				aria-expanded={showResults}
-				aria-activedescendant={highlightedIndex >= 0 ? `stop-option-${highlightedIndex}` : undefined}
+				aria-activedescendant={highlightedIndex >= 0
+					? `stop-option-${highlightedIndex}`
+					: undefined}
 			/>
 			{#if query || isLoading}
 				<button
@@ -320,27 +341,43 @@
 						class="stop-result-item flex w-full items-start gap-3 px-3 py-2.5 text-left outline-none transition-colors"
 						class:highlighted={highlightedIndex === index}
 					>
-						<MapPin class="h-5 w-5 mt-0.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+						<MapPin
+							class="h-5 w-5 mt-0.5 text-muted-foreground flex-shrink-0"
+							aria-hidden="true"
+						/>
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center gap-2 flex-wrap">
-								<p class="truncate text-sm font-medium">{stop.name}</p>
+								<p class="truncate text-sm font-medium">
+									{stop.name}
+								</p>
 								{#if stop.dir}
-									{@const dirColor = stop.dir === 'Eastbound' ? 'bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40' 
-										: stop.dir === 'Westbound' ? 'bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-600/40'
-										: stop.dir === 'Northbound' ? 'bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40'
-										: 'bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40'}
-									<span class="text-[10px] font-medium px-1.5 py-0.5 rounded border flex-shrink-0 uppercase {dirColor}">
+									{@const dirColor =
+										stop.dir === "Eastbound"
+											? "bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40"
+											: stop.dir === "Westbound"
+												? "bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-600/40"
+												: stop.dir === "Northbound"
+													? "bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40"
+													: "bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40"}
+									<span
+										class="text-[10px] font-medium px-1.5 py-0.5 rounded border flex-shrink-0 uppercase {dirColor}"
+									>
 										{stop.dir}
 									</span>
 								{/if}
-								<span class="text-xs text-muted-foreground/60 flex-shrink-0">#{stop.id}</span>
+								<span
+									class="text-xs text-muted-foreground/60 flex-shrink-0"
+									>#{stop.id}</span
+								>
 							</div>
 							<div class="mt-1 flex flex-wrap gap-1">
 								{#each stop.routes.slice(0, 5) as route}
-									<RouteBadge route={route} size="sm" />
+									<RouteBadge {route} size="sm" />
 								{/each}
 								{#if stop.routes.length > 5}
-									<span class="text-muted-foreground text-xs">+{stop.routes.length - 5} more</span>
+									<span class="text-muted-foreground text-xs"
+										>+{stop.routes.length - 5} more</span
+									>
 								{/if}
 							</div>
 						</div>
@@ -350,16 +387,22 @@
 					</button>
 				{/each}
 			{:else if hasSearched && !isLoading}
-				<div class="text-muted-foreground px-3 py-4 text-center text-sm">
+				<div
+					class="text-muted-foreground px-3 py-4 text-center text-sm"
+				>
 					<p>No stops found for "{query}"</p>
-					<p class="mt-1 text-xs">Try a different search term or use the nearby button</p>
+					<p class="mt-1 text-xs">
+						Try a different search term or use the nearby button
+					</p>
 				</div>
 			{/if}
 		</div>
 	{/if}
 
 	{#if !isInitialized && !error}
-		<p class="text-muted-foreground mt-1 text-sm">Loading stops database...</p>
+		<p class="text-muted-foreground mt-1 text-sm">
+			Loading stops database...
+		</p>
 	{/if}
 </div>
 
@@ -367,20 +410,20 @@
 	.stop-result-item {
 		background-color: transparent;
 	}
-	
+
 	.stop-result-item:hover {
 		background-color: rgba(255, 255, 255, 0.08);
 	}
-	
+
 	.stop-result-item.highlighted {
 		background-color: rgba(255, 255, 255, 0.12);
 	}
-	
+
 	:global(.light) .stop-result-item:hover,
 	:root:not(.dark) .stop-result-item:hover {
 		background-color: rgba(0, 0, 0, 0.05);
 	}
-	
+
 	:global(.light) .stop-result-item.highlighted,
 	:root:not(.dark) .stop-result-item.highlighted {
 		background-color: rgba(0, 0, 0, 0.08);

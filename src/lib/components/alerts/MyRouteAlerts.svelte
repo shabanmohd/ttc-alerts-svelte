@@ -1,23 +1,35 @@
 <script lang="ts">
-  import { Search, Plus, Bell, X, Pencil, RefreshCw, MapPinned } from 'lucide-svelte';
-  import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
-  import { browser } from '$app/environment';
-  import AlertCard from './AlertCard.svelte';
-  import RouteSearch from './RouteSearch.svelte';
-  import RouteBadge from './RouteBadge.svelte';
-  import { Button } from '$lib/components/ui/button';
-  import { Skeleton } from '$lib/components/ui/skeleton';
-  import { threadsWithAlerts, isLoading, refreshAlerts } from '$lib/stores/alerts';
-  import { savedRoutes } from '$lib/stores/savedRoutes';
-  import type { ThreadWithAlerts } from '$lib/types/database';
-  
+  import {
+    Search,
+    Plus,
+    Bell,
+    X,
+    Pencil,
+    RefreshCw,
+    MapPinned,
+  } from "lucide-svelte";
+  import { goto } from "$app/navigation";
+  import { onMount } from "svelte";
+  import { browser } from "$app/environment";
+  import AlertCard from "./AlertCard.svelte";
+  import RouteSearch from "./RouteSearch.svelte";
+  import RouteBadge from "./RouteBadge.svelte";
+  import { Button } from "$lib/components/ui/button";
+  import { Skeleton } from "$lib/components/ui/skeleton";
+  import {
+    threadsWithAlerts,
+    isLoading,
+    refreshAlerts,
+  } from "$lib/stores/alerts";
+  import { savedRoutes } from "$lib/stores/savedRoutes";
+  import type { ThreadWithAlerts } from "$lib/types/database";
+
   // Route filter state - which specific route to show (null = all saved routes)
   let selectedRouteFilter = $state<string | null>(null);
-  
+
   let isEditMode = $state(false);
   let isRefreshing = $state(false);
-  
+
   // Handle manual refresh
   async function handleRefresh() {
     isRefreshing = true;
@@ -35,13 +47,13 @@
       selectedRouteFilter = null;
     }
   }
-  
+
   // Toggle route filter
   function toggleRouteFilter(routeId: string) {
     if (isEditMode) return; // Don't toggle when in edit mode
     selectedRouteFilter = selectedRouteFilter === routeId ? null : routeId;
   }
-  
+
   // Toggle edit mode
   function toggleEditMode() {
     isEditMode = !isEditMode;
@@ -50,17 +62,19 @@
       selectedRouteFilter = null;
     }
   }
-  
+
   // Get saved route IDs
-  let routeIds = $derived($savedRoutes.map(r => r.id));
-  
+  let routeIds = $derived($savedRoutes.map((r) => r.id));
+
   let hasRoutes = $derived($savedRoutes.length > 0);
-  
+
   // Helper to extract routes from various formats
-  function extractRoutes(routes: string | string[] | null | undefined): string[] {
+  function extractRoutes(
+    routes: string | string[] | null | undefined,
+  ): string[] {
     if (!routes) return [];
     if (Array.isArray(routes)) return routes;
-    if (typeof routes === 'string') {
+    if (typeof routes === "string") {
       try {
         const parsed = JSON.parse(routes);
         return Array.isArray(parsed) ? parsed : [routes];
@@ -70,71 +84,82 @@
     }
     return [];
   }
-  
+
   // Helper to check if thread matches a specific route
-  function matchesSpecificRoute(thread: ThreadWithAlerts, routeId: string): boolean {
+  function matchesSpecificRoute(
+    thread: ThreadWithAlerts,
+    routeId: string,
+  ): boolean {
     const threadRoutes = extractRoutes(thread.affected_routes);
     const alertRoutes = extractRoutes(thread.latestAlert?.affected_routes);
     const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
-    
-    return allRoutes.some(threadRoute => 
-      threadRoute.toLowerCase() === routeId.toLowerCase() ||
-      threadRoute.includes(routeId) ||
-      routeId.includes(threadRoute)
+
+    return allRoutes.some(
+      (threadRoute) =>
+        threadRoute.toLowerCase() === routeId.toLowerCase() ||
+        threadRoute.includes(routeId) ||
+        routeId.includes(threadRoute),
     );
   }
-  
+
   // Helper to check if thread matches saved routes
   function matchesRoutes(thread: ThreadWithAlerts): boolean {
     const threadRoutes = extractRoutes(thread.affected_routes);
     const alertRoutes = extractRoutes(thread.latestAlert?.affected_routes);
     const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
-    
-    return routeIds.some(savedRoute => 
-      allRoutes.some(threadRoute => 
-        threadRoute.toLowerCase() === savedRoute.toLowerCase() ||
-        threadRoute.includes(savedRoute) ||
-        savedRoute.includes(threadRoute)
-      )
+
+    return routeIds.some((savedRoute) =>
+      allRoutes.some(
+        (threadRoute) =>
+          threadRoute.toLowerCase() === savedRoute.toLowerCase() ||
+          threadRoute.includes(savedRoute) ||
+          savedRoute.includes(threadRoute),
+      ),
     );
   }
-  
+
   // Get all alerts matching saved routes
   let routeMatchedAlerts = $derived.by<ThreadWithAlerts[]>(() => {
     if (routeIds.length === 0) return [];
     return $threadsWithAlerts.filter(matchesRoutes);
   });
-  
+
   // Filter alerts for saved routes with optional route filter applied
   let myAlerts = $derived.by<ThreadWithAlerts[]>(() => {
     const routeFilter = selectedRouteFilter;
-    
+
     // Start with route-matched alerts
     let filtered = routeMatchedAlerts;
-    
+
     // Apply specific route filter if selected
     if (routeFilter) {
-      filtered = filtered.filter(thread => matchesSpecificRoute(thread, routeFilter));
+      filtered = filtered.filter((thread) =>
+        matchesSpecificRoute(thread, routeFilter),
+      );
     }
-    
+
     return filtered;
   });
-  
+
   function handleAddRoutes() {
-    goto('/routes');
+    goto("/routes");
   }
+
+  // Reference to RouteSearch component for focus
+  let routeSearchRef: { focus: () => void } | undefined = $state();
 </script>
-
-
 
 <div class="my-route-alerts">
   <!-- Search Bar with Inline Dropdown -->
   <div class="search-section">
-    <RouteSearch placeholder="Search by route number or name..." />
+    <RouteSearch
+      bind:this={routeSearchRef}
+      placeholder="Search by route number or name..."
+    />
     {#if hasRoutes}
-      <Button 
-        variant="ghost" 
-        size="sm" 
+      <Button
+        variant="ghost"
+        size="sm"
         class="edit-button"
         onclick={toggleEditMode}
       >
@@ -177,7 +202,7 @@
             class="route-tab"
             class:active={selectedRouteFilter === null}
             aria-selected={selectedRouteFilter === null}
-            onclick={() => selectedRouteFilter = null}
+            onclick={() => (selectedRouteFilter = null)}
           >
             All saved routes
           </button>
@@ -188,7 +213,7 @@
               class="route-tab"
               class:active={selectedRouteFilter === route.id}
               aria-selected={selectedRouteFilter === route.id}
-              onclick={() => selectedRouteFilter = route.id}
+              onclick={() => (selectedRouteFilter = route.id)}
             >
               <RouteBadge route={route.id} size="sm" />
             </button>
@@ -220,47 +245,54 @@
     </div>
   {:else if !hasRoutes}
     <!-- Empty State: No Routes Saved -->
-    <div class="empty-state">
+    <button
+      type="button"
+      class="empty-state"
+      onclick={() => routeSearchRef?.focus()}
+    >
       <div class="empty-state-icon">
         <MapPinned class="h-8 w-8" />
       </div>
       <h3 class="empty-state-title">No routes saved yet</h3>
       <p class="empty-state-description">
-        Use the search bar above to find and save your regular routes. Get alerts for delays and disruptions.
+        Use the search bar above to find and save your regular routes. Get
+        alerts for delays and disruptions.
       </p>
+    </button>
+  {:else if myAlerts.length === 0}
+    <!-- Empty State: Routes Saved but No Active Alerts -->
+    <div class="empty-state success">
+      <div class="empty-state-icon success">
+        <Bell class="h-8 w-8" />
+      </div>
+      <h3 class="empty-state-title">All clear!</h3>
+      <p class="empty-state-description">
+        No active alerts for your saved routes. Service is running normally.
+      </p>
+      <button
+        type="button"
+        class="refresh-button"
+        onclick={handleRefresh}
+        disabled={isRefreshing}
+        aria-label="Refresh alerts"
+      >
+        <span class="refresh-icon" class:spinning={isRefreshing}>
+          <RefreshCw class="h-4 w-4" />
+        </span>
+        {isRefreshing ? "Refreshing..." : "Refresh"}
+      </button>
     </div>
   {:else}
-    {#if myAlerts.length === 0}
-      <!-- Empty State: Routes Saved but No Active Alerts -->
-      <div class="empty-state success">
-        <div class="empty-state-icon success">
-          <Bell class="h-8 w-8" />
-        </div>
-        <h3 class="empty-state-title">All clear!</h3>
-        <p class="empty-state-description">
-          No active alerts for your saved routes. Service is running normally.
-        </p>
-        <button
-          type="button"
-          class="refresh-button"
-          onclick={handleRefresh}
-          disabled={isRefreshing}
-          aria-label="Refresh alerts"
-        >
-          <span class="refresh-icon" class:spinning={isRefreshing}>
-            <RefreshCw class="h-4 w-4" />
-          </span>
-          {isRefreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
-      </div>
-    {:else}
-      <!-- Alert Cards for Saved Routes -->
-      <div class="space-y-3" role="feed" aria-label="Alerts for your saved routes">
-        {#each myAlerts as thread (thread.thread_id)}
-          <AlertCard {thread} />
-        {/each}
-      </div>
-    {/if}
+    <!-- Alert Cards for Saved Routes -->
+    <div
+      class="space-y-3"
+      role="feed"
+      aria-label="Alerts for your saved routes"
+    >
+      {#each myAlerts as thread (thread.thread_id)}
+        <AlertCard {thread} />
+      {/each}
+    </div>
   {/if}
 </div>
 
@@ -275,8 +307,6 @@
     gap: 0.5rem;
     margin-bottom: 1rem;
   }
-
-
 
   /* Route tabs container with fade indicator on mobile */
   .route-tabs-container {
@@ -314,7 +344,7 @@
       flex-wrap: wrap;
       overflow-x: visible;
     }
-    
+
     .route-tabs-fade {
       display: none;
     }
@@ -407,8 +437,6 @@
     color: hsl(var(--destructive-foreground));
   }
 
-
-
   .empty-state {
     display: flex;
     flex-direction: column;
@@ -432,19 +460,19 @@
     color: hsl(var(--muted-foreground));
     margin-bottom: 1rem;
   }
-  
+
   .empty-state-icon.success {
     background-color: hsl(142 76% 36% / 0.1);
     color: hsl(142 76% 36%);
   }
-  
+
   .empty-state-title {
     font-size: 1.125rem;
     font-weight: 600;
     color: hsl(var(--foreground));
     margin-bottom: 0.5rem;
   }
-  
+
   .empty-state-description {
     font-size: 0.875rem;
     color: hsl(var(--muted-foreground));

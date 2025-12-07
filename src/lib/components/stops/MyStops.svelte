@@ -78,12 +78,16 @@
   }
 
   let hasStops = $derived(count > 0);
+
+  // Reference to StopSearch component for focus
+  let stopSearchRef: { focus: () => void } | undefined = $state();
 </script>
 
 <div class={cn("my-stops", className)}>
   <!-- Search Bar with Inline Dropdown -->
   <div class="search-section">
     <StopSearch
+      bind:this={stopSearchRef}
       placeholder="Search by name or stop ID..."
       showNearbyButton={true}
       showBookmarkButton={true}
@@ -146,7 +150,11 @@
     {/if}
   {:else}
     <!-- Empty State -->
-    <div class="empty-state">
+    <button
+      type="button"
+      class="empty-state"
+      onclick={() => stopSearchRef?.focus()}
+    >
       <div class="empty-state-icon">
         <MapPin class="h-8 w-8" />
       </div>
@@ -155,7 +163,7 @@
         Use the search bar above to find stops. Tap the location icon to find
         nearby stops.
       </p>
-    </div>
+    </button>
   {/if}
 </div>
 
