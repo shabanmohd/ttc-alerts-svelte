@@ -122,7 +122,6 @@
     {#each etas.slice(0, maxDisplay) as eta (eta.stopId)}
       <SwipeableCard 
         onDelete={() => handleRemoveStop(eta.stopId)}
-        disabled={isEditMode}
       >
         <div class="eta-card-wrapper" class:editing={isEditMode}>
           <ETACard {eta} showRemove={false} class="flex-1" />

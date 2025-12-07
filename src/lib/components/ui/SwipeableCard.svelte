@@ -57,12 +57,14 @@
       e.preventDefault();
     }
 
-    // Only allow left swipe (negative diff)
+    // Allow left swipe (negative diff) and right swipe to close
     if (diffX < 0) {
+      // Swiping left
       translateX = Math.max(diffX, -deleteButtonWidth);
     } else if (translateX < 0) {
-      // Allow swiping back right to close
-      translateX = Math.min(0, translateX + (diffX - startX));
+      // Swiping back right to close - use absolute diffX for smooth close
+      const newTranslateX = translateX + diffX;
+      translateX = Math.min(0, newTranslateX);
     }
   }
 
@@ -176,6 +178,9 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s;
+    border-radius: var(--radius);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
   }
 
   .swipeable-container:has(.swipeable-content[style*="--translate-x: -"]) .delete-button {
