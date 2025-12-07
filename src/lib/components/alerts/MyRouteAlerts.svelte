@@ -20,6 +20,7 @@
     threadsWithAlerts,
     isLoading,
     refreshAlerts,
+    recentlyAddedThreadIds,
   } from "$lib/stores/alerts";
   import { savedRoutes } from "$lib/stores/savedRoutes";
   import type { ThreadWithAlerts } from "$lib/types/database";
@@ -293,9 +294,10 @@
       aria-label="Alerts for your saved routes"
     >
       {#each myAlerts as thread, i (thread.thread_id)}
+        {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
         <div
-          class="animate-fade-in-up"
-          style="animation-delay: {Math.min(i * 50, 300)}ms"
+          class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
+          style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
         >
           <AlertCard {thread} />
         </div>

@@ -18,6 +18,7 @@
     activeFilters,
     isConnected,
     fetchMaintenance,
+    recentlyAddedThreadIds,
   } from "$lib/stores/alerts";
   import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import { isVisible } from "$lib/stores/visibility";
@@ -196,9 +197,10 @@
         </div>
       {:else}
         {#each $filteredThreads as thread, i (thread.thread_id)}
+          {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
           <div
-            class="animate-fade-in-up"
-            style="animation-delay: {Math.min(i * 50, 300)}ms"
+            class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
+            style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
           >
             <AlertCard {thread} />
           </div>

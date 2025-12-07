@@ -10,6 +10,9 @@ export const isLoading = writable(true);
 export const error = writable<string | null>(null);
 export const lastUpdated = writable<Date | null>(null);
 
+// Track recently added thread IDs for "new alert" animation
+export const recentlyAddedThreadIds = writable<Set<string>>(new Set());
+
 // Filter state
 export const activeFilters = writable<Set<string>>(new Set(['ALL']));
 export const currentTab = writable<'all' | 'my'>('all');
@@ -154,6 +157,25 @@ function handleAlertInsert(newAlert: Alert): void {
     // Keep only last 100 alerts in memory
     return updated.slice(0, 100);
   });
+  
+  // Track this alert's thread as recently added for animation
+  if (newAlert.thread_id) {
+    recentlyAddedThreadIds.update(ids => {
+      const newIds = new Set(ids);
+      newIds.add(newAlert.thread_id);
+      return newIds;
+    });
+    
+    // Clear after animation completes (1 second)
+    setTimeout(() => {
+      recentlyAddedThreadIds.update(ids => {
+        const newIds = new Set(ids);
+        newIds.delete(newAlert.thread_id);
+        return newIds;
+      });
+    }, 1000);
+  }
+  
   lastUpdated.set(new Date());
 }
 
@@ -173,6 +195,22 @@ function handleAlertDelete(deletedAlert: { alert_id: string }): void {
 // Handle incoming thread from Realtime
 function handleThreadInsert(newThread: Thread): void {
   threads.update(current => [newThread, ...current]);
+  
+  // Track as recently added for animation
+  recentlyAddedThreadIds.update(ids => {
+    const newIds = new Set(ids);
+    newIds.add(newThread.thread_id);
+    return newIds;
+  });
+  
+  // Clear after animation completes (1 second)
+  setTimeout(() => {
+    recentlyAddedThreadIds.update(ids => {
+      const newIds = new Set(ids);
+      newIds.delete(newThread.thread_id);
+      return newIds;
+    });
+  }, 1000);
 }
 
 function handleThreadUpdate(updatedThread: Thread): void {
