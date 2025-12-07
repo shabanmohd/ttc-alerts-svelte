@@ -154,7 +154,7 @@
 
   .swipeable-content {
     transform: translateX(var(--translate-x, 0));
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
     position: relative;
     z-index: 2;
@@ -177,10 +177,8 @@
     z-index: 1;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s;
+    transition: opacity 0.25s ease-in-out;
     border-radius: var(--radius);
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
   }
 
   .swipeable-container:has(.swipeable-content[style*="--translate-x: -"]) .delete-button {
@@ -198,7 +196,7 @@
     border: none;
     color: hsl(var(--destructive-foreground));
     cursor: pointer;
-    transition: background-color 0.15s;
+    transition: background-color 0.2s ease-in-out;
   }
 
   .delete-button-inner:active {
