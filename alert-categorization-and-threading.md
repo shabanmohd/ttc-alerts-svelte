@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.1  
-**Date:** December 4, 2025  
-**Status:** ✅ Implemented and Active  
+**Version:** 3.2  
+**Date:** December 5, 2025  
+**Status:** ✅ Implemented and Active (Deployed)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -680,6 +680,47 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 | Concurrent Connections | ~100    | 200   | ✅ Safe |
 
 **Current safe capacity:** ~4,000 monthly active users on free tier
+
+---
+
+## Changelog
+
+### Version 3.2 - December 5, 2025
+
+**Threading Bug Fix (Production Deployment):**
+
+- ✅ **Critical Fix**: Prevented false positive alert threading
+  - Bug: Alerts without extracted routes could match threads based purely on text similarity
+  - Result: Unrelated routes (131, 38, 21, 57) were incorrectly grouped with route 133 thread
+- ✅ **Safety Check #1**: Alerts must have non-empty `routes` array to attempt thread matching
+- ✅ **Safety Check #2**: Threads with empty `affected_routes` are skipped during matching
+- ✅ **Deployment**: Updated `poll-alerts` Edge Function deployed via Supabase CLI
+- ✅ **Documentation**: Updated threading rules and added "Critical Safety Checks" section
+
+**Technical Details:**
+
+```typescript
+// Before: All alerts attempted thread matching
+for (const thread of unresolvedThreads || []) { ... }
+
+// After: Only alerts WITH routes attempt matching
+if (routes.length > 0) {
+  for (const thread of unresolvedThreads || []) {
+    const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+    
+    // Skip threads with no routes
+    if (threadRoutes.length === 0) continue;
+    
+    // ... route matching logic
+  }
+}
+```
+
+**Impact:**
+
+- Eliminates false positive threading where vague alerts match unrelated routes
+- Ensures route extraction is the first gate before similarity matching
+- Improves alert accuracy and prevents confusion for users
 
 ---
 

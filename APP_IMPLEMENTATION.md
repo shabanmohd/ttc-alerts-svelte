@@ -554,6 +554,29 @@ For local development, use `localhost` and `http://localhost:5173`.
 - Added checkDisplayNameAvailable to webauthn.ts
 - Build passes successfully
 
+### Dec 5, 2025 - Threading Bug Fix & Mobile UX
+
+**Threading Bug Fix (Critical):**
+- ✅ Fixed false positive alert threading where alerts without extracted routes could match any thread based purely on text similarity
+- ✅ Added safety check: alerts must have non-empty `affected_routes` array to attempt thread matching
+- ✅ Added safety check: skip threads with empty `affected_routes` during matching
+- ✅ Prevents unrelated routes from being grouped (e.g., routes 131, 38, 21, 57 incorrectly grouped with route 133)
+- ✅ Updated `supabase/functions/poll-alerts/index.ts` with critical safety checks
+- ✅ Deployed to production via Supabase CLI
+
+**Mobile Direction Tabs Fix:**
+- ✅ Fixed `RouteDirectionTabs.svelte` to show terminal names instead of "All" on mobile
+- ✅ Added short labels: VMC, Finch, Kennedy, Kipling, Don Mills, Shep-Yonge, Finch W, Humber
+- ✅ Updated `getDirectionIcon()` to map terminal names to arrows
+
+**Documentation:**
+- ✅ Updated `alert-categorization-and-threading.md` with new threading rules and safety checks
+- ✅ Updated `DESIGN_SYSTEM.md` with mobile direction tab short labels
+
+**Deployment:**
+- ✅ Fixed `supabase/config.toml` functions configuration format
+- ✅ Deployed threading fix via CLI: `npx supabase functions deploy poll-alerts --project-ref wmchvmegxcpyfjcuzqzk`
+
 ### Dec 4, 2025 - Edge Functions Deployed
 
 - Deployed 8 Edge Functions via MCP

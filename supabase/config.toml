@@ -106,6 +106,5 @@ enabled = false
 [auth.external.zoom]
 enabled = false
 
-[functions]
-# Set to false to disable automatic reloading of functions during development.
-enabled = true
+[functions.poll-alerts]
+verify_jwt = false
