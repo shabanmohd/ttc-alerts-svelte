@@ -294,12 +294,44 @@ for (const thread of unresolvedThreads || []) {
 
 ### Threading Rules
 
-1. **Exact route number match required** - Route NUMBERS must match (e.g., "46" = "46 Martin Grove", but "46" ≠ "996")
-2. **Medium similarity (≥50%)** - For general alert matching
-3. **Low similarity (≥30%)** - For DIVERSION/DELAY updates
-4. **Very low similarity (≥10%)** - For SERVICE_RESUMED (very different vocabulary)
-5. **6-hour window** - Only match unresolved threads updated within 6 hours
-6. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
+1. **Alert must have routes** - Alerts without extracted routes create new threads, never match existing
+2. **Thread must have routes** - Threads with empty routes are skipped during matching
+3. **Exact route number match required** - Route NUMBERS must match (e.g., "46" = "46 Martin Grove", but "46" ≠ "996")
+4. **Medium similarity (≥50%)** - For general alert matching
+5. **Low similarity (≥30%)** - For DIVERSION/DELAY updates
+6. **Very low similarity (≥10%)** - For SERVICE_RESUMED (very different vocabulary)
+7. **6-hour window** - Only match unresolved threads updated within 6 hours
+8. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
+
+### Critical Safety Checks (Prevent False Matches)
+
+```typescript
+// CRITICAL: Only attempt thread matching if alert has extracted routes
+// Alerts without routes should NEVER match existing threads
+if (routes.length > 0) {
+  for (const thread of unresolvedThreads || []) {
+    const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+    
+    // Skip threads with no routes - they can't be reliably matched
+    if (threadRoutes.length === 0) continue;
+    
+    // Use exact route number matching
+    const hasRouteOverlap = routes.some(alertRoute => 
+      threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))
+    );
+    
+    // Only proceed with similarity check if routes match
+    if (hasRouteOverlap) {
+      // ... similarity checks
+    }
+  }
+}
+```
+
+**Why This Matters:**
+- Prevents alerts like "All clear" (no routes) from matching unrelated threads
+- Prevents threads with empty routes from becoming catch-all buckets
+- Ensures route extraction is the FIRST gate before any similarity matching
 
 ### Text Similarity Calculation
 

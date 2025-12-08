@@ -194,38 +194,46 @@ serve(async (req) => {
       // Thread matching
       let matchedThread = null;
 
-      // Check for matching thread based on EXACT route number match and similarity
-      for (const thread of unresolvedThreads || []) {
-        const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
-        
-        // Use exact route number matching to prevent 46 matching 996, etc.
-        const hasRouteOverlap = routes.some(alertRoute => 
-          threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))
-        );
-        
-        if (hasRouteOverlap) {
-          const threadTitle = thread.title || '';
-          const similarity = jaccardSimilarity(text, threadTitle);
+      // CRITICAL: Only attempt thread matching if alert has extracted routes
+      // Alerts without routes should NEVER match existing threads
+      // This prevents false positives where vague alerts get grouped incorrectly
+      if (routes.length > 0) {
+        // Check for matching thread based on EXACT route number match and similarity
+        for (const thread of unresolvedThreads || []) {
+          const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
           
-          // Lower threshold (50%) for general matching - routes already match
-          if (similarity >= 0.5) {
-            matchedThread = thread;
-            break;
-          }
+          // Skip threads with no routes - they can't be reliably matched
+          if (threadRoutes.length === 0) continue;
           
-          // Very low threshold (10%) for SERVICE_RESUMED with route overlap
-          // SERVICE_RESUMED alerts have very different vocabulary ("resumed", "regular service")
-          // than the original alert ("detour", "no service", "delay")
-          if (category === 'SERVICE_RESUMED' && similarity >= 0.1) {
-            matchedThread = thread;
-            break;
-          }
+          // Use exact route number matching to prevent 46 matching 996, etc.
+          const hasRouteOverlap = routes.some(alertRoute => 
+            threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))
+          );
           
-          // For DIVERSION/DETOUR alerts, use lower threshold (30%) since they 
-          // may update existing incidents with different wording
-          if ((category === 'DIVERSION' || category === 'DELAY') && similarity >= 0.3) {
-            matchedThread = thread;
-            break;
+          if (hasRouteOverlap) {
+            const threadTitle = thread.title || '';
+            const similarity = jaccardSimilarity(text, threadTitle);
+            
+            // Lower threshold (50%) for general matching - routes already match
+            if (similarity >= 0.5) {
+              matchedThread = thread;
+              break;
+            }
+            
+            // Very low threshold (10%) for SERVICE_RESUMED with route overlap
+            // SERVICE_RESUMED alerts have very different vocabulary ("resumed", "regular service")
+            // than the original alert ("detour", "no service", "delay")
+            if (category === 'SERVICE_RESUMED' && similarity >= 0.1) {
+              matchedThread = thread;
+              break;
+            }
+            
+            // For DIVERSION/DETOUR alerts, use lower threshold (30%) since they 
+            // may update existing incidents with different wording
+            if ((category === 'DIVERSION' || category === 'DELAY') && similarity >= 0.3) {
+              matchedThread = thread;
+              break;
+            }
           }
         }
       }

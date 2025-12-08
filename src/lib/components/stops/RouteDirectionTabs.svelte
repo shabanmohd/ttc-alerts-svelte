@@ -37,12 +37,12 @@
       case "Southbound":
         return ArrowDown;
     }
-    
+
     // Subway terminal directions - map to appropriate arrows
     // Line 1: VMC is northwest, Finch is north
     if (direction === "Towards VMC") return ArrowLeft;
     if (direction === "Towards Finch") return ArrowRight;
-    // Line 2: Kennedy is east, Kipling is west  
+    // Line 2: Kennedy is east, Kipling is west
     if (direction === "Towards Kennedy") return ArrowRight;
     if (direction === "Towards Kipling") return ArrowLeft;
     // Line 4: Don Mills is east, Sheppard-Yonge is west
@@ -51,7 +51,7 @@
     // Line 6: Finch West is east, Humber College is west
     if (direction === "Towards Finch West") return ArrowRight;
     if (direction === "Towards Humber College") return ArrowLeft;
-    
+
     return CircleDot;
   }
 
@@ -72,7 +72,7 @@
       case "All Stops":
         return "All";
     }
-    
+
     // Subway terminal names - extract terminal station
     // "Towards VMC" -> "VMC"
     // "Towards Kennedy" -> "Kennedy"
@@ -86,7 +86,7 @@
       if (terminal === "Don Mills") return "Don Mills";
       return terminal;
     }
-    
+
     return direction;
   }
 </script>
