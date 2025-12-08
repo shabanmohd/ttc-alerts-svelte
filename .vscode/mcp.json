@@ -21,11 +21,8 @@
       ]
     },
     "supabase": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-supabase"
-      ]
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp"
     }
   }
 }

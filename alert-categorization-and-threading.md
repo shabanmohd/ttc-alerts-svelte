@@ -310,16 +310,18 @@ for (const thread of unresolvedThreads || []) {
 // Alerts without routes should NEVER match existing threads
 if (routes.length > 0) {
   for (const thread of unresolvedThreads || []) {
-    const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
-    
+    const threadRoutes = Array.isArray(thread.affected_routes)
+      ? thread.affected_routes
+      : [];
+
     // Skip threads with no routes - they can't be reliably matched
     if (threadRoutes.length === 0) continue;
-    
+
     // Use exact route number matching
-    const hasRouteOverlap = routes.some(alertRoute => 
-      threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))
+    const hasRouteOverlap = routes.some((alertRoute) =>
+      threadRoutes.some((threadRoute) => routesMatch(alertRoute, threadRoute))
     );
-    
+
     // Only proceed with similarity check if routes match
     if (hasRouteOverlap) {
       // ... similarity checks
@@ -329,6 +331,7 @@ if (routes.length > 0) {
 ```
 
 **Why This Matters:**
+
 - Prevents alerts like "All clear" (no routes) from matching unrelated threads
 - Prevents threads with empty routes from becoming catch-all buckets
 - Ensures route extraction is the FIRST gate before any similarity matching
