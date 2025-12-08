@@ -26,6 +26,7 @@
    * Get icon component for direction
    */
   function getDirectionIcon(direction: DirectionLabel) {
+    // Cardinal directions
     switch (direction) {
       case "Eastbound":
         return ArrowRight;
@@ -35,15 +36,30 @@
         return ArrowUp;
       case "Southbound":
         return ArrowDown;
-      default:
-        return CircleDot;
     }
+    
+    // Subway terminal directions - map to appropriate arrows
+    // Line 1: VMC is northwest, Finch is north
+    if (direction === "Towards VMC") return ArrowLeft;
+    if (direction === "Towards Finch") return ArrowRight;
+    // Line 2: Kennedy is east, Kipling is west  
+    if (direction === "Towards Kennedy") return ArrowRight;
+    if (direction === "Towards Kipling") return ArrowLeft;
+    // Line 4: Don Mills is east, Sheppard-Yonge is west
+    if (direction === "Towards Don Mills") return ArrowRight;
+    if (direction === "Towards Sheppard-Yonge") return ArrowLeft;
+    // Line 6: Finch West is east, Humber College is west
+    if (direction === "Towards Finch West") return ArrowRight;
+    if (direction === "Towards Humber College") return ArrowLeft;
+    
+    return CircleDot;
   }
 
   /**
    * Get short label for mobile display
    */
   function getShortLabel(direction: DirectionLabel): string {
+    // Cardinal directions
     switch (direction) {
       case "Eastbound":
         return "East";
@@ -53,9 +69,25 @@
         return "North";
       case "Southbound":
         return "South";
-      default:
+      case "All Stops":
         return "All";
     }
+    
+    // Subway terminal names - extract terminal station
+    // "Towards VMC" -> "VMC"
+    // "Towards Kennedy" -> "Kennedy"
+    // "Towards Sheppard-Yonge" -> "Shep-Yonge"
+    if (direction.startsWith("Towards ")) {
+      const terminal = direction.replace("Towards ", "");
+      // Shorten long station names
+      if (terminal === "Sheppard-Yonge") return "Shep-Yonge";
+      if (terminal === "Humber College") return "Humber";
+      if (terminal === "Finch West") return "Finch W";
+      if (terminal === "Don Mills") return "Don Mills";
+      return terminal;
+    }
+    
+    return direction;
   }
 </script>
 

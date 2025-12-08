@@ -310,11 +310,24 @@ Direction badges indicate the travel direction of a stop (extracted from GTFS tr
 
 > **Note**: Subway direction tabs use terminal station names instead of cardinal directions for clarity. Platform badges on stops still show Eastbound/Westbound/Northbound/Southbound.
 
+**Mobile Short Labels:**
+
+| Full Label             | Mobile Label |
+| ---------------------- | ------------ |
+| Towards VMC            | VMC          |
+| Towards Finch          | Finch        |
+| Towards Kennedy        | Kennedy      |
+| Towards Kipling        | Kipling      |
+| Towards Don Mills      | Don Mills    |
+| Towards Sheppard-Yonge | Shep-Yonge   |
+| Towards Finch West     | Finch W      |
+| Towards Humber College | Humber       |
+
 **Usage Locations:**
 
 - `StopSearch.svelte` - Search dropdown results
 - `ETACard.svelte` - Saved stop card headers
-- `RouteDirectionTabs.svelte` - Route page direction tabs
+- `RouteDirectionTabs.svelte` - Route page direction tabs (mobile: short labels)
 - `RouteStopItem.svelte` - Subway platform badges (uppercase)
 
 ### Alert Cards
