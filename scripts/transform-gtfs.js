@@ -81,9 +81,28 @@ try {
   // Build route_id -> route info map
   const routeMap = new Map();
   for (const route of routes) {
+    let type = ROUTE_TYPES[route.route_type] || 'bus';
+    let name = route.route_short_name;
+    
+    // For subway lines (type 1), use a cleaner name format like "Line 1", "Line 2", etc.
+    if (type === 'subway') {
+      const lineMatch = route.route_long_name?.match(/Line\s*(\d+)/i);
+      if (lineMatch) {
+        name = `Line ${lineMatch[1]}`;
+      }
+    }
+    
+    // Special handling for Line 6 (Finch West LRT)
+    // GTFS lists it as type 0 (streetcar), but it's an LRT line that should be
+    // treated like subway for naming and sequence purposes
+    if (route.route_short_name === '6' && route.route_long_name?.includes('Finch West')) {
+      name = 'Line 6';
+      type = 'subway'; // Treat as subway for sequence data
+    }
+    
     routeMap.set(route.route_id, {
-      name: route.route_short_name,
-      type: ROUTE_TYPES[route.route_type] || 'bus',
+      name: name,
+      type: type,
     });
   }
 
@@ -103,6 +122,7 @@ try {
   console.log(`   ${tripsWithDirection} trips have cardinal direction info`);
 
   // Build stop_id -> { routes: Set, directions: Set } map
+  // For subway sequence data, we'll add it in a second pass
   console.log('🔗 Mapping routes and directions to stops...');
   const stopData = new Map();
   for (const st of stopTimes) {
@@ -116,6 +136,7 @@ try {
       stopData.set(st.stop_id, {
         routes: new Set(),
         directions: new Set(),
+        sequences: new Map(), // routeName -> Map<directionId, seq>
       });
     }
     
@@ -125,6 +146,57 @@ try {
     // Add direction if available
     if (trip.direction) {
       data.directions.add(trip.direction);
+    }
+  }
+
+  // For subway lines, find the trip with the most stops per direction
+  // and use those sequences (this gives us the full-service pattern)
+  console.log('🚇 Building subway stop sequences from complete trips...');
+  
+  // Group stop_times by trip_id first
+  const stopTimesByTrip = new Map();
+  for (const st of stopTimes) {
+    if (!stopTimesByTrip.has(st.trip_id)) {
+      stopTimesByTrip.set(st.trip_id, []);
+    }
+    stopTimesByTrip.get(st.trip_id).push(st);
+  }
+  
+  // Find the best trip for each subway route + direction combo
+  // "Best" = the trip that serves the most stops (full service pattern)
+  const bestSubwayTrips = new Map(); // routeId_directionId -> { tripId, stopCount }
+  
+  for (const trip of trips) {
+    const routeInfo = routeMap.get(trip.route_id);
+    if (!routeInfo || routeInfo.type !== 'subway') continue;
+    
+    const key = `${trip.route_id}_${trip.direction_id}`;
+    const tripStops = stopTimesByTrip.get(trip.trip_id) || [];
+    
+    if (!bestSubwayTrips.has(key) || tripStops.length > bestSubwayTrips.get(key).stopCount) {
+      bestSubwayTrips.set(key, { tripId: trip.trip_id, stopCount: tripStops.length });
+    }
+  }
+  
+  console.log(`   Found ${bestSubwayTrips.size} subway route/direction patterns`);
+  
+  // Now apply sequences from the best trips to stop data
+  for (const [key, { tripId }] of bestSubwayTrips) {
+    const [routeIdStr, directionIdStr] = key.split('_');
+    const routeInfo = routeMap.get(routeIdStr);
+    if (!routeInfo) continue;
+    
+    const routeName = routeInfo.name;
+    const tripStops = stopTimesByTrip.get(tripId) || [];
+    
+    for (const st of tripStops) {
+      const data = stopData.get(st.stop_id);
+      if (!data) continue;
+      
+      if (!data.sequences.has(routeName)) {
+        data.sequences.set(routeName, new Map());
+      }
+      data.sequences.get(routeName).set(directionIdStr, parseInt(st.stop_sequence, 10));
     }
   }
 
@@ -201,14 +273,30 @@ try {
         result.dir = direction;
       }
       
+      // Add sequence data for subway stations (enables proper ordering)
+      if (data && data.sequences.size > 0) {
+        // Convert Map<routeName, Map<directionId, seq>> to object
+        // Format: { "Line 1": { "0": 17, "1": 16 } }
+        const seqObj = {};
+        for (const [routeName, dirMap] of data.sequences) {
+          seqObj[routeName] = {};
+          for (const [dirId, seq] of dirMap) {
+            seqObj[routeName][dirId] = seq;
+          }
+        }
+        result.seq = seqObj;
+      }
+      
       return result;
     })
     .filter(stop => stop.routes.length > 0); // Only include stops with routes
 
   // Count stops with direction info
   const stopsWithDirection = ttcStops.filter(s => s.dir).length;
+  const stopsWithSequence = ttcStops.filter(s => s.seq).length;
   console.log(`✅ Processed ${ttcStops.length} stops with routes`);
   console.log(`   🧭 ${stopsWithDirection} stops have direction info`);
+  console.log(`   📊 ${stopsWithSequence} stops have sequence data (subway/LRT)`);
 
   // Create output directory if needed
   const outputDir = path.dirname(outputPath);

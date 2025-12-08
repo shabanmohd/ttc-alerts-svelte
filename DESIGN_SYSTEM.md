@@ -276,7 +276,7 @@ border-color: hsl(var(--border));
 
 ### Direction Badges
 
-Direction badges indicate the travel direction of a stop (extracted from GTFS trip headsigns). Used in StopSearch dropdown and ETACard headers.
+Direction badges indicate the travel direction of a stop (extracted from GTFS trip headsigns). Used in StopSearch dropdown, ETACard headers, route page direction tabs, and subway platform badges.
 
 ```svelte
 <!-- Tailwind classes for direction colors -->
@@ -299,10 +299,23 @@ Direction badges indicate the travel direction of a stop (extracted from GTFS tr
 | **Northbound** | `emerald-600/20` | `emerald-700` | `emerald-400` | `emerald-600/40` |
 | **Southbound** | `rose-600/20`    | `rose-700`    | `rose-400`    | `rose-600/40`    |
 
+**Subway Terminal Direction Labels:**
+
+| Line   | Direction 0 (GTFS) | Direction 1 (GTFS)     | Color (0/1)     |
+| ------ | ------------------ | ---------------------- | --------------- |
+| Line 1 | Towards VMC        | Towards Finch          | amber / emerald |
+| Line 2 | Towards Kennedy    | Towards Kipling        | sky / amber     |
+| Line 4 | Towards Don Mills  | Towards Sheppard-Yonge | sky / amber     |
+| Line 6 | Towards Finch West | Towards Humber College | sky / amber     |
+
+> **Note**: Subway direction tabs use terminal station names instead of cardinal directions for clarity. Platform badges on stops still show Eastbound/Westbound/Northbound/Southbound.
+
 **Usage Locations:**
 
 - `StopSearch.svelte` - Search dropdown results
 - `ETACard.svelte` - Saved stop card headers
+- `RouteDirectionTabs.svelte` - Route page direction tabs
+- `RouteStopItem.svelte` - Subway platform badges (uppercase)
 
 ### Alert Cards
 

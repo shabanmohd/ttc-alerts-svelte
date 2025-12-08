@@ -133,27 +133,33 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Static (`static/`)
 
-| File                  | Status | Purpose                                            |
-| --------------------- | ------ | -------------------------------------------------- |
-| `manifest.json`       | ✅     | PWA manifest (Version B: "TTC Alerts Beta")        |
-| `sw.js`               | ✅     | Service worker (Version B: beta cache prefix)      |
-| `icons/*`             | ✅     | All PWA icons (72-512px)                           |
-| `data/ttc-stops.json` | ✅     | TTC stops database (9,346 stops, 1.1MB) 🆕 **V-B** |
+| File                  | Status | Purpose                                                             |
+| --------------------- | ------ | ------------------------------------------------------------------- |
+| `manifest.json`       | ✅     | PWA manifest (Version B: "TTC Alerts Beta")                         |
+| `sw.js`               | ✅     | Service worker (Version B: beta cache prefix)                       |
+| `icons/*`             | ✅     | All PWA icons (72-512px)                                            |
+| `data/ttc-stops.json` | ✅     | TTC stops database (9,346 stops, 184 subway w/ sequence) 🆕 **V-B** |
 
 ### Data (`src/lib/data/`) 🆕 **Version B Only**
 
-| File          | Status | Purpose                                                   |
-| ------------- | ------ | --------------------------------------------------------- |
-| `stops-db.ts` | ✅     | IndexedDB layer with Dexie.js, direction field, ID search |
+| File          | Status | Purpose                                                           |
+| ------------- | ------ | ----------------------------------------------------------------- |
+| `stops-db.ts` | ✅     | IndexedDB layer with Dexie.js, GTFS direction/sequence for subway |
 
 ### Stops Components (`src/lib/components/stops/`) 🆕 **Version B Only**
 
-| File                        | Status | Purpose                                                    |
-| --------------------------- | ------ | ---------------------------------------------------------- |
-| `StopSearch.svelte`         | ✅     | Stop search with autocomplete, direction badges, ID search |
-| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops                           |
-| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                       |
-| `index.ts`                  | ✅     | Component exports                                          |
+| File                        | Status | Purpose                                                        |
+| --------------------------- | ------ | -------------------------------------------------------------- |
+| `StopSearch.svelte`         | ✅     | Stop search with autocomplete, direction badges, ID search     |
+| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops                               |
+| `MyStops.svelte`            | ✅     | Full-page My Stops list                                        |
+| `MyStopsEmpty.svelte`       | ✅     | Empty state for My Stops                                       |
+| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                           |
+| `RouteDirectionTabs.svelte` | ✅     | Direction tabs for route pages (terminal names for subway)     |
+| `RouteMapPreview.svelte`    | ✅     | Map preview for route stops                                    |
+| `RouteStopItem.svelte`      | ✅     | Stop item with ETA, platform badges, hidden stop ID for subway |
+| `RouteStopsList.svelte`     | ✅     | List of stops with ETA expand/collapse                         |
+| `index.ts`                  | ✅     | Component exports                                              |
 
 ### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
 
@@ -208,10 +214,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
-| File                | Status | Purpose                                                        |
-| ------------------- | ------ | -------------------------------------------------------------- |
-| `transform-gtfs.js` | ✅     | Transform TTC GTFS data, extract direction from trip headsigns |
-| `generate-icons.js` | ✅     | Generate PWA icons from source                                 |
+| File                | Status | Purpose                                                         |
+| ------------------- | ------ | --------------------------------------------------------------- |
+| `transform-gtfs.js` | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT |
+| `generate-icons.js` | ✅     | Generate PWA icons from source                                  |
 
 ### Migrations (`supabase/migrations/`)
 
