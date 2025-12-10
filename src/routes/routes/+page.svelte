@@ -536,7 +536,9 @@
   /* Touch feedback animation */
   @media (hover: none) {
     .route-card:active {
-      transition: transform 0.1s ease-out, background-color 0.1s ease-out;
+      transition:
+        transform 0.1s ease-out,
+        background-color 0.1s ease-out;
     }
   }
 </style>

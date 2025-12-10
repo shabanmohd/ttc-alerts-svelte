@@ -4,8 +4,6 @@
   import { onMount } from "svelte";
   import {
     ArrowLeft,
-    Bookmark,
-    BookmarkCheck,
     Bell,
     CheckCircle,
     MapPin,
@@ -14,6 +12,7 @@
   import Header from "$lib/components/layout/Header.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
+  import BookmarkRouteButton from "$lib/components/alerts/BookmarkRouteButton.svelte";
   import { Button } from "$lib/components/ui/button";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import {
@@ -21,7 +20,6 @@
     isLoading,
     fetchAlerts,
   } from "$lib/stores/alerts";
-  import { savedRoutes } from "$lib/stores/savedRoutes";
   import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import type { ThreadWithAlerts } from "$lib/types/database";
 
@@ -81,9 +79,6 @@
   };
 
   let routeName = $derived(ROUTE_NAMES[routeId] || "");
-
-  // Check if route is saved
-  let isSaved = $derived($savedRoutes.some((r) => r.id === routeId));
 
   // Filter alerts for this route
   let routeAlerts = $derived(
@@ -153,8 +148,6 @@
 
   // Get route color for map
   let activeDialog = $state<string | null>(null);
-  let showToast = $state(false);
-  let toastMessage = $state("");
 
   onMount(async () => {
     // Load alerts and stops in parallel
@@ -230,51 +223,6 @@
     }, 100);
   }
 
-  async function toggleSaveRoute() {
-    if (isSaved) {
-      // Remove route
-      await savedRoutes.remove(routeId);
-      showToastMessage(`${routeId} removed from My Routes`);
-    } else {
-      // Add route - determine type from routeId
-      let type: "bus" | "streetcar" | "subway" = "bus";
-      if (routeId.startsWith("Line")) {
-        type = "subway";
-      } else if (
-        [
-          "501",
-          "503",
-          "504",
-          "505",
-          "506",
-          "507",
-          "508",
-          "509",
-          "510",
-          "511",
-          "512",
-        ].includes(routeId)
-      ) {
-        type = "streetcar";
-      }
-
-      await savedRoutes.add({
-        id: routeId,
-        name: `${routeId}${routeName ? ` ${routeName}` : ""}`,
-        type,
-      });
-      showToastMessage(`${routeId} added to My Routes`);
-    }
-  }
-
-  function showToastMessage(message: string) {
-    toastMessage = message;
-    showToast = true;
-    setTimeout(() => {
-      showToast = false;
-    }, 3000);
-  }
-
   function handleBack() {
     goto("/routes");
   }
@@ -327,20 +275,12 @@
       </div>
     </div>
 
-    <Button
-      variant={isSaved ? "default" : "outline"}
-      size="sm"
-      onclick={toggleSaveRoute}
-      class={isSaved ? "bg-primary" : ""}
-    >
-      {#if isSaved}
-        <BookmarkCheck class="h-4 w-4 mr-2" />
-        Saved
-      {:else}
-        <Bookmark class="h-4 w-4 mr-2" />
-        Save Route
-      {/if}
-    </Button>
+    <BookmarkRouteButton 
+      route={routeId} 
+      name={routeName || routeId} 
+      type={routeId.startsWith('Line') ? 'subway' : ['501','503','504','505','506','507','508','509','510','511','512'].includes(routeId) ? 'streetcar' : 'bus'}
+      showLabel={true} 
+    />
   </div>
 
   <!-- Active Alerts Section -->
@@ -487,14 +427,6 @@
   </section>
 </main>
 
-<!-- Toast Notification -->
-{#if showToast}
-  <div class="toast" role="alert">
-    <CheckCircle class="h-4 w-4 text-green-500" />
-    <span>{toastMessage}</span>
-  </div>
-{/if}
-
 <!-- Dialogs -->
 <HowToUseDialog
   open={activeDialog === "how-to-use"}
@@ -587,37 +519,6 @@
   .no-alerts-description {
     font-size: 0.875rem;
     color: hsl(var(--muted-foreground));
-  }
-
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background-color: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    box-shadow: 0 4px 12px hsl(var(--foreground) / 0.15);
-    font-size: 0.875rem;
-    color: hsl(var(--foreground));
-    z-index: 100;
-    animation: toast-slide-up 0.3s ease-out;
-  }
-
-  @keyframes toast-slide-up {
-    from {
-      opacity: 0;
-      transform: translateX(-50%) translateY(1rem);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
   }
 
   /* Mobile: stack header vertically */

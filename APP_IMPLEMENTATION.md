@@ -317,6 +317,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 **Route Filtering Fix (Critical):**
 
 Route filtering was using substring matching which caused incorrect matches:
+
 - Example: Route 11 was incorrectly matching routes 119 and 511
 
 **Files Fixed:**
@@ -327,9 +328,10 @@ Route filtering was using substring matching which caused incorrect matches:
 | `src/routes/routes/[route]/+page.svelte` | Route alerts filter | Exact route matching only |
 
 **Implementation:**
+
 ```typescript
 // Remove leading zeros and compare exact match
-normalizeRouteId(route1) === normalizeRouteId(route2)
+normalizeRouteId(route1) === normalizeRouteId(route2);
 ```
 
 **My Stops UX Improvements:**
@@ -339,6 +341,7 @@ normalizeRouteId(route1) === normalizeRouteId(route2)
 - ✅ Updated `TTC-ROUTE-CONFLICTS.md` with frontend filtering documentation
 
 **Files Updated:**
+
 - `src/lib/stores/eta.ts` - `etaList` derived from both `etaStore` and `savedStops` for ordering
 - `src/lib/components/stops/MyStops.svelte` - Auto-exit edit mode on empty stops
 
