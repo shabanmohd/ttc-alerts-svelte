@@ -295,16 +295,16 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Deployed Edge Functions
 
-| Function            | Status | URL                                                                         |
-| ------------------- | ------ | --------------------------------------------------------------------------- |
-| auth-register       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register`       |
-| auth-challenge      | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge`      |
-| auth-verify         | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`         |
-| auth-session        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`        |
-| auth-recover        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`        |
-| poll-alerts         | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v14)   |
-| get-eta             | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`             |
-| scrape-maintenance  | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance`  |
+| Function           | Status | URL                                                                        |
+| ------------------ | ------ | -------------------------------------------------------------------------- |
+| auth-register      | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register`      |
+| auth-challenge     | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge`     |
+| auth-verify        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`        |
+| auth-session       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`       |
+| auth-recover       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`       |
+| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v14)  |
+| get-eta            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`            |
+| scrape-maintenance | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance` |
 
 ---
 
@@ -312,7 +312,20 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ### Dec 10, 2025 - Alert Threading Improvements & Database Cleanup
 
-**poll-alerts Edge Function v14:**
+**poll-alerts Edge Function v15 (latest):**
+
+- ✅ Fixed route extraction for comma-separated routes (e.g., "37, 37A" → ["37", "37A"])
+- ✅ Added route family matching: 37, 37A, 37B treated as same route family
+- ✅ Deployed via Supabase MCP
+- ✅ Fixed existing database records for routes 123 and 37 with empty arrays
+
+**Database Fixes (Dec 10 PM):**
+- ✅ Fixed 6 alerts with empty `affected_routes` arrays:
+  - `123, 123C, 123D Sherway...` → `["123", "123C", "123D"]`
+  - `37, 37A Islington...` → `["37", "37A"]`
+- ✅ Production branch changed from `main` to `version-b` in Cloudflare Pages
+
+**poll-alerts Edge Function v14 (previous):**
 
 - ✅ Fixed route extraction for comma-separated routes (e.g., "37, 37A" → ["37", "37A"])
 - ✅ Added route family matching: 37, 37A, 37B treated as same route family
@@ -343,6 +356,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 | Active threads | Indefinite |
 
 **Files Updated:**
+
 - `supabase/functions/poll-alerts/index.ts` - Enhanced threading logic (v14)
 - `supabase/migrations/20251210_cleanup_cron.sql` - Automated cleanup setup
 

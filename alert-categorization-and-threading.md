@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 4.0  
+**Version:** 4.1  
 **Date:** December 10, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v14)  
+**Status:** ✅ Implemented and Active (poll-alerts v15)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -258,7 +258,7 @@ Extracts location keywords from alert text for better similarity matching:
 ```typescript
 function extractLocationKeywords(text: string): Set<string> {
   const keywords = new Set<string>();
-  
+
   // Common TTC location patterns
   const locationPatterns = [
     /\bat\s+(\w+)\s+(ave|st|blvd|rd|dr|cres|way|pkwy)\b/gi,
@@ -266,20 +266,22 @@ function extractLocationKeywords(text: string): Set<string> {
     /\bvia\s+(\w+)/gi,
     /\bnear\s+(\w+)/gi,
   ];
-  
-  locationPatterns.forEach(pattern => {
+
+  locationPatterns.forEach((pattern) => {
     const matches = text.match(pattern);
     if (matches) {
-      matches.forEach(m => keywords.add(m.toLowerCase()));
+      matches.forEach((m) => keywords.add(m.toLowerCase()));
     }
   });
-  
+
   // Extract specific street names
-  const streetMatch = text.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:Ave|St|Blvd|Rd|Dr|Cres|Way)\b/g);
+  const streetMatch = text.match(
+    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:Ave|St|Blvd|Rd|Dr|Cres|Way)\b/g
+  );
   if (streetMatch) {
-    streetMatch.forEach(s => keywords.add(s.toLowerCase()));
+    streetMatch.forEach((s) => keywords.add(s.toLowerCase()));
   }
-  
+
   return keywords;
 }
 ```
@@ -292,10 +294,18 @@ Identifies incident causes for better thread matching:
 function extractCause(text: string): string | null {
   const lowerText = text.toLowerCase();
   const causes = [
-    'collision', 'medical emergency', 'fire', 'police', 'construction', 
-    'stalled', 'track work', 'signal problem', 'power', 'trespasser'
+    "collision",
+    "medical emergency",
+    "fire",
+    "police",
+    "construction",
+    "stalled",
+    "track work",
+    "signal problem",
+    "power",
+    "trespasser",
   ];
-  return causes.find(c => lowerText.includes(c)) || null;
+  return causes.find((c) => lowerText.includes(c)) || null;
 }
 ```
 
@@ -307,23 +317,24 @@ Combines Jaccard similarity with location and cause bonuses:
 function enhancedSimilarity(text1: string, text2: string): number {
   // Base Jaccard similarity
   const jaccard = jaccardSimilarity(text1, text2);
-  
+
   // Location overlap bonus (up to +20%)
   const loc1 = extractLocationKeywords(text1);
   const loc2 = extractLocationKeywords(text2);
-  const locOverlap = [...loc1].filter(l => loc2.has(l)).length;
+  const locOverlap = [...loc1].filter((l) => loc2.has(l)).length;
   const locationBonus = locOverlap > 0 ? Math.min(0.2, locOverlap * 0.1) : 0;
-  
+
   // Same cause bonus (+15%)
   const cause1 = extractCause(text1);
   const cause2 = extractCause(text2);
-  const causeBonus = (cause1 && cause1 === cause2) ? 0.15 : 0;
-  
+  const causeBonus = cause1 && cause1 === cause2 ? 0.15 : 0;
+
   return Math.min(1, jaccard + locationBonus + causeBonus);
 }
 ```
 
 **Example:**
+
 - Alert 1: "37 Islington: Detour via Rexdale Blvd due to a collision"
 - Alert 2: "37B Islington: Detour via Elmhurst Dr due to a collision"
 - Base Jaccard: ~30%
@@ -357,18 +368,18 @@ let matchedThread = null;
 if (routes.length > 0) {
   // Extract base route numbers for family matching
   const alertBaseRoutes = routes.map(extractRouteNumber);
-  
+
   for (const thread of unresolvedThreads || []) {
     const threadRoutes = Array.isArray(thread.affected_routes)
       ? thread.affected_routes
       : [];
-    
+
     // Skip threads with no routes
     if (threadRoutes.length === 0) continue;
-    
+
     // Extract base route numbers from thread
     const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
-    
+
     // Route FAMILY matching (37 matches 37A, 37B, etc.)
     const hasRouteOverlap = alertBaseRoutes.some((alertBase) =>
       threadBaseRoutes.includes(alertBase)
@@ -392,7 +403,10 @@ if (routes.length > 0) {
       }
 
       // DIVERSION/DELAY: 25%
-      if ((category === "DIVERSION" || category === "DELAY") && similarity >= 0.25) {
+      if (
+        (category === "DIVERSION" || category === "DELAY") &&
+        similarity >= 0.25
+      ) {
         matchedThread = thread;
         break;
       }
@@ -403,24 +417,24 @@ if (routes.length > 0) {
 
 ### Threading Rules (v14)
 
-| Rule | Threshold | Description |
-|------|-----------|-------------|
-| **Route Family Match** | Required | Base route numbers must match (37 = 37A = 37B) |
-| **General Similarity** | ≥40% | Default threshold for matching |
-| **DIVERSION/DELAY** | ≥25% | Lower threshold for route updates |
-| **SERVICE_RESUMED** | ≥10% | Very different vocabulary from original |
-| **Time Window** | 6 hours | Only match threads updated within 6 hours |
-| **Enhanced Similarity** | Jaccard + bonuses | Location (+20%) + Cause (+15%) bonuses |
+| Rule                    | Threshold         | Description                                    |
+| ----------------------- | ----------------- | ---------------------------------------------- |
+| **Route Family Match**  | Required          | Base route numbers must match (37 = 37A = 37B) |
+| **General Similarity**  | ≥40%              | Default threshold for matching                 |
+| **DIVERSION/DELAY**     | ≥25%              | Lower threshold for route updates              |
+| **SERVICE_RESUMED**     | ≥10%              | Very different vocabulary from original        |
+| **Time Window**         | 6 hours           | Only match threads updated within 6 hours      |
+| **Enhanced Similarity** | Jaccard + bonuses | Location (+20%) + Cause (+15%) bonuses         |
 
 ### Similarity Calculation
 
 **Enhanced Similarity = Jaccard + Location Bonus + Cause Bonus**
 
-| Component | Weight | Description |
-|-----------|--------|-------------|
-| Jaccard | Base | Word overlap between texts |
-| Location | +10-20% | Same street/station mentions |
-| Cause | +15% | Same incident cause (collision, medical, etc.) |
+| Component | Weight  | Description                                    |
+| --------- | ------- | ---------------------------------------------- |
+| Jaccard   | Base    | Word overlap between texts                     |
+| Location  | +10-20% | Same street/station mentions                   |
+| Cause     | +15%    | Same incident cause (collision, medical, etc.) |
 
 ### Critical Safety Checks (Prevent False Matches)
 
@@ -701,12 +715,12 @@ Automated cleanup runs daily at 4 AM Toronto time (DST-aware).
 
 ### Retention Policy
 
-| Data Type | Retention | Cleanup Action |
-|-----------|-----------|----------------|
-| Resolved threads | 15 days | Auto-deleted |
-| Orphan alerts (no thread) | 15 days | Auto-deleted |
-| Active (unresolved) threads | Indefinite | Kept until resolved |
-| Alerts linked to threads | Matches thread | Deleted with thread |
+| Data Type                   | Retention      | Cleanup Action      |
+| --------------------------- | -------------- | ------------------- |
+| Resolved threads            | 15 days        | Auto-deleted        |
+| Orphan alerts (no thread)   | 15 days        | Auto-deleted        |
+| Active (unresolved) threads | Indefinite     | Kept until resolved |
+| Alerts linked to threads    | Matches thread | Deleted with thread |
 
 ### Cleanup Functions
 
@@ -720,10 +734,10 @@ SELECT * FROM cleanup_old_alerts_toronto();
 
 ### Scheduled Jobs
 
-| Job Name | Schedule | Purpose |
-|----------|----------|---------|
-| `cleanup-alerts-8am-utc` | 0 8 * * * | 4 AM EDT (summer) |
-| `cleanup-alerts-9am-utc` | 0 9 * * * | 4 AM EST (winter) |
+| Job Name                 | Schedule     | Purpose           |
+| ------------------------ | ------------ | ----------------- |
+| `cleanup-alerts-8am-utc` | 0 8 \* \* \* | 4 AM EDT (summer) |
+| `cleanup-alerts-9am-utc` | 0 9 \* \* \* | 4 AM EST (winter) |
 
 ### Useful Commands
 

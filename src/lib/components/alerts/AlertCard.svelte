@@ -119,7 +119,7 @@
    * - If multiple variants of same base (37, 37A, 37B) -> show just "37"
    * - If only one variant (37B alone) -> show "37B"
    * - Always show just the number, not the name (123, not "123 Sherway")
-   * 
+   *
    * E.g., ["37", "37A", "37B", "37 Islington"] -> ["37"]
    * E.g., ["37B", "37 Islington"] -> ["37"]  (still multiple variants)
    * E.g., ["37B"] -> ["37B"]  (single variant, keep suffix)
@@ -129,7 +129,7 @@
   function getDisplayRoutes(routes: string[]): string[] {
     // Group routes by their base number
     const routesByBase = new Map<string, string[]>();
-    
+
     for (const route of routes) {
       // Extract base route number (digits only)
       const match = route.match(/^(\d+)/);
@@ -144,7 +144,7 @@
         routesByBase.set(route, [route]);
       }
     }
-    
+
     // For each base, decide what to display
     const displayRoutes: string[] = [];
     for (const [baseNum, variants] of routesByBase) {
@@ -158,7 +158,7 @@
         displayRoutes.push(baseNum);
       }
     }
-    
+
     return displayRoutes;
   }
 
