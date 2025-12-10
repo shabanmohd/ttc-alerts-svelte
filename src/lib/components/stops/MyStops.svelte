@@ -52,6 +52,13 @@
     };
   });
 
+  // Auto-exit edit mode when all stops are deleted
+  $effect(() => {
+    if (count === 0 && isEditMode) {
+      isEditMode = false;
+    }
+  });
+
   // Initialize on mount
   onMount(async () => {
     etaStore.startAutoRefresh();

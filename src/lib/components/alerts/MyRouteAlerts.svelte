@@ -86,6 +86,17 @@
     return [];
   }
 
+  // Helper to normalize route ID for comparison (remove leading zeros, lowercase)
+  function normalizeRouteId(route: string): string {
+    // Remove leading zeros and convert to lowercase
+    return route.replace(/^0+/, "").toLowerCase();
+  }
+
+  // Helper to check if two routes match exactly (handles different formats)
+  function routesMatch(route1: string, route2: string): boolean {
+    return normalizeRouteId(route1) === normalizeRouteId(route2);
+  }
+
   // Helper to check if thread matches a specific route
   function matchesSpecificRoute(
     thread: ThreadWithAlerts,
@@ -95,12 +106,8 @@
     const alertRoutes = extractRoutes(thread.latestAlert?.affected_routes);
     const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
 
-    return allRoutes.some(
-      (threadRoute) =>
-        threadRoute.toLowerCase() === routeId.toLowerCase() ||
-        threadRoute.includes(routeId) ||
-        routeId.includes(threadRoute)
-    );
+    // Use exact match only - no substring matching
+    return allRoutes.some((threadRoute) => routesMatch(threadRoute, routeId));
   }
 
   // Helper to check if thread matches saved routes
@@ -109,13 +116,9 @@
     const alertRoutes = extractRoutes(thread.latestAlert?.affected_routes);
     const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
 
+    // Use exact match only - no substring matching
     return routeIds.some((savedRoute) =>
-      allRoutes.some(
-        (threadRoute) =>
-          threadRoute.toLowerCase() === savedRoute.toLowerCase() ||
-          threadRoute.includes(savedRoute) ||
-          savedRoute.includes(threadRoute)
-      )
+      allRoutes.some((threadRoute) => routesMatch(threadRoute, savedRoute))
     );
   }
 

@@ -96,11 +96,11 @@
         : [];
       const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
 
+      // Use exact match only - no substring matching to prevent route 11 matching 119/511
       return allRoutes.some(
         (r) =>
-          r.toLowerCase() === routeId.toLowerCase() ||
-          r.includes(routeId) ||
-          routeId.includes(r)
+          r.replace(/^0+/, "").toLowerCase() ===
+          routeId.replace(/^0+/, "").toLowerCase()
       );
     })
   );

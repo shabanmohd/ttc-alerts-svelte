@@ -312,6 +312,36 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 20, 2025 - Route Filtering Bug Fix & My Stops UX Improvements
+
+**Route Filtering Fix (Critical):**
+
+Route filtering was using substring matching which caused incorrect matches:
+- Example: Route 11 was incorrectly matching routes 119 and 511
+
+**Files Fixed:**
+| File | Function | Fix |
+|------|----------|-----|
+| `src/lib/components/alerts/MyRouteAlerts.svelte` | `matchesRoutes()` | Exact route matching only |
+| `src/lib/stores/alerts.ts` | `getAlertsByRoutes()` | Exact route matching only |
+| `src/routes/routes/[route]/+page.svelte` | Route alerts filter | Exact route matching only |
+
+**Implementation:**
+```typescript
+// Remove leading zeros and compare exact match
+normalizeRouteId(route1) === normalizeRouteId(route2)
+```
+
+**My Stops UX Improvements:**
+
+- ✅ `etaList` derived store now respects `savedStops` order (newest first)
+- ✅ Edit mode auto-exits when all stops are deleted
+- ✅ Updated `TTC-ROUTE-CONFLICTS.md` with frontend filtering documentation
+
+**Files Updated:**
+- `src/lib/stores/eta.ts` - `etaList` derived from both `etaStore` and `savedStops` for ordering
+- `src/lib/components/stops/MyStops.svelte` - Auto-exit edit mode on empty stops
+
 ### Dec 10, 2025 - Major Threading Logic Overhaul (v20)
 
 **poll-alerts Edge Function v20 (latest):**

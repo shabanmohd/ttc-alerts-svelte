@@ -412,10 +412,18 @@ if (browser) {
 // ============================================
 
 /**
- * Array of all ETAs for easy iteration
+ * Array of all ETAs for easy iteration, ordered by savedStops order
  */
-export const etaList = derived(etaStore, ($state) => {
-	return Array.from($state.stops.values());
+export const etaList = derived([etaStore, savedStops], ([$state, $savedStops]) => {
+	// Order ETAs by savedStops order (most recently saved first)
+	const orderedEtas: StopETA[] = [];
+	for (const stop of $savedStops) {
+		const eta = $state.stops.get(stop.id);
+		if (eta) {
+			orderedEtas.push(eta);
+		}
+	}
+	return orderedEtas;
 });
 
 /**

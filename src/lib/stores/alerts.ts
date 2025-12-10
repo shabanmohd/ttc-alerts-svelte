@@ -408,11 +408,10 @@ export function getThreadsForRoutes(routes: string[]): ThreadWithAlerts[] {
     const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
     
     // Match if any of the user's saved routes is in the thread's routes
+    // Use exact match only - no substring matching to prevent route 11 matching 119/511
     return routes.some(savedRoute => 
       allRoutes.some(threadRoute => 
-        threadRoute.toLowerCase() === savedRoute.toLowerCase() ||
-        threadRoute.includes(savedRoute) ||
-        savedRoute.includes(threadRoute)
+        threadRoute.replace(/^0+/, '').toLowerCase() === savedRoute.replace(/^0+/, '').toLowerCase()
       )
     );
   });

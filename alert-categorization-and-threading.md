@@ -1010,6 +1010,7 @@ SERVICE_RESUMED alerts weren't matching their corresponding disruption threads b
 2. "SERVICE_RESUMED" alert processed → Looks in STALE candidateThreads list → Thread doesn't exist yet → Creates DUPLICATE thread
 
 **Fix (poll-alerts v23):**
+
 - Moved `candidateThreads` query INSIDE the per-alert loop
 - Each alert now gets a fresh list of threads, including threads created by earlier alerts in the same batch
 
@@ -1026,6 +1027,7 @@ for (const item of posts) {
 ```
 
 **Impact:**
+
 - SERVICE_RESUMED alerts now properly match threads created in the same polling batch
 - Fixed 507 Long Branch threading issue (merged orphaned SERVICE_RESUMED alert back to correct thread)
 
@@ -1066,7 +1068,7 @@ SELECT cron.schedule('poll-alerts-cron', '*/2 * * * *', 'SELECT invoke_poll_aler
 SELECT jobid, jobname, schedule, active FROM cron.job;
 
 -- View recent poll-alerts runs
-SELECT status, start_time, return_message FROM cron.job_run_details 
+SELECT status, start_time, return_message FROM cron.job_run_details
 WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'poll-alerts-cron')
 ORDER BY start_time DESC LIMIT 10;
 

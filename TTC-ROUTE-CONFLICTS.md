@@ -293,6 +293,49 @@ Expected: ALLOWED - Same route number (39 = 39)
 
 ---
 
+## Frontend Route Filtering
+
+The frontend also requires exact route matching when filtering alerts for "My Routes" or individual route pages.
+
+### Affected Files
+
+| File                                             | Function               | Description                 |
+| ------------------------------------------------ | ---------------------- | --------------------------- |
+| `src/lib/components/alerts/MyRouteAlerts.svelte` | `matchesRoutes()`      | My Routes tab filtering     |
+| `src/lib/stores/alerts.ts`                       | `getAlertsByRoutes()`  | Store-level route filtering |
+| `src/routes/routes/[route]/+page.svelte`         | `$derived routeAlerts` | Individual route page       |
+
+### Implementation
+
+```typescript
+// Helper to normalize route ID for comparison (remove leading zeros, lowercase)
+function normalizeRouteId(route: string): string {
+  return route.replace(/^0+/, "").toLowerCase();
+}
+
+// Exact match only - no substring matching
+function routesMatch(route1: string, route2: string): boolean {
+  return normalizeRouteId(route1) === normalizeRouteId(route2);
+}
+```
+
+### Common Bug Pattern (AVOIDED)
+
+❌ **WRONG - Substring matching causes false positives:**
+
+```typescript
+// Route 11 would match 119 and 511!
+threadRoute.includes(savedRoute) || savedRoute.includes(threadRoute);
+```
+
+✅ **CORRECT - Exact match only:**
+
+```typescript
+normalizeRouteId(threadRoute) === normalizeRouteId(savedRoute);
+```
+
+---
+
 ## Monitoring
 
 The Edge Function logs route comparisons when debugging is needed. Check Supabase Edge Function logs for threading decisions.
@@ -307,7 +350,7 @@ The Edge Function logs route comparisons when debugging is needed. Check Supabas
 
 ---
 
-**Version:** 1.1
+**Version:** 1.2
 **Created:** November 20, 2025
-**Updated:** December 4, 2025
+**Updated:** December 5, 2025
 **Purpose:** Route conflict reference for alert threading system

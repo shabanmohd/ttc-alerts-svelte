@@ -190,7 +190,12 @@
   const cardId = $derived(`alert-${thread.thread_id}`);
 </script>
 
-<article class="alert-card" id={cardId} aria-labelledby="{cardId}-title">
+<article
+  class="alert-card"
+  class:expanded={showEarlierUpdates}
+  id={cardId}
+  aria-labelledby="{cardId}-title"
+>
   <div class="alert-card-content">
     <!-- Main content: Badge on left, details on right -->
     <div class="flex gap-3">
