@@ -43,46 +43,55 @@ function extractRoutes(text: string): string[] {
   const routes: string[] = [];
   
   // Match subway lines first: Line 1, Line 2, Line 4, Line 6
-  const lineMatch = text.match(/Line\s*(\d+)/gi);
+  const lineMatch = text.match(/Line\s*\d+/gi);
   if (lineMatch) {
     lineMatch.forEach(m => {
       routes.push(m); // Keep "Line 1" format
     });
   }
   
+  // IMPORTANT: Handle comma-separated route lists like "37, 37A" or "123, 123C, 123D"
+  // This pattern appears at the START of TTC alerts
+  // Look for patterns like "123, 123C, 123D Sherway" or "37, 37A Islington"
+  const commaListMatch = text.match(/^(\d{1,3}(?:[A-Z])?(?:\s*,\s*\d{1,3}[A-Z]?)+)/);
+  if (commaListMatch) {
+    // Split by comma and extract each route
+    const routeList = commaListMatch[1].split(/\s*,\s*/);
+    routeList.forEach(r => {
+      const trimmed = r.trim();
+      if (trimmed && !routes.includes(trimmed)) {
+        routes.push(trimmed);
+      }
+    });
+  }
+  
   // Match route numbers with letter suffix variants: "37A", "37B", "123C", "123D"
-  // This must come BEFORE route-with-name to capture letter variants
   const routeWithSuffixMatch = text.match(/\b(\d{1,3}[A-Z])\b/g);
   if (routeWithSuffixMatch) {
     routeWithSuffixMatch.forEach(m => {
-      routes.push(m); // Keep "37A", "123C" format
+      if (!routes.includes(m)) {
+        routes.push(m);
+      }
     });
   }
   
   // Match numbered routes with optional name: "306 Carlton", "504 King", etc.
-  const routeWithNameMatch = text.match(/\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g);
+  // But DON'T match if already captured in comma list
+  const routeWithNameMatch = text.match(/\b(\d{1,3})\s+([A-Z][a-z]+)/g);
   if (routeWithNameMatch) {
     routeWithNameMatch.forEach(m => {
-      routes.push(m); // Keep "306 Carlton" format
+      // Extract just the number part
+      const numMatch = m.match(/^(\d{1,3})/);
+      if (numMatch && !routes.some(r => r.startsWith(numMatch[1]))) {
+        routes.push(m); // Keep "306 Carlton" format
+      }
     });
   }
   
-  // Match standalone route numbers (no letter suffix, no name)
-  // Handle cases like "37, 37A" or "123:" or "37 Islington"
-  const standaloneMatch = text.match(/\b(\d{1,3})(?=[,:\s]|$)/g);
-  if (standaloneMatch) {
-    standaloneMatch.forEach(num => {
-      const numInt = parseInt(num);
-      // Only add if it's a valid route number and NOT already captured as exact match
-      // Allow adding "37" even if "37A" exists (route family)
-      if (numInt >= 1 && numInt < 1000) {
-        // Check if exact match already exists (not just variant)
-        const exactExists = routes.some(r => r === num);
-        if (!exactExists) {
-          routes.push(num);
-        }
-      }
-    });
+  // Match standalone route numbers at start of text: "510 Spadina" where 510 is the route
+  const startMatch = text.match(/^(\d{1,3})\s+[A-Z]/);
+  if (startMatch && !routes.some(r => r.startsWith(startMatch[1]))) {
+    routes.push(startMatch[1]);
   }
   
   return [...new Set(routes)];
@@ -333,10 +342,17 @@ serve(async (req) => {
           .update({ thread_id: matchedThread.thread_id })
           .eq('alert_id', newAlert.alert_id);
 
+        // Merge routes: combine thread's existing routes with new alert's routes
+        const existingRoutes = Array.isArray(matchedThread.affected_routes) 
+          ? matchedThread.affected_routes 
+          : [];
+        const mergedRoutes = [...new Set([...existingRoutes, ...routes])];
+
         // Update thread
         const updates: any = {
           title: text.split('\n')[0].substring(0, 200),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          affected_routes: mergedRoutes
         };
 
         // Resolve thread if SERVICE_RESUMED
