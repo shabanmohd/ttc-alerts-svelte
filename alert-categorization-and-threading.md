@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 5.3  
+**Version:** 5.4  
 **Date:** December 10, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v22 + pg_cron automation)  
+**Status:** ✅ Implemented and Active (poll-alerts v23 + pg_cron automation)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -1000,6 +1000,36 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 ---
 
 ## Changelog
+
+### Version 5.4 - December 10, 2025 (Stale Candidate Threads Fix)
+
+**Root Cause of 507 Not Threading:**
+SERVICE_RESUMED alerts weren't matching their corresponding disruption threads because the `candidateThreads` query ran ONCE at the start of processing (before the `for` loop). When multiple alerts arrived in the same batch:
+
+1. "No service" alert processed → Creates new thread
+2. "SERVICE_RESUMED" alert processed → Looks in STALE candidateThreads list → Thread doesn't exist yet → Creates DUPLICATE thread
+
+**Fix (poll-alerts v23):**
+- Moved `candidateThreads` query INSIDE the per-alert loop
+- Each alert now gets a fresh list of threads, including threads created by earlier alerts in the same batch
+
+```typescript
+// BEFORE (v22): Query ONCE outside loop - STALE DATA BUG
+const { data: candidateThreads } = await supabase.from('incident_threads')...
+for (const item of posts) { ... }
+
+// AFTER (v23): Query INSIDE loop - ALWAYS FRESH DATA
+for (const item of posts) {
+  // Fresh query catches threads created by earlier alerts
+  const { data: candidateThreads } = await supabase.from('incident_threads')...
+}
+```
+
+**Impact:**
+- SERVICE_RESUMED alerts now properly match threads created in the same polling batch
+- Fixed 507 Long Branch threading issue (merged orphaned SERVICE_RESUMED alert back to correct thread)
+
+---
 
 ### Version 5.3 - December 10, 2025 (pg_cron Automation)
 

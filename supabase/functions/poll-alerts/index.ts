@@ -1,8 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 22 - Fixed route threading logic with strict route matching
-const FUNCTION_VERSION = 22;
+// VERSION 23 - Fixed stale candidate threads causing SERVICE_RESUMED not to match
+const FUNCTION_VERSION = 23;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -232,12 +232,8 @@ serve(async (req) => {
 
     const existingUris = new Set(existingAlerts?.map(a => a.bluesky_uri) || []);
 
-    // Get threads for matching - both unresolved AND recently resolved (for SERVICE_RESUMED matching)
-    const { data: candidateThreads } = await supabase
-      .from('incident_threads')
-      .select('*')
-      .gte('updated_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
-      .order('updated_at', { ascending: false });
+    // NOTE: We now fetch candidate threads INSIDE the loop to catch newly created threads
+    // This fixes the bug where SERVICE_RESUMED wouldn't find threads created in the same batch
 
     for (const item of posts) {
       const post = item.post;
@@ -277,6 +273,15 @@ serve(async (req) => {
       }
 
       newAlerts++;
+
+      // FRESH QUERY: Get candidate threads for matching
+      // This is INSIDE the loop to catch threads created by earlier alerts in the same batch
+      // Both unresolved AND recently resolved (for SERVICE_RESUMED matching)
+      const { data: candidateThreads } = await supabase
+        .from('incident_threads')
+        .select('*')
+        .gte('updated_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
+        .order('updated_at', { ascending: false });
 
       // Thread matching - find best matching thread
       let matchedThread = null;
@@ -342,12 +347,11 @@ serve(async (req) => {
             continue;
           }
             
-            // For DIVERSION/DETOUR/DELAY alerts, use lower threshold (25%)
-            if ((category === 'DIVERSION' || category === 'DELAY') && 
-                similarity >= 0.25 && similarity > bestSimilarity) {
-              bestSimilarity = similarity;
-              matchedThread = thread;
-            }
+          // For DIVERSION/DETOUR/DELAY alerts, use lower threshold (25%)
+          if ((category === 'DIVERSION' || category === 'DELAY') && 
+              similarity >= 0.25 && similarity > bestSimilarity) {
+            bestSimilarity = similarity;
+            matchedThread = thread;
           }
         }
       }
