@@ -2,13 +2,7 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
-  import {
-    ArrowLeft,
-    Bell,
-    CheckCircle,
-    MapPin,
-    Loader2,
-  } from "lucide-svelte";
+  import { ArrowLeft, Bell, CheckCircle, MapPin, Loader2 } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
@@ -275,11 +269,27 @@
       </div>
     </div>
 
-    <BookmarkRouteButton 
-      route={routeId} 
-      name={routeName || routeId} 
-      type={routeId.startsWith('Line') ? 'subway' : ['501','503','504','505','506','507','508','509','510','511','512'].includes(routeId) ? 'streetcar' : 'bus'}
-      showLabel={true} 
+    <BookmarkRouteButton
+      route={routeId}
+      name={routeName || routeId}
+      type={routeId.startsWith("Line")
+        ? "subway"
+        : [
+              "501",
+              "503",
+              "504",
+              "505",
+              "506",
+              "507",
+              "508",
+              "509",
+              "510",
+              "511",
+              "512",
+            ].includes(routeId)
+          ? "streetcar"
+          : "bus"}
+      showLabel={true}
     />
   </div>
 

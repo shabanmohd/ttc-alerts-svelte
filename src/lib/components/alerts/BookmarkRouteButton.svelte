@@ -1,20 +1,20 @@
 <script lang="ts">
-  import { Bookmark, Check } from 'lucide-svelte';
-  import { savedRoutes, isAtMaxSavedRoutes } from '$lib/stores/savedRoutes';
-  import { cn } from '$lib/utils';
+  import { Bookmark, Check } from "lucide-svelte";
+  import { savedRoutes, isAtMaxSavedRoutes } from "$lib/stores/savedRoutes";
+  import { cn } from "$lib/utils";
 
   let {
     route,
     name,
-    type = 'bus',
-    size = 'md',
-    class: className = '',
-    showLabel = false
+    type = "bus",
+    size = "md",
+    class: className = "",
+    showLabel = false,
   }: {
     route: string;
     name: string;
-    type?: 'bus' | 'streetcar' | 'subway';
-    size?: 'sm' | 'md' | 'lg';
+    type?: "bus" | "streetcar" | "subway";
+    size?: "sm" | "md" | "lg";
     class?: string;
     showLabel?: boolean;
   } = $props();
@@ -26,15 +26,15 @@
 
   // Subscribe to saved state
   $effect(() => {
-    const unsubscribe = savedRoutes.subscribe(routes => {
-      isSaved = routes.some(r => r.id === route);
+    const unsubscribe = savedRoutes.subscribe((routes) => {
+      isSaved = routes.some((r) => r.id === route);
     });
     return unsubscribe;
   });
 
   // Subscribe to max state
   $effect(() => {
-    const unsubscribe = isAtMaxSavedRoutes.subscribe(value => {
+    const unsubscribe = isAtMaxSavedRoutes.subscribe((value) => {
       atMax = value;
     });
     return unsubscribe;
@@ -53,13 +53,13 @@
   const iconSizes = {
     sm: 14,
     md: 16,
-    lg: 18
+    lg: 18,
   };
 
   function handleClick(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
-    
+
     if (isSaved) {
       savedRoutes.remove(route);
     } else if (!atMax) {
@@ -74,13 +74,19 @@
   onclick={handleClick}
   disabled={!isSaved && atMax}
   class={cn(
-    'save-route-button',
-    isSaved && 'saved',
-    showSavedFeedback && 'show-feedback',
+    "save-route-button",
+    isSaved && "saved",
+    showSavedFeedback && "show-feedback",
     className
   )}
-  aria-label={isSaved ? `Remove route ${route} from saved routes` : `Save route ${route} to My Routes`}
-  title={!isSaved && atMax ? 'Maximum 20 saved routes reached' : isSaved ? 'Remove from My Routes' : 'Save to My Routes'}
+  aria-label={isSaved
+    ? `Remove route ${route} from saved routes`
+    : `Save route ${route} to My Routes`}
+  title={!isSaved && atMax
+    ? "Maximum 20 saved routes reached"
+    : isSaved
+      ? "Remove from My Routes"
+      : "Save to My Routes"}
 >
   {#if showSavedFeedback}
     <Check size={iconSizes[size]} />
