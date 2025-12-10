@@ -302,7 +302,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 | auth-verify        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`        |
 | auth-session       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`       |
 | auth-recover       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`       |
-| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v14)  |
+| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v15)  |
 | get-eta            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`            |
 | scrape-maintenance | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance` |
 
@@ -320,6 +320,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 - ✅ Fixed existing database records for routes 123 and 37 with empty arrays
 
 **Database Fixes (Dec 10 PM):**
+
 - ✅ Fixed 6 alerts with empty `affected_routes` arrays:
   - `123, 123C, 123D Sherway...` → `["123", "123C", "123D"]`
   - `37, 37A Islington...` → `["37", "37A"]`
