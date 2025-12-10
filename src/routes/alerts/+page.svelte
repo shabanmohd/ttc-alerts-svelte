@@ -6,7 +6,6 @@
     Calendar,
     AlertTriangle,
     AlertCircle,
-    Clock,
   } from "lucide-svelte";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
@@ -520,19 +519,9 @@
     });
   });
 
-  // Derived: Filtered resolved alerts based on category filters
+  // Derived: Resolved alerts for display (no filtering - all resolved alerts shown)
   let filteredResolvedAlerts = $derived(() => {
-    const resolved = resolvedAlerts();
-    if ($activeFilters.has("ALL") || $activeFilters.size === 0) {
-      return resolved;
-    }
-
-    return resolved.filter((thread) => {
-      const categories = Array.isArray(thread.latestAlert?.categories)
-        ? thread.latestAlert.categories
-        : [];
-      return categories.some((cat) => $activeFilters.has(cat));
-    });
+    return resolvedAlerts();
   });
 
   // Derived: Currently active scheduled maintenance (happening right now)
@@ -764,7 +753,7 @@
                 >{line.alertStatusText}</span
               >
             {:else if line.status === "scheduled"}
-              <Clock class="w-4 h-4 status-scheduled-icon flex-shrink-0" />
+              <Calendar class="w-4 h-4 status-scheduled-icon flex-shrink-0" />
               <span class="status-text status-scheduled-text"
                 >Scheduled Closure</span
               >
@@ -831,10 +820,6 @@
     </div>
   {:else if currentTab === "resolved"}
     <!-- Resolved Alerts Tab -->
-    <!-- Filter Chips -->
-    <div class="mb-4">
-      <FilterChips />
-    </div>
 
     <!-- Alert Cards -->
     <div

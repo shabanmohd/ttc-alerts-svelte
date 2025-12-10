@@ -74,9 +74,35 @@
 
   let routeName = $derived(ROUTE_NAMES[routeId] || "");
 
-  // Filter alerts for this route
+  /**
+   * Check if a thread is resolved (service resumed or marked resolved)
+   */
+  function isResolved(thread: ThreadWithAlerts): boolean {
+    // Check if the thread is marked as resolved
+    if (thread.is_resolved) return true;
+
+    // Check if the latest alert has SERVICE_RESUMED effect
+    const effect = thread.latestAlert?.effect?.toUpperCase() || "";
+    if (effect.includes("SERVICE_RESUMED") || effect.includes("RESUMED"))
+      return true;
+
+    // Check header text for "Service has resumed"
+    const headerText = thread.latestAlert?.header_text?.toLowerCase() || "";
+    if (
+      headerText.includes("service has resumed") ||
+      headerText.includes("service resumed")
+    )
+      return true;
+
+    return false;
+  }
+
+  // Filter alerts for this route (only active/unresolved alerts)
   let routeAlerts = $derived(
     $threadsWithAlerts.filter((thread) => {
+      // First, skip resolved/resumed alerts
+      if (isResolved(thread)) return false;
+
       const threadRoutes = Array.isArray(thread.affected_routes)
         ? thread.affected_routes
         : [];

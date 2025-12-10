@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AlarmClock, ExternalLink, Train } from "lucide-svelte";
+  import { ExternalLink, Train } from "lucide-svelte";
   import RouteBadge from "./RouteBadge.svelte";
   import { cn } from "$lib/utils";
   import { maintenanceItems } from "$lib/stores/alerts";
@@ -269,7 +269,6 @@
   <!-- Header -->
   <div class="closures-header">
     <div class="closures-header-content">
-      <AlarmClock class="h-5 w-5 text-foreground" aria-hidden="true" />
       <h2 id="closures-heading" class="closures-title">
         <span class="closures-title-short">Subway Closures</span>
         <span class="closures-title-full">Planned Subway Closures</span>
