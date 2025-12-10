@@ -355,12 +355,18 @@ serve(async (req) => {
           : [];
         const mergedRoutes = [...new Set([...existingRoutes, ...routes])];
 
-        // Update thread
+        // Update thread - IMPORTANT: Preserve original incident title when SERVICE_RESUMED
+        // The thread title should describe the incident, not just "service has resumed"
         const updates: any = {
-          title: text.split('\n')[0].substring(0, 200),
           updated_at: new Date().toISOString(),
           affected_routes: mergedRoutes
         };
+
+        // Only update title if NOT a SERVICE_RESUMED alert
+        // SERVICE_RESUMED alerts should keep the original incident description
+        if (category !== 'SERVICE_RESUMED') {
+          updates.title = text.split('\n')[0].substring(0, 200);
+        }
 
         // Resolve thread if SERVICE_RESUMED
         if (category === 'SERVICE_RESUMED') {
@@ -374,6 +380,59 @@ serve(async (req) => {
 
         updatedThreads++;
       } else {
+        // Before creating a new thread, check if a thread was JUST created for this route
+        // This prevents race conditions when multiple alerts arrive simultaneously
+        const headerTitle = text.split('\n')[0].substring(0, 200);
+        let joinedRecentThread = false;
+        
+        // Check for very recently created threads (within last 5 seconds) with same route
+        if (routes.length > 0) {
+          const alertBaseRoutes = routes.map(extractRouteNumber);
+          const { data: recentThreads } = await supabase
+            .from('incident_threads')
+            .select('*')
+            .gte('created_at', new Date(Date.now() - 5000).toISOString());
+          
+          // Look for matching thread that was just created
+          for (const recentThread of recentThreads || []) {
+            const recentRoutes = Array.isArray(recentThread.affected_routes) 
+              ? recentThread.affected_routes 
+              : [];
+            if (recentRoutes.length === 0) continue;
+            
+            const recentBaseRoutes = recentRoutes.map(extractRouteNumber);
+            const hasOverlap = alertBaseRoutes.some(base => recentBaseRoutes.includes(base));
+            
+            if (hasOverlap) {
+              // Found a recently created thread for same route - join it instead
+              console.log(`Joining recently created thread ${recentThread.thread_id} instead of creating duplicate`);
+              
+              // Link alert to existing thread
+              await supabase
+                .from('alert_cache')
+                .update({ thread_id: recentThread.thread_id })
+                .eq('alert_id', newAlert.alert_id);
+              
+              // Merge routes
+              const mergedRoutes = [...new Set([...recentRoutes, ...routes])];
+              await supabase
+                .from('incident_threads')
+                .update({ 
+                  affected_routes: mergedRoutes,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('thread_id', recentThread.thread_id);
+              
+              updatedThreads++;
+              joinedRecentThread = true;
+              break; // Exit inner loop
+            }
+          }
+        }
+        
+        // Skip creating new thread if we already joined a recent one
+        if (joinedRecentThread) continue;
+        
         // Create new thread
         const { data: newThread } = await supabase
           .from('incident_threads')

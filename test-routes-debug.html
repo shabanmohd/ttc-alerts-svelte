@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Route Badge Debug Test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .card { border: 1px solid #ccc; margin: 10px 0; padding: 15px; border-radius: 8px; }
+    .success { background: #d4edda; border-color: #28a745; }
+    .warning { background: #fff3cd; border-color: #ffc107; }
+    .error { background: #f8d7da; border-color: #dc3545; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: bold; margin: 2px; }
+    .badge-route { background: #dc241f; color: white; }
+    pre { background: #f5f5f5; padding: 10px; overflow-x: auto; font-size: 12px; }
+    h2 { margin-top: 30px; border-bottom: 2px solid #333; padding-bottom: 5px; }
+    .status { font-weight: bold; }
+    .log { margin: 5px 0; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    .loading { color: #666; font-style: italic; }
+    #raw-data { max-height: 400px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Route Badge Debug Test</h1>
+  <p>Testing the TTC Alerts route extraction and display logic</p>
+
+  <h2>1. Supabase Data Fetch</h2>
+  <div id="fetch-status" class="card loading">Fetching alerts from Supabase...</div>
+  
+  <h2>2. Problem Alerts (37, 123, 301)</h2>
+  <div id="problem-alerts"></div>
+
+  <h2>3. Route Extraction Test</h2>
+  <div id="extraction-test"></div>
+
+  <h2>4. Raw Data</h2>
+  <div id="raw-data" class="card">
+    <pre id="raw-json">Loading...</pre>
+  </div>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script type="module">
+    // Supabase config
+    const SUPABASE_URL = 'https://wmchvmegxcpyfjcuzqzk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtY2h2bWVneGNweWZqY3V6cXprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MTk4MzgsImV4cCI6MjA3OTQ5NTgzOH0.Jy0t3-TtKIHamd0ZIxZRZxN9Q8rNZuD-IFBta6VdwXM';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Helper functions (same as in AlertCard.svelte)
+    function parseJsonArray(data) {
+      if (!data) return [];
+      if (Array.isArray(data)) return data;
+      if (typeof data === 'string') {
+        try {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {
+          // Not valid JSON
+        }
+      }
+      return [];
+    }
+
+    function getDisplayRoutes(routes) {
+      const routesByBase = new Map();
+      
+      for (const route of routes) {
+        const match = route.match(/^(\d+)/);
+        if (match) {
+          const baseNum = match[1];
+          if (!routesByBase.has(baseNum)) {
+            routesByBase.set(baseNum, []);
+          }
+          routesByBase.get(baseNum).push(route);
+        } else {
+          routesByBase.set(route, [route]);
+        }
+      }
+      
+      const displayRoutes = [];
+      for (const [baseNum, variants] of routesByBase) {
+        if (variants.length === 1) {
+          const single = variants[0];
+          const routeMatch = single.match(/^(\d+[A-Z]?)/);
+          displayRoutes.push(routeMatch ? routeMatch[1] : single);
+        } else {
+          displayRoutes.push(baseNum);
+        }
+      }
+      
+      return displayRoutes;
+    }
+
+    function log(elementId, message, type = 'info') {
+      const el = document.getElementById(elementId);
+      const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : '';
+      el.innerHTML += `<div class="log ${className}">${message}</div>`;
+    }
+
+    async function fetchAlerts() {
+      const fetchStatus = document.getElementById('fetch-status');
+      
+      try {
+        // Fetch alerts using Supabase client
+        const { data: alerts, error: alertsError } = await supabase
+          .from('alert_cache')
+          .select('alert_id, thread_id, header_text, affected_routes, created_at')
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(100);
+        
+        if (alertsError) throw new Error(`Alerts fetch failed: ${alertsError.message}`);
+        
+        // Get thread IDs
+        const threadIds = [...new Set(alerts.map(a => a.thread_id).filter(Boolean))];
+        
+        // Fetch threads
+        const { data: threads, error: threadsError } = await supabase
+          .from('incident_threads')
+          .select('thread_id, title, affected_routes')
+          .in('thread_id', threadIds);
+        
+        if (threadsError) throw new Error(`Threads fetch failed: ${threadsError.message}`);
+        
+        fetchStatus.className = 'card success';
+        fetchStatus.innerHTML = `
+          <strong>✅ Fetch successful!</strong><br>
+          Alerts: ${alerts.length}<br>
+          Threads: ${threads.length}
+        `;
+        
+        // Process problem alerts
+        analyzeProblems(alerts, threads);
+        
+        // Show raw data
+        document.getElementById('raw-json').textContent = JSON.stringify({ alerts: alerts.slice(0, 10), threads: threads.slice(0, 10) }, null, 2);
+        
+      } catch (err) {
+        fetchStatus.className = 'card error';
+        fetchStatus.innerHTML = `<strong>❌ Fetch failed:</strong> ${err.message}`;
+      }
+    }
+
+    function analyzeProblems(alerts, threads) {
+      const problemEl = document.getElementById('problem-alerts');
+      const extractionEl = document.getElementById('extraction-test');
+      
+      // Find alerts with 37, 123, 301 patterns
+      const problemPatterns = ['37, 37A', '123, 123C, 123D', '301, 301B'];
+      const problemAlerts = alerts.filter(a => 
+        problemPatterns.some(p => a.header_text && a.header_text.includes(p))
+      );
+      
+      if (problemAlerts.length === 0) {
+        problemEl.innerHTML = '<div class="card warning">⚠️ No alerts found matching 37, 123, or 301 patterns in last 24 hours</div>';
+        return;
+      }
+      
+      let html = '<table><thead><tr><th>Alert ID</th><th>Header</th><th>Alert Routes</th><th>Thread Routes</th><th>Display Routes</th><th>Status</th></tr></thead><tbody>';
+      
+      for (const alert of problemAlerts) {
+        const thread = threads.find(t => t.thread_id === alert.thread_id);
+        
+        const alertRoutes = parseJsonArray(alert.affected_routes);
+        const threadRoutes = thread ? parseJsonArray(thread.affected_routes) : [];
+        
+        // New logic: check length
+        const rawRoutes = alertRoutes.length > 0 ? alertRoutes : threadRoutes;
+        const displayRoutes = getDisplayRoutes(rawRoutes);
+        
+        const hasRoutes = displayRoutes.length > 0;
+        const status = hasRoutes ? '✅ Has badge' : '❌ No badge';
+        const statusClass = hasRoutes ? 'success' : 'error';
+        
+        html += `<tr class="${statusClass}">
+          <td><code>${alert.alert_id}</code></td>
+          <td>${alert.header_text?.substring(0, 50)}...</td>
+          <td><pre>${JSON.stringify(alertRoutes)}</pre></td>
+          <td><pre>${JSON.stringify(threadRoutes)}</pre></td>
+          <td>${displayRoutes.map(r => `<span class="badge badge-route">${r}</span>`).join('')}</td>
+          <td class="status">${status}</td>
+        </tr>`;
+      }
+      
+      html += '</tbody></table>';
+      problemEl.innerHTML = html;
+      
+      // Extraction test
+      const testCases = [
+        '37, 37A Islington Regular service has resumed',
+        '123, 123C, 123D Sherway: Detour via The Queensway',
+        '301, 301B Queen Regular service has resumed',
+        '510 Spadina: Detour southbound',
+        'Line 1 Yonge-University: No service'
+      ];
+      
+      let testHtml = '<table><thead><tr><th>Input</th><th>Expected Regex Match</th><th>Notes</th></tr></thead><tbody>';
+      
+      for (const testCase of testCases) {
+        // Test what the regex SHOULD match
+        const routeWithSuffixMatch = testCase.match(/\b(\d{1,3}[A-Z])\b/g) || [];
+        const standaloneMatch = testCase.match(/\b(\d{1,3})(?=[,:\s]|$)/g) || [];
+        const lineMatch = testCase.match(/Line\s*(\d+)/gi) || [];
+        
+        testHtml += `<tr>
+          <td>${testCase}</td>
+          <td>
+            Suffix: <code>${JSON.stringify(routeWithSuffixMatch)}</code><br>
+            Standalone: <code>${JSON.stringify(standaloneMatch)}</code><br>
+            Line: <code>${JSON.stringify(lineMatch)}</code>
+          </td>
+          <td>Combined should be: ${[...lineMatch, ...routeWithSuffixMatch, ...standaloneMatch].join(', ')}</td>
+        </tr>`;
+      }
+      
+      testHtml += '</tbody></table>';
+      extractionEl.innerHTML = testHtml;
+    }
+
+    // Run on load
+    fetchAlerts();
+  </script>
+</body>
+</html>

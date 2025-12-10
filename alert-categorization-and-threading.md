@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 4.1  
+**Version:** 5.0  
 **Date:** December 10, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v15)  
+**Status:** ✅ Implemented and Active (poll-alerts v20)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -356,20 +356,23 @@ Incident threading groups related alerts over time to:
 - Display most recent update first
 - Auto-resolve threads when SERVICE_RESUMED
 
-### Threading Algorithm (v14)
+### Threading Algorithm (v20)
 
 **Implemented in:** `supabase/functions/poll-alerts/index.ts`
 
 ```typescript
 // Thread matching logic with route family matching and enhanced similarity
 let matchedThread = null;
+let bestSimilarity = 0;
 
 // CRITICAL: Only attempt thread matching if alert has extracted routes
 if (routes.length > 0) {
   // Extract base route numbers for family matching
   const alertBaseRoutes = routes.map(extractRouteNumber);
 
-  for (const thread of unresolvedThreads || []) {
+  // Search BOTH unresolved AND recently resolved threads (12-hour window)
+  // This allows SERVICE_RESUMED to match and close existing threads
+  for (const thread of candidateThreads || []) {
     const threadRoutes = Array.isArray(thread.affected_routes)
       ? thread.affected_routes
       : [];
@@ -415,16 +418,75 @@ if (routes.length > 0) {
 }
 ```
 
-### Threading Rules (v14)
+### Threading Rules (v20)
 
-| Rule                    | Threshold         | Description                                    |
-| ----------------------- | ----------------- | ---------------------------------------------- |
-| **Route Family Match**  | Required          | Base route numbers must match (37 = 37A = 37B) |
-| **General Similarity**  | ≥40%              | Default threshold for matching                 |
-| **DIVERSION/DELAY**     | ≥25%              | Lower threshold for route updates              |
-| **SERVICE_RESUMED**     | ≥10%              | Very different vocabulary from original        |
-| **Time Window**         | 6 hours           | Only match threads updated within 6 hours      |
-| **Enhanced Similarity** | Jaccard + bonuses | Location (+20%) + Cause (+15%) bonuses         |
+| Rule                       | Threshold         | Description                                        |
+| -------------------------- | ----------------- | -------------------------------------------------- |
+| **Route Family Match**     | Required          | Base route numbers must match (37 = 37A = 37B)     |
+| **General Similarity**     | ≥40%              | Default threshold for matching                     |
+| **DIVERSION/DELAY**        | ≥25%              | Lower threshold for route updates                  |
+| **SERVICE_RESUMED**        | ≥10%              | Very different vocabulary from original            |
+| **Time Window**            | 12 hours          | Match threads updated within 12 hours              |
+| **Search Scope**           | Resolved + Active | SERVICE_RESUMED can match resolved threads         |
+| **Enhanced Similarity**    | Jaccard + bonuses | Location (+20%) + Cause (+15%) bonuses             |
+| **Title Preservation**     | SERVICE_RESUMED   | Don't overwrite original incident title            |
+| **Route Merging**          | On match          | Thread routes accumulate from all alerts           |
+| **Duplicate Prevention**   | 5-second window   | Check for recently created threads before creating |
+
+### Thread Update Rules (v20)
+
+When an alert matches an existing thread:
+
+```typescript
+// Merge routes: combine thread's existing routes with new alert's routes
+const mergedRoutes = [...new Set([...existingRoutes, ...routes])];
+
+// IMPORTANT: Preserve original incident title when SERVICE_RESUMED
+const updates: any = {
+  updated_at: new Date().toISOString(),
+  affected_routes: mergedRoutes
+};
+
+// Only update title if NOT a SERVICE_RESUMED alert
+// SERVICE_RESUMED alerts should keep the original incident description
+if (category !== 'SERVICE_RESUMED') {
+  updates.title = text.split('\n')[0].substring(0, 200);
+}
+
+// Resolve thread if SERVICE_RESUMED
+if (category === 'SERVICE_RESUMED') {
+  updates.is_resolved = true;
+}
+```
+
+### Race Condition Prevention (v20)
+
+Before creating a new thread, check if one was just created for the same route:
+
+```typescript
+// Check for threads created in last 5 seconds with same route
+if (routes.length > 0) {
+  const alertBaseRoutes = routes.map(extractRouteNumber);
+  const { data: recentThreads } = await supabase
+    .from('incident_threads')
+    .select('*')
+    .gte('created_at', new Date(Date.now() - 5000).toISOString());
+  
+  for (const recentThread of recentThreads || []) {
+    const recentBaseRoutes = recentRoutes.map(extractRouteNumber);
+    const hasOverlap = alertBaseRoutes.some(base => recentBaseRoutes.includes(base));
+    
+    if (hasOverlap) {
+      // Join existing thread instead of creating duplicate
+      console.log(`Joining recently created thread ${recentThread.thread_id}`);
+      // ... link alert to existing thread ...
+      joinedRecentThread = true;
+      break;
+    }
+  }
+}
+if (joinedRecentThread) continue; // Skip to next alert
+```
 
 ### Similarity Calculation
 
@@ -867,6 +929,66 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 
 ## Changelog
 
+### Version 5.0 - December 10, 2025 (poll-alerts v20)
+
+**Major Threading Logic Improvements:**
+
+- ✅ **Extended Search Window**: 12 hours (was 6 hours) for finding matching threads
+- ✅ **Resolved Thread Matching**: SERVICE_RESUMED alerts can now match resolved threads
+- ✅ **Title Preservation**: SERVICE_RESUMED alerts no longer overwrite original incident title
+- ✅ **Route Merging**: Thread routes accumulate ALL routes from ALL alerts in the thread
+- ✅ **Race Condition Prevention**: 5-second duplicate detection before creating new threads
+- ✅ **Best Match Selection**: Finds BEST matching thread, not just first match
+
+**SERVICE_RESUMED Handling:**
+
+```typescript
+// Don't overwrite title for SERVICE_RESUMED - preserve original incident description
+if (category !== 'SERVICE_RESUMED') {
+  updates.title = text.split('\\n')[0].substring(0, 200);
+}
+// Resolve thread when SERVICE_RESUMED arrives
+if (category === 'SERVICE_RESUMED') {
+  updates.is_resolved = true;
+}
+```
+
+**Duplicate Thread Prevention:**
+
+```typescript
+// Before creating new thread, check for recently created threads with same route
+const { data: recentThreads } = await supabase
+  .from('incident_threads')
+  .select('*')
+  .gte('created_at', new Date(Date.now() - 5000).toISOString());
+
+// If found matching recent thread, join it instead of creating duplicate
+if (hasOverlap) {
+  joinedRecentThread = true;
+  // Link alert to existing thread
+}
+```
+
+**Impact:**
+
+- Prevents SERVICE_RESUMED from creating separate threads
+- Thread titles remain descriptive (original incident, not "service resumed")
+- Route badges show all affected routes from entire incident
+- No more duplicate threads when alerts arrive simultaneously
+
+---
+
+### Version 4.1 - December 10, 2025 (poll-alerts v15)
+
+**Enhanced Similarity and Route Family Matching:**
+
+- ✅ **Route Family Matching**: 37, 37A, 37B treated as same route (base number matching)
+- ✅ **Enhanced Similarity**: Jaccard + location bonus (+20%) + cause bonus (+15%)
+- ✅ **Tuned Thresholds**: 40% general, 25% DIVERSION, 10% SERVICE_RESUMED
+- ✅ **Comma-Separated Routes**: Handle "37, 37A Islington" format
+
+---
+
 ### Version 3.2 - December 5, 2025
 
 **Threading Bug Fix (Production Deployment):**
@@ -903,6 +1025,114 @@ if (routes.length > 0) {
 - Eliminates false positive threading where vague alerts match unrelated routes
 - Ensures route extraction is the first gate before similarity matching
 - Improves alert accuracy and prevents confusion for users
+
+---
+
+## Troubleshooting Guide
+
+### Common Threading Issues and Solutions
+
+#### Issue: SERVICE_RESUMED Creates Separate Thread
+
+**Symptoms:**
+- New thread created with just "service has resumed" text
+- Original incident thread stays unresolved
+- Two threads for same incident
+
+**Root Cause:**
+- SERVICE_RESUMED has very different vocabulary from original alert
+- Jaccard similarity is low (~17%) when matching "delay due to collision" vs "regular service resumed"
+
+**Solution (v20):**
+1. Lower threshold for SERVICE_RESUMED (10%)
+2. Search resolved threads (SERVICE_RESUMED may arrive after thread auto-resolved)
+3. Use route family matching (base number)
+4. Extended search window (12 hours)
+
+#### Issue: Thread Title Becomes "Service Resumed"
+
+**Symptoms:**
+- Thread title shows "507 Long Branch: Regular service has resumed"
+- Lost original incident description
+
+**Root Cause:**
+- Thread title updated on every alert match
+- SERVICE_RESUMED overwrote descriptive incident title
+
+**Solution (v20):**
+```typescript
+// Only update title if NOT SERVICE_RESUMED
+if (category !== 'SERVICE_RESUMED') {
+  updates.title = text.split('\\n')[0].substring(0, 200);
+}
+```
+
+#### Issue: Duplicate Threads for Same Incident
+
+**Symptoms:**
+- Multiple threads with identical or similar titles
+- Same route, same time period
+
+**Root Cause:**
+- Multiple alerts arrive simultaneously (batch from Bluesky)
+- Race condition: both create threads before either finishes
+
+**Solution (v20):**
+- 5-second window duplicate detection before creating new thread
+- Check for recently created threads with same base route number
+- Join existing thread instead of creating duplicate
+
+#### Issue: Route Badges Not Showing All Routes
+
+**Symptoms:**
+- Thread has 37, 37A, 37B alerts but only shows 37 badge
+- Latest alert overwrites thread routes instead of merging
+
+**Root Cause:**
+- Frontend used `latestAlert.affected_routes` instead of `thread.affected_routes`
+- Thread routes weren't being merged when new alerts joined
+
+**Solution:**
+1. Backend: Merge routes on thread update
+   ```typescript
+   const mergedRoutes = [...new Set([...existingRoutes, ...routes])];
+   ```
+2. Frontend (AlertCard.svelte): Use thread routes for badges
+   ```typescript
+   const rawRoutes = $derived(threadRoutes);
+   ```
+
+#### Issue: JSONB Columns Storing String Instead of Array
+
+**Symptoms:**
+- `affected_routes` shows `"[]"` instead of `[]`
+- Route extraction works but stored incorrectly
+- Fallback route extraction runs unnecessarily
+
+**Root Cause:**
+- Double JSON encoding: `JSON.stringify()` called twice
+- Or string passed to JSONB column
+
+**Solution:**
+- Database trigger `fix_jsonb_string_encoding` auto-corrects on INSERT
+- Pass arrays directly to Supabase (it handles serialization)
+- Don't use `JSON.stringify()` before insert
+
+---
+
+## Testing Checklist
+
+When modifying threading logic, verify:
+
+1. [ ] New alert with matching route joins existing thread
+2. [ ] SERVICE_RESUMED matches and resolves original thread
+3. [ ] Thread title preserved when SERVICE_RESUMED arrives
+4. [ ] Route variants (37, 37A, 37B) grouped together
+5. [ ] Different routes NOT grouped (39 vs 939, 46 vs 996)
+6. [ ] Thread routes accumulate all routes from all alerts
+7. [ ] No duplicate threads when batch alerts arrive
+8. [ ] Route badges display all affected routes in thread
+9. [ ] Resolved threads can be matched by SERVICE_RESUMED
 
 ---
 
