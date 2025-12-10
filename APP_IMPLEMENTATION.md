@@ -115,7 +115,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                       |
 | `functions/auth-session/index.ts`       | ✅     | Validate existing session                               |
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                              |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v5: fixed schema)            |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v20: threading overhaul) |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                             |
 | `functions/get-eta/index.ts`            | ✅     | Fetch TTC NextBus predictions 🆕 **B**                  |
 
@@ -221,10 +221,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Migrations (`supabase/migrations/`)
 
-| File                            | Status | Purpose                                    | Version |
-| ------------------------------- | ------ | ------------------------------------------ | ------- |
-| `20241204_auth_tables.sql`      | ✅     | WebAuthn auth tables                       | A & B   |
-| `20251204_bookmarked_stops.sql` | ✅     | Add bookmarked_stops column to preferences | **B**   |
+| File                                  | Status | Purpose                                    | Version |
+| ------------------------------------- | ------ | ------------------------------------------ | ------- |
+| `20241204_auth_tables.sql`            | ✅     | WebAuthn auth tables                       | A & B   |
+| `20251204_bookmarked_stops.sql`       | ✅     | Add bookmarked_stops column to preferences | **B**   |
+| `20251210_cleanup_cron.sql`           | ✅     | Automated 15-day retention cleanup         | **B**   |
+| `20251210_threading_constraints.sql`  | ✅     | JSONB constraints, helper functions        | **B**   |
 
 ---
 
@@ -302,7 +304,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 | auth-verify        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`        |
 | auth-session       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`       |
 | auth-recover       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`       |
-| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v15)  |
+| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v20)  |
 | get-eta            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`            |
 | scrape-maintenance | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance` |
 
@@ -310,9 +312,39 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 10, 2025 - Major Threading Logic Overhaul (v20)
+
+**poll-alerts Edge Function v20 (latest):**
+
+- ✅ **Extended search window**: 12 hours (was 6 hours) for finding matching threads
+- ✅ **Resolved thread matching**: SERVICE_RESUMED can now match resolved threads
+- ✅ **Title preservation**: SERVICE_RESUMED alerts no longer overwrite original incident title
+- ✅ **Route merging**: Thread routes accumulate ALL routes from ALL alerts in the thread
+- ✅ **Race condition prevention**: 5-second duplicate detection before creating new threads
+- ✅ **Best match selection**: Finds best matching thread, not just first match
+
+**Database Constraints & Functions (Dec 10 PM):**
+
+- ✅ Added `alert_cache_routes_is_array` constraint - ensures affected_routes is array
+- ✅ Added `alert_cache_categories_is_array` constraint - ensures categories is array
+- ✅ Added `incident_threads_routes_is_array` constraint - ensures affected_routes is array
+- ✅ Added `incident_threads_categories_is_array` constraint - ensures categories is array
+- ✅ Added `extract_route_number(TEXT)` function - extracts base route (37A → 37)
+- ✅ Added `routes_have_family_overlap(JSONB, JSONB)` function - checks route family overlap
+- ✅ Added `merge_routes(JSONB, JSONB)` function - merges and dedupes route arrays
+- ✅ Fixed `auto_populate_routes()` trigger - now checks `jsonb_typeof()` before `jsonb_array_length()`
+- ✅ Removed duplicate triggers (`auto_populate_routes_trigger`)
+- ✅ Added `idx_incident_threads_created_at` index for duplicate detection
+- ✅ Added `idx_incident_threads_active` partial index for unresolved threads
+- ✅ Migration file: `supabase/migrations/20251210_threading_constraints.sql`
+
+**Frontend Fix:**
+
+- ✅ AlertCard.svelte now uses thread routes for badges (shows all routes from all alerts in thread)
+
 ### Dec 10, 2025 - Alert Threading Improvements & Database Cleanup
 
-**poll-alerts Edge Function v15 (latest):**
+**poll-alerts Edge Function v15 (previous):**
 
 - ✅ Fixed route extraction for comma-separated routes (e.g., "37, 37A" → ["37", "37A"])
 - ✅ Added route family matching: 37, 37A, 37B treated as same route family
