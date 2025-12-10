@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 5.2  
+**Version:** 5.3  
 **Date:** December 10, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v22)  
+**Status:** ✅ Implemented and Active (poll-alerts v22 + pg_cron automation)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -844,7 +844,7 @@ RETURNS TEXT AS $$
 $$;
 
 -- Unique index prevents duplicates
-CREATE UNIQUE INDEX idx_incident_threads_hash_unique 
+CREATE UNIQUE INDEX idx_incident_threads_hash_unique
 ON incident_threads (thread_hash) WHERE thread_hash IS NOT NULL;
 
 -- Auto-populate trigger
@@ -866,11 +866,13 @@ A database trigger prevents route mismatches when assigning alerts to threads. T
 ```
 
 **How it works:**
+
 1. On INSERT/UPDATE to `alert_cache`, extract base route numbers (e.g., "16" from "16A")
 2. Compare with target thread's route numbers
 3. RAISE EXCEPTION if no route overlap found
 
 **Why this was added:**
+
 - Route 9 and Route 16 alerts share similar locations (same collision area)
 - Old poll-alerts versions matched based on similarity score alone
 - This caused Route 16 alerts to appear under Route 9 threads
@@ -879,8 +881,8 @@ A database trigger prevents route mismatches when assigning alerts to threads. T
 
 ```sql
 -- Ensures affected_routes is always a valid JSONB array
-ALTER TABLE alert_cache 
-  ADD CONSTRAINT affected_routes_is_array 
+ALTER TABLE alert_cache
+  ADD CONSTRAINT affected_routes_is_array
   CHECK (jsonb_typeof(affected_routes) = 'array');
 ```
 
@@ -999,6 +1001,58 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 
 ## Changelog
 
+### Version 5.3 - December 10, 2025 (pg_cron Automation)
+
+**Automated poll-alerts Invocation:**
+
+- ✅ **pg_net Extension Enabled**: HTTP requests can now be made from within PostgreSQL
+- ✅ **`invoke_poll_alerts()` Function**: Wrapper function that calls poll-alerts Edge Function via HTTP POST
+- ✅ **Service Role Key in Vault**: Securely stored in `vault.secrets` for Edge Function authentication
+- ✅ **pg_cron Job Created**: `poll-alerts-cron` runs every 2 minutes (`*/2 * * * *`)
+- ✅ **Fixed `cleanup_old_data()`**: Now properly handles foreign key constraints when deleting threads
+
+**New Database Components:**
+
+```sql
+-- invoke_poll_alerts() - Calls Edge Function using pg_net
+CREATE FUNCTION invoke_poll_alerts() RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+  SELECT decrypted_secret INTO service_key FROM vault.decrypted_secrets WHERE name = 'service_role_key';
+  PERFORM net.http_post(
+    url := 'https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || service_key),
+    body := '{}'::jsonb
+  );
+$$;
+
+-- pg_cron schedule
+SELECT cron.schedule('poll-alerts-cron', '*/2 * * * *', 'SELECT invoke_poll_alerts()');
+```
+
+**Monitoring Cron Jobs:**
+
+```sql
+-- View all cron jobs
+SELECT jobid, jobname, schedule, active FROM cron.job;
+
+-- View recent poll-alerts runs
+SELECT status, start_time, return_message FROM cron.job_run_details 
+WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'poll-alerts-cron')
+ORDER BY start_time DESC LIMIT 10;
+
+-- View HTTP responses
+SELECT status_code, content, created FROM net._http_response ORDER BY id DESC LIMIT 10;
+```
+
+**Impact:**
+
+- Alerts are now polled automatically every 2 minutes without external triggers
+- No need for external cron services (GitHub Actions, Cloudflare Workers, etc.)
+- Self-contained within Supabase infrastructure
+- HTTP responses stored in `net._http_response` for debugging
+
+---
+
 ### Version 5.2 - December 10, 2025 (Thread Deduplication Fix)
 
 **Thread Duplication Race Condition Fix:**
@@ -1017,7 +1071,7 @@ Supabase Edge Functions run in separate Deno isolates with independent database 
 
 ```sql
 -- Unique partial index prevents duplicates
-CREATE UNIQUE INDEX idx_incident_threads_hash_unique 
+CREATE UNIQUE INDEX idx_incident_threads_hash_unique
 ON incident_threads (thread_hash)
 WHERE thread_hash IS NOT NULL;
 
@@ -1032,6 +1086,7 @@ END;
 ```
 
 **Impact:**
+
 - Eliminated 13-14x thread duplication for identical alerts
 - Database now prevents duplicates regardless of Edge Function bugs
 - Thread hash based on: route number + normalized title + hour-level timestamp
@@ -1049,6 +1104,7 @@ END;
 Route 9 Bellamy and Route 16 McCowan both use the same streets during detours (same collision area). Old code matched based on similarity score which included location keywords, causing Route 16 alerts to match Route 9 threads.
 
 **Solution:**
+
 1. Strict route validation in Edge Function (v22)
 2. Database trigger prevents mismatches even if Edge Function has bugs
 3. SERVICE_RESUMED alerts require ALL routes to match thread (not just any)
