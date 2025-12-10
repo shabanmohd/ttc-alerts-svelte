@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// VERSION 22 - Fixed route threading logic with strict route matching
+const FUNCTION_VERSION = 22;
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -296,35 +299,48 @@ serve(async (req) => {
           // Extract base route numbers from thread routes
           const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
           
-          // Use route FAMILY matching (37 matches 37A, 37B, etc.)
+          // STRICT ROUTE MATCHING: All alert routes must match thread routes
+          // This prevents Route 16 from matching Route 9 just because they share a location
+          const allAlertRoutesMatchThread = alertBaseRoutes.every(alertBase => 
+            threadBaseRoutes.includes(alertBase)
+          );
+          
+          // Also check if any alert route matches thread routes (for adding to existing incidents)
           const hasRouteOverlap = alertBaseRoutes.some(alertBase => 
             threadBaseRoutes.includes(alertBase)
           );
           
-          if (hasRouteOverlap) {
-            const threadTitle = thread.title || '';
-            // Use enhanced similarity that considers location and cause
-            const similarity = enhancedSimilarity(text, threadTitle);
-            
-            // SERVICE_RESUMED: Can match RESOLVED threads with same route
-            // Use very low threshold since vocabulary differs completely
-            if (category === 'SERVICE_RESUMED') {
-              if (similarity >= 0.1 && similarity > bestSimilarity) {
-                bestSimilarity = similarity;
-                matchedThread = thread;
-              }
-              continue; // Keep looking for better match
-            }
-            
-            // Skip resolved threads for non-SERVICE_RESUMED alerts
-            if (thread.is_resolved) continue;
-            
-            // General matching: 40% threshold for unresolved threads
-            if (similarity >= 0.4 && similarity > bestSimilarity) {
+          // For SERVICE_RESUMED, require strict match (all routes must match)
+          // For other alerts, allow partial overlap but validate similarity
+          const routeMatchOk = category === 'SERVICE_RESUMED' 
+            ? allAlertRoutesMatchThread 
+            : hasRouteOverlap;
+          
+          if (!routeMatchOk) continue;
+          
+          const threadTitle = thread.title || '';
+          // Use enhanced similarity that considers location and cause
+          const similarity = enhancedSimilarity(text, threadTitle);
+          
+          // SERVICE_RESUMED: Can match RESOLVED threads with same route
+          // Use very low threshold since vocabulary differs completely
+          if (category === 'SERVICE_RESUMED') {
+            if (similarity >= 0.1 && similarity > bestSimilarity) {
               bestSimilarity = similarity;
               matchedThread = thread;
-              continue;
             }
+            continue; // Keep looking for better match
+          }
+          
+          // Skip resolved threads for non-SERVICE_RESUMED alerts
+          if (thread.is_resolved) continue;
+          
+          // General matching: 40% threshold for unresolved threads
+          if (similarity >= 0.4 && similarity > bestSimilarity) {
+            bestSimilarity = similarity;
+            matchedThread = thread;
+            continue;
+          }
             
             // For DIVERSION/DETOUR/DELAY alerts, use lower threshold (25%)
             if ((category === 'DIVERSION' || category === 'DELAY') && 
@@ -527,6 +543,7 @@ serve(async (req) => {
         success: true, 
         newAlerts, 
         updatedThreads,
+        version: FUNCTION_VERSION,
         timestamp: new Date().toISOString()
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -535,7 +552,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, version: FUNCTION_VERSION }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
