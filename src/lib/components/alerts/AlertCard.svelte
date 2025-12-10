@@ -164,10 +164,11 @@
 
   const latestAlert = $derived(thread.latestAlert);
   const earlierAlerts = $derived(thread.alerts.slice(1));
+  // Get routes from alert first, fall back to thread routes if alert routes are empty
+  const alertRoutes = $derived(parseJsonArray(latestAlert?.affected_routes));
+  const threadRoutes = $derived(parseJsonArray(thread.affected_routes));
   const rawRoutes = $derived(
-    parseJsonArray(latestAlert?.affected_routes) ||
-      parseJsonArray(thread.affected_routes) ||
-      []
+    alertRoutes.length > 0 ? alertRoutes : threadRoutes
   );
   // Get display routes (deduplicate variants, show base number only)
   const displayRoutes = $derived(getDisplayRoutes(rawRoutes));

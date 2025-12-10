@@ -239,12 +239,14 @@ serve(async (req) => {
       const routes = extractRoutes(text);
       
       // Create alert record matching alert_cache schema
+      // NOTE: JSONB columns need arrays passed directly, not stringified
+      // The Supabase client handles serialization automatically
       const alert = {
         bluesky_uri: uri,
         header_text: text.split('\n')[0].substring(0, 200),
         description_text: text,
-        categories: [category],
-        affected_routes: routes,
+        categories: JSON.parse(JSON.stringify([category])), // Force clean array
+        affected_routes: JSON.parse(JSON.stringify(routes)), // Force clean array
         created_at: post.record.createdAt,
         is_latest: true,
         effect: category === 'SERVICE_RESUMED' ? 'RESUMED' : 'DISRUPTION'
