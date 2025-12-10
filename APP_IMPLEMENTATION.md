@@ -71,14 +71,15 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Frontend (`src/lib/`)
 
-| File                                         | Status | Purpose                                          |
-| -------------------------------------------- | ------ | ------------------------------------------------ |
-| `components/alerts/AlertCard.svelte`         | ✅     | Alert cards w/ route extraction from header_text |
-| `components/alerts/FilterChips.svelte`       | ✅     | Category filter buttons                          |
-| `components/alerts/MaintenanceWidget.svelte` | ✅     | Scheduled maintenance display                    |
-| `components/alerts/MyRouteAlerts.svelte`     | ✅     | My Routes tab with responsive route badge tabs   |
-| `components/alerts/RouteBadge.svelte`        | ✅     | TTC-branded route badges (full names, colors)    |
-| `components/alerts/StatusBadge.svelte`       | ✅     | Status indicators (Delay, Detour, Resumed, etc.) |
+| File                                         | Status | Purpose                                                 |
+| -------------------------------------------- | ------ | ------------------------------------------------------- |
+| `components/alerts/AlertCard.svelte`         | ✅     | Alert cards w/ route extraction from header_text        |
+| `components/alerts/BookmarkRouteButton.svelte` | ✅     | Save route button with feedback animation 🆕 **B**     |
+| `components/alerts/FilterChips.svelte`       | ✅     | Category filter buttons                                 |
+| `components/alerts/MaintenanceWidget.svelte` | ✅     | Scheduled maintenance display                           |
+| `components/alerts/MyRouteAlerts.svelte`     | ✅     | My Routes tab with responsive route badge tabs          |
+| `components/alerts/RouteBadge.svelte`        | ✅     | TTC-branded route badges (full names, colors)           |
+| `components/alerts/StatusBadge.svelte`       | ✅     | Status indicators (Delay, Detour, Resumed, etc.)        |
 | `components/dialogs/HowToUseDialog.svelte`   | ✅     | User guide                                       |
 | `components/dialogs/InstallPWADialog.svelte` | ✅     | PWA install prompt                               |
 | `components/layout/Header.svelte`            | ✅     | App header with hamburger menu (mobile)          |
@@ -344,6 +345,20 @@ normalizeRouteId(route1) === normalizeRouteId(route2);
 
 - `src/lib/stores/eta.ts` - `etaList` derived from both `etaStore` and `savedStops` for ordering
 - `src/lib/components/stops/MyStops.svelte` - Auto-exit edit mode on empty stops
+
+**Route UI Improvements:**
+
+- ✅ Route cards now have cursor pointer and tap feedback (active:scale-98)
+- ✅ `BookmarkRouteButton` rewritten with save-stop-button matching styles
+- ✅ Added `showLabel` prop for optional text labels ("Save to My Routes"/"Saved")
+- ✅ Added feedback animation with checkmark on save
+- ✅ Route detail page now uses `BookmarkRouteButton` with label
+
+**Files Updated:**
+
+- `src/routes/routes/+page.svelte` - Added cursor-pointer and active:scale-98 tap feedback
+- `src/lib/components/alerts/BookmarkRouteButton.svelte` - Complete rewrite with matching styles
+- `src/routes/routes/[route]/+page.svelte` - Uses BookmarkRouteButton with showLabel=true
 
 ### Dec 10, 2025 - Major Threading Logic Overhaul (v20)
 
