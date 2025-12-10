@@ -42,7 +42,7 @@ const ALERT_CATEGORIES = {
 function extractRoutes(text: string): string[] {
   const routes: string[] = [];
   
-  // Match subway lines first: Line 1, Line 2, Line 4
+  // Match subway lines first: Line 1, Line 2, Line 4, Line 6
   const lineMatch = text.match(/Line\s*(\d+)/gi);
   if (lineMatch) {
     lineMatch.forEach(m => {
@@ -72,8 +72,15 @@ function extractRoutes(text: string): string[] {
   const standaloneMatch = text.match(/\b(\d{1,3})(?=[,:\s]|$)/g);
   if (standaloneMatch) {
     standaloneMatch.forEach(num => {
-      if (parseInt(num) < 1000 && !routes.some(r => r === num || r.startsWith(num + ' '))) {
-        routes.push(num);
+      const numInt = parseInt(num);
+      // Only add if it's a valid route number and NOT already captured as exact match
+      // Allow adding "37" even if "37A" exists (route family)
+      if (numInt >= 1 && numInt < 1000) {
+        // Check if exact match already exists (not just variant)
+        const exactExists = routes.some(r => r === num);
+        if (!exactExists) {
+          routes.push(num);
+        }
       }
     });
   }
@@ -100,11 +107,48 @@ function extractRouteNumber(route: string): string {
   return match ? match[1] : route;
 }
 
-// Check if two routes have the same route number
+// Check if two routes have the same route number (route family match)
 function routesMatch(route1: string, route2: string): boolean {
   const num1 = extractRouteNumber(route1);
   const num2 = extractRouteNumber(route2);
   return num1 === num2;
+}
+
+// Extract location keywords from alert text for better similarity matching
+function extractLocationKeywords(text: string): Set<string> {
+  const keywords = new Set<string>();
+  const lowerText = text.toLowerCase();
+  
+  // Common TTC location words
+  const locationPatterns = [
+    /\bat\s+(\w+)\s+(ave|st|blvd|rd|dr|cres|way|pkwy)\b/gi,
+    /\b(\w+)\s+station\b/gi,
+    /\bvia\s+(\w+)/gi,
+    /\bnear\s+(\w+)/gi,
+  ];
+  
+  locationPatterns.forEach(pattern => {
+    const matches = text.match(pattern);
+    if (matches) {
+      matches.forEach(m => keywords.add(m.toLowerCase()));
+    }
+  });
+  
+  // Extract specific street names
+  const streetMatch = text.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:Ave|St|Blvd|Rd|Dr|Cres|Way)\b/g);
+  if (streetMatch) {
+    streetMatch.forEach(s => keywords.add(s.toLowerCase()));
+  }
+  
+  return keywords;
+}
+
+// Extract incident cause for matching
+function extractCause(text: string): string | null {
+  const lowerText = text.toLowerCase();
+  const causes = ['collision', 'medical emergency', 'fire', 'police', 'construction', 
+                  'stalled', 'track work', 'signal problem', 'power', 'trespasser'];
+  return causes.find(c => lowerText.includes(c)) || null;
 }
 
 // Calculate Jaccard similarity for threading
@@ -116,6 +160,25 @@ function jaccardSimilarity(text1: string, text2: string): number {
   const union = new Set([...words1, ...words2]);
   
   return intersection.size / union.size;
+}
+
+// Enhanced similarity that considers location and cause
+function enhancedSimilarity(text1: string, text2: string): number {
+  // Base Jaccard similarity
+  const jaccard = jaccardSimilarity(text1, text2);
+  
+  // Location overlap bonus
+  const loc1 = extractLocationKeywords(text1);
+  const loc2 = extractLocationKeywords(text2);
+  const locOverlap = [...loc1].filter(l => loc2.has(l)).length;
+  const locationBonus = locOverlap > 0 ? Math.min(0.2, locOverlap * 0.1) : 0;
+  
+  // Same cause bonus
+  const cause1 = extractCause(text1);
+  const cause2 = extractCause(text2);
+  const causeBonus = (cause1 && cause1 === cause2) ? 0.15 : 0;
+  
+  return Math.min(1, jaccard + locationBonus + causeBonus);
 }
 
 serve(async (req) => {
@@ -208,24 +271,31 @@ serve(async (req) => {
       // Alerts without routes should NEVER match existing threads
       // This prevents false positives where vague alerts get grouped incorrectly
       if (routes.length > 0) {
-        // Check for matching thread based on EXACT route number match and similarity
+        // Extract base route numbers for family matching
+        const alertBaseRoutes = routes.map(extractRouteNumber);
+        
+        // Check for matching thread based on route family match and enhanced similarity
         for (const thread of unresolvedThreads || []) {
           const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
           
           // Skip threads with no routes - they can't be reliably matched
           if (threadRoutes.length === 0) continue;
           
-          // Use exact route number matching to prevent 46 matching 996, etc.
-          const hasRouteOverlap = routes.some(alertRoute => 
-            threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))
+          // Extract base route numbers from thread routes
+          const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
+          
+          // Use route FAMILY matching (37 matches 37A, 37B, etc.)
+          const hasRouteOverlap = alertBaseRoutes.some(alertBase => 
+            threadBaseRoutes.includes(alertBase)
           );
           
           if (hasRouteOverlap) {
             const threadTitle = thread.title || '';
-            const similarity = jaccardSimilarity(text, threadTitle);
+            // Use enhanced similarity that considers location and cause
+            const similarity = enhancedSimilarity(text, threadTitle);
             
-            // Lower threshold (50%) for general matching - routes already match
-            if (similarity >= 0.5) {
+            // Lower threshold (40%) for general matching - routes already match
+            if (similarity >= 0.4) {
               matchedThread = thread;
               break;
             }
@@ -238,9 +308,9 @@ serve(async (req) => {
               break;
             }
             
-            // For DIVERSION/DETOUR alerts, use lower threshold (30%) since they 
+            // For DIVERSION/DETOUR alerts, use lower threshold (25%) since they 
             // may update existing incidents with different wording
-            if ((category === 'DIVERSION' || category === 'DELAY') && similarity >= 0.3) {
+            if ((category === 'DIVERSION' || category === 'DELAY') && similarity >= 0.25) {
               matchedThread = thread;
               break;
             }

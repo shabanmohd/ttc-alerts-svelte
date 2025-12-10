@@ -295,18 +295,56 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Deployed Edge Functions
 
-| Function       | Status | URL                                                                    |
-| -------------- | ------ | ---------------------------------------------------------------------- |
-| auth-register  | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register`  |
-| auth-challenge | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge` |
-| auth-verify    | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`    |
-| auth-session   | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`   |
-| auth-recover   | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`   |
-| poll-alerts    | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts`    |
+| Function            | Status | URL                                                                         |
+| ------------------- | ------ | --------------------------------------------------------------------------- |
+| auth-register       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register`       |
+| auth-challenge      | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge`      |
+| auth-verify         | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`         |
+| auth-session        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`        |
+| auth-recover        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`        |
+| poll-alerts         | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v14)   |
+| get-eta             | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`             |
+| scrape-maintenance  | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance`  |
 
 ---
 
 ## Changelog
+
+### Dec 10, 2025 - Alert Threading Improvements & Database Cleanup
+
+**poll-alerts Edge Function v14:**
+
+- ✅ Fixed route extraction for comma-separated routes (e.g., "37, 37A" → ["37", "37A"])
+- ✅ Added route family matching: 37, 37A, 37B treated as same route family
+- ✅ Added enhanced similarity function with location + cause bonuses
+- ✅ Lower thresholds: 10% for SERVICE_RESUMED, 25% for DIVERSION, 40% general
+- ✅ Added `extractLocationKeywords()` for better location matching
+- ✅ Added `extractCause()` to match incident causes (collision, medical emergency, etc.)
+
+**Database Cleanup (Manual):**
+
+- ✅ Deleted 181,165 orphan threads (threads with no alerts)
+- ✅ Database reduced from ~181,500 threads to 332 threads
+- ✅ Fixed route 37 collision: now 1 thread with 3 alerts (was 3 separate threads)
+
+**Automated Data Retention (pg_cron):**
+
+- ✅ Enabled pg_cron extension for scheduled tasks
+- ✅ Created `cleanup_old_alerts()` function - 15-day retention for resolved threads
+- ✅ Created `cleanup_old_alerts_toronto()` DST-aware wrapper
+- ✅ Scheduled daily cleanup at 4 AM Toronto time (handles EST/EDT automatically)
+- ✅ Migration file: `supabase/migrations/20251210_cleanup_cron.sql`
+
+**Retention Policy:**
+| Data Type | Retention |
+|-----------|-----------|
+| Resolved threads | 15 days |
+| Orphan alerts | 15 days |
+| Active threads | Indefinite |
+
+**Files Updated:**
+- `supabase/functions/poll-alerts/index.ts` - Enhanced threading logic (v14)
+- `supabase/migrations/20251210_cleanup_cron.sql` - Automated cleanup setup
 
 ### Dec 4, 2025 - Lexend Font + Typography Hierarchy
 
@@ -348,50 +386,6 @@ For local development, use `localhost` and `http://localhost:5173`.
 - `src/lib/components/layout/Header.svelte` - Font weight classes
 - `src/lib/components/layout/Sidebar.svelte` - Font weight classes
 - `src/lib/components/alerts/AlertCard.svelte` - Font weight classes
-
-### Dec 9, 2025 - Threading System Overhaul
-
-**Major Improvements to Alert Threading:**
-
-- ✅ **Stop Words Filtering**: Added TTC-specific stop words to prevent false matches
-  - Common words like "service", "bus", "route", "station", "via" now filtered
-  - Prevents inflated similarity scores from generic transit vocabulary
-
-- ✅ **Minimum Shared Words Gate**: NEW requirement for at least 3 meaningful shared words
-  - Prevents matches based purely on similarity ratio
-  - Ensures actual semantic overlap between alerts
-
-- ✅ **Raised Similarity Thresholds**:
-  - General: 50% → 55%
-  - DIVERSION/DELAY: 30% → 35%
-  - SERVICE_RESUMED: 10% → 15%
-
-- ✅ **Extended Time Window**: 6 hours → 8 hours for overnight incidents
-
-- ✅ **Improved Route Extraction**:
-  - Better multi-word route names ("Finch East", "Victoria Park")
-  - Added "Route X" pattern matching
-  - Stricter validation of route numbers
-
-- ✅ **Multi-Gate Threading Algorithm**: New `shouldMatchThread()` function with 5 gates:
-  1. Alert must have routes
-  2. Thread must have routes
-  3. At least one exact route number match
-  4. Minimum 3 shared meaningful words
-  5. Category-specific similarity threshold
-
-- ✅ **Enhanced Logging**: Match reasons now logged for debugging
-
-- ✅ **Route Merging**: Thread routes now merge with new alert routes
-
-**Files Updated:**
-
-- `supabase/functions/poll-alerts/index.ts` - Complete threading system rewrite
-- `alert-categorization-and-threading.md` - Updated to v3.3 with new documentation
-
-**Deployment:**
-
-- ✅ Edge Function deployed (version 10) via Supabase MCP
 
 ### Dec 4, 2025 - Edge Function Alert Parsing Fix
 

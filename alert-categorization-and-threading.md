@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.2  
-**Date:** December 5, 2025  
-**Status:** ✅ Implemented and Active (Deployed)  
+**Version:** 4.0  
+**Date:** December 10, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v14)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -80,9 +80,10 @@ This document describes the alert categorization and threading system designed t
 
 - **Effect > Cause** - "No service" matters more than "due to security incident"
 - **Non-exclusive categories** - Alert can be `SERVICE_DISRUPTION` + `SUBWAY`
-- **Simple threading** - 50% text similarity for general matching, 20% for SERVICE_RESUMED
+- **Route family threading** - 37, 37A, 37B treated as same route family (via base number)
+- **Enhanced similarity** - Jaccard + location keywords + cause matching
+- **Tuned thresholds** - 40% general, 25% DIVERSION, 10% SERVICE_RESUMED
 - **Latest first** - Most recent update at top of thread
-- **Exact route number matching** - Threading uses route NUMBER comparison (e.g., "46" ≠ "996")
 
 ---
 
@@ -162,18 +163,18 @@ function categorizeAlert(text: string): { category: string; priority: number } {
 
 **Note:** Current implementation returns single category (first match by priority order).
 
-### Route Number Matching
+### Route Number Matching (Route Family)
 
-To prevent cross-route threading (e.g., route 46 matching with 996), exact route number comparison is used:
+To enable route family threading (37, 37A, 37B = same family) while preventing cross-route threading (46 vs 996):
 
 ```typescript
-// Extract route NUMBER only (for comparison)
+// Extract route NUMBER only (base number for family matching)
 function extractRouteNumber(route: string): string {
   const match = route.match(/^(\d+)/);
   return match ? match[1] : route;
 }
 
-// Check if two routes have the same route number
+// Check if two routes are in the same family (same base number)
 function routesMatch(route1: string, route2: string): boolean {
   const num1 = extractRouteNumber(route1);
   const num2 = extractRouteNumber(route2);
@@ -181,9 +182,11 @@ function routesMatch(route1: string, route2: string): boolean {
 }
 ```
 
-**Examples:**
+**Route Family Examples:**
 
-- `routesMatch("46 Martin Grove", "46")` → `true` (both have route number 46)
+- `routesMatch("37", "37A")` → `true` (same family: 37)
+- `routesMatch("37B", "37 Islington")` → `true` (same family: 37)
+- `routesMatch("46 Martin Grove", "46")` → `true` (same family: 46)
 - `routesMatch("996 Wilson Express", "96")` → `false` (996 ≠ 96)
 - `routesMatch("39 Finch East", "939 Finch Express")` → `false` (39 ≠ 939)
 
@@ -216,12 +219,17 @@ function extractRoutes(text: string): string[] {
     routeWithNameMatch.forEach((m) => routes.push(m));
   }
 
-  // Match standalone route numbers (no letter suffix, no name)
+  // Match standalone route numbers - handles "37, 37A" comma-separated format
   const standaloneMatch = text.match(/\b(\d{1,3})(?=[,:\s]|$)/g);
   if (standaloneMatch) {
     standaloneMatch.forEach((num) => {
-      if (parseInt(num) < 1000 && !routes.some((r) => r === num || r.startsWith(num + ' '))) {
-        routes.push(num);
+      const numInt = parseInt(num);
+      // Only add if valid route number and not already captured as exact match
+      if (numInt >= 1 && numInt < 1000) {
+        const exactExists = routes.some((r) => r === num);
+        if (!exactExists) {
+          routes.push(num);
+        }
       }
     });
   }
@@ -236,8 +244,92 @@ function extractRoutes(text: string): string[] {
 - "306 Carlton: Detour" → `["306 Carlton"]`
 - "504 King delays" → `["504 King"]`
 - "Routes 39, 85, 939" → `["39", "85", "939"]`
-- "37, 37A Islington: Detour" → `["37A", "37 Islington", "37"]` (letter suffix routes now captured)
+- "37, 37A Islington: Detour" → `["37A", "37 Islington", "37"]` (all variants captured)
 - "123, 123C, 123D Sherway" → `["123C", "123D", "123 Sherway", "123"]` (multi-variant routes)
+
+---
+
+## Enhanced Similarity (v14)
+
+### Location Keyword Matching
+
+Extracts location keywords from alert text for better similarity matching:
+
+```typescript
+function extractLocationKeywords(text: string): Set<string> {
+  const keywords = new Set<string>();
+  
+  // Common TTC location patterns
+  const locationPatterns = [
+    /\bat\s+(\w+)\s+(ave|st|blvd|rd|dr|cres|way|pkwy)\b/gi,
+    /\b(\w+)\s+station\b/gi,
+    /\bvia\s+(\w+)/gi,
+    /\bnear\s+(\w+)/gi,
+  ];
+  
+  locationPatterns.forEach(pattern => {
+    const matches = text.match(pattern);
+    if (matches) {
+      matches.forEach(m => keywords.add(m.toLowerCase()));
+    }
+  });
+  
+  // Extract specific street names
+  const streetMatch = text.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:Ave|St|Blvd|Rd|Dr|Cres|Way)\b/g);
+  if (streetMatch) {
+    streetMatch.forEach(s => keywords.add(s.toLowerCase()));
+  }
+  
+  return keywords;
+}
+```
+
+### Incident Cause Matching
+
+Identifies incident causes for better thread matching:
+
+```typescript
+function extractCause(text: string): string | null {
+  const lowerText = text.toLowerCase();
+  const causes = [
+    'collision', 'medical emergency', 'fire', 'police', 'construction', 
+    'stalled', 'track work', 'signal problem', 'power', 'trespasser'
+  ];
+  return causes.find(c => lowerText.includes(c)) || null;
+}
+```
+
+### Enhanced Similarity Function
+
+Combines Jaccard similarity with location and cause bonuses:
+
+```typescript
+function enhancedSimilarity(text1: string, text2: string): number {
+  // Base Jaccard similarity
+  const jaccard = jaccardSimilarity(text1, text2);
+  
+  // Location overlap bonus (up to +20%)
+  const loc1 = extractLocationKeywords(text1);
+  const loc2 = extractLocationKeywords(text2);
+  const locOverlap = [...loc1].filter(l => loc2.has(l)).length;
+  const locationBonus = locOverlap > 0 ? Math.min(0.2, locOverlap * 0.1) : 0;
+  
+  // Same cause bonus (+15%)
+  const cause1 = extractCause(text1);
+  const cause2 = extractCause(text2);
+  const causeBonus = (cause1 && cause1 === cause2) ? 0.15 : 0;
+  
+  return Math.min(1, jaccard + locationBonus + causeBonus);
+}
+```
+
+**Example:**
+- Alert 1: "37 Islington: Detour via Rexdale Blvd due to a collision"
+- Alert 2: "37B Islington: Detour via Elmhurst Dr due to a collision"
+- Base Jaccard: ~30%
+- Location bonus: +10% (both mention Islington area)
+- Cause bonus: +15% (both mention collision)
+- **Enhanced similarity: 55%** → Threads together!
 
 ---
 
@@ -253,64 +345,82 @@ Incident threading groups related alerts over time to:
 - Display most recent update first
 - Auto-resolve threads when SERVICE_RESUMED
 
-### Threading Algorithm
+### Threading Algorithm (v14)
 
 **Implemented in:** `supabase/functions/poll-alerts/index.ts`
 
 ```typescript
-// Thread matching logic
+// Thread matching logic with route family matching and enhanced similarity
 let matchedThread = null;
 
-for (const thread of unresolvedThreads || []) {
-  const threadRoutes = Array.isArray(thread.affected_routes)
-    ? thread.affected_routes
-    : [];
+// CRITICAL: Only attempt thread matching if alert has extracted routes
+if (routes.length > 0) {
+  // Extract base route numbers for family matching
+  const alertBaseRoutes = routes.map(extractRouteNumber);
+  
+  for (const thread of unresolvedThreads || []) {
+    const threadRoutes = Array.isArray(thread.affected_routes)
+      ? thread.affected_routes
+      : [];
+    
+    // Skip threads with no routes
+    if (threadRoutes.length === 0) continue;
+    
+    // Extract base route numbers from thread
+    const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
+    
+    // Route FAMILY matching (37 matches 37A, 37B, etc.)
+    const hasRouteOverlap = alertBaseRoutes.some((alertBase) =>
+      threadBaseRoutes.includes(alertBase)
+    );
 
-  // Use exact route number matching to prevent 46 matching 996, etc.
-  const hasRouteOverlap = routes.some((alertRoute) =>
-    threadRoutes.some((threadRoute) => routesMatch(alertRoute, threadRoute))
-  );
+    if (hasRouteOverlap) {
+      const threadTitle = thread.title || "";
+      // Use enhanced similarity (Jaccard + location + cause)
+      const similarity = enhancedSimilarity(text, threadTitle);
 
-  if (hasRouteOverlap) {
-    const threadTitle = thread.title || "";
-    const similarity = jaccardSimilarity(text, threadTitle);
+      // General threshold: 40%
+      if (similarity >= 0.4) {
+        matchedThread = thread;
+        break;
+      }
 
-    // Medium similarity (50%) for general matching
-    if (similarity >= 0.5) {
-      matchedThread = thread;
-      break;
-    }
+      // SERVICE_RESUMED: 10% (very different vocabulary)
+      if (category === "SERVICE_RESUMED" && similarity >= 0.1) {
+        matchedThread = thread;
+        break;
+      }
 
-    // Very low threshold (10%) for SERVICE_RESUMED with route overlap
-    // SERVICE_RESUMED alerts have very different vocabulary ("resumed", "regular service")
-    // than the original alert ("detour", "no service", "delay")
-    if (category === "SERVICE_RESUMED" && similarity >= 0.1) {
-      matchedThread = thread;
-      break;
-    }
-
-    // For DIVERSION/DETOUR alerts, use lower threshold (30%)
-    if (
-      (category === "DIVERSION" || category === "DELAY") &&
-      similarity >= 0.3
-    ) {
-      matchedThread = thread;
-      break;
+      // DIVERSION/DELAY: 25%
+      if ((category === "DIVERSION" || category === "DELAY") && similarity >= 0.25) {
+        matchedThread = thread;
+        break;
+      }
     }
   }
 }
 ```
 
-### Threading Rules
+### Threading Rules (v14)
 
-1. **Alert must have routes** - Alerts without extracted routes create new threads, never match existing
-2. **Thread must have routes** - Threads with empty routes are skipped during matching
-3. **Exact route number match required** - Route NUMBERS must match (e.g., "46" = "46 Martin Grove", but "46" ≠ "996")
-4. **Medium similarity (≥50%)** - For general alert matching
-5. **Low similarity (≥30%)** - For DIVERSION/DELAY updates
-6. **Very low similarity (≥10%)** - For SERVICE_RESUMED (very different vocabulary)
-7. **6-hour window** - Only match unresolved threads updated within 6 hours
-8. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
+| Rule | Threshold | Description |
+|------|-----------|-------------|
+| **Route Family Match** | Required | Base route numbers must match (37 = 37A = 37B) |
+| **General Similarity** | ≥40% | Default threshold for matching |
+| **DIVERSION/DELAY** | ≥25% | Lower threshold for route updates |
+| **SERVICE_RESUMED** | ≥10% | Very different vocabulary from original |
+| **Time Window** | 6 hours | Only match threads updated within 6 hours |
+| **Enhanced Similarity** | Jaccard + bonuses | Location (+20%) + Cause (+15%) bonuses |
+
+### Similarity Calculation
+
+**Enhanced Similarity = Jaccard + Location Bonus + Cause Bonus**
+
+| Component | Weight | Description |
+|-----------|--------|-------------|
+| Jaccard | Base | Word overlap between texts |
+| Location | +10-20% | Same street/station mentions |
+| Cause | +15% | Same incident cause (collision, medical, etc.) |
 
 ### Critical Safety Checks (Prevent False Matches)
 
@@ -560,14 +670,15 @@ CREATE TABLE planned_maintenance (
 
 **Trigger:** Cron schedule (every 2 minutes)  
 **Purpose:** Fetch, categorize, and thread alerts from Bluesky
+**Version:** v14 (December 2025)
 
 **Flow:**
 
 1. Fetch latest posts from @ttcalerts.bsky.social
 2. For each post:
-   - Extract text and routes
+   - Extract text and routes (including letter suffix variants)
    - Determine category from keywords
-   - Find or create incident thread
+   - Find or create incident thread (using route family matching + enhanced similarity)
    - Store in `alert_cache`
 3. Update Realtime subscriptions
 
@@ -581,6 +692,54 @@ CREATE TABLE planned_maintenance (
 1. Fetch TTC service alerts page
 2. Parse maintenance announcements
 3. Upsert into `planned_maintenance` table
+
+---
+
+## Data Retention (pg_cron)
+
+Automated cleanup runs daily at 4 AM Toronto time (DST-aware).
+
+### Retention Policy
+
+| Data Type | Retention | Cleanup Action |
+|-----------|-----------|----------------|
+| Resolved threads | 15 days | Auto-deleted |
+| Orphan alerts (no thread) | 15 days | Auto-deleted |
+| Active (unresolved) threads | Indefinite | Kept until resolved |
+| Alerts linked to threads | Matches thread | Deleted with thread |
+
+### Cleanup Functions
+
+```sql
+-- Core cleanup function
+SELECT * FROM cleanup_old_alerts();
+
+-- DST-aware wrapper (runs at 4 AM Toronto)
+SELECT * FROM cleanup_old_alerts_toronto();
+```
+
+### Scheduled Jobs
+
+| Job Name | Schedule | Purpose |
+|----------|----------|---------|
+| `cleanup-alerts-8am-utc` | 0 8 * * * | 4 AM EDT (summer) |
+| `cleanup-alerts-9am-utc` | 0 9 * * * | 4 AM EST (winter) |
+
+### Useful Commands
+
+```sql
+-- Manually run cleanup
+SELECT * FROM cleanup_old_alerts();
+
+-- View scheduled jobs
+SELECT jobid, jobname, schedule, command FROM cron.job;
+
+-- View job history
+SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 20;
+
+-- Check Toronto time
+SELECT now() AT TIME ZONE 'America/Toronto' as toronto_time;
+```
 
 ---
 

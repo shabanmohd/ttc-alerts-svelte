@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTC Alerts - Database Test (Last 48 Hours)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .route-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            font-size: 0.75rem;
+            min-width: 2.5rem;
+        }
+        .route-line-1 { background-color: #FFCC00; color: #000; }
+        .route-line-2 { background-color: #00A859; color: #fff; }
+        .route-line-3 { background-color: #0072CE; color: #fff; }
+        .route-line-4 { background-color: #A020F0; color: #fff; }
+        .route-streetcar { background-color: #DA291C; color: #fff; }
+        .route-bus { background-color: #0072CE; color: #fff; }
+        .route-night { background-color: #1F2937; color: #fff; }
+        .route-express { background-color: #059669; color: #fff; }
+        .category-SERVICE_DISRUPTION { background-color: #EF4444; color: #fff; }
+        .category-SERVICE_RESUMED { background-color: #22C55E; color: #fff; }
+        .category-DELAY { background-color: #F59E0B; color: #000; }
+        .category-DIVERSION, .category-DETOUR { background-color: #8B5CF6; color: #fff; }
+        .category-SHUTTLE { background-color: #06B6D4; color: #000; }
+        .category-PLANNED_SERVICE_DISRUPTION { background-color: #6B7280; color: #fff; }
+        .category-OTHER { background-color: #374151; color: #fff; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-2 text-red-500">🗃️ Database Alerts - Last 48 Hours</h1>
+        <p class="text-gray-400 text-sm mb-4">100 alerts from Supabase alert_cache table showing threading</p>
+        
+        <div class="bg-gray-800 rounded-lg p-4 mb-6">
+            <h3 class="text-sm font-semibold text-gray-400 mb-3">Threading Legend</h3>
+            <div class="grid grid-cols-2 gap-4 text-xs">
+                <div class="flex items-center gap-2">
+                    <div class="w-1 h-6 bg-purple-500 rounded"></div>
+                    <div>
+                        <span class="text-purple-300 font-medium">🧵 Same Thread ID</span>
+                        <p class="text-gray-500">Database-assigned thread grouping</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-1 h-6 bg-green-500 rounded"></div>
+                    <div>
+                        <span class="text-green-300 font-medium">✅ is_latest: true</span>
+                        <p class="text-gray-500">Most recent in thread</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="stats" class="grid grid-cols-4 gap-4 mb-6">
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+                <div id="total-count" class="text-2xl font-bold text-blue-400">100</div>
+                <div class="text-xs text-gray-500">Total Alerts</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+                <div id="thread-count" class="text-2xl font-bold text-purple-400">-</div>
+                <div class="text-xs text-gray-500">Threads</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+                <div id="route-count" class="text-2xl font-bold text-green-400">-</div>
+                <div class="text-xs text-gray-500">Routes Affected</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+                <div id="resumed-count" class="text-2xl font-bold text-emerald-400">-</div>
+                <div class="text-xs text-gray-500">Resolved</div>
+            </div>
+        </div>
+        
+        <div id="alerts-container" class="space-y-4"></div>
+    </div>
+
+    <script>
+        // Database results from Supabase (last 48 hours)
+        const dbAlerts = [
+            {"alert_id":"bsky-3m7mbrcdrc22p","created_at":"2025-12-10 05:02:08.694+00","header_text":"Line 1 Yonge-University: There is no subway service between Osgoode and College stations due to planned track work","categories":"[\"PLANNED_SERVICE_DISRUPTION\",\"LINE_1\",\"SUBWAY\"]","affected_routes":"[\"Line 1\"]","thread_id":"thread-c952759d-6029-4628-bbb7-bb2fc2336045","is_latest":true},
+            {"alert_id":"bsky-3m7m7ukgjv724","created_at":"2025-12-10 04:28:16.088+00","header_text":"501 Queen Regular service has resumed eastbound from Queen St East at Kingston Rd to Queen St East at Neville Park Blvd","categories":"[\"SERVICE_RESUMED\",\"STREETCARS\"]","affected_routes":"[\"501\"]","thread_id":"thread-d8013457-5fec-44dc-927f-1795e675bed2","is_latest":true},
+            {"alert_id":"bsky-3m7m7uiqu532m","created_at":"2025-12-10 04:28:11.289+00","header_text":"Line 1 Yonge-University Regular service has resumed northbound at St Clair station","categories":"[\"SERVICE_RESUMED\",\"LINE_1\",\"SUBWAY\"]","affected_routes":"[\"Line 1\"]","thread_id":"thread-63887c45-0c8b-4d21-a43f-dc4a712b2257","is_latest":false},
+            {"alert_id":"bsky-3m7m7lntuud2d","created_at":"2025-12-10 04:23:13.871+00","header_text":"123, 123C, 123D Sherway Regular service has resumed near North Queen St at The East Mall East Side","categories":"[\"SERVICE_RESUMED\"]","affected_routes":"[]","thread_id":"thread-e97ea80e-76e9-497c-a89c-65656d5cd702","is_latest":true},
+            {"alert_id":"bsky-3m7m7gcfxyc24","created_at":"2025-12-10 04:20:10.327+00","header_text":"Line 1 Yonge-University: Delays northbound at St Clair station while we respond to an emergency alarm","categories":"[\"DELAY\",\"LINE_1\",\"SUBWAY\"]","affected_routes":"[\"Line 1\"]","thread_id":"thread-63887c45-0c8b-4d21-a43f-dc4a712b2257","is_latest":true},
+            {"alert_id":"bsky-3m7m6qrzhul2b","created_at":"2025-12-10 04:08:12.208+00","header_text":"501 Queen: No service eastbound from Queen St East at Kingston Rd to Queen St East at Neville Park Blvd while we respond to a medical emergency","categories":"[\"SERVICE_DISRUPTION\",\"STREETCARS\"]","affected_routes":"[\"501\"]","thread_id":"thread-d8013457-5fec-44dc-927f-1795e675bed2","is_latest":true},
+            {"alert_id":"bsky-3m7m4s4x7hb24","created_at":"2025-12-10 03:33:09.943+00","header_text":"Line 2 Bloor-Danforth Regular service has resumed between Keele and Islington stations","categories":"[\"SERVICE_RESUMED\",\"LINE_2\",\"SUBWAY\"]","affected_routes":"[\"Line 2\"]","thread_id":"thread-f76ddb29-3c33-4a75-8780-2c90898d6cf1","is_latest":true},
+            {"alert_id":"bsky-3m7m4c6jqlj24","created_at":"2025-12-10 03:24:13.357+00","header_text":"Line 2 Bloor-Danforth: No service between Keele and Islington stations while we respond to a medical emergency","categories":"[\"SERVICE_DISRUPTION\",\"LINE_2\",\"SUBWAY\"]","affected_routes":"[\"Line 2\"]","thread_id":"thread-f76ddb29-3c33-4a75-8780-2c90898d6cf1","is_latest":true},
+            {"alert_id":"bsky-3m7m4awoezw2y","created_at":"2025-12-10 03:23:14.195+00","header_text":"Line 2 Bloor-Danforth: No service between Ossington and Islington stations while we respond to a medical emergency","categories":"[\"SERVICE_DISRUPTION\",\"LINE_2\",\"SUBWAY\"]","affected_routes":"[\"Line 2\"]","thread_id":"thread-f76ddb29-3c33-4a75-8780-2c90898d6cf1","is_latest":true},
+            {"alert_id":"bsky-3m7m3s62sxb2p","created_at":"2025-12-10 03:15:15.735+00","header_text":"505 Dundas Regular service has resumed eastbound near Dundas St West at McCaul St","categories":"[\"SERVICE_RESUMED\",\"STREETCARS\"]","affected_routes":"[\"505\"]","thread_id":"thread-45d12b10-7ea9-42e3-b4ca-472cc271b838","is_latest":true},
+            {"alert_id":"bsky-3m7m3mmbq6b2p","created_at":"2025-12-10 03:12:10.487+00","header_text":"505 Dundas: Detour eastbound via Spadina Ave, Adelaide St E, Church St, Dundas St W and Parliament St due to cyclist injury in the roadway","categories":"[\"DETOUR\",\"STREETCARS\"]","affected_routes":"[\"505\"]","thread_id":"thread-45d12b10-7ea9-42e3-b4ca-472cc271b838","is_latest":false},
+            {"alert_id":"bsky-3m7m3iyziqf24","created_at":"2025-12-10 03:10:11.151+00","header_text":"506 Carlton: Detour eastbound via Spadina Ave, Adelaide St E, Church St, Dundas St E and Parliament St due to a collision","categories":"[\"DETOUR\",\"STREETCARS\"]","affected_routes":"[\"506\"]","thread_id":"thread-f523018e-cc96-4a77-a98d-a53c4f52f280","is_latest":true},
+            {"alert_id":"bsky-3m7m2sd3fg624","created_at":"2025-12-10 02:57:28.251+00","header_text":"511 Bathurst Regular service has resumed between Bathurst St at Bloor St West and Bathurst Station at Bay 6","categories":"[\"SERVICE_RESUMED\",\"STREETCARS\"]","affected_routes":"[\"511\"]","thread_id":"thread-689b2fdc-24ec-409d-9d41-11653809d34c","is_latest":true},
+            {"alert_id":"bsky-3m7m2hfe3du24","created_at":"2025-12-10 02:51:25.608+00","header_text":"511 Bathurst: Detour via College St, Spadina Ave and Spadina Station while we respond to a medical emergency","categories":"[\"DETOUR\",\"STREETCARS\"]","affected_routes":"[\"511\"]","thread_id":"thread-689b2fdc-24ec-409d-9d41-11653809d34c","is_latest":true},
+            {"alert_id":"bsky-3m7m2h674af2m","created_at":"2025-12-10 02:51:08.752+00","header_text":"Line 1 Yonge-University Regular service has resumed at Davisville station","categories":"[\"SERVICE_RESUMED\",\"LINE_1\",\"SUBWAY\"]","affected_routes":"[\"Line 1\"]","thread_id":"thread-2a70eef3-fb86-4dc7-8092-2c435d7382fe","is_latest":true},
+            {"alert_id":"bsky-3m7lzdfrdpf24","created_at":"2025-12-10 02:31:17.209+00","header_text":"37B Islington Regular service has resumed between Islington Ave at Bergamot Ave and Bergamot Ave at Rexdale Blvd","categories":"[\"SERVICE_RESUMED\",\"BUS\"]","affected_routes":"[\"37B\"]","thread_id":"thread-4cb26bad-8213-428f-8bec-26d28565b39d","is_latest":true},
+            {"alert_id":"bsky-3m7lzddi4xu24","created_at":"2025-12-10 02:31:15.929+00","header_text":"37, 37A Islington Regular service has resumed southbound near Islington Ave at Bergamot Ave","categories":"[\"SERVICE_RESUMED\"]","affected_routes":"[]","thread_id":"thread-85e56f83-19a0-45fb-b21b-5afe389eeca3","is_latest":true},
+            {"alert_id":"bsky-3m7lzdcx4yj2x","created_at":"2025-12-10 02:31:15.287+00","header_text":"37, 37A Islington Regular service has resumed northbound near Islington Ave at Bergamot Ave","categories":"[\"SERVICE_RESUMED\"]","affected_routes":"[]","thread_id":"thread-2c736396-462c-4448-b08d-3063edfd9d38","is_latest":true},
+            {"alert_id":"bsky-3m7lzdb4h2n24","created_at":"2025-12-10 02:31:10.327+00","header_text":"Line 1 Yonge-University: Delays at Davisville station due to a security incident","categories":"[\"DELAY\",\"LINE_1\",\"SUBWAY\"]","affected_routes":"[\"Line 1\"]","thread_id":"thread-2a70eef3-fb86-4dc7-8092-2c435d7382fe","is_latest":true},
+            {"alert_id":"bsky-3m7lvncp72m2b","created_at":"2025-12-10 01:25:11.094+00","header_text":"37B Islington: Detour via Rexdale Blvd, Kipling Ave, Redwater Dr and Elmhurst Dr due to a collision","categories":"[\"DETOUR\",\"BUS\"]","affected_routes":"[\"37B\"]","thread_id":"thread-4cb26bad-8213-428f-8bec-26d28565b39d","is_latest":true},
+            {"alert_id":"bsky-3m7lvliptxb2x","created_at":"2025-12-10 01:24:11.954+00","header_text":"37 Islington: Detour via Rexdale Blvd, Kipling Ave, Redwater Dr and Elmhurst Dr due to a collision","categories":"[\"DETOUR\",\"BUS\"]","affected_routes":"[\"37\"]","thread_id":"thread-4cb26bad-8213-428f-8bec-26d28565b39d","is_latest":false},
+            {"alert_id":"bsky-3m7lvhunilh2e","created_at":"2025-12-10 01:22:08.008+00","header_text":"37, 37A Islington: Detour southbound via Rexdale Blvd and Islington Ave due to a collision","categories":"[\"DETOUR\"]","affected_routes":"[]","thread_id":"thread-85e56f83-19a0-45fb-b21b-5afe389eeca3","is_latest":false},
+            {"alert_id":"bsky-3m7lvgeap3m2n","created_at":"2025-12-10 01:21:13.657+00","header_text":"37, 37A Islington: Detour northbound via Rexdale Blvd due to a collision","categories":"[\"DETOUR\"]","affected_routes":"[]","thread_id":"thread-2c736396-462c-4448-b08d-3063edfd9d38","is_latest":false},
+            {"alert_id":"bsky-3m7lsoi6taw2i","created_at":"2025-12-10 00:32:09.77+00","header_text":"505 Dundas Regular service has resumed westbound from Dundas St West at Ossington Ave to Dundas St West at Lansdowne Ave","categories":"[\"SERVICE_RESUMED\",\"STREETCARS\"]","affected_routes":"[\"505\"]","thread_id":"thread-e99e5c3e-8405-4ce9-aa78-39b810f7e98a","is_latest":true},
+            {"alert_id":"bsky-3m7lpethb5j25","created_at":"2025-12-09 23:33:06.45+00","header_text":"Line 4 Sheppard Regular service has resumed at Sheppard-Yonge station","categories":"[\"SERVICE_RESUMED\",\"LINE_4\",\"SUBWAY\"]","affected_routes":"[\"Line 4\"]","thread_id":"thread-51556d9a-4981-4bd9-9cbd-d1f47dc8903a","is_latest":true},
+            {"alert_id":"bsky-3m7lpdmk4gc2p","created_at":"2025-12-09 23:32:27.952+00","header_text":"102 Markham Rd Regular service has resumed southbound near St Clair Ave East at North Woodrow Blvd","categories":"[\"SERVICE_RESUMED\",\"BUS\"]","affected_routes":"[\"102\"]","thread_id":"thread-06c1b431-cdb3-447a-a87e-51314cd972dc","is_latest":true},
+            {"alert_id":"bsky-3m7lpdhjb33t2x","created_at":"2025-12-09 23:32:22.808+00","header_text":"16 Mccowan Regular service has resumed southbound from Danforth Rd at St Clair Ave East to St Clair Ave East at Santamonica Blvd","categories":"[\"SERVICE_RESUMED\",\"BUS\"]","affected_routes":"[\"16\"]","thread_id":"thread-12ccc216-4fb6-47b0-b3a1-cff6f8906837","is_latest":true},
+            {"alert_id":"bsky-3m7lpdh73r42d","created_at":"2025-12-09 23:32:22.413+00","header_text":"16 Mccowan Regular service has resumed northbound from St Clair Ave East at Santamonica Blvd to St Clair Ave East at Cotton Ave","categories":"[\"SERVICE_RESUMED\",\"BUS\"]","affected_routes":"[\"16\"]","thread_id":"thread-63be0c81-0035-421a-b700-2063e101a0e6","is_latest":true},
+            {"alert_id":"bsky-3m7lpdgjvzk2e","created_at":"2025-12-09 23:32:21.71+00","header_text":"9 Bellamy Regular service has resumed southbound from St Clair Ave East at Danforth Rd to St Clair Ave East at Santamonica Blvd","categories":"[\"SERVICE_RESUMED\",\"STREETCARS\"]","affected_routes":"[\"9\"]","thread_id":"thread-702794f2-5c5b-4369-ada4-b1100beddbe4","is_latest":true},
+            {"alert_id":"bsky-3m7lpdg4vzb25","created_at":"2025-12-09 23:32:21.207+00","header_text":"9 Bellamy Regular service has resumed northbound from St Clair Ave East at Santamonica Blvd to St Clair Ave East at Kennedy Rd","categories":"[\"SERVICE_RESUMED\",\"STREETCARS\"]","affected_routes":"[\"9\"]","thread_id":"thread-4b08688e-cdbd-4dc9-bca0-8349ec8cffc1","is_latest":true},
+            {"alert_id":"bsky-3m7lpd7znxs2p","created_at":"2025-12-09 23:32:11.554+00","header_text":"505 Dundas: Detour westbound via Ossington Ave and College St while we respond to a medical emergency","categories":"[\"DETOUR\",\"STREETCARS\"]","affected_routes":"[\"505\"]","thread_id":"thread-e99e5c3e-8405-4ce9-aa78-39b810f7e98a","is_latest":false},
+            {"alert_id":"bsky-3m7lorj6fvu2y","created_at":"2025-12-09 23:22:16.831+00","header_text":"123, 123C, 123D Sherway: Detour via The Queensway and Atomic Ave due to a collision","categories":"[\"DETOUR\"]","affected_routes":"[]","thread_id":"thread-e97ea80e-76e9-497c-a89c-65656d5cd702","is_latest":false},
+            {"alert_id":"bsky-3m7lnsvu6np2e","created_at":"2025-12-09 23:05:08.329+00","header_text":"Line 4 Sheppard: Delays at Sheppard-Yonge station while we deal with a trespasser on the tracks","categories":"[\"DELAY\",\"LINE_4\",\"SUBWAY\"]","affected_routes":"[\"Line 4\"]","thread_id":"thread-51556d9a-4981-4bd9-9cbd-d1f47dc8903a","is_latest":false},
+            {"alert_id":"bsky-3m7lnk222pw2e","created_at":"2025-12-09 23:00:10.128+00","header_text":"504 King Regular service has resumed westbound near King St East at Church St West Side","categories":"[\"SERVICE_RESUMED\",\"STREETCARS\"]","affected_routes":"[\"504\"]","thread_id":"thread-70d578e4-af83-4bbb-ba6a-632339c942fe","is_latest":true},
+            {"alert_id":"bsky-3m7lmykh3bx23","created_at":"2025-12-09 22:50:17.286+00","header_text":"504 King: Detour westbound via Church St, Wellington St E and York St while we respond to a medical emergency","categories":"[\"DETOUR\",\"STREETCARS\"]","affected_routes":"[\"504\"]","thread_id":"thread-70d578e4-af83-4bbb-ba6a-632339c942fe","is_latest":true},
+            {"alert_id":"bsky-3m7lkcfxogu2o","created_at":"2025-12-09 22:02:10.108+00","header_text":"16 Mccowan: Detour northbound via St Clair Ave E, Birchmount Rd and Danforth Rd due to a collision","categories":"[\"DETOUR\",\"BUS\"]","affected_routes":"[\"16\"]","thread_id":"thread-63be0c81-0035-421a-b700-2063e101a0e6","is_latest":false},
+            {"alert_id":"bsky-3m7lkangbne2y","created_at":"2025-12-09 22:01:19.32+00","header_text":"102 Markham Rd: Detour southbound via St Clair Ave E, Kennedy Rd, Danforth Rd and Birchmount Rd due to a collision","categories":"[\"DETOUR\",\"BUS\"]","affected_routes":"[\"102\"]","thread_id":"thread-06c1b431-cdb3-447a-a87e-51314cd972dc","is_latest":false},
+            {"alert_id":"bsky-3m7lkalh3kf2j","created_at":"2025-12-09 22:01:14.64+00","header_text":"16 Mccowan: Detour southbound via Danforth Rd, Mack Ave and Warden Ave due to a collision","categories":"[\"DETOUR\",\"BUS\"]","affected_routes":"[\"16\"]","thread_id":"thread-12ccc216-4fb6-47b0-b3a1-cff6f8906837","is_latest":true},
+            {"alert_id":"bsky-3m7ljzbf6s42j","created_at":"2025-12-09 21:57:09.986+00","header_text":"9 Bellamy: Detour northbound via Warden Ave, Danforth Rd and St Clair Ave E due to a collision","categories":"[\"DETOUR\",\"STREETCARS\"]","affected_routes":"[\"9\"]","thread_id":"thread-4b08688e-cdbd-4dc9-bca0-8349ec8cffc1","is_latest":false},
+            {"alert_id":"bsky-3m7ljxi2kmn2q","created_at":"2025-12-09 21:56:09.129+00","header_text":"9 Bellamy: Detour southbound via Danforth Rd, Mack Ave and Warden Ave due to a collision","categories":"[\"DETOUR\",\"STREETCARS\"]","affected_routes":"[\"9\"]","thread_id":"thread-702794f2-5c5b-4369-ada4-b1100beddbe4","is_latest":true},
+            {"alert_id":"bsky-3m7ljtyerc52q","created_at":"2025-12-09 21:54:14.568+00","header_text":"506 Carlton Regular service has resumed eastbound from College St at Spadina Ave to Carlton St at Parliament St","categories":"[\"SERVICE_RESUMED\",\"STREETCARS\"]","affected_routes":"[\"506\"]","thread_id":"thread-2c813698-3353-42b7-be3d-e8ec46be4945","is_latest":true}
+        ];
+
+        function getRouteBadgeClass(route) {
+            if (route.startsWith('Line 1')) return 'route-line-1';
+            if (route.startsWith('Line 2')) return 'route-line-2';
+            if (route.startsWith('Line 3')) return 'route-line-3';
+            if (route.startsWith('Line 4') || route.startsWith('Line 6')) return 'route-line-4';
+            const numMatch = route.match(/^(\d+)/);
+            if (numMatch) {
+                const num = parseInt(numMatch[1]);
+                if (num >= 500 && num <= 514) return 'route-streetcar';
+                if (num >= 300 && num <= 399) return 'route-night';
+                if (num >= 900) return 'route-express';
+            }
+            return 'route-bus';
+        }
+
+        function getCategoryClass(categories) {
+            const cats = JSON.parse(categories || '[]');
+            if (cats.includes('SERVICE_RESUMED')) return 'category-SERVICE_RESUMED';
+            if (cats.includes('SERVICE_DISRUPTION')) return 'category-SERVICE_DISRUPTION';
+            if (cats.includes('PLANNED_SERVICE_DISRUPTION')) return 'category-PLANNED_SERVICE_DISRUPTION';
+            if (cats.includes('DELAY')) return 'category-DELAY';
+            if (cats.includes('DETOUR') || cats.includes('DIVERSION')) return 'category-DIVERSION';
+            return 'category-OTHER';
+        }
+
+        function getDisplayCategory(categories) {
+            const cats = JSON.parse(categories || '[]');
+            if (cats.includes('SERVICE_RESUMED')) return 'SERVICE_RESUMED';
+            if (cats.includes('SERVICE_DISRUPTION')) return 'SERVICE_DISRUPTION';
+            if (cats.includes('PLANNED_SERVICE_DISRUPTION')) return 'PLANNED_CLOSURE';
+            if (cats.includes('DELAY')) return 'DELAY';
+            if (cats.includes('DETOUR') || cats.includes('DIVERSION')) return 'DIVERSION';
+            return 'OTHER';
+        }
+
+        function extractRoutesFromText(text) {
+            const routes = [];
+            const lineMatch = text.match(/Line\s*(\d+)/gi);
+            if (lineMatch) lineMatch.forEach(m => routes.push(m));
+            const routeWithSuffixMatch = text.match(/\b(\d{1,3}[A-Z])\b/g);
+            if (routeWithSuffixMatch) routeWithSuffixMatch.forEach(m => routes.push(m));
+            const standaloneMatch = text.match(/\b(\d{1,3})(?=[,:\s]|$)/g);
+            if (standaloneMatch) standaloneMatch.forEach(num => {
+                if (parseInt(num) < 1000 && !routes.some(r => r === num || r.startsWith(num + ' '))) routes.push(num);
+            });
+            return [...new Set(routes)];
+        }
+
+        function getDisplayRoutes(affectedRoutesStr, text) {
+            let routes = [];
+            try {
+                routes = JSON.parse(affectedRoutesStr || '[]');
+            } catch {}
+            
+            // If no routes in DB field, extract from text
+            if (routes.length === 0) {
+                routes = extractRoutesFromText(text);
+            }
+            
+            // Deduplicate route families
+            const routeFamilies = new Map();
+            for (const route of routes) {
+                const baseMatch = route.match(/^(\d+)/);
+                if (baseMatch) {
+                    const base = baseMatch[1];
+                    if (!routeFamilies.has(base)) routeFamilies.set(base, []);
+                    routeFamilies.get(base).push(route);
+                } else if (route.startsWith('Line')) {
+                    routeFamilies.set(route, [route]);
+                }
+            }
+            
+            return Array.from(routeFamilies.keys()).map(base => {
+                if (base.startsWith('Line')) return base;
+                return base;
+            });
+        }
+
+        function render() {
+            // Group by thread_id
+            const threads = new Map();
+            dbAlerts.forEach(alert => {
+                const tid = alert.thread_id;
+                if (!threads.has(tid)) threads.set(tid, []);
+                threads.get(tid).push(alert);
+            });
+
+            // Sort each thread by created_at
+            threads.forEach(posts => {
+                posts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            });
+
+            // Calculate stats
+            const uniqueRoutes = new Set();
+            let resumedCount = 0;
+            dbAlerts.forEach(alert => {
+                const routes = getDisplayRoutes(alert.affected_routes, alert.header_text);
+                routes.forEach(r => uniqueRoutes.add(r));
+                if (alert.categories.includes('SERVICE_RESUMED')) resumedCount++;
+            });
+
+            document.getElementById('thread-count').textContent = threads.size;
+            document.getElementById('route-count').textContent = uniqueRoutes.size;
+            document.getElementById('resumed-count').textContent = resumedCount;
+
+            // Render threads
+            const container = document.getElementById('alerts-container');
+            let html = '';
+            
+            // Convert to array and sort by most recent alert in thread
+            const sortedThreads = Array.from(threads.entries())
+                .map(([tid, posts]) => ({ tid, posts, latest: new Date(posts[posts.length - 1].created_at) }))
+                .sort((a, b) => b.latest - a.latest);
+
+            sortedThreads.forEach(({ tid, posts }) => {
+                const isMultiPost = posts.length > 1;
+                const rootAlert = posts[0];
+                const replies = posts.slice(1);
+                
+                const displayRoutes = getDisplayRoutes(rootAlert.affected_routes, rootAlert.header_text);
+                const badges = displayRoutes.map(r => 
+                    `<span class="route-badge ${getRouteBadgeClass(r)}">${r}</span>`
+                ).join('');
+                
+                const catClass = getCategoryClass(rootAlert.categories);
+                const catDisplay = getDisplayCategory(rootAlert.categories);
+                const createdAt = new Date(rootAlert.created_at).toLocaleString();
+                
+                const borderClass = isMultiPost ? 'border-l-4 border-purple-500' : '';
+                const threadBadge = isMultiPost ? 
+                    `<span class="text-xs px-2 py-0.5 rounded bg-purple-900 text-purple-300">🧵 ${posts.length} posts</span>` : '';
+                const latestBadge = rootAlert.is_latest ? 
+                    `<span class="text-xs px-2 py-0.5 rounded bg-green-900 text-green-300">✅ latest</span>` : 
+                    `<span class="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-400">older</span>`;
+                
+                let repliesHtml = '';
+                if (replies.length > 0) {
+                    repliesHtml = '<div class="mt-3 border-l-2 border-gray-600 pl-3 space-y-2">' + 
+                        replies.map(reply => {
+                            const rCatClass = getCategoryClass(reply.categories);
+                            const rCatDisplay = getDisplayCategory(reply.categories);
+                            const rTime = new Date(reply.created_at).toLocaleString();
+                            const rLatest = reply.is_latest ? 
+                                '<span class="text-xs px-2 py-0.5 rounded bg-green-900 text-green-300 ml-2">✅ latest</span>' : '';
+                            return `<div class="text-sm">
+                                <span class="text-xs px-2 py-0.5 rounded ${rCatClass}">${rCatDisplay.replace('_', ' ')}</span>
+                                ${rLatest}
+                                <span class="text-gray-500 text-xs ml-2">${rTime}</span>
+                                <p class="text-gray-300 mt-1">${reply.header_text}</p>
+                            </div>`;
+                        }).join('') + '</div>';
+                }
+                
+                html += `
+                <div class="bg-gray-800 rounded-lg p-4 ${borderClass}">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        ${badges || '<span class="text-gray-500 text-xs">No routes</span>'}
+                        <span class="text-xs px-2 py-0.5 rounded ${catClass}">${catDisplay.replace('_', ' ')}</span>
+                        ${threadBadge}
+                        ${latestBadge}
+                    </div>
+                    <p class="text-sm text-gray-300">${rootAlert.header_text}</p>
+                    <div class="mt-2 text-xs text-gray-500">
+                        <span>Thread: ${tid.split('-')[1].substring(0, 8)}...</span>
+                        <span class="ml-2">${createdAt}</span>
+                    </div>
+                    ${repliesHtml}
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        render();
+    </script>
+</body>
+</html>

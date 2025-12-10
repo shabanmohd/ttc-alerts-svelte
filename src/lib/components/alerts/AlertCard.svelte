@@ -114,6 +114,54 @@
     return routeNumber;
   }
 
+  /**
+   * Get display routes for badges.
+   * - If multiple variants of same base (37, 37A, 37B) -> show just "37"
+   * - If only one variant (37B alone) -> show "37B"
+   * - Always show just the number, not the name (123, not "123 Sherway")
+   * 
+   * E.g., ["37", "37A", "37B", "37 Islington"] -> ["37"]
+   * E.g., ["37B", "37 Islington"] -> ["37"]  (still multiple variants)
+   * E.g., ["37B"] -> ["37B"]  (single variant, keep suffix)
+   * E.g., ["123", "123C", "123D", "123 Sherway"] -> ["123"]
+   * E.g., ["37", "85", "939"] -> ["37", "85", "939"]
+   */
+  function getDisplayRoutes(routes: string[]): string[] {
+    // Group routes by their base number
+    const routesByBase = new Map<string, string[]>();
+    
+    for (const route of routes) {
+      // Extract base route number (digits only)
+      const match = route.match(/^(\d+)/);
+      if (match) {
+        const baseNum = match[1];
+        if (!routesByBase.has(baseNum)) {
+          routesByBase.set(baseNum, []);
+        }
+        routesByBase.get(baseNum)!.push(route);
+      } else {
+        // Non-numeric routes (like "Line 1") - keep as is
+        routesByBase.set(route, [route]);
+      }
+    }
+    
+    // For each base, decide what to display
+    const displayRoutes: string[] = [];
+    for (const [baseNum, variants] of routesByBase) {
+      if (variants.length === 1) {
+        // Single variant - extract just the route identifier (number + optional letter)
+        const single = variants[0];
+        const routeMatch = single.match(/^(\d+[A-Z]?)/);
+        displayRoutes.push(routeMatch ? routeMatch[1] : single);
+      } else {
+        // Multiple variants - show just the base number
+        displayRoutes.push(baseNum);
+      }
+    }
+    
+    return displayRoutes;
+  }
+
   const latestAlert = $derived(thread.latestAlert);
   const earlierAlerts = $derived(thread.alerts.slice(1));
   const rawRoutes = $derived(
@@ -121,7 +169,9 @@
       parseJsonArray(thread.affected_routes) ||
       []
   );
-  // Extract full route names from header text
+  // Get display routes (deduplicate variants, show base number only)
+  const displayRoutes = $derived(getDisplayRoutes(rawRoutes));
+  // Extract full route names from header text (for accessibility/screen readers)
   const routes = $derived(
     rawRoutes.map((route) =>
       extractRouteName(latestAlert?.header_text || "", route)
@@ -142,12 +192,12 @@
     <div class="flex gap-3">
       <!-- Route badge(s) on left - fixed width for uniform alignment -->
       <div class="w-20 flex flex-col items-center gap-2 flex-shrink-0">
-        {#each rawRoutes.slice(0, 2) as route}
+        {#each displayRoutes.slice(0, 2) as route}
           <RouteBadge {route} size="lg" class="alert-badge-fixed" />
         {/each}
-        {#if rawRoutes.length > 2}
+        {#if displayRoutes.length > 2}
           <span class="text-xs text-muted-foreground"
-            >+{rawRoutes.length - 2}</span
+            >+{displayRoutes.length - 2}</span
           >
         {/if}
       </div>
