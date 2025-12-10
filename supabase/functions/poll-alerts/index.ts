@@ -337,6 +337,21 @@ serve(async (req) => {
       }
 
       if (matchedThread) {
+        // VALIDATION: Double-check route overlap before assigning
+        // This catches any edge cases where similarity matching bypassed route checks
+        const alertBaseRoutes = routes.map(extractRouteNumber);
+        const threadRoutes = Array.isArray(matchedThread.affected_routes) ? matchedThread.affected_routes : [];
+        const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
+        const hasValidRouteOverlap = alertBaseRoutes.some(base => threadBaseRoutes.includes(base));
+        
+        if (!hasValidRouteOverlap && routes.length > 0 && threadRoutes.length > 0) {
+          // Route mismatch detected! Log warning and create new thread instead
+          console.warn(`Route mismatch: Alert routes ${JSON.stringify(routes)} don't match thread routes ${JSON.stringify(threadRoutes)}. Creating new thread.`);
+          matchedThread = null; // Force new thread creation
+        }
+      }
+      
+      if (matchedThread) {
         // Mark old alerts in this thread as not latest
         await supabase
           .from('alert_cache')
@@ -380,77 +395,129 @@ serve(async (req) => {
 
         updatedThreads++;
       } else {
-        // Before creating a new thread, check if a thread was JUST created for this route
-        // This prevents race conditions when multiple alerts arrive simultaneously
+        // No matching thread found - use database function to atomically find or create
+        // This prevents race conditions by using database-level advisory locks
         const headerTitle = text.split('\n')[0].substring(0, 200);
-        let joinedRecentThread = false;
         
-        // Check for very recently created threads (within last 5 seconds) with same route
-        if (routes.length > 0) {
-          const alertBaseRoutes = routes.map(extractRouteNumber);
-          const { data: recentThreads } = await supabase
-            .from('incident_threads')
-            .select('*')
-            .gte('created_at', new Date(Date.now() - 5000).toISOString());
+        // Use the database's find_or_create_thread function for atomic operation
+        // This handles race conditions properly using advisory locks per route
+        const { data: threadResult, error: threadError } = await supabase
+          .rpc('find_or_create_thread', {
+            p_title: headerTitle,
+            p_routes: routes,  // Supabase client converts arrays to JSONB automatically
+            p_categories: [category],
+            p_is_resolved: category === 'SERVICE_RESUMED'
+          });
+        
+        if (threadError) {
+          // Fallback: If RPC fails (e.g., function not deployed yet), use traditional insert
+          console.warn('find_or_create_thread RPC failed, using fallback:', threadError.message);
           
-          // Look for matching thread that was just created
-          for (const recentThread of recentThreads || []) {
-            const recentRoutes = Array.isArray(recentThread.affected_routes) 
-              ? recentThread.affected_routes 
-              : [];
-            if (recentRoutes.length === 0) continue;
+          // Check for very recently created threads (within last 5 seconds) with same route
+          let joinedRecentThread = false;
+          if (routes.length > 0) {
+            const alertBaseRoutes = routes.map(extractRouteNumber);
+            const { data: recentThreads } = await supabase
+              .from('incident_threads')
+              .select('*')
+              .gte('created_at', new Date(Date.now() - 5000).toISOString());
             
-            const recentBaseRoutes = recentRoutes.map(extractRouteNumber);
-            const hasOverlap = alertBaseRoutes.some(base => recentBaseRoutes.includes(base));
-            
-            if (hasOverlap) {
-              // Found a recently created thread for same route - join it instead
-              console.log(`Joining recently created thread ${recentThread.thread_id} instead of creating duplicate`);
+            // Look for matching thread that was just created
+            for (const recentThread of recentThreads || []) {
+              const recentRoutes = Array.isArray(recentThread.affected_routes) 
+                ? recentThread.affected_routes 
+                : [];
+              if (recentRoutes.length === 0) continue;
               
-              // Link alert to existing thread
-              await supabase
-                .from('alert_cache')
-                .update({ thread_id: recentThread.thread_id })
-                .eq('alert_id', newAlert.alert_id);
+              const recentBaseRoutes = recentRoutes.map(extractRouteNumber);
+              const hasOverlap = alertBaseRoutes.some(base => recentBaseRoutes.includes(base));
               
-              // Merge routes
-              const mergedRoutes = [...new Set([...recentRoutes, ...routes])];
-              await supabase
-                .from('incident_threads')
-                .update({ 
-                  affected_routes: mergedRoutes,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('thread_id', recentThread.thread_id);
-              
-              updatedThreads++;
-              joinedRecentThread = true;
-              break; // Exit inner loop
+              if (hasOverlap) {
+                // Found a recently created thread for same route - join it instead
+                console.log(`Joining recently created thread ${recentThread.thread_id} instead of creating duplicate`);
+                
+                // Link alert to existing thread
+                await supabase
+                  .from('alert_cache')
+                  .update({ thread_id: recentThread.thread_id })
+                  .eq('alert_id', newAlert.alert_id);
+                
+                // Merge routes
+                const mergedRoutes = [...new Set([...recentRoutes, ...routes])];
+                await supabase
+                  .from('incident_threads')
+                  .update({ 
+                    affected_routes: mergedRoutes,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('thread_id', recentThread.thread_id);
+                
+                updatedThreads++;
+                joinedRecentThread = true;
+                break;
+              }
             }
           }
-        }
-        
-        // Skip creating new thread if we already joined a recent one
-        if (joinedRecentThread) continue;
-        
-        // Create new thread
-        const { data: newThread } = await supabase
-          .from('incident_threads')
-          .insert({
-            title: text.split('\n')[0].substring(0, 200),
-            categories: [category],
-            affected_routes: routes,
-            is_resolved: category === 'SERVICE_RESUMED'
-          })
-          .select()
-          .single();
+          
+          // Skip creating new thread if we already joined a recent one
+          if (!joinedRecentThread) {
+            // Create new thread
+            const { data: newThread } = await supabase
+              .from('incident_threads')
+              .insert({
+                title: headerTitle,
+                categories: [category],
+                affected_routes: routes,
+                is_resolved: category === 'SERVICE_RESUMED'
+              })
+              .select()
+              .single();
 
-        if (newThread) {
-          // Link alert to new thread
+            if (newThread) {
+              // Link alert to new thread
+              await supabase
+                .from('alert_cache')
+                .update({ thread_id: newThread.thread_id })
+                .eq('alert_id', newAlert.alert_id);
+            }
+          }
+        } else if (threadResult && threadResult.length > 0) {
+          // RPC succeeded - use the returned thread
+          const result = threadResult[0];
+          const threadId = result.out_thread_id;
+          const isNewThread = result.out_is_new;
+          
+          // Link alert to thread
           await supabase
             .from('alert_cache')
-            .update({ thread_id: newThread.thread_id })
+            .update({ thread_id: threadId })
             .eq('alert_id', newAlert.alert_id);
+          
+          if (!isNewThread) {
+            // Existing thread - merge routes and update
+            const { data: existingThread } = await supabase
+              .from('incident_threads')
+              .select('affected_routes')
+              .eq('thread_id', threadId)
+              .single();
+            
+            const existingRoutes = Array.isArray(existingThread?.affected_routes) 
+              ? existingThread.affected_routes 
+              : [];
+            const mergedRoutes = [...new Set([...existingRoutes, ...routes])];
+            
+            await supabase
+              .from('incident_threads')
+              .update({ 
+                affected_routes: mergedRoutes,
+                updated_at: new Date().toISOString()
+              })
+              .eq('thread_id', threadId);
+            
+            updatedThreads++;
+          }
+          
+          console.log(`Alert assigned to thread ${threadId} (${isNewThread ? 'new' : 'existing'})`);
         }
       }
     }
