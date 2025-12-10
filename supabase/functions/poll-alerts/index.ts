@@ -8,61 +8,112 @@ const corsHeaders = {
 
 // Bluesky API endpoint
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
-const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
+
+// Threading configuration
+const THREADING_CONFIG = {
+  // Time windows for thread matching
+  THREAD_WINDOW_HOURS: 8,           // Extended from 6 to handle overnight incidents
+  
+  // Similarity thresholds (raised to prevent false matches)
+  GENERAL_THRESHOLD: 0.55,          // Raised from 0.5 - requires stronger text match
+  UPDATE_THRESHOLD: 0.35,           // Raised from 0.3 - for DIVERSION/DELAY updates
+  RESUMED_THRESHOLD: 0.15,          // Raised from 0.1 - very different vocabulary but need SOME overlap
+  
+  // Minimum requirements
+  MIN_SHARED_WORDS: 3,              // NEW: Require at least 3 shared words regardless of ratio
+  MIN_ROUTE_CONFIDENCE: 1,          // Require at least 1 route to be extracted
+  
+  // Route matching strictness
+  REQUIRE_ALL_ROUTES_MATCH: false,  // If true, ALL alert routes must match thread routes
+};
+
+// Stop words to ignore in similarity calculation (common words with no semantic value)
+const STOP_WORDS = new Set([
+  'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'had', 'her',
+  'was', 'one', 'our', 'out', 'has', 'have', 'been', 'will', 'more', 'when',
+  'who', 'oil', 'its', 'way', 'use', 'how', 'man', 'day', 'get', 'may', 'new',
+  'now', 'old', 'see', 'two', 'any', 'into', 'just', 'made', 'over', 'such',
+  'time', 'very', 'than', 'them', 'some', 'with', 'could', 'from', 'this', 'that',
+  'what', 'were', 'would', 'there', 'their', 'which', 'about', 'after', 'being',
+  // TTC-specific common words that appear in most alerts
+  'due', 'service', 'route', 'routes', 'bus', 'buses', 'streetcar', 'streetcars',
+  'subway', 'line', 'station', 'stations', 'stop', 'stops', 'between', 'via',
+  'northbound', 'southbound', 'eastbound', 'westbound', 'running', 'operating'
+]);
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
   SERVICE_DISRUPTION: {
-    keywords: ['no service', 'suspended', 'closed', 'not stopping', 'bypassing'],
+    keywords: ['no service', 'suspended', 'closed', 'not stopping', 'bypassing', 'out of service'],
     priority: 1
   },
   SERVICE_RESUMED: {
-    keywords: ['regular service', 'resumed', 'restored', 'back to normal', 'now stopping'],
+    keywords: ['regular service', 'resumed', 'restored', 'back to normal', 'now stopping', 'service restored'],
     priority: 2
   },
   DELAY: {
-    keywords: ['delay', 'delayed', 'slower', 'longer wait'],
+    keywords: ['delay', 'delayed', 'slower', 'longer wait', 'experiencing delays'],
     priority: 3
   },
   DIVERSION: {
-    keywords: ['diverting', 'detour', 'alternate route', 'diversion'],
+    keywords: ['diverting', 'detour', 'alternate route', 'diversion', 'rerouted'],
     priority: 4
   },
   SHUTTLE: {
-    keywords: ['shuttle', 'buses replacing'],
+    keywords: ['shuttle', 'buses replacing', 'shuttle buses'],
     priority: 4
   },
   PLANNED_CLOSURE: {
-    keywords: ['planned', 'scheduled', 'maintenance', 'this weekend'],
+    keywords: ['planned', 'scheduled', 'maintenance', 'this weekend', 'scheduled closure'],
     priority: 5
   }
 };
 
-// Extract routes from alert text
+// Extract routes from alert text with improved patterns
 function extractRoutes(text: string): string[] {
   const routes: string[] = [];
   
-  // Match subway lines first: Line 1, Line 2, Line 4
-  const lineMatch = text.match(/Line\s*(\d+)/gi);
+  // Match subway lines first: Line 1, Line 2, Line 3 Scarborough, Line 4
+  const lineMatch = text.match(/Line\s*(\d+)(?:\s+[A-Za-z]+)?/gi);
   if (lineMatch) {
     lineMatch.forEach(m => {
-      routes.push(m); // Keep "Line 1" format
+      routes.push(m); // Keep "Line 1" or "Line 3 Scarborough" format
     });
   }
   
-  // Match numbered routes with optional name: "306 Carlton", "504 King", etc.
-  const routeWithNameMatch = text.match(/\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g);
+  // Match numbered routes with optional name: "306 Carlton", "504 King", "39 Finch East", etc.
+  // Updated to handle multi-word names like "Finch East", "Victoria Park"
+  const routeWithNameMatch = text.match(/\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})/g);
   if (routeWithNameMatch) {
     routeWithNameMatch.forEach(m => {
-      routes.push(m); // Keep "306 Carlton" format
+      // Validate this looks like a route (not just any number followed by text)
+      const num = parseInt(m.match(/^\d+/)?.[0] || '0');
+      // TTC routes are 1-999, but most are under 600
+      if (num >= 1 && num <= 999) {
+        routes.push(m); // Keep "306 Carlton" format
+      }
+    });
+  }
+  
+  // Match routes in format "Route 39" or "route 504"
+  const routePrefixMatch = text.match(/\broutes?\s+(\d{1,3})/gi);
+  if (routePrefixMatch) {
+    routePrefixMatch.forEach(m => {
+      const num = m.match(/\d+/)?.[0];
+      if (num && !routes.some(r => r.startsWith(num))) {
+        routes.push(num);
+      }
     });
   }
   
   // Match standalone route numbers if not already captured
-  const standaloneMatch = text.match(/\b(\d{1,3})(?=\s|:|,|$)/g);
+  // More restrictive: only at word boundaries with specific context
+  const standaloneMatch = text.match(/\b(\d{1,3})(?=\s*(?::|,|bus|streetcar|route|\.|$))/gi);
   if (standaloneMatch) {
     standaloneMatch.forEach(num => {
-      if (parseInt(num) < 1000 && !routes.some(r => r.startsWith(num))) {
+      const n = parseInt(num);
+      // Valid TTC route numbers, avoid common non-route numbers
+      if (n >= 1 && n <= 999 && !routes.some(r => extractRouteNumber(r) === num)) {
         routes.push(num);
       }
     });
@@ -84,28 +135,145 @@ function categorizeAlert(text: string): { category: string; priority: number } {
   return { category: 'OTHER', priority: 10 };
 }
 
-// Extract route NUMBER only (for comparison)
+// Extract route NUMBER only (for comparison) - handles various formats
 function extractRouteNumber(route: string): string {
-  const match = route.match(/^(\d+)/);
-  return match ? match[1] : route;
+  // Handle "Line X" format
+  const lineMatch = route.match(/Line\s*(\d+)/i);
+  if (lineMatch) {
+    return `Line ${lineMatch[1]}`; // Preserve "Line" prefix for subway
+  }
+  
+  // Handle numeric routes like "306 Carlton" or just "306"
+  const numMatch = route.match(/^(\d+)/);
+  return numMatch ? numMatch[1] : route;
 }
 
 // Check if two routes have the same route number
+// STRICT: Exact route number comparison to prevent 46 matching 996, 39 matching 939, etc.
 function routesMatch(route1: string, route2: string): boolean {
   const num1 = extractRouteNumber(route1);
   const num2 = extractRouteNumber(route2);
   return num1 === num2;
 }
 
-// Calculate Jaccard similarity for threading
-function jaccardSimilarity(text1: string, text2: string): number {
-  const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 2));
-  const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+// Calculate the number of matching routes between alert and thread
+function countMatchingRoutes(alertRoutes: string[], threadRoutes: string[]): number {
+  let count = 0;
+  for (const alertRoute of alertRoutes) {
+    if (threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))) {
+      count++;
+    }
+  }
+  return count;
+}
+
+// Extract meaningful words from text (filtering stop words and short words)
+function extractMeaningfulWords(text: string): Set<string> {
+  return new Set(
+    text.toLowerCase()
+      .replace(/[^\w\s]/g, ' ')  // Remove punctuation
+      .split(/\s+/)
+      .filter(w => w.length > 2 && !STOP_WORDS.has(w))
+  );
+}
+
+// Calculate enhanced Jaccard similarity for threading
+// Returns both the similarity ratio AND the shared word count
+function calculateSimilarity(text1: string, text2: string): { similarity: number; sharedWords: number } {
+  const words1 = extractMeaningfulWords(text1);
+  const words2 = extractMeaningfulWords(text2);
   
+  // Find intersection (shared words)
   const intersection = new Set([...words1].filter(x => words2.has(x)));
+  
+  // Find union (all unique words)
   const union = new Set([...words1, ...words2]);
   
-  return intersection.size / union.size;
+  // Prevent division by zero
+  if (union.size === 0) {
+    return { similarity: 0, sharedWords: 0 };
+  }
+  
+  return {
+    similarity: intersection.size / union.size,
+    sharedWords: intersection.size
+  };
+}
+
+// Legacy jaccardSimilarity function for backwards compatibility
+function jaccardSimilarity(text1: string, text2: string): number {
+  return calculateSimilarity(text1, text2).similarity;
+}
+
+// Determine if an alert should match a thread based on multiple criteria
+function shouldMatchThread(
+  alertText: string,
+  alertRoutes: string[],
+  alertCategory: string,
+  thread: { title: string; affected_routes: string[] | null; categories: string[] | null }
+): { match: boolean; reason: string; confidence: number } {
+  const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+  const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
+  const threadTitle = thread.title || '';
+  
+  // Gate 1: Both must have routes
+  if (alertRoutes.length === 0) {
+    return { match: false, reason: 'Alert has no routes', confidence: 0 };
+  }
+  if (threadRoutes.length === 0) {
+    return { match: false, reason: 'Thread has no routes', confidence: 0 };
+  }
+  
+  // Gate 2: Check route overlap with EXACT number matching
+  const matchingRouteCount = countMatchingRoutes(alertRoutes, threadRoutes);
+  if (matchingRouteCount === 0) {
+    return { match: false, reason: 'No route number match', confidence: 0 };
+  }
+  
+  // Gate 3: Calculate text similarity
+  const { similarity, sharedWords } = calculateSimilarity(alertText, threadTitle);
+  
+  // Gate 4: Require minimum shared words to prevent random matches
+  if (sharedWords < THREADING_CONFIG.MIN_SHARED_WORDS) {
+    return { 
+      match: false, 
+      reason: `Only ${sharedWords} shared words (need ${THREADING_CONFIG.MIN_SHARED_WORDS})`, 
+      confidence: similarity 
+    };
+  }
+  
+  // Gate 5: Apply category-specific thresholds
+  let threshold: number;
+  let thresholdName: string;
+  
+  if (alertCategory === 'SERVICE_RESUMED') {
+    // SERVICE_RESUMED has very different vocabulary
+    threshold = THREADING_CONFIG.RESUMED_THRESHOLD;
+    thresholdName = 'RESUMED';
+  } else if (alertCategory === 'DIVERSION' || alertCategory === 'DELAY') {
+    // Updates may use different wording
+    threshold = THREADING_CONFIG.UPDATE_THRESHOLD;
+    thresholdName = 'UPDATE';
+  } else {
+    // General matching
+    threshold = THREADING_CONFIG.GENERAL_THRESHOLD;
+    thresholdName = 'GENERAL';
+  }
+  
+  if (similarity < threshold) {
+    return { 
+      match: false, 
+      reason: `Similarity ${(similarity * 100).toFixed(1)}% < ${thresholdName} threshold ${(threshold * 100).toFixed(1)}%`, 
+      confidence: similarity 
+    };
+  }
+  
+  // All gates passed - it's a match!
+  return { 
+    match: true, 
+    reason: `Matched with ${matchingRouteCount} routes, ${(similarity * 100).toFixed(1)}% similarity, ${sharedWords} shared words`,
+    confidence: similarity 
+  };
 }
 
 serve(async (req) => {
@@ -147,12 +315,12 @@ serve(async (req) => {
 
     const existingUris = new Set(existingAlerts?.map(a => a.bluesky_uri) || []);
 
-    // Get unresolved threads for matching
+    // Get unresolved threads for matching (extended time window)
     const { data: unresolvedThreads } = await supabase
       .from('incident_threads')
       .select('*')
       .eq('is_resolved', false)
-      .gte('updated_at', new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString());
+      .gte('updated_at', new Date(Date.now() - THREADING_CONFIG.THREAD_WINDOW_HOURS * 60 * 60 * 1000).toISOString());
 
     for (const item of posts) {
       const post = item.post;
@@ -191,64 +359,46 @@ serve(async (req) => {
 
       newAlerts++;
 
-      // Thread matching
+      // Thread matching using enhanced algorithm
       let matchedThread = null;
+      let matchReason = '';
+      let matchConfidence = 0;
 
-      // CRITICAL: Only attempt thread matching if alert has extracted routes
-      // Alerts without routes should NEVER match existing threads
-      // This prevents false positives where vague alerts get grouped incorrectly
-      if (routes.length > 0) {
-        // Check for matching thread based on EXACT route number match and similarity
+      // Only attempt thread matching if alert has routes
+      if (routes.length >= THREADING_CONFIG.MIN_ROUTE_CONFIDENCE) {
         for (const thread of unresolvedThreads || []) {
-          const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+          const result = shouldMatchThread(text, routes, category, thread);
           
-          // Skip threads with no routes - they can't be reliably matched
-          if (threadRoutes.length === 0) continue;
-          
-          // Use exact route number matching to prevent 46 matching 996, etc.
-          const hasRouteOverlap = routes.some(alertRoute => 
-            threadRoutes.some(threadRoute => routesMatch(alertRoute, threadRoute))
-          );
-          
-          if (hasRouteOverlap) {
-            const threadTitle = thread.title || '';
-            const similarity = jaccardSimilarity(text, threadTitle);
-            
-            // Lower threshold (50%) for general matching - routes already match
-            if (similarity >= 0.5) {
-              matchedThread = thread;
-              break;
-            }
-            
-            // Very low threshold (10%) for SERVICE_RESUMED with route overlap
-            // SERVICE_RESUMED alerts have very different vocabulary ("resumed", "regular service")
-            // than the original alert ("detour", "no service", "delay")
-            if (category === 'SERVICE_RESUMED' && similarity >= 0.1) {
-              matchedThread = thread;
-              break;
-            }
-            
-            // For DIVERSION/DETOUR alerts, use lower threshold (30%) since they 
-            // may update existing incidents with different wording
-            if ((category === 'DIVERSION' || category === 'DELAY') && similarity >= 0.3) {
-              matchedThread = thread;
-              break;
-            }
+          if (result.match) {
+            matchedThread = thread;
+            matchReason = result.reason;
+            matchConfidence = result.confidence;
+            break;
           }
+          
+          // Log why thread didn't match (for debugging)
+          // console.log(`Thread ${thread.thread_id} rejected: ${result.reason}`);
         }
+      } else {
+        console.log(`Alert skipped thread matching: only ${routes.length} routes extracted`);
       }
 
       if (matchedThread) {
+        console.log(`Alert matched thread ${matchedThread.thread_id}: ${matchReason}`);
+        
         // Mark old alerts in this thread as not latest
         await supabase
           .from('alert_cache')
           .update({ is_latest: false })
           .eq('thread_id', matchedThread.thread_id);
 
-        // Link alert to thread
+        // Link alert to thread and store similarity score
         await supabase
           .from('alert_cache')
-          .update({ thread_id: matchedThread.thread_id })
+          .update({ 
+            thread_id: matchedThread.thread_id,
+            similarity_score: matchConfidence
+          })
           .eq('alert_id', newAlert.alert_id);
 
         // Update thread
@@ -257,9 +407,15 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         };
 
+        // Merge routes from new alert into thread
+        const existingRoutes = Array.isArray(matchedThread.affected_routes) ? matchedThread.affected_routes : [];
+        const allRoutes = [...new Set([...existingRoutes, ...routes])];
+        updates.affected_routes = allRoutes;
+
         // Resolve thread if SERVICE_RESUMED
         if (category === 'SERVICE_RESUMED') {
           updates.is_resolved = true;
+          updates.resolved_at = new Date().toISOString();
         }
 
         await supabase

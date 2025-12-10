@@ -349,6 +349,50 @@ For local development, use `localhost` and `http://localhost:5173`.
 - `src/lib/components/layout/Sidebar.svelte` - Font weight classes
 - `src/lib/components/alerts/AlertCard.svelte` - Font weight classes
 
+### Dec 9, 2025 - Threading System Overhaul
+
+**Major Improvements to Alert Threading:**
+
+- ✅ **Stop Words Filtering**: Added TTC-specific stop words to prevent false matches
+  - Common words like "service", "bus", "route", "station", "via" now filtered
+  - Prevents inflated similarity scores from generic transit vocabulary
+
+- ✅ **Minimum Shared Words Gate**: NEW requirement for at least 3 meaningful shared words
+  - Prevents matches based purely on similarity ratio
+  - Ensures actual semantic overlap between alerts
+
+- ✅ **Raised Similarity Thresholds**:
+  - General: 50% → 55%
+  - DIVERSION/DELAY: 30% → 35%
+  - SERVICE_RESUMED: 10% → 15%
+
+- ✅ **Extended Time Window**: 6 hours → 8 hours for overnight incidents
+
+- ✅ **Improved Route Extraction**:
+  - Better multi-word route names ("Finch East", "Victoria Park")
+  - Added "Route X" pattern matching
+  - Stricter validation of route numbers
+
+- ✅ **Multi-Gate Threading Algorithm**: New `shouldMatchThread()` function with 5 gates:
+  1. Alert must have routes
+  2. Thread must have routes
+  3. At least one exact route number match
+  4. Minimum 3 shared meaningful words
+  5. Category-specific similarity threshold
+
+- ✅ **Enhanced Logging**: Match reasons now logged for debugging
+
+- ✅ **Route Merging**: Thread routes now merge with new alert routes
+
+**Files Updated:**
+
+- `supabase/functions/poll-alerts/index.ts` - Complete threading system rewrite
+- `alert-categorization-and-threading.md` - Updated to v3.3 with new documentation
+
+**Deployment:**
+
+- ✅ Edge Function deployed (version 10) via Supabase MCP
+
 ### Dec 4, 2025 - Edge Function Alert Parsing Fix
 
 **poll-alerts Edge Function:**
@@ -557,6 +601,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 ### Dec 5, 2025 - Threading Bug Fix & Mobile UX
 
 **Threading Bug Fix (Critical):**
+
 - ✅ Fixed false positive alert threading where alerts without extracted routes could match any thread based purely on text similarity
 - ✅ Added safety check: alerts must have non-empty `affected_routes` array to attempt thread matching
 - ✅ Added safety check: skip threads with empty `affected_routes` during matching
@@ -565,15 +610,18 @@ For local development, use `localhost` and `http://localhost:5173`.
 - ✅ Deployed to production via Supabase CLI
 
 **Mobile Direction Tabs Fix:**
+
 - ✅ Fixed `RouteDirectionTabs.svelte` to show terminal names instead of "All" on mobile
 - ✅ Added short labels: VMC, Finch, Kennedy, Kipling, Don Mills, Shep-Yonge, Finch W, Humber
 - ✅ Updated `getDirectionIcon()` to map terminal names to arrows
 
 **Documentation:**
+
 - ✅ Updated `alert-categorization-and-threading.md` with new threading rules and safety checks
 - ✅ Updated `DESIGN_SYSTEM.md` with mobile direction tab short labels
 
 **Deployment:**
+
 - ✅ Fixed `supabase/config.toml` functions configuration format
 - ✅ Deployed threading fix via CLI: `npx supabase functions deploy poll-alerts --project-ref wmchvmegxcpyfjcuzqzk`
 
