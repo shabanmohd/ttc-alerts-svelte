@@ -412,13 +412,13 @@
                     ? "streetcar"
                     : "bus"}
               <div
-                class="flex items-center gap-1 p-2 rounded-md border bg-card hover:bg-accent transition-colors animate-fade-in"
+                class="route-card flex items-center gap-1 p-2 rounded-md border bg-card hover:bg-accent transition-colors animate-fade-in"
                 style="animation-delay: {Math.min(i * 30, 150)}ms"
               >
                 <button
                   type="button"
                   onclick={() => handleRouteClick(route)}
-                  class="flex items-center gap-2 text-left"
+                  class="route-button flex items-center gap-2 text-left cursor-pointer"
                 >
                   <RouteBadge {route} size="sm" />
                   <span class="text-sm">{name}</span>
@@ -483,13 +483,13 @@
         <div class="flex flex-wrap gap-2">
           {#each routes as { route, name }, i (route)}
             <div
-              class="flex items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent transition-colors animate-fade-in"
+              class="route-card flex items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent transition-colors animate-fade-in"
               style="animation-delay: {Math.min(i * 20, 200)}ms"
             >
               <button
                 type="button"
                 onclick={() => handleRouteClick(route)}
-                class="flex items-center gap-2 text-left"
+                class="route-button flex items-center gap-2 text-left cursor-pointer"
               >
                 <RouteBadge {route} />
                 <span class="text-sm">{name}</span>
@@ -507,3 +507,36 @@
     <Button variant="outline" onclick={() => goto("/")}>← Back to Home</Button>
   </div>
 </main>
+
+<style>
+  /* Route card styling with proper cursor and tap feedback */
+  .route-card {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .route-card:active {
+    transform: scale(0.98);
+    background-color: hsl(var(--accent));
+  }
+
+  .route-button {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+  }
+
+  .route-button:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
+
+  /* Touch feedback animation */
+  @media (hover: none) {
+    .route-card:active {
+      transition: transform 0.1s ease-out, background-color 0.1s ease-out;
+    }
+  }
+</style>
