@@ -115,7 +115,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                       |
 | `functions/auth-session/index.ts`       | ✅     | Validate existing session                               |
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                              |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v20: threading overhaul) |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v20: threading overhaul)     |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                             |
 | `functions/get-eta/index.ts`            | ✅     | Fetch TTC NextBus predictions 🆕 **B**                  |
 
@@ -221,12 +221,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Migrations (`supabase/migrations/`)
 
-| File                                  | Status | Purpose                                    | Version |
-| ------------------------------------- | ------ | ------------------------------------------ | ------- |
-| `20241204_auth_tables.sql`            | ✅     | WebAuthn auth tables                       | A & B   |
-| `20251204_bookmarked_stops.sql`       | ✅     | Add bookmarked_stops column to preferences | **B**   |
-| `20251210_cleanup_cron.sql`           | ✅     | Automated 15-day retention cleanup         | **B**   |
-| `20251210_threading_constraints.sql`  | ✅     | JSONB constraints, helper functions        | **B**   |
+| File                                 | Status | Purpose                                    | Version |
+| ------------------------------------ | ------ | ------------------------------------------ | ------- |
+| `20241204_auth_tables.sql`           | ✅     | WebAuthn auth tables                       | A & B   |
+| `20251204_bookmarked_stops.sql`      | ✅     | Add bookmarked_stops column to preferences | **B**   |
+| `20251210_cleanup_cron.sql`          | ✅     | Automated 15-day retention cleanup         | **B**   |
+| `20251210_threading_constraints.sql` | ✅     | JSONB constraints, helper functions        | **B**   |
 
 ---
 

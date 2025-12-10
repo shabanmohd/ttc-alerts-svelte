@@ -1,6 +1,6 @@
 # Alert Categorization and Threading System
 
-**Version:** 5.1  
+**Version:** 5.2  
 **Date:** December 10, 2025  
 **Status:** ✅ Implemented and Active (poll-alerts v22)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
@@ -823,6 +823,36 @@ SELECT now() AT TIME ZONE 'America/Toronto' as toronto_time;
 
 ## Database Constraints and Triggers
 
+### Thread Deduplication System (v5.2)
+
+Prevents duplicate threads from being created when multiple Edge Function isolates run in parallel.
+
+**Components:**
+
+1. **`thread_hash` Column**: MD5 hash of normalized title + route + hour-level timestamp
+2. **Unique Index**: `idx_incident_threads_hash_unique` prevents duplicate hashes
+3. **Auto-populate Trigger**: Computes hash automatically on INSERT
+4. **Exception Handling**: `find_or_create_thread` catches unique violations and returns existing thread
+
+```sql
+-- Hash generation function
+CREATE FUNCTION generate_thread_hash(p_title TEXT, p_routes JSONB, p_created_at TIMESTAMPTZ)
+RETURNS TEXT AS $$
+  primary_route := extract_route_number(p_routes->>0);
+  date_key := TO_CHAR(p_created_at AT TIME ZONE 'America/Toronto', 'YYYY-MM-DD-HH24');
+  RETURN MD5(primary_route || '|' || date_key || '|' || normalized_title);
+$$;
+
+-- Unique index prevents duplicates
+CREATE UNIQUE INDEX idx_incident_threads_hash_unique 
+ON incident_threads (thread_hash) WHERE thread_hash IS NOT NULL;
+
+-- Auto-populate trigger
+CREATE TRIGGER auto_populate_thread_hash_trigger
+    BEFORE INSERT ON incident_threads
+    FOR EACH ROW EXECUTE FUNCTION auto_populate_thread_hash();
+```
+
 ### Route Validation Trigger (v5.1)
 
 A database trigger prevents route mismatches when assigning alerts to threads. This acts as a safety net against bugs in the Edge Function.
@@ -968,6 +998,43 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 ---
 
 ## Changelog
+
+### Version 5.2 - December 10, 2025 (Thread Deduplication Fix)
+
+**Thread Duplication Race Condition Fix:**
+
+- ✅ **Root Cause Identified**: Multiple Edge Function isolates running in parallel created duplicate threads (13-14 threads for same alert in same second)
+- ✅ **Unique Index Added**: `idx_incident_threads_hash_unique` on `thread_hash` column prevents duplicate inserts at database level
+- ✅ **Updated `find_or_create_thread`**: Uses `EXCEPTION WHEN unique_violation` to handle concurrent inserts atomically
+- ✅ **Fixed `extract_route_number`**: Now handles subway lines ("Line 1", "Line 2") in addition to bus/streetcar routes
+- ✅ **Auto-populate Trigger**: `auto_populate_thread_hash_trigger` ensures hash is always computed on insert
+- ✅ **Data Cleanup**: Removed 310 duplicate threads, consolidated to 278 unique threads
+
+**Why Advisory Locks Didn't Work:**
+Supabase Edge Functions run in separate Deno isolates with independent database connections. PostgreSQL advisory locks (`pg_advisory_xact_lock`) only work within the same connection, so parallel isolates bypassed the locks entirely.
+
+**New Database Protection:**
+
+```sql
+-- Unique partial index prevents duplicates
+CREATE UNIQUE INDEX idx_incident_threads_hash_unique 
+ON incident_threads (thread_hash)
+WHERE thread_hash IS NOT NULL;
+
+-- find_or_create_thread now handles race conditions
+BEGIN
+    INSERT INTO incident_threads (...) VALUES (...);
+EXCEPTION WHEN unique_violation THEN
+    -- Another concurrent request created same thread - return that one
+    SELECT thread_id INTO v_thread_id
+    FROM incident_threads WHERE thread_hash = v_thread_hash;
+END;
+```
+
+**Impact:**
+- Eliminated 13-14x thread duplication for identical alerts
+- Database now prevents duplicates regardless of Edge Function bugs
+- Thread hash based on: route number + normalized title + hour-level timestamp
 
 ### Version 5.1 - December 10, 2025 (poll-alerts v22)
 

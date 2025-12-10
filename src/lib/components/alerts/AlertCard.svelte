@@ -164,8 +164,8 @@
 
   const latestAlert = $derived(thread.latestAlert);
   const earlierAlerts = $derived(thread.alerts.slice(1));
-  
-  // Get routes for badge display: 
+
+  // Get routes for badge display:
   // - Prefer thread routes (accumulated from all alerts in the thread)
   // - Fall back to latest alert routes if thread routes are empty
   const alertRoutes = $derived(parseJsonArray(latestAlert?.affected_routes));
