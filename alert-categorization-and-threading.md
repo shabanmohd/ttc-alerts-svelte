@@ -1,7 +1,7 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.3  
-**Date:** December 9, 2025  
+**Version:** 3.2  
+**Date:** December 5, 2025  
 **Status:** ✅ Implemented and Active (Deployed)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
@@ -80,8 +80,7 @@ This document describes the alert categorization and threading system designed t
 
 - **Effect > Cause** - "No service" matters more than "due to security incident"
 - **Non-exclusive categories** - Alert can be `SERVICE_DISRUPTION` + `SUBWAY`
-- **Multi-gate threading** - Routes + similarity + minimum shared words
-- **Stop words filtering** - Common words removed from similarity calculation
+- **Simple threading** - 50% text similarity for general matching, 20% for SERVICE_RESUMED
 - **Latest first** - Most recent update at top of thread
 - **Exact route number matching** - Threading uses route NUMBER comparison (e.g., "46" ≠ "996")
 
@@ -202,6 +201,13 @@ function extractRoutes(text: string): string[] {
     lineMatch.forEach((m) => routes.push(m));
   }
 
+  // Match route numbers with letter suffix variants: "37A", "37B", "123C", "123D"
+  // This must come BEFORE route-with-name to capture letter variants
+  const routeWithSuffixMatch = text.match(/\b(\d{1,3}[A-Z])\b/g);
+  if (routeWithSuffixMatch) {
+    routeWithSuffixMatch.forEach((m) => routes.push(m));
+  }
+
   // Match numbered routes with names: "306 Carlton", "504 King"
   const routeWithNameMatch = text.match(
     /\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g
@@ -210,11 +216,11 @@ function extractRoutes(text: string): string[] {
     routeWithNameMatch.forEach((m) => routes.push(m));
   }
 
-  // Match standalone route numbers
-  const standaloneMatch = text.match(/\b(\d{1,3})(?=\s|:|,|$)/g);
+  // Match standalone route numbers (no letter suffix, no name)
+  const standaloneMatch = text.match(/\b(\d{1,3})(?=[,:\s]|$)/g);
   if (standaloneMatch) {
     standaloneMatch.forEach((num) => {
-      if (parseInt(num) < 1000 && !routes.some((r) => r.startsWith(num))) {
+      if (parseInt(num) < 1000 && !routes.some((r) => r === num || r.startsWith(num + ' '))) {
         routes.push(num);
       }
     });
@@ -230,6 +236,8 @@ function extractRoutes(text: string): string[] {
 - "306 Carlton: Detour" → `["306 Carlton"]`
 - "504 King delays" → `["504 King"]`
 - "Routes 39, 85, 939" → `["39", "85", "939"]`
+- "37, 37A Islington: Detour" → `["37A", "37 Islington", "37"]` (letter suffix routes now captured)
+- "123, 123C, 123D Sherway" → `["123C", "123D", "123 Sherway", "123"]` (multi-variant routes)
 
 ---
 
@@ -249,57 +257,47 @@ Incident threading groups related alerts over time to:
 
 **Implemented in:** `supabase/functions/poll-alerts/index.ts`
 
-The threading system uses a **multi-gate approach** where ALL conditions must pass:
-
 ```typescript
-// Threading configuration
-const THREADING_CONFIG = {
-  THREAD_WINDOW_HOURS: 8,      // Extended from 6 for overnight incidents
-  GENERAL_THRESHOLD: 0.55,     // Raised from 0.5
-  UPDATE_THRESHOLD: 0.35,      // Raised from 0.3 for DIVERSION/DELAY
-  RESUMED_THRESHOLD: 0.15,     // Raised from 0.1 for SERVICE_RESUMED
-  MIN_SHARED_WORDS: 3,         // NEW: Minimum shared meaningful words
-  MIN_ROUTE_CONFIDENCE: 1,     // Require at least 1 route
-};
+// Thread matching logic
+let matchedThread = null;
 
-// Stop words filtered from similarity calculation
-const STOP_WORDS = new Set([
-  'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', ...
-  // TTC-specific common words
-  'due', 'service', 'route', 'routes', 'bus', 'buses', 'streetcar',
-  'subway', 'line', 'station', 'stations', 'stop', 'stops', 'between', 'via',
-  'northbound', 'southbound', 'eastbound', 'westbound', 'running', 'operating'
-]);
-```
+for (const thread of unresolvedThreads || []) {
+  const threadRoutes = Array.isArray(thread.affected_routes)
+    ? thread.affected_routes
+    : [];
 
-**Multi-Gate Thread Matching:**
+  // Use exact route number matching to prevent 46 matching 996, etc.
+  const hasRouteOverlap = routes.some((alertRoute) =>
+    threadRoutes.some((threadRoute) => routesMatch(alertRoute, threadRoute))
+  );
 
-```typescript
-function shouldMatchThread(alertText, alertRoutes, alertCategory, thread) {
-  // Gate 1: Alert must have routes
-  if (alertRoutes.length === 0) return { match: false };
-  
-  // Gate 2: Thread must have routes
-  if (thread.affected_routes.length === 0) return { match: false };
-  
-  // Gate 3: At least one route number must match EXACTLY
-  const matchingRouteCount = countMatchingRoutes(alertRoutes, threadRoutes);
-  if (matchingRouteCount === 0) return { match: false };
-  
-  // Gate 4: Calculate similarity (with stop words filtered)
-  const { similarity, sharedWords } = calculateSimilarity(alertText, thread.title);
-  
-  // Gate 5: Require minimum shared words (prevents random matches)
-  if (sharedWords < 3) return { match: false };
-  
-  // Gate 6: Apply category-specific threshold
-  let threshold = 0.55;  // General
-  if (alertCategory === 'SERVICE_RESUMED') threshold = 0.15;
-  else if (alertCategory === 'DIVERSION' || alertCategory === 'DELAY') threshold = 0.35;
-  
-  if (similarity < threshold) return { match: false };
-  
-  return { match: true, confidence: similarity };
+  if (hasRouteOverlap) {
+    const threadTitle = thread.title || "";
+    const similarity = jaccardSimilarity(text, threadTitle);
+
+    // Medium similarity (50%) for general matching
+    if (similarity >= 0.5) {
+      matchedThread = thread;
+      break;
+    }
+
+    // Very low threshold (10%) for SERVICE_RESUMED with route overlap
+    // SERVICE_RESUMED alerts have very different vocabulary ("resumed", "regular service")
+    // than the original alert ("detour", "no service", "delay")
+    if (category === "SERVICE_RESUMED" && similarity >= 0.1) {
+      matchedThread = thread;
+      break;
+    }
+
+    // For DIVERSION/DETOUR alerts, use lower threshold (30%)
+    if (
+      (category === "DIVERSION" || category === "DELAY") &&
+      similarity >= 0.3
+    ) {
+      matchedThread = thread;
+      break;
+    }
+  }
 }
 ```
 
@@ -308,13 +306,11 @@ function shouldMatchThread(alertText, alertRoutes, alertCategory, thread) {
 1. **Alert must have routes** - Alerts without extracted routes create new threads, never match existing
 2. **Thread must have routes** - Threads with empty routes are skipped during matching
 3. **Exact route number match required** - Route NUMBERS must match (e.g., "46" = "46 Martin Grove", but "46" ≠ "996")
-4. **Minimum shared words (≥3)** - NEW: Require at least 3 meaningful words to match
-5. **Stop words filtered** - Common words like "service", "bus", "via" removed from comparison
-6. **General similarity (≥55%)** - Raised from 50% for general alert matching
-7. **Update similarity (≥35%)** - Raised from 30% for DIVERSION/DELAY updates
-8. **Resumed similarity (≥15%)** - Raised from 10% for SERVICE_RESUMED (very different vocabulary)
-9. **8-hour window** - Extended from 6 hours to handle overnight incidents
-10. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
+4. **Medium similarity (≥50%)** - For general alert matching
+5. **Low similarity (≥30%)** - For DIVERSION/DELAY updates
+6. **Very low similarity (≥10%)** - For SERVICE_RESUMED (very different vocabulary)
+7. **6-hour window** - Only match unresolved threads updated within 6 hours
+8. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
 
 ### Critical Safety Checks (Prevent False Matches)
 
@@ -351,66 +347,42 @@ if (routes.length > 0) {
 
 ### Text Similarity Calculation
 
-**Enhanced Jaccard Similarity** with stop words filtering:
+**Jaccard Similarity** on word sets:
 
 ```typescript
-// Stop words to ignore in similarity calculation
-const STOP_WORDS = new Set([
-  'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', ...
-  // TTC-specific common words that appear in most alerts
-  'due', 'service', 'route', 'routes', 'bus', 'buses', 'streetcar', 'streetcars',
-  'subway', 'line', 'station', 'stations', 'stop', 'stops', 'between', 'via',
-  'northbound', 'southbound', 'eastbound', 'westbound', 'running', 'operating'
-]);
-
-// Extract meaningful words (filter stop words and short words)
-function extractMeaningfulWords(text: string): Set<string> {
-  return new Set(
-    text.toLowerCase()
-      .replace(/[^\w\s]/g, ' ')  // Remove punctuation
+function jaccardSimilarity(text1: string, text2: string): number {
+  const words1 = new Set(
+    text1
+      .toLowerCase()
       .split(/\s+/)
-      .filter(w => w.length > 2 && !STOP_WORDS.has(w))
+      .filter((w) => w.length > 2)
   );
-}
+  const words2 = new Set(
+    text2
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+  );
 
-// Calculate similarity with shared word count
-function calculateSimilarity(text1: string, text2: string): { similarity: number; sharedWords: number } {
-  const words1 = extractMeaningfulWords(text1);
-  const words2 = extractMeaningfulWords(text2);
-  
-  const intersection = new Set([...words1].filter(x => words2.has(x)));
+  const intersection = new Set([...words1].filter((x) => words2.has(x)));
   const union = new Set([...words1, ...words2]);
-  
-  return {
-    similarity: union.size > 0 ? intersection.size / union.size : 0,
-    sharedWords: intersection.size
-  };
+
+  return intersection.size / union.size;
 }
 ```
 
-**Why Stop Words Matter:**
+**Example:**
 
-Before (without stop word filtering):
 ```
-Text 1: "504 King: Due to construction, service via diversion"
-Text 2: "512 St Clair: Due to construction, service via diversion"
+Text 1: "Line 1: No service between Lawrence West and Wilson"
+Text 2: "Line 1: No service between Lawrence West and Wilson stations"
 
-Words 1: {504, king, due, construction, service, via, diversion}
-Words 2: {512, clair, due, construction, service, via, diversion}
+Words 1: {line, no, service, between, lawrence, west, and, wilson}
+Words 2: {line, no, service, between, lawrence, west, and, wilson, stations}
 
-Shared: 5 words (due, construction, service, via, diversion)
+Shared: 8 words
 Total: 9 words
-Similarity: 5/9 = 0.56 → MATCH! (wrong - different routes)
-```
-
-After (with stop word filtering):
-```
-Words 1: {504, king, construction, diversion}
-Words 2: {512, clair, construction, diversion}
-
-Shared: 2 words (construction, diversion)
-Total: 6 words
-Similarity: 2/6 = 0.33 → NO MATCH (correct!)
+Similarity: 8/9 = 0.89 → MATCH (≥ 0.8)
 ```
 
 ### Thread Lifecycle
@@ -721,55 +693,6 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 ---
 
 ## Changelog
-
-### Version 3.3 - December 9, 2025
-
-**Major Threading System Overhaul:**
-
-- ✅ **Stop Words Filtering**: Added TTC-specific stop words to prevent false matches
-  - Common words: "service", "bus", "route", "station", "via", "between", etc.
-  - These words appear in almost every alert and inflated similarity scores
-
-- ✅ **Minimum Shared Words Requirement**: NEW gate requiring at least 3 meaningful shared words
-  - Prevents matches based on just route numbers and common phrases
-  - Ensures there's actual semantic overlap between alerts
-
-- ✅ **Raised Similarity Thresholds**:
-  - General: 50% → 55%
-  - DIVERSION/DELAY: 30% → 35%
-  - SERVICE_RESUMED: 10% → 15%
-
-- ✅ **Extended Time Window**: 6 hours → 8 hours for overnight incidents
-
-- ✅ **Improved Route Extraction**:
-  - Better handling of multi-word route names ("Finch East", "Victoria Park")
-  - Added "Route X" pattern matching
-  - Stricter validation of route numbers
-
-- ✅ **Enhanced Logging**: Match reasons now logged for debugging
-
-- ✅ **Route Merging**: Thread routes now merge with new alert routes
-
-**Technical Changes:**
-
-```typescript
-// New multi-gate threading function
-function shouldMatchThread(alertText, alertRoutes, alertCategory, thread) {
-  // Gate 1: Alert must have routes
-  // Gate 2: Thread must have routes
-  // Gate 3: At least one exact route number match
-  // Gate 4: Calculate similarity with stop words filtered
-  // Gate 5: Require ≥3 shared meaningful words
-  // Gate 6: Apply category-specific threshold
-}
-```
-
-**Impact:**
-- Eliminates false positive matches where unrelated routes were grouped
-- More accurate threading for routes that share similar location names
-- Better handling of alerts with common construction/detour language
-
----
 
 ### Version 3.2 - December 5, 2025
 
