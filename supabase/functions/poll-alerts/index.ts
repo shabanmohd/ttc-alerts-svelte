@@ -229,12 +229,12 @@ serve(async (req) => {
 
     const existingUris = new Set(existingAlerts?.map(a => a.bluesky_uri) || []);
 
-    // Get unresolved threads for matching
-    const { data: unresolvedThreads } = await supabase
+    // Get threads for matching - both unresolved AND recently resolved (for SERVICE_RESUMED matching)
+    const { data: candidateThreads } = await supabase
       .from('incident_threads')
       .select('*')
-      .eq('is_resolved', false)
-      .gte('updated_at', new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString());
+      .gte('updated_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
+      .order('updated_at', { ascending: false });
 
     for (const item of posts) {
       const post = item.post;
@@ -275,8 +275,9 @@ serve(async (req) => {
 
       newAlerts++;
 
-      // Thread matching
+      // Thread matching - find best matching thread
       let matchedThread = null;
+      let bestSimilarity = 0;
 
       // CRITICAL: Only attempt thread matching if alert has extracted routes
       // Alerts without routes should NEVER match existing threads
@@ -286,7 +287,7 @@ serve(async (req) => {
         const alertBaseRoutes = routes.map(extractRouteNumber);
         
         // Check for matching thread based on route family match and enhanced similarity
-        for (const thread of unresolvedThreads || []) {
+        for (const thread of candidateThreads || []) {
           const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
           
           // Skip threads with no routes - they can't be reliably matched
@@ -305,25 +306,31 @@ serve(async (req) => {
             // Use enhanced similarity that considers location and cause
             const similarity = enhancedSimilarity(text, threadTitle);
             
-            // Lower threshold (40%) for general matching - routes already match
-            if (similarity >= 0.4) {
-              matchedThread = thread;
-              break;
+            // SERVICE_RESUMED: Can match RESOLVED threads with same route
+            // Use very low threshold since vocabulary differs completely
+            if (category === 'SERVICE_RESUMED') {
+              if (similarity >= 0.1 && similarity > bestSimilarity) {
+                bestSimilarity = similarity;
+                matchedThread = thread;
+              }
+              continue; // Keep looking for better match
             }
             
-            // Very low threshold (10%) for SERVICE_RESUMED with route overlap
-            // SERVICE_RESUMED alerts have very different vocabulary ("resumed", "regular service")
-            // than the original alert ("detour", "no service", "delay")
-            if (category === 'SERVICE_RESUMED' && similarity >= 0.1) {
+            // Skip resolved threads for non-SERVICE_RESUMED alerts
+            if (thread.is_resolved) continue;
+            
+            // General matching: 40% threshold for unresolved threads
+            if (similarity >= 0.4 && similarity > bestSimilarity) {
+              bestSimilarity = similarity;
               matchedThread = thread;
-              break;
+              continue;
             }
             
-            // For DIVERSION/DETOUR alerts, use lower threshold (25%) since they 
-            // may update existing incidents with different wording
-            if ((category === 'DIVERSION' || category === 'DELAY') && similarity >= 0.25) {
+            // For DIVERSION/DETOUR/DELAY alerts, use lower threshold (25%)
+            if ((category === 'DIVERSION' || category === 'DELAY') && 
+                similarity >= 0.25 && similarity > bestSimilarity) {
+              bestSimilarity = similarity;
               matchedThread = thread;
-              break;
             }
           }
         }
