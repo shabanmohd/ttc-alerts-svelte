@@ -467,7 +467,18 @@
               <span>Save to My Stops</span>
             {/if}
           </button>
-          <span></span>
+          <button
+            type="button"
+            class="refresh-button"
+            onclick={handleRefresh}
+            disabled={isLoadingETA}
+            aria-label="Refresh arrival times"
+          >
+            <RefreshCw
+              class="h-3.5 w-3.5 {isLoadingETA ? 'animate-spin' : ''}"
+            />
+            <span class="refresh-text">Retry</span>
+          </button>
         </div>
       {:else if etaPredictions.length === 0}
         <!-- No Predictions -->
