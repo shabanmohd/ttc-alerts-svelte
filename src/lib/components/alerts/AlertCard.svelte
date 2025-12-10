@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronDown } from "lucide-svelte";
+  import { ChevronDown, ExternalLink } from "lucide-svelte";
   import RouteBadge from "./RouteBadge.svelte";
   import StatusBadge from "./StatusBadge.svelte";
   import { cn } from "$lib/utils";
@@ -32,19 +32,35 @@
   }
 
   /**
-   * Get the main category from categories array for display priority.
+   * Check if any route is a subway line
    */
-  function getMainCategory(categories: unknown): string {
+  function isSubwayRoute(routes: string[]): boolean {
+    return routes.some(
+      (route) => route.toLowerCase().startsWith("line") || /^[1-6]$/.test(route)
+    );
+  }
+
+  /**
+   * Get the main category from categories array for display priority.
+   * For subway routes, DETOUR is never applicable (subways don't detour).
+   */
+  function getMainCategory(categories: unknown, routes: string[] = []): string {
     const cats = parseJsonArray(categories);
+    const isSubway = isSubwayRoute(routes);
+
     // Priority order for display
     const priority = [
       "SERVICE_DISRUPTION",
+      "SCHEDULED_CLOSURE",
       "DETOUR",
       "DELAY",
       "SERVICE_RESUMED",
       "PLANNED_SERVICE_DISRUPTION",
     ];
+
     for (const cat of priority) {
+      // Skip DETOUR for subway routes - subways don't detour
+      if (cat === "DETOUR" && isSubway) continue;
       if (cats.includes(cat)) return cat;
     }
     return cats[0] || "OTHER";
@@ -115,22 +131,47 @@
   }
 
   /**
+   * Normalize subway line names to just "Line X" format.
+   * E.g., "Line 1 Yonge-University" -> "Line 1"
+   * E.g., "Line 2 Bloor-Danforth" -> "Line 2"
+   */
+  function normalizeSubwayLine(route: string): string {
+    const lineMatch = route.match(/^(Line\s*\d+)/i);
+    if (lineMatch) {
+      return lineMatch[1];
+    }
+    return route;
+  }
+
+  /**
    * Get display routes for badges.
    * - If multiple variants of same base (37, 37A, 37B) -> show just "37"
    * - If only one variant (37B alone) -> show "37B"
    * - Always show just the number, not the name (123, not "123 Sherway")
+   * - Subway lines are normalized to "Line X" format
    *
    * E.g., ["37", "37A", "37B", "37 Islington"] -> ["37"]
    * E.g., ["37B", "37 Islington"] -> ["37"]  (still multiple variants)
    * E.g., ["37B"] -> ["37B"]  (single variant, keep suffix)
    * E.g., ["123", "123C", "123D", "123 Sherway"] -> ["123"]
    * E.g., ["37", "85", "939"] -> ["37", "85", "939"]
+   * E.g., ["Line 1 Yonge-University"] -> ["Line 1"]
    */
   function getDisplayRoutes(routes: string[]): string[] {
     // Group routes by their base number
     const routesByBase = new Map<string, string[]>();
 
     for (const route of routes) {
+      // Check if it's a subway line first
+      if (route.toLowerCase().startsWith("line")) {
+        const normalizedLine = normalizeSubwayLine(route);
+        if (!routesByBase.has(normalizedLine)) {
+          routesByBase.set(normalizedLine, []);
+        }
+        routesByBase.get(normalizedLine)!.push(route);
+        continue;
+      }
+
       // Extract base route number (digits only)
       const match = route.match(/^(\d+)/);
       if (match) {
@@ -140,7 +181,7 @@
         }
         routesByBase.get(baseNum)!.push(route);
       } else {
-        // Non-numeric routes (like "Line 1") - keep as is
+        // Non-numeric routes - normalize and keep
         routesByBase.set(route, [route]);
       }
     }
@@ -148,6 +189,12 @@
     // For each base, decide what to display
     const displayRoutes: string[] = [];
     for (const [baseNum, variants] of routesByBase) {
+      // For subway lines, always use the normalized "Line X" format
+      if (baseNum.toLowerCase().startsWith("line")) {
+        displayRoutes.push(baseNum);
+        continue;
+      }
+
       if (variants.length === 1) {
         // Single variant - extract just the route identifier (number + optional letter)
         const single = variants[0];
@@ -214,7 +261,7 @@
       <!-- Status + Description on right -->
       <div class="flex-1 min-w-0">
         <div class="flex items-center justify-between gap-2 mb-1.5">
-          <StatusBadge category={getMainCategory(categories)} />
+          <StatusBadge category={getMainCategory(categories, rawRoutes)} />
           <time
             class="alert-card-timestamp"
             datetime={latestAlert?.created_at || ""}
@@ -222,9 +269,33 @@
             {formatTimestamp(latestAlert?.created_at || "")}
           </time>
         </div>
-        <p class="text-sm leading-relaxed" id="{cardId}-title">
-          {latestAlert?.description_text || latestAlert?.header_text || ""}
-        </p>
+
+        {#if getMainCategory(categories, rawRoutes) === "SCHEDULED_CLOSURE"}
+          <!-- Scheduled Closure: Visual hierarchy with header + description -->
+          <p class="text-sm font-medium leading-snug" id="{cardId}-title">
+            {latestAlert?.header_text || ""}
+          </p>
+          {#if latestAlert?.description_text}
+            <p class="text-sm text-muted-foreground leading-relaxed mt-1">
+              {latestAlert.description_text}
+            </p>
+          {/if}
+          {#if (latestAlert as { url?: string })?.url}
+            <a
+              href={(latestAlert as { url?: string }).url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-xs text-primary hover:underline mt-1.5 inline-flex items-center gap-1"
+            >
+              More details <ExternalLink class="h-3 w-3" aria-hidden="true" />
+            </a>
+          {/if}
+        {:else}
+          <!-- Regular alerts: description OR header -->
+          <p class="text-sm leading-relaxed" id="{cardId}-title">
+            {latestAlert?.description_text || latestAlert?.header_text || ""}
+          </p>
+        {/if}
       </div>
     </div>
   </div>
@@ -263,7 +334,9 @@
             style="animation-delay: {i * 80}ms"
           >
             <div class="flex justify-between items-start mb-1.5">
-              <StatusBadge category={getMainCategory(alert.categories)} />
+              <StatusBadge
+                category={getMainCategory(alert.categories, rawRoutes)}
+              />
               <time
                 class="text-xs text-muted-foreground"
                 datetime={alert.created_at}

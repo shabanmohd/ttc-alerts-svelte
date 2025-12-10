@@ -365,7 +365,10 @@
                   rel="noopener noreferrer"
                   class="closure-card-link"
                 >
-                  Details <ExternalLink class="h-3 w-3" aria-hidden="true" />
+                  More details <ExternalLink
+                    class="h-3 w-3"
+                    aria-hidden="true"
+                  />
                 </a>
               {/if}
             </div>
@@ -637,12 +640,22 @@
 
   .closure-type-badge.nightly {
     background-color: hsl(210 100% 50% / 0.15);
-    color: hsl(210 100% 65%);
+    color: hsl(210 100% 35%);
+  }
+
+  :global(.dark) .closure-type-badge.nightly {
+    background-color: hsl(210 100% 50% / 0.2);
+    color: hsl(210 100% 70%);
   }
 
   .closure-type-badge.weekend {
     background-color: hsl(38 92% 50% / 0.15);
-    color: hsl(38 92% 40%);
+    color: hsl(30 90% 30%);
+  }
+
+  :global(.dark) .closure-type-badge.weekend {
+    background-color: hsl(38 92% 50% / 0.2);
+    color: hsl(38 92% 65%);
   }
 
   .closure-card-link {

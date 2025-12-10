@@ -583,6 +583,69 @@ The ETA Cards display real-time arrival predictions for bookmarked stops. Each c
 4. **Pagination dots** visible only when 2+ directions exist
 5. **Large route badge (size="lg")** maintains TTC brand styling at larger size
 
+### Subway Status Cards
+
+The Subway Status Cards display the current service status for each subway line at the top of the Alerts page.
+
+#### Typography
+
+| Element            | Class                 | Size          | Weight |
+| ------------------ | --------------------- | ------------- | ------ |
+| Line number badge  | `.subway-line-badge`  | `0.875rem` (14px) | 700    |
+| Line name text     | `.subway-line-name`   | `1rem` (16px)     | 600    |
+| Status text        | `.status-text`        | `0.75rem` (12px)  | 500    |
+
+#### Status States
+
+| Status        | Background Color | Icon Color     | Text                |
+| ------------- | ---------------- | -------------- | ------------------- |
+| **ok**        | Card default     | Green          | "Normal Service"    |
+| **delay**     | Amber tint       | Amber          | Alert status text   |
+| **disruption**| Red tint         | Red            | Alert status text   |
+| **scheduled** | Blue tint        | Blue           | "Scheduled Closure" |
+
+#### CSS Classes
+
+```css
+.subway-status-card          /* Card container */
+.subway-status-card.status-ok          /* Normal service */
+.subway-status-card.status-delay       /* Delay */
+.subway-status-card.status-disruption  /* Disruption */
+.subway-status-card.status-scheduled   /* Scheduled closure */
+```
+
+### Closure Type Badges
+
+The Closure Type Badges indicate the type of planned maintenance closure in the Scheduled tab (`ClosuresView.svelte`).
+
+#### Badge Types
+
+| Type          | Light Mode BG            | Light Mode Text        | Dark Mode Text         |
+| ------------- | ------------------------ | ---------------------- | ---------------------- |
+| **Nightly**   | `hsl(210 100% 50% / 0.15)` | `hsl(210 100% 35%)`    | `hsl(210 100% 70%)`    |
+| **Weekend**   | `hsl(38 92% 50% / 0.15)`   | `hsl(30 90% 30%)`      | `hsl(38 92% 65%)`      |
+
+#### Typography
+
+- Font size: `0.6875rem` (11px)
+- Font weight: 500
+- Text transform: uppercase
+- Letter spacing: `0.025em`
+
+#### CSS Classes
+
+```css
+.closure-type-badge          /* Base badge styles */
+.closure-type-badge.nightly  /* Blue nightly closure */
+.closure-type-badge.weekend  /* Amber weekend closure */
+```
+
+#### WCAG Compliance
+
+Both badge types meet **WCAG AA** contrast requirements (4.5:1 minimum):
+- Nightly (light mode): ~7:1 contrast ratio
+- Weekend (light mode): ~8:1 contrast ratio
+
 ---
 
 ## 7. Layout

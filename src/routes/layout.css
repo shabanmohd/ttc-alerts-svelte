@@ -44,6 +44,9 @@
   --status-error-text: 0 72% 30%;
   --status-warning-bg: 38 80% 94%;
   --status-warning-text: 28 90% 25%;
+  /* Violet for scheduled closures */
+  --status-scheduled-bg: 270 60% 95%;
+  --status-scheduled-text: 270 60% 35%;
   --status-info-bg: 214 80% 96%;
   --status-info-text: 224 76% 30%;
   --status-success-bg: 142 60% 94%;
@@ -93,6 +96,9 @@
   --status-error-text: 0 91% 75%;
   --status-warning-bg: 38 92% 50% / 0.25;
   --status-warning-text: 43 96% 70%;
+  /* Violet for scheduled closures */
+  --status-scheduled-bg: 270 50% 30% / 0.35;
+  --status-scheduled-text: 270 70% 75%;
   --status-info-bg: 217 91% 60% / 0.25;
   --status-info-text: 213 94% 75%;
   --status-success-bg: 142 71% 45% / 0.25;
@@ -824,13 +830,28 @@ header.sticky {
 }
 
 .status-badge-detour {
-  background-color: hsl(var(--status-orange-bg));
-  color: hsl(var(--status-orange-text));
+  background-color: hsl(220 14% 94%);
+  color: hsl(220 9% 35%);
+}
+
+.dark .status-badge-detour {
+  background-color: hsl(220 14% 25% / 0.5);
+  color: hsl(220 14% 80%);
 }
 
 .status-badge-planned {
   background-color: hsl(var(--status-info-bg));
   color: hsl(var(--status-info-text));
+}
+
+.status-badge-scheduled {
+  background-color: hsl(270 60% 95%);
+  color: hsl(270 60% 35%);
+}
+
+.dark .status-badge-scheduled {
+  background-color: hsl(270 50% 30% / 0.35);
+  color: hsl(270 70% 75%);
 }
 
 /* ============================================

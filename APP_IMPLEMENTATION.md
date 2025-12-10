@@ -73,8 +73,9 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | File                                           | Status | Purpose                                            |
 | ---------------------------------------------- | ------ | -------------------------------------------------- |
-| `components/alerts/AlertCard.svelte`           | ✅     | Alert cards w/ route extraction from header_text   |
+| `components/alerts/AlertCard.svelte`           | ✅     | Alert cards w/ route extraction, subway DETOUR validation |
 | `components/alerts/BookmarkRouteButton.svelte` | ✅     | Save route button with feedback animation 🆕 **B** |
+| `components/alerts/ClosuresView.svelte`        | ✅     | Scheduled tab with closure type badges (nightly/weekend) |
 | `components/alerts/FilterChips.svelte`         | ✅     | Category filter buttons                            |
 | `components/alerts/MaintenanceWidget.svelte`   | ✅     | Scheduled maintenance display                      |
 | `components/alerts/MyRouteAlerts.svelte`       | ✅     | My Routes tab with responsive route badge tabs     |
@@ -97,14 +98,16 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Pages (`src/routes/`)
 
-| File                         | Status | Purpose                                               |
-| ---------------------------- | ------ | ----------------------------------------------------- |
-| `+layout.svelte`             | ✅     | App layout, auth init, dialogs                        |
-| `+page.svelte`               | ✅     | Homepage with alert tabs + ETA                        |
-| `preferences/+page.svelte`   | ✅     | Route/mode preferences                                |
-| `settings/+page.svelte`      | ✅     | Settings with stops, routes, prefs, location 🆕 **B** |
-| `routes/+page.svelte`        | ✅     | Route browser by category 🆕 **B**                    |
-| `auth/callback/+page.svelte` | ✅     | Auth callback handler                                 |
+| File                              | Status | Purpose                                                        |
+| --------------------------------- | ------ | -------------------------------------------------------------- |
+| `+layout.svelte`                  | ✅     | App layout, auth init, dialogs                                 |
+| `+page.svelte`                    | ✅     | Homepage with alert tabs + ETA                                 |
+| `alerts/+page.svelte`             | ✅     | Alerts page with Active/Resolved/Scheduled tabs, subway status |
+| `alerts-archive/+page.svelte.bak` | 📦     | Archived original alerts page                                  |
+| `preferences/+page.svelte`        | ✅     | Route/mode preferences                                         |
+| `settings/+page.svelte`           | ✅     | Settings with stops, routes, prefs, location 🆕 **B**          |
+| `routes/+page.svelte`             | ✅     | Route browser by category 🆕 **B**                             |
+| `auth/callback/+page.svelte`      | ✅     | Auth callback handler                                          |
 
 ### Backend (`supabase/`)
 
