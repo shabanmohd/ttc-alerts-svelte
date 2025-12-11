@@ -214,11 +214,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Utilities (`src/lib/utils/`) 🆕 **Version B Only**
 
-| File                   | Status | Purpose                                                   |
-| ---------------------- | ------ | --------------------------------------------------------- |
-| `ttc-service-info.ts`  | ✅     | TTC service hours, holidays, suspended lines, frequencies |
+| File                  | Status | Purpose                                                   |
+| --------------------- | ------ | --------------------------------------------------------- |
+| `ttc-service-info.ts` | ✅     | TTC service hours, holidays, suspended lines, frequencies |
 
 **TTC Service Info (`ttc-service-info.ts`)**:
+
 - **Annual Holiday Updates**: 2025 & 2026 holiday schedules (update from https://www.ttc.ca/riding-the-ttc/Updates/Holiday-service)
 - **Line Hours**: Lines 1/2/4 subway (6am-2am Mon-Sat, 8am-2am Sun) vs Line 6 LRT (5:30am-1:30am)
 - **Suspended Lines**: Easy toggle when lines are suspended/restored (Line 6 currently suspended)

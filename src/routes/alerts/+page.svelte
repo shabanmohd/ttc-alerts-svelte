@@ -292,10 +292,12 @@
   }
 
   // Helper: check if route matches a specific line
+  // Handles both "Line 1" and "Line 1 (Yonge - University)" formats
   function routeMatchesLine(route: string, lineId: string): boolean {
     const normalizedRoute = normalizeLineId(route).toLowerCase();
     const normalizedLine = lineId.toLowerCase();
-    return normalizedRoute === normalizedLine;
+    // Use startsWith to match "Line 1 (Yonge - University)" with "Line 1"
+    return normalizedRoute === normalizedLine || normalizedRoute.startsWith(normalizedLine + " ");
   }
 
   // Helper: parse date as local time (Toronto time)
