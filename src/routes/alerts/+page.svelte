@@ -1076,6 +1076,7 @@
               class="accordion-card"
               class:highlighted={isHighlighted}
               id={sectionId}
+              style="--line-color: {lineInfo?.color || '#666'}"
             >
               <button
                 class="accordion-header"
