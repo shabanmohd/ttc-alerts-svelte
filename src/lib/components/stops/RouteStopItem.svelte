@@ -21,6 +21,7 @@
   import LiveSignalIcon from "$lib/components/eta/LiveSignalIcon.svelte";
   import { savedStops, isAtMaxSavedStops } from "$lib/stores/savedStops";
   import { cn } from "$lib/utils";
+  import { toast } from "svelte-sonner";
 
   // Props
   let {
@@ -345,19 +346,31 @@
   /**
    * Handle save stop button click
    */
-  function handleSaveStop(e: MouseEvent) {
+  async function handleSaveStop(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
 
     if (isSaved) {
-      savedStops.remove(stop.id);
+      await savedStops.remove(stop.id);
+      toast.info("Stop removed", {
+        description: stop.name,
+      });
     } else if (!atMax) {
-      savedStops.add({
+      const added = await savedStops.add({
         id: stop.id,
         name: stop.name,
         routes: stop.routes,
       });
-      showSavedFeedback = true;
+      if (added) {
+        showSavedFeedback = true;
+        toast.success("Stop added", {
+          description: stop.name,
+        });
+      } else {
+        toast.info("Stop already saved", {
+          description: `${stop.name} is already in your stops`,
+        });
+      }
     }
   }
 

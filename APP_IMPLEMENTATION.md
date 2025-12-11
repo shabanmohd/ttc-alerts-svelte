@@ -191,17 +191,17 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Stores (`src/lib/stores/`) 🆕 **Version B additions**
 
-| File                  | Status | Purpose                                                   | Version |
-| --------------------- | ------ | --------------------------------------------------------- | ------- |
-| `alerts.ts`           | ✅     | Alerts state + date validation filter                     | A & B   |
-| `auth.ts`             | ✅     | Custom WebAuthn auth store                                | A & B   |
-| `preferences.ts`      | ✅     | User preferences state (cloud sync)                       | A & B   |
-| `localPreferences.ts` | ✅     | Local preferences (theme, text size, reduce motion, i18n) | **B**   |
-| `visibility.ts`       | ✅     | Track document visibility for polling control             | **B**   |
-| `accessibility.ts`    | ✅     | Text scaling and reduce motion settings                   | **B**   |
-| `bookmarks.ts`        | ✅     | Bookmarked stops (localStorage + Supabase sync)           | **B**   |
-| `savedStops.ts`       | ✅     | Saved stops (IndexedDB storage)                           | **B**   |
-| `savedRoutes.ts`      | ✅     | Saved routes (IndexedDB storage)                          | **B**   |
+| File                  | Status | Purpose                                                        | Version |
+| --------------------- | ------ | -------------------------------------------------------------- | ------- |
+| `alerts.ts`           | ✅     | Alerts state + date validation filter                          | A & B   |
+| `auth.ts`             | ✅     | Custom WebAuthn auth store                                     | A & B   |
+| `preferences.ts`      | ✅     | User preferences state (cloud sync)                            | A & B   |
+| `localPreferences.ts` | ✅     | Local preferences (theme, text size, reduce motion, i18n)      | **B**   |
+| `visibility.ts`       | ✅     | Track document visibility for polling control                  | **B**   |
+| `accessibility.ts`    | ✅     | Text scaling and reduce motion settings                        | **B**   |
+| `bookmarks.ts`        | ✅     | Bookmarked stops (localStorage + Supabase sync)                | **B**   |
+| `savedStops.ts`       | ✅     | Saved stops (IndexedDB storage)                                | **B**   |
+| `savedRoutes.ts`      | ✅     | Saved routes (IndexedDB storage)                               | **B**   |
 | `eta.ts`              | ✅     | ETA state with auto-refresh, subway detection by stop ID range | **B**   |
 
 ### Services (`src/lib/services/`)

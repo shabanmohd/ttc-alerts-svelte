@@ -1,27 +1,29 @@
 <script lang="ts">
-  import { Bell, Star } from 'lucide-svelte';
-  import { currentTab } from '$lib/stores/alerts';
-  import { isAuthenticated } from '$lib/stores/auth';
-  
+  import { Bell, Star } from "lucide-svelte";
+  import { currentTab } from "$lib/stores/alerts";
+  import { isAuthenticated } from "$lib/stores/auth";
+
   let { myAlertsCount = 0 }: { myAlertsCount?: number } = $props();
 </script>
 
 <div class="tab-navigation">
-  <button 
+  <button
     class="tab-button"
-    class:active={$currentTab === 'all'}
-    onclick={() => currentTab.set('all')}
+    class:active={$currentTab === "all"}
+    onclick={() => currentTab.set("all")}
   >
     <Bell class="w-4 h-4" />
     <span>All Alerts</span>
   </button>
-  
-  <button 
+
+  <button
     class="tab-button"
-    class:active={$currentTab === 'my'}
-    onclick={() => currentTab.set('my')}
+    class:active={$currentTab === "my"}
+    onclick={() => currentTab.set("my")}
     disabled={!$isAuthenticated}
-    title={!$isAuthenticated ? 'Sign in to view your personalized alerts' : undefined}
+    title={!$isAuthenticated
+      ? "Sign in to view your personalized alerts"
+      : undefined}
   >
     <Star class="w-4 h-4" />
     <span>My Alerts</span>
@@ -40,7 +42,7 @@
     border-radius: calc(var(--radius) + 2px);
     margin-bottom: 1rem;
   }
-  
+
   .tab-button {
     flex: 1;
     display: flex;
@@ -57,22 +59,22 @@
     cursor: pointer;
     transition: all 0.15s ease;
   }
-  
+
   .tab-button:hover:not(:disabled) {
     color: hsl(var(--foreground));
   }
-  
+
   .tab-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
-  
+
   .tab-button.active {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
   }
-  
+
   .tab-badge {
     display: inline-flex;
     align-items: center;

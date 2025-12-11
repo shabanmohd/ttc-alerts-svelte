@@ -2058,3 +2058,105 @@ html.reduce-motion .eta-live-indicator svg {
   color: hsl(var(--foreground));
   line-height: 1.4;
 }
+
+/* ============================================
+   TOAST / SONNER NOTIFICATIONS
+   ============================================ */
+
+/* Toast container - mobile positioning */
+[data-sonner-toaster] {
+  --width: min(90vw, 380px);
+  --offset: 16px;
+  font-family: "Lexend", system-ui, sans-serif !important;
+}
+
+/* Position above mobile bottom nav */
+@media (max-width: 767px) {
+  [data-sonner-toaster] {
+    bottom: calc(64px + 16px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Individual toast styling - Light mode: dark bg, light text for contrast */
+[data-sonner-toast] {
+  font-family: "Lexend", system-ui, sans-serif !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  background: hsl(240 10% 20%) !important;
+  color: hsl(0 0% 98%) !important;
+  border: 1px solid hsl(240 10% 30%) !important;
+}
+
+/* Dark mode toast base - keep dark bg, light text */
+.dark [data-sonner-toast] {
+  background: hsl(240 10% 15%) !important;
+  color: hsl(0 0% 95%) !important;
+  border: 1px solid hsl(240 10% 25%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Toast title */
+[data-sonner-toast] [data-title] {
+  font-weight: 500 !important;
+  font-size: calc(0.9375rem * var(--text-scale, 1)) !important;
+}
+
+/* Toast description */
+[data-sonner-toast] [data-description] {
+  font-weight: 400 !important;
+  font-size: calc(0.8125rem * var(--text-scale, 1)) !important;
+  opacity: 0.8;
+}
+
+/* Success toast - dark green bg in both modes */
+[data-sonner-toast][data-type="success"] {
+  background: hsl(142 50% 25%) !important;
+  border: 1px solid hsl(142 50% 35%) !important;
+  color: hsl(0 0% 98%) !important;
+}
+
+.dark [data-sonner-toast][data-type="success"] {
+  background: hsl(142 45% 20%) !important;
+  border: 1px solid hsl(142 45% 30%) !important;
+  color: hsl(142 60% 85%) !important;
+}
+
+/* Info toast - dark blue bg in both modes */
+[data-sonner-toast][data-type="info"] {
+  background: hsl(217 60% 30%) !important;
+  border: 1px solid hsl(217 50% 40%) !important;
+  color: hsl(0 0% 98%) !important;
+}
+
+.dark [data-sonner-toast][data-type="info"] {
+  background: hsl(217 50% 22%) !important;
+  border: 1px solid hsl(217 50% 32%) !important;
+  color: hsl(213 80% 85%) !important;
+}
+
+/* Error toast - dark red bg in both modes */
+[data-sonner-toast][data-type="error"] {
+  background: hsl(0 60% 35%) !important;
+  border: 1px solid hsl(0 50% 45%) !important;
+  color: hsl(0 0% 98%) !important;
+}
+
+.dark [data-sonner-toast][data-type="error"] {
+  background: hsl(0 55% 25%) !important;
+  border: 1px solid hsl(0 50% 35%) !important;
+  color: hsl(0 80% 88%) !important;
+}
+
+/* Warning toast - dark amber bg in both modes */
+[data-sonner-toast][data-type="warning"] {
+  background: hsl(28 70% 30%) !important;
+  border: 1px solid hsl(28 60% 40%) !important;
+  color: hsl(0 0% 98%) !important;
+}
+
+.dark [data-sonner-toast][data-type="warning"] {
+  background: hsl(28 60% 22%) !important;
+  border: 1px solid hsl(28 55% 32%) !important;
+  color: hsl(43 90% 85%) !important;
+}

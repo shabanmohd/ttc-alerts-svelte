@@ -711,7 +711,7 @@
 >
   <Dialog.Content
     class="sm:max-w-md"
-    style="background-color: hsl(var(--background));"
+    style="background-color: hsl(var(--background)); border: 1px solid hsl(var(--border));"
   >
     <Dialog.Header>
       <div
@@ -719,22 +719,27 @@
       >
         <Trash2 class="h-7 w-7 text-destructive" aria-hidden="true" />
       </div>
-      <Dialog.Title class="text-center">Remove Stop?</Dialog.Title>
-      <Dialog.Description class="text-center">
+      <Dialog.Title class="text-center text-lg font-semibold"
+        >Remove Stop?</Dialog.Title
+      >
+      <Dialog.Description class="text-center text-sm text-muted-foreground">
         Are you sure you want to remove <span
           class="font-medium text-foreground">"{confirmDeleteStop?.name}"</span
         >? This action cannot be undone.
       </Dialog.Description>
     </Dialog.Header>
-    <Dialog.Footer class="flex-col gap-2 sm:flex-row sm:justify-center pt-4">
+    <Dialog.Footer
+      class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-center"
+    >
       <Button
         variant="outline"
-        class="sm:w-auto w-full"
+        class="w-full sm:w-auto"
         onclick={() => (confirmDeleteStop = null)}>Cancel</Button
       >
       <Button
         variant="destructive"
-        class="sm:w-auto w-full"
+        class="w-full sm:w-auto"
+        style="background-color: hsl(var(--destructive)); color: white;"
         onclick={confirmRemoveStop}
       >
         Remove Stop
@@ -752,7 +757,7 @@
 >
   <Dialog.Content
     class="sm:max-w-md"
-    style="background-color: hsl(var(--background));"
+    style="background-color: hsl(var(--background)); border: 1px solid hsl(var(--border));"
   >
     <Dialog.Header>
       <div
@@ -760,22 +765,27 @@
       >
         <Trash2 class="h-7 w-7 text-destructive" aria-hidden="true" />
       </div>
-      <Dialog.Title class="text-center">Remove Route?</Dialog.Title>
-      <Dialog.Description class="text-center">
+      <Dialog.Title class="text-center text-lg font-semibold"
+        >Remove Route?</Dialog.Title
+      >
+      <Dialog.Description class="text-center text-sm text-muted-foreground">
         Are you sure you want to remove <span
           class="font-medium text-foreground">"{confirmDeleteRoute?.name}"</span
         >? This action cannot be undone.
       </Dialog.Description>
     </Dialog.Header>
-    <Dialog.Footer class="flex-col gap-2 sm:flex-row sm:justify-center pt-4">
+    <Dialog.Footer
+      class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-center"
+    >
       <Button
         variant="outline"
-        class="sm:w-auto w-full"
+        class="w-full sm:w-auto"
         onclick={() => (confirmDeleteRoute = null)}>Cancel</Button
       >
       <Button
         variant="destructive"
-        class="sm:w-auto w-full"
+        class="w-full sm:w-auto"
+        style="background-color: hsl(var(--destructive)); color: white;"
         onclick={confirmRemoveRoute}
       >
         Remove Route
@@ -793,7 +803,7 @@
 >
   <Dialog.Content
     class="sm:max-w-md"
-    style="background-color: hsl(var(--background));"
+    style="background-color: hsl(var(--background)); border: 1px solid hsl(var(--border));"
   >
     <Dialog.Header>
       <div
@@ -801,22 +811,26 @@
       >
         <Trash2 class="h-7 w-7 text-destructive" aria-hidden="true" />
       </div>
-      <Dialog.Title class="text-center">Clear All Data?</Dialog.Title>
-      <Dialog.Description class="text-center">
+      <Dialog.Title class="text-center text-lg font-semibold"
+        >Clear All Data?</Dialog.Title
+      >
+      <Dialog.Description class="text-center text-sm text-muted-foreground">
         This will permanently delete all your saved stops, routes, and reset all
         preferences. This action cannot be undone.
       </Dialog.Description>
     </Dialog.Header>
-    <Dialog.Footer class="flex-col gap-2 sm:flex-row sm:justify-center pt-4">
+    <Dialog.Footer
+      class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-center"
+    >
       <Button
         variant="outline"
-        class="sm:w-auto w-full"
+        class="w-full sm:w-auto"
         onclick={() => (showClearAllDialog = false)}>Cancel</Button
       >
       <Button
-        variant="outline"
-        class="sm:w-auto w-full hover:bg-destructive/10"
-        style="border-color: hsl(var(--destructive)); color: hsl(var(--destructive));"
+        variant="destructive"
+        class="w-full sm:w-auto"
+        style="background-color: hsl(var(--destructive)); color: white;"
         onclick={confirmClearAllData}
       >
         Clear All Data

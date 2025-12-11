@@ -2,6 +2,7 @@
   import { Bookmark, Check } from "lucide-svelte";
   import { savedRoutes, isAtMaxSavedRoutes } from "$lib/stores/savedRoutes";
   import { cn } from "$lib/utils";
+  import { toast } from "svelte-sonner";
 
   let {
     route,
@@ -56,15 +57,27 @@
     lg: 18,
   };
 
-  function handleClick(e: MouseEvent) {
+  async function handleClick(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
 
     if (isSaved) {
-      savedRoutes.remove(route);
+      await savedRoutes.remove(route);
+      toast.info("Route removed", {
+        description: `${route} ${name}`,
+      });
     } else if (!atMax) {
-      savedRoutes.add({ id: route, name, type });
-      showSavedFeedback = true;
+      const added = await savedRoutes.add({ id: route, name, type });
+      if (added) {
+        showSavedFeedback = true;
+        toast.success("Route added", {
+          description: `${route} ${name}`,
+        });
+      } else {
+        toast.info("Route already saved", {
+          description: `${route} ${name} is already in your routes`,
+        });
+      }
     }
   }
 </script>

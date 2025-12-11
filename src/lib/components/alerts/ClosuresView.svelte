@@ -482,6 +482,7 @@
   }
 
   .closures-tab {
+    position: relative;
     flex: 1;
     display: flex;
     align-items: center;
@@ -497,6 +498,18 @@
     cursor: pointer;
     transition: all 0.15s ease;
     white-space: nowrap;
+  }
+
+  .closures-tab.active:after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2rem;
+    height: 2px;
+    background: hsl(var(--primary));
+    border-radius: 1px;
   }
 
   /* Mobile: show short labels */

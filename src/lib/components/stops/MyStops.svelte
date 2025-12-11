@@ -9,6 +9,7 @@
     Pencil,
     Search,
     Loader2,
+    Trash2,
   } from "lucide-svelte";
   import { browser } from "$app/environment";
   import { savedStops, savedStopsCount } from "$lib/stores/savedStops";
@@ -16,9 +17,11 @@
   import StopSearch from "$lib/components/stops/StopSearch.svelte";
   import ETACard from "$lib/components/eta/ETACard.svelte";
   import { Button } from "$lib/components/ui/button";
+  import * as Dialog from "$lib/components/ui/dialog";
   import { cn } from "$lib/utils";
   import type { TTCStop } from "$lib/data/stops-db";
   import { initStopsDB, findNearbyStops } from "$lib/data/stops-db";
+  import { toast } from "svelte-sonner";
 
   interface Props {
     maxDisplay?: number;
@@ -68,16 +71,38 @@
     etaStore.stopAutoRefresh();
   });
 
-  function handleStopSelect(stop: TTCStop) {
-    savedStops.add({
+  async function handleStopSelect(stop: TTCStop) {
+    const added = await savedStops.add({
       id: stop.id,
       name: stop.name,
       routes: stop.routes,
     });
+
+    if (!added) {
+      toast.info("Stop already saved", {
+        description: `${stop.name} is already in your stops`,
+      });
+    } else {
+      toast.success("Stop added", {
+        description: stop.name,
+      });
+    }
   }
 
-  function handleRemoveStop(stopId: string) {
-    savedStops.remove(stopId);
+  // Confirmation dialog state
+  let confirmDeleteStop = $state<{ id: string; name: string } | null>(null);
+
+  function promptRemoveStop(stopId: string, stopName: string) {
+    confirmDeleteStop = { id: stopId, name: stopName };
+  }
+
+  function confirmRemoveStop() {
+    if (!confirmDeleteStop) return;
+    savedStops.remove(confirmDeleteStop.id);
+    toast.success("Stop removed", {
+      description: confirmDeleteStop.name,
+    });
+    confirmDeleteStop = null;
   }
 
   function toggleEditMode() {
@@ -144,7 +169,7 @@
             <button
               type="button"
               class="card-remove-button"
-              onclick={() => handleRemoveStop(eta.stopId)}
+              onclick={() => promptRemoveStop(eta.stopId, eta.stopName)}
               aria-label="Remove stop"
             >
               <X class="h-4 w-4" />
@@ -177,6 +202,52 @@
     </button>
   {/if}
 </div>
+
+<!-- Delete Stop Confirmation Dialog -->
+<Dialog.Root
+  open={confirmDeleteStop !== null}
+  onOpenChange={(open) => {
+    if (!open) confirmDeleteStop = null;
+  }}
+>
+  <Dialog.Content
+    class="sm:max-w-md"
+    style="background-color: hsl(var(--background)); border: 1px solid hsl(var(--border));"
+  >
+    <Dialog.Header>
+      <div
+        class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10"
+      >
+        <Trash2 class="h-7 w-7 text-destructive" aria-hidden="true" />
+      </div>
+      <Dialog.Title class="text-center text-lg font-semibold"
+        >Remove Stop?</Dialog.Title
+      >
+      <Dialog.Description class="text-center text-sm text-muted-foreground">
+        Are you sure you want to remove <span
+          class="font-medium text-foreground">"{confirmDeleteStop?.name}"</span
+        >? You can add it back anytime.
+      </Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer
+      class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-center"
+    >
+      <Button
+        variant="outline"
+        class="w-full sm:w-auto"
+        onclick={() => (confirmDeleteStop = null)}>Cancel</Button
+      >
+      <Button
+        variant="destructive"
+        class="w-full sm:w-auto"
+        style="background-color: hsl(var(--destructive)); color: white;"
+        onclick={confirmRemoveStop}
+      >
+        Remove Stop
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
 <style>
   .my-stops {

@@ -1,27 +1,27 @@
 <script lang="ts">
-  import { MapPin, Route } from 'lucide-svelte';
-  import { page } from '$app/stores';
-  import { goto } from '$app/navigation';
-  
-  type HomeTab = 'stops' | 'routes';
-  
+  import { MapPin, Route } from "lucide-svelte";
+  import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
+
+  type HomeTab = "stops" | "routes";
+
   // Get current tab from URL, default to 'stops'
   let currentTab = $derived<HomeTab>(
-    ($page.url.searchParams.get('home') as HomeTab) || 'stops'
+    ($page.url.searchParams.get("home") as HomeTab) || "stops"
   );
-  
+
   const tabs: Array<{ id: HomeTab; label: string; icon: typeof MapPin }> = [
-    { id: 'stops', label: 'My Stops', icon: MapPin },
-    { id: 'routes', label: 'My Routes', icon: Route }
+    { id: "stops", label: "My Stops", icon: MapPin },
+    { id: "routes", label: "My Routes", icon: Route },
   ];
-  
+
   function handleTabClick(tabId: HomeTab) {
     // Use replaceState to avoid adding to history for tab switches
     const url = new URL($page.url);
-    if (tabId === 'stops') {
-      url.searchParams.delete('home');
+    if (tabId === "stops") {
+      url.searchParams.delete("home");
     } else {
-      url.searchParams.set('home', tabId);
+      url.searchParams.set("home", tabId);
     }
     goto(url.toString(), { replaceState: true, noScroll: true });
   }
@@ -52,8 +52,9 @@
     border-radius: calc(var(--radius) + 2px);
     margin-bottom: 1rem;
   }
-  
+
   .sub-tab {
+    position: relative;
     flex: 1;
     display: flex;
     align-items: center;
@@ -70,25 +71,37 @@
     transition: all 0.15s ease;
     white-space: nowrap;
   }
-  
+
   .sub-tab:hover:not(.active) {
     color: hsl(var(--foreground));
     background-color: hsl(var(--muted-foreground) / 0.1);
   }
-  
+
   .sub-tab.active {
     color: hsl(var(--foreground));
     background-color: hsl(var(--background));
     box-shadow: 0 1px 3px hsl(var(--foreground) / 0.1);
   }
-  
+
+  .sub-tab.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2rem;
+    height: 2px;
+    background: hsl(var(--primary));
+    border-radius: 1px;
+  }
+
   /* Mobile: smaller text, icons only on very small screens */
   @media (max-width: 360px) {
     .sub-tab {
       padding: 0.5rem;
       font-size: 0.75rem;
     }
-    
+
     .sub-tab span {
       display: none;
     }

@@ -7,6 +7,7 @@
     Pencil,
     RefreshCw,
     MapPinned,
+    Trash2,
   } from "lucide-svelte";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
@@ -15,7 +16,9 @@
   import RouteSearch from "./RouteSearch.svelte";
   import RouteBadge from "./RouteBadge.svelte";
   import { Button } from "$lib/components/ui/button";
+  import * as Dialog from "$lib/components/ui/dialog";
   import { Skeleton } from "$lib/components/ui/skeleton";
+  import { toast } from "svelte-sonner";
   import {
     threadsWithAlerts,
     isLoading,
@@ -40,13 +43,27 @@
       isRefreshing = false;
     }
   }
-  // Handle route removal
-  function handleRemoveRoute(routeId: string) {
-    savedRoutes.remove(routeId);
+
+  // Confirmation dialog state
+  let confirmDeleteRoute = $state<{ id: string; name: string } | null>(null);
+
+  // Prompt for route removal
+  function promptRemoveRoute(routeId: string, routeName: string) {
+    confirmDeleteRoute = { id: routeId, name: routeName };
+  }
+
+  // Confirm route removal
+  function confirmRemoveRoute() {
+    if (!confirmDeleteRoute) return;
+    savedRoutes.remove(confirmDeleteRoute.id);
     // Clear filter if removing the filtered route
-    if (selectedRouteFilter === routeId) {
+    if (selectedRouteFilter === confirmDeleteRoute.id) {
       selectedRouteFilter = null;
     }
+    toast.success("Route removed", {
+      description: confirmDeleteRoute.name,
+    });
+    confirmDeleteRoute = null;
   }
 
   // Toggle route filter
@@ -190,7 +207,7 @@
                 <button
                   type="button"
                   class="chip-remove"
-                  onclick={() => handleRemoveRoute(route.id)}
+                  onclick={() => promptRemoveRoute(route.id, route.name)}
                   aria-label="Remove {route.id}"
                 >
                   <X class="h-3 w-3" />
@@ -308,6 +325,52 @@
     </div>
   {/if}
 </div>
+
+<!-- Delete Route Confirmation Dialog -->
+<Dialog.Root
+  open={confirmDeleteRoute !== null}
+  onOpenChange={(open) => {
+    if (!open) confirmDeleteRoute = null;
+  }}
+>
+  <Dialog.Content
+    class="sm:max-w-md"
+    style="background-color: hsl(var(--background)); border: 1px solid hsl(var(--border));"
+  >
+    <Dialog.Header>
+      <div
+        class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10"
+      >
+        <Trash2 class="h-7 w-7 text-destructive" aria-hidden="true" />
+      </div>
+      <Dialog.Title class="text-center text-lg font-semibold"
+        >Remove Route?</Dialog.Title
+      >
+      <Dialog.Description class="text-center text-sm text-muted-foreground">
+        Are you sure you want to remove <span
+          class="font-medium text-foreground">"{confirmDeleteRoute?.name}"</span
+        >? You can add it back anytime.
+      </Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer
+      class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-center"
+    >
+      <Button
+        variant="outline"
+        class="w-full sm:w-auto"
+        onclick={() => (confirmDeleteRoute = null)}>Cancel</Button
+      >
+      <Button
+        variant="destructive"
+        class="w-full sm:w-auto"
+        style="background-color: hsl(var(--destructive)); color: white;"
+        onclick={confirmRemoveRoute}
+      >
+        Remove Route
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
 <style>
   .my-route-alerts {
@@ -438,10 +501,10 @@
     width: 1.25rem;
     height: 1.25rem;
     border-radius: 50%;
-    background: none;
+    background-color: hsl(var(--destructive) / 0.15);
     border: none;
     cursor: pointer;
-    color: hsl(var(--muted-foreground));
+    color: hsl(var(--destructive));
     transition: all 0.15s;
   }
 

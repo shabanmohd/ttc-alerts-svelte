@@ -1130,10 +1130,10 @@ Real-time subway arrivals via TTC NTAS (Next Train Arrival System) API.
 
 ```typescript
 const SUBWAY_STOP_ID_RANGES = [
-  { min: 13731, max: 13866 },   // Line 1 & 2 core stations
-  { min: 14109, max: 14949 },   // Line 1 extensions & Line 4
-  { min: 15656, max: 15667 },   // Line 1 Vaughan extension
-  { min: 16289, max: 16324 }    // Line 6 Eglinton Crosstown
+  { min: 13731, max: 13866 }, // Line 1 & 2 core stations
+  { min: 14109, max: 14949 }, // Line 1 extensions & Line 4
+  { min: 15656, max: 15667 }, // Line 1 Vaughan extension
+  { min: 16289, max: 16324 }, // Line 6 Eglinton Crosstown
 ];
 ```
 

@@ -5,6 +5,7 @@
   import { Input } from "$lib/components/ui/input";
   import { savedRoutes } from "$lib/stores/savedRoutes";
   import RouteBadge from "./RouteBadge.svelte";
+  import { toast } from "svelte-sonner";
 
   interface Props {
     onSelect?: (route: RouteInfo) => void;
@@ -31,6 +32,7 @@
     { route: "Line 1", name: "Yonge-University", category: "subway" },
     { route: "Line 2", name: "Bloor-Danforth", category: "subway" },
     { route: "Line 4", name: "Sheppard", category: "subway" },
+    { route: "Line 6", name: "Finch West", category: "subway" },
   ];
 
   const STREETCAR_ROUTES = [
@@ -335,37 +337,36 @@
     showResults = query.length > 0;
   }
 
-  function selectRoute(route: RouteInfo) {
-    const isSaved = isRouteSaved(route.route);
+  async function selectRoute(route: RouteInfo) {
+    // Search bar only adds routes, never removes
+    // To remove a route, user should use the bookmark button or edit mode
+    const type =
+      route.category === "subway"
+        ? "subway"
+        : route.category === "streetcar"
+          ? "streetcar"
+          : "bus";
+    const added = await savedRoutes.add({
+      id: route.route,
+      name: `${route.route} ${route.name}`,
+      type,
+    });
 
-    if (isSaved) {
-      // Remove if already saved
-      savedRoutes.remove(route.route);
-      // Show removal animation
-      recentlyRemovedRoute = route.route;
-      recentlyAddedRoute = null;
-      setTimeout(() => {
-        recentlyRemovedRoute = null;
-      }, 500);
-    } else {
-      // Add if not saved
-      const type =
-        route.category === "subway"
-          ? "subway"
-          : route.category === "streetcar"
-            ? "streetcar"
-            : "bus";
-      savedRoutes.add({
-        id: route.route,
-        name: `${route.route} ${route.name}`,
-        type,
-      });
+    if (added) {
       // Show added animation
       recentlyAddedRoute = route.route;
       recentlyRemovedRoute = null;
       setTimeout(() => {
         recentlyAddedRoute = null;
       }, 500);
+      toast.success("Route added", {
+        description: `${route.route} ${route.name}`,
+      });
+    } else {
+      // Route already saved - just show info toast
+      toast.info("Route already saved", {
+        description: `${route.route} ${route.name} is already in your routes`,
+      });
     }
 
     onSelect?.(route);

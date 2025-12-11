@@ -214,6 +214,146 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
 - Small: `h-9 px-3`
 - Icon: `h-10 w-10`
 
+### Dialogs (Confirmation Modals)
+
+Dialogs are used for confirmation prompts (delete, clear data) and informational modals. Built with shadcn-svelte `Dialog` component.
+
+#### Basic Structure
+
+```svelte
+<script>
+  import * as Dialog from "$lib/components/ui/dialog";
+  import { Button } from "$lib/components/ui/button";
+  import { Trash2 } from "lucide-svelte";
+</script>
+
+<Dialog.Root open={showDialog} onOpenChange={(open) => { if (!open) showDialog = false; }}>
+  <Dialog.Content
+    class="sm:max-w-md"
+    style="background-color: hsl(var(--background)); border: 1px solid hsl(var(--border));"
+  >
+    <Dialog.Header>
+      <!-- Icon Circle -->
+      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+        <Trash2 class="h-7 w-7 text-destructive" />
+      </div>
+      <Dialog.Title class="text-center text-lg font-semibold">Confirm Action?</Dialog.Title>
+      <Dialog.Description class="text-center text-sm text-muted-foreground">
+        Are you sure you want to proceed? This action cannot be undone.
+      </Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-center">
+      <Button variant="outline" class="w-full sm:w-auto" onclick={() => showDialog = false}>
+        Cancel
+      </Button>
+      <Button
+        variant="destructive"
+        class="w-full sm:w-auto"
+        style="background-color: hsl(var(--destructive)); color: white;"
+        onclick={handleConfirm}
+      >
+        Confirm
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+```
+
+#### Dialog Styling Rules
+
+| Element            | Classes/Styles                                                                      |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| **Content**        | `class="sm:max-w-md"` + inline `background-color` and `border` for reliability      |
+| **Icon Container** | `mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-{type}/10` |
+| **Icon**           | `h-7 w-7 text-{type}` (e.g., `text-destructive` for delete dialogs)                 |
+| **Title**          | `text-center text-lg font-semibold`                                                 |
+| **Description**    | `text-center text-sm text-muted-foreground`                                         |
+| **Footer**         | `flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-center`                    |
+| **Buttons**        | `w-full sm:w-auto` for responsive sizing                                            |
+
+#### Button Order (Mobile-First)
+
+- Mobile: Buttons stack vertically with **destructive action on top** (more accessible)
+- Desktop: Buttons in row with Cancel on left, Action on right
+
+#### Destructive Button Styling
+
+Due to Tailwind CSS variable processing, always add explicit inline styles for destructive buttons:
+
+```svelte
+<Button
+  variant="destructive"
+  style="background-color: hsl(var(--destructive)); color: white;"
+>
+  Delete
+</Button>
+```
+
+#### Dialog Types by Icon Color
+
+| Type        | Icon Container      | Icon Color         | Example Use          |
+| ----------- | ------------------- | ------------------ | -------------------- |
+| **Danger**  | `bg-destructive/10` | `text-destructive` | Delete, Clear data   |
+| **Info**    | `bg-blue-500/10`    | `text-blue-500`    | How to use, About    |
+| **Warning** | `bg-amber-500/10`   | `text-amber-500`   | Unsaved changes      |
+| **Success** | `bg-green-500/10`   | `text-green-500`   | Confirmation success |
+
+### Tab Indicators
+
+Active tabs use a 2px bottom line indicator to show the current selection. This pattern is used across all tabbed navigation in the app.
+
+#### Usage Locations
+
+| Component                  | Tabs                                     | Implementation          |
+| -------------------------- | ---------------------------------------- | ----------------------- |
+| `HomeSubTabs.svelte`       | My Stops / My Routes                     | `:after` pseudo-element |
+| `alerts/+page.svelte`      | Active / Resolved / Scheduled            | `:after` pseudo-element |
+| `MaintenanceWidget.svelte` | Starting Soon / This Weekend / Coming Up | `border-bottom`         |
+| `ClosuresView.svelte`      | Starting Soon / This Weekend / Coming Up | `:after` pseudo-element |
+
+#### CSS Pattern (Pseudo-Element)
+
+```css
+.tab {
+  position: relative;
+  /* ... other tab styles */
+}
+
+.tab.active:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2rem;
+  height: 2px;
+  background: hsl(var(--primary));
+  border-radius: 1px;
+}
+```
+
+#### CSS Pattern (Border-Bottom)
+
+```css
+.tab {
+  border-bottom: 2px solid transparent;
+  /* ... other tab styles */
+}
+
+.tab.active {
+  border-bottom-color: hsl(var(--primary));
+  /* or specific color: rgb(139 92 246) for purple */
+}
+```
+
+#### Guidelines
+
+- **Width**: 2rem (32px) centered under the tab text
+- **Height**: 2px
+- **Color**: Primary color `hsl(var(--primary))` or theme-specific (e.g., purple for maintenance tabs)
+- **Position**: Absolute positioned at `bottom: 0`, centered with `left: 50%` + `transform: translateX(-50%)`
+- **Transition**: Inherits tab transition for smooth state changes
+
 ### Input Fields
 
 All input fields use a muted gray background for better contrast and consistency.
@@ -611,6 +751,18 @@ The Subway Status Cards display the current service status for each subway line 
 /* Card container */
 /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -639,6 +791,18 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
