@@ -317,6 +317,42 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 21, 2025 - UI Refinements & Production Cleanup
+
+**Demo Mode Removal:**
+
+- ✅ Disabled `DEMO_MODE` for production deployment
+- ✅ Removed all demo alerts and maintenance data from UI
+- ✅ App now displays only real data from database
+
+**Mobile Tab Responsiveness:**
+
+- ✅ Fixed tab overflow on mobile devices (Active/Resolved/Scheduled tabs)
+- ✅ Added `min-width: 0` to allow tabs to shrink below content size
+- ✅ Expanded responsive breakpoint from 360px to 450px for better coverage
+- ✅ Added text truncation for extra small screens (≤360px)
+- ✅ Reduced padding and badge sizes on small screens
+
+**My Stops UX:**
+
+- ✅ Search bar now clears automatically after adding a stop
+- ✅ Makes adding multiple stops consecutively easier
+- ✅ Previously kept stop name in search input after selection
+
+**ClosuresView Cleanup:**
+
+- ✅ Removed redundant "X scheduled" text badge from header
+- ✅ Count badge in Scheduled tab now provides sufficient feedback
+- ✅ Eliminated duplicate information display
+
+**Files Updated:**
+
+- `src/routes/alerts/+page.svelte` - DEMO_MODE disabled, tab responsiveness improved
+- `src/lib/components/stops/StopSearch.svelte` - Clear search on stop selection
+- `src/lib/components/alerts/ClosuresView.svelte` - Remove redundant badge
+
+---
+
 ### Dec 21, 2025 - Subway Alerts Accordion Section Headers
 
 **UX Enhancement:**
