@@ -122,7 +122,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                              |
 | `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v20: threading overhaul)     |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                             |
-| `functions/get-eta/index.ts`            | ✅     | Fetch TTC NextBus predictions 🆕 **B**                  |
+| `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B** |
 
 ### Database (EXISTING in Supabase)
 
@@ -162,17 +162,18 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                           |
 | `RouteDirectionTabs.svelte` | ✅     | Direction tabs for route pages (terminal names for subway)     |
 | `RouteMapPreview.svelte`    | ✅     | Map preview for route stops                                    |
-| `RouteStopItem.svelte`      | ✅     | Stop item with ETA, platform badges, hidden stop ID for subway |
-| `RouteStopsList.svelte`     | ✅     | List of stops with ETA expand/collapse                         |
+| `RouteStopItem.svelte`      | ✅     | Stop item with ETA, platform badges, subway direction parsing |
+| `RouteStopsList.svelte`     | ✅     | List of stops with ETA expand/collapse, routeFilter prop      |
 | `index.ts`                  | ✅     | Component exports                                              |
 
 ### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
 
-| File               | Status | Purpose                                                      |
-| ------------------ | ------ | ------------------------------------------------------------ |
-| `ETABadge.svelte`  | ✅     | Individual arrival time badge with urgency                   |
-| `ETACard.svelte`   | ✅     | Route-grouped ETA card with direction badge + stop ID header |
-| `ETAWidget.svelte` | ✅     | Homepage widget showing bookmarked stop ETAs                 |
+| File                       | Status | Purpose                                                           |
+| -------------------------- | ------ | ----------------------------------------------------------------- |
+| `ETABadge.svelte`          | ✅     | Individual arrival time badge with urgency                        |
+| `ETACard.svelte`           | ✅     | Route-grouped ETA card, NTAS direction parsing (Southbound to...) |
+| `ETAWidget.svelte`         | ✅     | Homepage widget showing bookmarked stop ETAs                      |
+| `ETADirectionSlide.svelte` | ✅     | Direction carousel slide for ETA swiper 🆕                        |
 
 ### Weather Components (`src/lib/components/weather/`) 🆕 **Version B Only**
 

@@ -1106,6 +1106,41 @@ export const etaStore = createETAStore();
 
 ---
 
+### 3.5 Subway ETA Integration (NTAS API) 🆕
+
+Real-time subway arrivals via TTC NTAS (Next Train Arrival System) API.
+
+- [x] Add NTAS API support to `get-eta/index.ts` ✅
+- [x] Detect subway routes (1, 2, 4, 6) and use NTAS instead of NextBus ✅
+- [x] Use stop ID directly as NTAS stop code (each stop = one platform direction) ✅
+- [x] Parse NTAS response format (`nextTrains`, `directionText`) ✅
+- [x] Handle empty NTAS responses gracefully ✅
+- [x] Update direction parsing for NTAS format ("Southbound to..." vs "towards") ✅
+- [x] Show subway ETA in route pages under each direction tab ✅
+
+**NTAS API Details:**
+
+- Endpoint: `https://ntas.ttc.ca/api/ntas/get-next-train-time/{stopCode}`
+- Stop codes = Database stop IDs (e.g., 13864 = Bloor-Yonge Southbound)
+- Response: `{ line: "1", direction: "0", nextTrains: "0, 4, 11", directionText: "Southbound to Vaughan..." }`
+- Each stop code returns ONE direction only (no filtering needed)
+
+**Direction Parsing (parseDirection function):**
+
+```typescript
+// Input: "Southbound to Vaughan Metropolitan Centre via Union"
+// Output: { direction: "Southbound", destination: "Vaughan Metropolitan Centre via Union" }
+const boundMatch = direction.match(/^(North|South|East|West)(bound)\s+to\s+(.+)$/i);
+if (boundMatch) {
+  return {
+    direction: boundMatch[1] + boundMatch[2], // "Southbound"
+    destination: boundMatch[3].trim()         // "Vaughan Metropolitan Centre via Union"
+  };
+}
+```
+
+---
+
 ## Phase 4: i18n & Additional Features (Week 7-8)
 
 ### 4.1 French Language Support
