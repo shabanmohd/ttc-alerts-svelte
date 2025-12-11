@@ -360,7 +360,7 @@
   }
 
   /**
-   * Get empty state message based on time of day
+   * Get empty state message based on time of day and stop type
    */
   function getEmptyStateMessage(): {
     icon: "moon" | "clock";
@@ -368,24 +368,29 @@
     subtitle: string;
   } {
     const hour = new Date().getHours();
+    const isSubway = stop.type === "subway";
+    
     if (hour >= 1 && hour < 5) {
       return {
         icon: "moon",
         title: "Limited service",
-        subtitle: "Most routes run 6am–1am",
+        subtitle: isSubway ? "Subway runs 6am–1:30am" : "Most routes run 6am–1am",
       };
     }
     if (hour >= 5 && hour < 6) {
       return {
         icon: "clock",
         title: "Service starting soon",
-        subtitle: "First buses ~6am",
+        subtitle: isSubway ? "First trains ~6am" : "First buses ~6am",
       };
     }
+    // During normal hours with no data
     return {
       icon: "clock",
       title: "No arrivals scheduled",
-      subtitle: "Check back shortly",
+      subtitle: isSubway 
+        ? "Real-time data unavailable for this station" 
+        : "Check back shortly",
     };
   }
 
