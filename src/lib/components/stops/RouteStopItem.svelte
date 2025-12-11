@@ -7,6 +7,7 @@
   } from "$lib/services/nextbus";
   import { fetchSubwayETA, isSubwayStop } from "$lib/services/subway-eta";
   import {
+    AlertCircle,
     ChevronDown,
     ChevronUp,
     Clock,
@@ -22,6 +23,7 @@
   import { savedStops, isAtMaxSavedStops } from "$lib/stores/savedStops";
   import { cn } from "$lib/utils";
   import { toast } from "svelte-sonner";
+  import { getEmptyStateMessage } from "$lib/utils/ttc-service-info";
 
   // Props
   let {
@@ -374,43 +376,6 @@
     }
   }
 
-  /**
-   * Get empty state message based on time of day and stop type
-   */
-  function getEmptyStateMessage(): {
-    icon: "moon" | "clock";
-    title: string;
-    subtitle: string;
-  } {
-    const hour = new Date().getHours();
-    const isSubway = stop.type === "subway";
-
-    if (hour >= 1 && hour < 5) {
-      return {
-        icon: "moon",
-        title: "Limited service",
-        subtitle: isSubway
-          ? "Subway runs 6am–1:30am"
-          : "Most routes run 6am–1am",
-      };
-    }
-    if (hour >= 5 && hour < 6) {
-      return {
-        icon: "clock",
-        title: "Service starting soon",
-        subtitle: isSubway ? "First trains ~6am" : "First buses ~6am",
-      };
-    }
-    // During normal hours with no data
-    return {
-      icon: "clock",
-      title: "No arrivals scheduled",
-      subtitle: isSubway
-        ? "Real-time data unavailable for this station"
-        : "Check back shortly",
-    };
-  }
-
   let formattedStop = $derived(formatStopName(stop.name));
 </script>
 
@@ -525,10 +490,15 @@
         </div>
       {:else if etaPredictions.length === 0}
         <!-- No Predictions -->
-        {@const emptyState = getEmptyStateMessage()}
-        <div class="p-5 flex flex-col items-center gap-1.5 text-center">
+        {@const emptyState = getEmptyStateMessage(
+          stop.type === "subway",
+          stop.id
+        )}
+        <div class="p-5 flex flex-col items-center gap-2 text-center">
           {#if emptyState.icon === "moon"}
             <Moon class="h-6 w-6 text-muted-foreground/50 mb-1" />
+          {:else if emptyState.icon === "alert"}
+            <AlertCircle class="h-6 w-6 text-muted-foreground/50 mb-1" />
           {:else}
             <Clock class="h-6 w-6 text-muted-foreground/50 mb-1" />
           {/if}
@@ -536,6 +506,28 @@
             {emptyState.title}
           </p>
           <p class="text-xs text-muted-foreground/70">{emptyState.subtitle}</p>
+          {#if emptyState.frequency}
+            <p class="text-xs text-muted-foreground/60 italic">
+              {emptyState.frequency}
+            </p>
+          {/if}
+          {#if emptyState.additionalInfo}
+            <p class="text-xs text-muted-foreground/60 italic">
+              {emptyState.additionalInfo}
+            </p>
+          {/if}
+          <Button
+            variant="outline"
+            size="sm"
+            class="mt-2 gap-1.5"
+            onclick={refreshETA}
+            disabled={isLoadingETA}
+          >
+            <RefreshCw
+              class={cn("h-3.5 w-3.5", isLoadingETA && "animate-spin")}
+            />
+            <span>{isLoadingETA ? "Refreshing..." : "Refresh"}</span>
+          </Button>
         </div>
         <!-- Action bar for empty state -->
         <div class="action-bar">

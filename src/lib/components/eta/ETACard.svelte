@@ -1,16 +1,25 @@
 <script lang="ts">
-  import { AlertCircle, MapPin, X, Moon, Clock } from "lucide-svelte";
+  import {
+    AlertCircle,
+    MapPin,
+    X,
+    Moon,
+    Clock,
+    RefreshCw,
+  } from "lucide-svelte";
   import { savedStops } from "$lib/stores/savedStops";
   import { type StopETA, type ETAPrediction } from "$lib/stores/eta";
   import LiveSignalIcon from "./LiveSignalIcon.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import { Button } from "$lib/components/ui/button";
   import { cn } from "$lib/utils";
+  import { getEmptyStateMessage } from "$lib/utils/ttc-service-info";
 
   interface Props {
     eta: StopETA;
     compact?: boolean;
     showRemove?: boolean;
+    onRefresh?: (stopId: string) => void;
     class?: string;
   }
 
@@ -18,8 +27,11 @@
     eta,
     compact = false,
     showRemove = true,
+    onRefresh,
     class: className = "",
   }: Props = $props();
+
+  let isRefreshing = $state(false);
 
   /**
    * Format stop name as cross-streets
@@ -35,43 +47,6 @@
       .replace(/\s+South Side\s*/gi, " (South Side)")
       .replace(/\s+East Side\s*/gi, " (East Side)")
       .replace(/\s+West Side\s*/gi, " (West Side)");
-  }
-
-  /**
-   * Get context-aware empty state message based on time of day
-   */
-  function getEmptyStateMessage(): {
-    icon: "moon" | "clock";
-    title: string;
-    subtitle: string;
-  } {
-    const now = new Date();
-    const hour = now.getHours();
-
-    // Late night hours (1am - 5am) - most routes don't run
-    if (hour >= 1 && hour < 5) {
-      return {
-        icon: "moon",
-        title: "Limited service",
-        subtitle: "Most routes run 6am–1am",
-      };
-    }
-
-    // Early morning (5am - 6am) - service starting up
-    if (hour >= 5 && hour < 6) {
-      return {
-        icon: "clock",
-        title: "Service starting soon",
-        subtitle: "First buses arrive around 6am",
-      };
-    }
-
-    // Normal hours - no predictions could mean various things
-    return {
-      icon: "clock",
-      title: "No arrivals scheduled",
-      subtitle: "Check back in a few minutes",
-    };
   }
 
   /**
@@ -150,6 +125,19 @@
 
   function handleRemove() {
     savedStops.remove(eta.stopId);
+  }
+
+  async function handleRefresh() {
+    if (!onRefresh || isRefreshing) return;
+    isRefreshing = true;
+    try {
+      await onRefresh(eta.stopId);
+    } finally {
+      // Small delay to show the animation completed
+      setTimeout(() => {
+        isRefreshing = false;
+      }, 500);
+    }
   }
 
   /**
@@ -254,11 +242,13 @@
       {/each}
     </div>
   {:else if sortedPredictions.length === 0}
-    <!-- No Predictions - Context-aware message -->
-    {@const emptyState = getEmptyStateMessage()}
-    <div class="p-5 flex flex-col items-center gap-1.5 text-center">
+    <!-- No Predictions - Context-aware message with refresh button -->
+    {@const emptyState = getEmptyStateMessage(true)}
+    <div class="p-5 flex flex-col items-center gap-2 text-center">
       {#if emptyState.icon === "moon"}
         <Moon class="h-6 w-6 text-muted-foreground/50 mb-1" />
+      {:else if emptyState.icon === "alert"}
+        <AlertCircle class="h-6 w-6 text-muted-foreground/50 mb-1" />
       {:else}
         <Clock class="h-6 w-6 text-muted-foreground/50 mb-1" />
       {/if}
@@ -266,6 +256,35 @@
         {emptyState.title}
       </p>
       <p class="text-xs text-muted-foreground/70">{emptyState.subtitle}</p>
+      {#if emptyState.frequency}
+        <p class="text-xs text-muted-foreground/60 italic">
+          {emptyState.frequency}
+        </p>
+      {/if}
+      {#if emptyState.additionalInfo}
+        <p class="text-xs text-muted-foreground/60 italic">
+          {emptyState.additionalInfo}
+        </p>
+      {/if}
+      {#if onRefresh}
+        <Button
+          variant="outline"
+          size="sm"
+          class="mt-2 gap-1.5"
+          onclick={handleRefresh}
+          disabled={isRefreshing || eta.isLoading}
+        >
+          <RefreshCw
+            class={cn(
+              "h-3.5 w-3.5",
+              (isRefreshing || eta.isLoading) && "animate-spin"
+            )}
+          />
+          <span
+            >{isRefreshing || eta.isLoading ? "Refreshing..." : "Refresh"}</span
+          >
+        </Button>
+      {/if}
     </div>
   {:else}
     <!-- Stacked Route Cards with Dividers -->

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { Clock, Plus, RefreshCw, AlertCircle } from 'lucide-svelte';
-  import { savedStops, savedStopsCount } from '$lib/stores/savedStops';
-  import { etaStore, etaList, isAnyLoading } from '$lib/stores/eta';
-  import ETACard from './ETACard.svelte';
-  import { Button } from '$lib/components/ui/button';
-  import { cn } from '$lib/utils';
+  import { onMount, onDestroy } from "svelte";
+  import { Clock, Plus, RefreshCw, AlertCircle } from "lucide-svelte";
+  import { savedStops, savedStopsCount } from "$lib/stores/savedStops";
+  import { etaStore, etaList, isAnyLoading } from "$lib/stores/eta";
+  import ETACard from "./ETACard.svelte";
+  import { Button } from "$lib/components/ui/button";
+  import { cn } from "$lib/utils";
 
   interface Props {
     onAddStop?: () => void;
@@ -13,11 +13,7 @@
     class?: string;
   }
 
-  let { 
-    onAddStop,
-    maxDisplay = 5,
-    class: className = ''
-  }: Props = $props();
+  let { onAddStop, maxDisplay = 5, class: className = "" }: Props = $props();
 
   let count = $state(0);
   let etas = $state<typeof $etaList>([]);
@@ -25,13 +21,13 @@
 
   // Subscribe to stores
   $effect(() => {
-    const unsubscribeCount = savedStopsCount.subscribe(value => {
+    const unsubscribeCount = savedStopsCount.subscribe((value) => {
       count = value;
     });
-    const unsubscribeEtas = etaList.subscribe(value => {
+    const unsubscribeEtas = etaList.subscribe((value) => {
       etas = value;
     });
-    const unsubscribeLoading = isAnyLoading.subscribe(value => {
+    const unsubscribeLoading = isAnyLoading.subscribe((value) => {
       loading = value;
     });
     return () => {
@@ -53,7 +49,7 @@
 </script>
 
 {#if count > 0}
-  <div class={cn('space-y-3', className)}>
+  <div class={cn("space-y-3", className)}>
     <!-- Header -->
     <div class="flex items-center justify-between">
       <h2 class="font-semibold flex items-center gap-2">
@@ -79,7 +75,7 @@
     <!-- ETA Cards -->
     <div class="flex flex-col gap-3">
       {#each etas.slice(0, maxDisplay) as eta (eta.stopId)}
-        <ETACard {eta} class="w-full" />
+        <ETACard {eta} onRefresh={etaStore.refreshStop} class="w-full" />
       {/each}
     </div>
 
@@ -91,7 +87,12 @@
   </div>
 {:else}
   <!-- Empty State -->
-  <div class={cn('rounded-lg border border-dashed bg-muted/30 p-6 text-center', className)}>
+  <div
+    class={cn(
+      "rounded-lg border border-dashed bg-muted/30 p-6 text-center",
+      className
+    )}
+  >
     <Clock class="h-10 w-10 text-muted-foreground mx-auto mb-3" />
     <h3 class="font-medium mb-1">No Saved Stops</h3>
     <p class="text-sm text-muted-foreground mb-4">

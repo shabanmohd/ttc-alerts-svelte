@@ -164,7 +164,12 @@
           class:editing={isEditMode}
           style="animation-delay: {Math.min(i * 60, 300)}ms"
         >
-          <ETACard {eta} showRemove={false} class="flex-1" />
+          <ETACard
+            {eta}
+            showRemove={false}
+            onRefresh={etaStore.refreshStop}
+            class="flex-1"
+          />
           {#if isEditMode}
             <button
               type="button"

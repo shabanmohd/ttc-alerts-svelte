@@ -95,6 +95,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `types/database.ts`                            | ✅     | Database types (JSONB fields)                             |
 | `supabase.ts`                                  | ✅     | Supabase client config                                    |
 | `utils.ts`                                     | ✅     | Utility functions                                         |
+| `utils/ttc-service-info.ts`                    | ✅     | TTC service hours, holidays, suspended lines 🆕 **B**     |
 
 ### Pages (`src/routes/`)
 
@@ -210,6 +211,19 @@ Real-time Toronto Transit alerts with biometric authentication.
 | ------------- | ------ | ------------------------------------------------ | ------- |
 | `webauthn.ts` | ✅     | WebAuthn browser API wrapper                     | A & B   |
 | `storage.ts`  | ✅     | IndexedDB storage for stops, routes, preferences | **B**   |
+
+### Utilities (`src/lib/utils/`) 🆕 **Version B Only**
+
+| File                   | Status | Purpose                                                   |
+| ---------------------- | ------ | --------------------------------------------------------- |
+| `ttc-service-info.ts`  | ✅     | TTC service hours, holidays, suspended lines, frequencies |
+
+**TTC Service Info (`ttc-service-info.ts`)**:
+- **Annual Holiday Updates**: 2025 & 2026 holiday schedules (update from https://www.ttc.ca/riding-the-ttc/Updates/Holiday-service)
+- **Line Hours**: Lines 1/2/4 subway (6am-2am Mon-Sat, 8am-2am Sun) vs Line 6 LRT (5:30am-1:30am)
+- **Suspended Lines**: Easy toggle when lines are suspended/restored (Line 6 currently suspended)
+- **Service Frequency**: Rush hour (2-3 min), off-peak (4-5 min), weekend, Sunday, holiday
+- **Empty State Messages**: Context-aware messages based on time/day/holiday/line suspension
 
 ### Configuration (`src/`)
 
