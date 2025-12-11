@@ -1117,6 +1117,7 @@ Real-time subway arrivals via TTC NTAS (Next Train Arrival System) API.
 - [x] Handle empty NTAS responses gracefully ✅
 - [x] Update direction parsing for NTAS format ("Southbound to..." vs "towards") ✅
 - [x] Show subway ETA in route pages under each direction tab ✅
+- [x] Detect subway stops by stop ID range in ETA store for My Stops ✅
 
 **NTAS API Details:**
 
@@ -1124,6 +1125,17 @@ Real-time subway arrivals via TTC NTAS (Next Train Arrival System) API.
 - Stop codes = Database stop IDs (e.g., 13864 = Bloor-Yonge Southbound)
 - Response: `{ line: "1", direction: "0", nextTrains: "0, 4, 11", directionText: "Southbound to Vaughan..." }`
 - Each stop code returns ONE direction only (no filtering needed)
+
+**Subway Stop ID Ranges (for My Stops detection):**
+
+```typescript
+const SUBWAY_STOP_ID_RANGES = [
+  { min: 13731, max: 13866 },   // Line 1 & 2 core stations
+  { min: 14109, max: 14949 },   // Line 1 extensions & Line 4
+  { min: 15656, max: 15667 },   // Line 1 Vaughan extension
+  { min: 16289, max: 16324 }    // Line 6 Eglinton Crosstown
+];
+```
 
 **Direction Parsing (parseDirection function):**
 

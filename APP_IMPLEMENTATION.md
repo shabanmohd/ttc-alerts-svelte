@@ -202,7 +202,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `bookmarks.ts`        | ✅     | Bookmarked stops (localStorage + Supabase sync)           | **B**   |
 | `savedStops.ts`       | ✅     | Saved stops (IndexedDB storage)                           | **B**   |
 | `savedRoutes.ts`      | ✅     | Saved routes (IndexedDB storage)                          | **B**   |
-| `eta.ts`              | ✅     | ETA state with auto-refresh & caching                     | **B**   |
+| `eta.ts`              | ✅     | ETA state with auto-refresh, subway detection by stop ID range | **B**   |
 
 ### Services (`src/lib/services/`)
 
