@@ -274,9 +274,6 @@
         <span class="closures-title-full">Planned Subway Closures</span>
       </h2>
     </div>
-    {#if totalCount > 0}
-      <span class="closures-badge">{totalCount} scheduled</span>
-    {/if}
   </div>
 
   {#if totalCount === 0}
