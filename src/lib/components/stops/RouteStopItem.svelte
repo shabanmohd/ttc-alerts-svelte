@@ -537,22 +537,24 @@
               <span>Save to My Stops</span>
             {/if}
           </button>
-          {#if lastFetched}
-            <button
-              type="button"
-              class="refresh-button"
-              onclick={handleRefresh}
-              disabled={isLoadingETA}
-              aria-label="Refresh arrival times"
-            >
-              <RefreshCw
-                class="h-3.5 w-3.5 {isLoadingETA ? 'animate-spin' : ''}"
-              />
-              <span class="refresh-text"
-                >{formatLastUpdated(lastFetched, timeTick)}</span
-              >
-            </button>
-          {/if}
+          <button
+            type="button"
+            class="refresh-button"
+            onclick={handleRefresh}
+            disabled={isLoadingETA}
+            aria-label="Refresh arrival times"
+          >
+            <RefreshCw
+              class="h-3.5 w-3.5 {isLoadingETA ? 'animate-spin' : ''}"
+            />
+            <span class="refresh-text">
+              {#if lastFetched}
+                {formatLastUpdated(lastFetched, timeTick)}
+              {:else}
+                Refresh
+              {/if}
+            </span>
+          </button>
         </div>
       {:else}
         <!-- Predictions (ETACard style) -->
