@@ -279,26 +279,22 @@ interface NTASArrival {
 
 /**
  * Fetch real-time subway arrivals from TTC NTAS API
+ * 
+ * The stopId from our DB IS the NTAS stop code (e.g., 13864 for Bloor-Yonge Southbound).
+ * By using the stopId directly, we get arrivals for that specific platform only.
  */
 async function fetchSubwayETA(
 	stationName: string,
 	stopId: string,
 	filterRoute?: string
 ): Promise<ETAResponse> {
-	const stopCodes = getStationStopCodes(stationName);
-	
-	if (!stopCodes) {
-		return {
-			stopId,
-			predictions: [],
-			timestamp: new Date().toISOString(),
-			error: 'Station not found in NTAS database'
-		};
-	}
+	// Use the stop ID directly - it maps to the NTAS stop code for that platform
+	// This ensures we only get arrivals for the specific platform/direction
+	const stopCode = stopId;
 
 	try {
-		// NTAS API expects stop codes in URL path
-		const url = `${TTC_NTAS_API}/${encodeURIComponent(stopCodes)}`;
+		// NTAS API expects stop code in URL path
+		const url = `${TTC_NTAS_API}/${encodeURIComponent(stopCode)}`;
 		
 		const response = await fetch(url, {
 			headers: {

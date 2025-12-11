@@ -448,6 +448,7 @@
             direction={selectedDirection}
             onGetETA={handleGetETA}
             {expandedStopId}
+            routeFilter={routeId}
           />
         </div>
 

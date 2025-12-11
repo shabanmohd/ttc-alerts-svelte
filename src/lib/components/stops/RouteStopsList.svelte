@@ -12,12 +12,14 @@
     isLoading = false,
     onGetETA,
     expandedStopId = null,
+    routeFilter,
   }: {
     stops: TTCStop[];
     direction: DirectionLabel;
     isLoading?: boolean;
     onGetETA?: (stopId: string) => void;
     expandedStopId?: string | null;
+    routeFilter?: string;
   } = $props();
 </script>
 
@@ -57,6 +59,7 @@
           index={i + 1}
           isExpanded={expandedStopId === stop.id}
           {onGetETA}
+          {routeFilter}
         />
       </div>
     {/each}
