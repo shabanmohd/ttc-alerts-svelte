@@ -1,10 +1,11 @@
 /**
  * Subway ETA Service for TTC Alerts PWA
  *
- * Fetches subway arrival predictions via the Edge Function proxy.
- * The Edge Function handles the MyTTC API call to bypass CORS restrictions.
+ * Fetches real-time subway arrival predictions via the Edge Function proxy.
+ * The Edge Function calls the TTC NTAS (Next Train Arrival System) API.
  *
- * Supports Lines 1, 2, and 4. Line 6 is not yet available in MyTTC.
+ * Supports Lines 1, 2, 4, and 6 (when Line 6 opens in 2025).
+ * Provides real-time countdown data like "0 min, 4 min, 11 min".
  */
 
 import { supabase } from '$lib/supabase';
@@ -66,11 +67,17 @@ export function isSubwayLine(route: string): boolean {
 }
 
 /**
- * Check if a station is on Line 6 (not yet available in MyTTC)
+ * Check if a station is on Line 6 (will be available when line opens)
+ * Line 6 Finch West LRT opens in 2025
  */
 function isLine6Station(stationName: string): boolean {
 	const name = stationName.toLowerCase();
-	const line6Stations = ['finch west', 'humber college', 'highway 27', 'woodbine racetrack'];
+	const line6Stations = [
+		'finch west', 'humber college', 'westmore', 'martin grove', 'albion',
+		'stevenson', 'mount olive', 'rowntree mills', 'pearldale', 'duncanwoods',
+		'milvan rumike', 'emery', 'signet arrow', 'norfinch oakdale', 'jane and finch',
+		'driftwood', 'tobermory', 'sentinel'
+	];
 	return line6Stations.some(s => name.includes(s));
 }
 
@@ -89,15 +96,8 @@ export async function fetchSubwayETA(
 	filterRoute?: string,
 	forceRefresh = false
 ): Promise<ETAResponse> {
-	// Check if this is a Line 6 station (not available yet)
-	if (isLine6Station(stationName)) {
-		return {
-			stopId,
-			predictions: [],
-			timestamp: new Date().toISOString(),
-			error: 'Line 6 schedules not yet available'
-		};
-	}
+	// Note: Line 6 stations have NTAS codes ready for when the line opens
+	// The API will return empty predictions until service starts
 
 	// Create cache key
 	const cacheKey = `subway:${stopId}:${filterRoute || 'all'}`;

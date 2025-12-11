@@ -3,7 +3,7 @@
  *
  * Fetches real-time arrival predictions for TTC stops:
  * - Surface vehicles (buses/streetcars): NextBus API
- * - Subway stations: MyTTC API
+ * - Subway stations: TTC NTAS API (Next Train Arrival System)
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
@@ -16,8 +16,8 @@ const corsHeaders = {
 // TTC NextBus API endpoint (UMO IQ public feed)
 const TTC_NEXTBUS_API = 'https://retro.umoiq.com/service/publicJSONFeed';
 
-// MyTTC API for subway schedules (HTTP only)
-const MYTTC_API = 'http://myttc.ca';
+// TTC NTAS API for real-time subway arrivals
+const TTC_NTAS_API = 'https://ntas.ttc.ca/api/ntas/get-next-train-time';
 
 interface Prediction {
 	route: string;
@@ -118,260 +118,191 @@ function parsePredictions(data: any): { predictions: Prediction[]; stopTitle?: s
 }
 
 // ============================================================================
-// Subway ETA (MyTTC API)
+// Subway ETA (TTC NTAS API - Real-time Train Arrivals)
 // ============================================================================
 
 /**
- * Station name overrides for MyTTC API
- * Maps our station names to MyTTC URI format
+ * TTC NTAS stop codes for subway stations
+ * Format: stopCode1|stopCode2 (one per direction/platform)
+ * 
+ * Data sourced from TTC website subway station pages
  */
-const STATION_URI_OVERRIDES: Record<string, string> = {
-	// Stations with special naming in MyTTC
-	'st andrew': 'st_andrew_station',
-	'st george': 'st_george_station',
-	'st clair': 'st_clair_station',
-	'st clair west': 'st_clair_west_station',
-	'st patrick': 'st_patrick_station',
-	// TMU was renamed from Dundas
-	'tmu': 'dundas_station',
-	'tmu station': 'dundas_station',
-	// Queen's Park
-	"queen's park": 'queens_park_station',
-	'queens park': 'queens_park_station',
-	// Vaughan stations
-	'vaughan metropolitan centre': 'vaughan_metropolitan_centre_station',
-	'highway 407': 'highway_407_station',
-	// Scarborough RT replacements (now buses, but keep for reference)
-	'scarborough centre': 'scarborough_centre_station'
+const SUBWAY_STOP_CODES: Record<string, string> = {
+	// Line 1 - Yonge-University
+	'finch': '14111|14944',
+	'north york centre': '13790|13789',
+	'sheppard-yonge': '13859|13860|13861|13862', // Interchange station
+	'york mills': '13791|13792',
+	'lawrence': '13794|13793',
+	'eglinton': '13795|13796',
+	'davisville': '13798|13797',
+	'st clair': '13800|13799',
+	'summerhill': '13802|13801',
+	'rosedale': '13803|13804',
+	'bloor-yonge': '13863|13864|13755|13756', // Interchange station
+	'wellesley': '13806|13805',
+	'college': '13807|13808',
+	'tmu': '13809|13810', // Formerly Dundas
+	'dundas': '13809|13810', // Alias for TMU
+	'queen': '13811|13812',
+	'king': '13814|13813',
+	'union': '13816|13815',
+	'st andrew': '13817|13818',
+	'osgoode': '13819|13820',
+	'st patrick': '13822|13821',
+	'queens park': '13823|13824',
+	"queen's park": '13823|13824',
+	'museum': '13825|13826',
+	'st george': '13857|13858|13855|13856', // Interchange station
+	'spadina': '13853|13854|13852|13851', // Interchange station
+	'dupont': '13827|13828',
+	'st clair west': '13829|13830',
+	'cedarvale': '13831|13832', // Formerly Eglinton West
+	'eglinton west': '13831|13832', // Alias for Cedarvale
+	'glencairn': '13834|13833',
+	'lawrence west': '13835|13836',
+	'yorkdale': '13838|13837',
+	'wilson': '13839|13840',
+	'sheppard west': '14110|14945', // Formerly Downsview
+	'downsview': '14110|14945', // Alias for Sheppard West
+	'downsview park': '15665|15664',
+	'finch west': '15658|15659|16324|16323', // Interchange with Line 6
+	'york university': '15667|15666',
+	'pioneer village': '15657|15656',
+	'highway 407': '15660|15661',
+	'vaughan metropolitan centre': '15663|15662',
+	
+	// Line 2 - Bloor-Danforth
+	'kipling': '13785|14948',
+	'islington': '13783|13784',
+	'royal york': '13781|13782',
+	'old mill': '13779|13780',
+	'jane': '13777|13778',
+	'runnymede': '13775|13776',
+	'high park': '13774|13773',
+	'keele': '13771|13772',
+	'dundas west': '13770|13769',
+	'lansdowne': '13767|13768',
+	'dufferin': '13766|13765',
+	'ossington': '13763|13764',
+	'christie': '13761|13762',
+	'bathurst': '13760|13759',
+	'bay': '13758|13757',
+	'sherbourne': '13753|13754',
+	'castle frank': '13752|13751',
+	'broadview': '13750|13749',
+	'chester': '13747|13748',
+	'pape': '13746|13745',
+	'donlands': '13744|13743',
+	'greenwood': '13742|13741',
+	'coxwell': '13739|13740',
+	'woodbine': '13738|13737',
+	'main street': '13736|13735',
+	'victoria park': '13733|13734',
+	'warden': '13732|13731',
+	'kennedy': '14947|13865', // Interchange station
+	
+	// Line 4 - Sheppard
+	'don mills': '14949|14109',
+	'leslie': '13848|13847',
+	'bessarion': '13846|13845',
+	'bayview': '13844|13843',
+	
+	// Line 6 - Eglinton Crosstown (stations for future use)
+	// Note: Line 6 opens in 2025, stop codes included for readiness
+	'humber college': '16290|16289',
+	'westmore': '16291|16292',
+	'martin grove': '16293|16294',
+	'albion': '16295|16296',
+	'stevenson': '16298|16297',
+	'mount olive': '16300|16299',
+	'rowntree mills': '16302|16301',
+	'pearldale': '16304|16303',
+	'duncanwoods': '16306|16305',
+	'milvan rumike': '16307|16308',
+	'emery': '16309|16310',
+	'signet arrow': '16312|16311',
+	'norfinch oakdale': '16313|16314',
+	'jane and finch': '16315|16316',
+	'driftwood': '16317|16318',
+	'tobermory': '16319|16320',
+	'sentinel': '16321|16322'
 };
 
 /**
- * Line 6 stations - not available in MyTTC yet
+ * Clean and normalize station name for lookup
  */
-const LINE_6_STATIONS = new Set([
-	'finch west',
-	'humber college',
-	'highway 27',
-	'woodbine racetrack'
-]);
+function normalizeStationName(name: string): string {
+	return name
+		.toLowerCase()
+		.trim()
+		// Remove direction info
+		.replace(/\s*-\s*(eastbound|westbound|northbound|southbound)\s+platform.*$/i, '')
+		.replace(/\s+(eastbound|westbound|northbound|southbound)\s+platform$/i, '')
+		.replace(/\s*-\s*subway(\s+platform)?$/i, '')
+		// Remove "station" suffix
+		.replace(/\s+station$/i, '')
+		.trim();
+}
 
 /**
- * Subway route patterns for matching MyTTC routes
+ * Get NTAS stop codes for a station
  */
-const SUBWAY_ROUTE_MAP: Record<string, { pattern: RegExp; displayName: string }> = {
-	'Line 1': { pattern: /yonge-university.*subway/i, displayName: 'Line 1 Yonge-University' },
-	'Line 2': { pattern: /bloor-danforth.*subway/i, displayName: 'Line 2 Bloor-Danforth' },
-	'Line 4': { pattern: /sheppard.*subway/i, displayName: 'Line 4 Sheppard' }
-};
-
-/**
- * Convert station name to MyTTC URI format
- */
-function stationNameToMyTTCUri(stationName: string): string | null {
-	// Clean up the station name
-	let cleaned = stationName.toLowerCase().trim();
+function getStationStopCodes(stationName: string): string | null {
+	const normalized = normalizeStationName(stationName);
 	
-	// Remove platform direction info
-	cleaned = cleaned.replace(/\s*-\s*(eastbound|westbound|northbound|southbound)\s+platform.*$/i, '');
-	cleaned = cleaned.replace(/\s+(eastbound|westbound|northbound|southbound)\s+platform$/i, '');
-	cleaned = cleaned.replace(/\s*-\s*subway(\s+platform)?$/i, '');
-	
-	// Remove "station" suffix if present
-	cleaned = cleaned.replace(/\s+station$/i, '');
-	cleaned = cleaned.trim();
-	
-	// Check for override
-	const override = STATION_URI_OVERRIDES[cleaned];
-	if (override) {
-		return override;
+	// Direct lookup
+	if (SUBWAY_STOP_CODES[normalized]) {
+		return SUBWAY_STOP_CODES[normalized];
 	}
 	
-	// Check for Line 6 (not available)
-	for (const station of LINE_6_STATIONS) {
-		if (cleaned.includes(station) || station.includes(cleaned)) {
-			return null;
+	// Fuzzy match - check if station name is contained in any key
+	for (const [key, codes] of Object.entries(SUBWAY_STOP_CODES)) {
+		if (normalized.includes(key) || key.includes(normalized)) {
+			return codes;
 		}
 	}
 	
-	// Convert to URI format: lowercase, replace spaces/hyphens with underscores
-	const uri = cleaned
-		.replace(/['']/g, '')
-		.replace(/[\s-]+/g, '_')
-		.replace(/[^a-z0-9_]/g, '');
-	
-	return `${uri}_station`;
+	return null;
 }
 
 /**
- * Check if a station is on Line 6
+ * NTAS API response structure
  */
-function isLine6Station(stationName: string): boolean {
-	const cleaned = stationName.toLowerCase();
-	for (const station of LINE_6_STATIONS) {
-		if (cleaned.includes(station)) {
-			return true;
-		}
-	}
-	return false;
+interface NTASArrival {
+	line: string;
+	direction: string;
+	nextTrains: string; // "0, 4, 11" format
+	directionText: string;
+	stopCode: string;
 }
 
 /**
- * Extract direction from MyTTC shape string
- */
-function extractSubwayDirection(shape: string): string {
-	const match = shape.match(/To\s+(.+?)(?:\s+Station)?$/i);
-	if (match) {
-		let direction = match[1].trim().replace(/\s+Station$/i, '');
-		return `Towards ${direction}`;
-	}
-	return shape;
-}
-
-/**
- * Calculate minutes until departure from Unix timestamp
- */
-function calculateMinutesUntil(timestamp: number): number {
-	const now = Math.floor(Date.now() / 1000);
-	return Math.max(0, Math.floor((timestamp - now) / 60));
-}
-
-interface MyTTCStopTime {
-	service_id: number;
-	departure_time: string;
-	departure_timestamp: number;
-	shape: string;
-}
-
-interface MyTTCRoute {
-	route_group_id: string;
-	uri: string;
-	name: string;
-	stop_times: MyTTCStopTime[];
-}
-
-interface MyTTCStop {
-	agency: string;
-	uri: string;
-	name: string;
-	routes: MyTTCRoute[];
-}
-
-interface MyTTCResponse {
-	name: string;
-	uri: string;
-	stops: MyTTCStop[];
-	time: number;
-}
-
-/**
- * Parse MyTTC subway response into predictions
- */
-function parseSubwayPredictions(
-	data: MyTTCResponse,
-	filterRoute?: string
-): { predictions: Prediction[]; stopTitle: string } {
-	const predictions: Prediction[] = [];
-	const stopTitle = data.name;
-
-	for (const stop of data.stops) {
-		// Only process subway platform stops
-		if (!stop.uri.includes('platform') && !stop.uri.includes('subway')) {
-			continue;
-		}
-
-		for (const route of stop.routes) {
-			// Skip if filtering by route and this doesn't match
-			if (filterRoute) {
-				const routeConfig = SUBWAY_ROUTE_MAP[filterRoute];
-				if (routeConfig && !routeConfig.pattern.test(route.uri)) {
-					continue;
-				}
-			}
-
-			// Determine which line this is
-			let routeName = route.name;
-			let routeId = '';
-			for (const [lineId, config] of Object.entries(SUBWAY_ROUTE_MAP)) {
-				if (config.pattern.test(route.uri)) {
-					routeName = config.displayName;
-					routeId = lineId;
-					break;
-				}
-			}
-
-			// Group stop times by direction
-			const directionGroups = new Map<string, MyTTCStopTime[]>();
-			for (const stopTime of route.stop_times) {
-				const direction = extractSubwayDirection(stopTime.shape);
-				const existing = directionGroups.get(direction) || [];
-				existing.push(stopTime);
-				directionGroups.set(direction, existing);
-			}
-
-			// Create predictions for each direction
-			for (const [direction, stopTimes] of directionGroups) {
-				const arrivals = stopTimes
-					.slice(0, 3)
-					.map((st) => calculateMinutesUntil(st.departure_timestamp))
-					.filter((mins) => mins >= 0 && mins < 120);
-
-				if (arrivals.length > 0) {
-					const scheduledTime = stopTimes[0].departure_time
-						.replace('a', ' AM')
-						.replace('p', ' PM');
-
-					predictions.push({
-						route: routeId || route.uri,
-						routeTitle: routeName,
-						direction,
-						arrivals,
-						isLive: false, // Subway times are scheduled, not GPS
-						scheduledTime
-					});
-				}
-			}
-		}
-	}
-
-	// Sort by first arrival time
-	predictions.sort((a, b) => (a.arrivals[0] ?? 999) - (b.arrivals[0] ?? 999));
-
-	return { predictions, stopTitle };
-}
-
-/**
- * Fetch subway ETA from MyTTC API
+ * Fetch real-time subway arrivals from TTC NTAS API
  */
 async function fetchSubwayETA(
 	stationName: string,
 	stopId: string,
 	filterRoute?: string
 ): Promise<ETAResponse> {
-	// Check Line 6
-	if (isLine6Station(stationName)) {
+	const stopCodes = getStationStopCodes(stationName);
+	
+	if (!stopCodes) {
 		return {
 			stopId,
 			predictions: [],
 			timestamp: new Date().toISOString(),
-			error: 'Line 6 schedules not yet available'
-		};
-	}
-
-	const stationUri = stationNameToMyTTCUri(stationName);
-	if (!stationUri) {
-		return {
-			stopId,
-			predictions: [],
-			timestamp: new Date().toISOString(),
-			error: 'Station not supported'
+			error: 'Station not found in NTAS database'
 		};
 	}
 
 	try {
-		const url = `${MYTTC_API}/${stationUri}.json`;
+		// NTAS API expects stop codes in URL path
+		const url = `${TTC_NTAS_API}/${encodeURIComponent(stopCodes)}`;
+		
 		const response = await fetch(url, {
 			headers: {
-				Accept: 'application/json',
+				'Accept': 'application/json',
 				'User-Agent': 'TTC-Alerts-PWA/1.0'
 			}
 		});
@@ -382,18 +313,67 @@ async function fetchSubwayETA(
 					stopId,
 					predictions: [],
 					timestamp: new Date().toISOString(),
-					error: 'Station not found in schedule database'
+					error: 'No real-time data available'
 				};
 			}
-			throw new Error(`MyTTC API returned ${response.status}`);
+			throw new Error(`NTAS API returned ${response.status}`);
 		}
 
-		const data: MyTTCResponse = await response.json();
-		const { predictions, stopTitle } = parseSubwayPredictions(data, filterRoute);
+		const data: NTASArrival[] = await response.json();
+		
+		if (!data || data.length === 0) {
+			return {
+				stopId,
+				stopTitle: stationName,
+				predictions: [],
+				timestamp: new Date().toISOString()
+			};
+		}
+
+		// Convert NTAS response to our prediction format
+		const predictions: Prediction[] = [];
+		
+		for (const arrival of data) {
+			// Filter by route if specified (e.g., "Line 1", "Line 2")
+			if (filterRoute) {
+				const routeLine = `Line ${arrival.line}`;
+				if (!routeLine.toLowerCase().includes(filterRoute.toLowerCase()) &&
+				    !filterRoute.toLowerCase().includes(arrival.line)) {
+					continue;
+				}
+			}
+			
+			// Parse arrival times: "0, 4, 11" -> [0, 4, 11]
+			const arrivals = arrival.nextTrains
+				.split(',')
+				.map(t => parseInt(t.trim(), 10))
+				.filter(n => !isNaN(n) && n >= 0);
+			
+			if (arrivals.length > 0) {
+				// Determine line name
+				const lineNames: Record<string, string> = {
+					'1': 'Line 1 Yonge-University',
+					'2': 'Line 2 Bloor-Danforth',
+					'4': 'Line 4 Sheppard',
+					'6': 'Line 6 Eglinton Crosstown'
+				};
+				
+				predictions.push({
+					route: `Line ${arrival.line}`,
+					routeTitle: lineNames[arrival.line] || `Line ${arrival.line}`,
+					direction: arrival.directionText,
+					arrivals,
+					isLive: true // NTAS provides real-time data!
+				});
+			}
+		}
+
+		// Sort by first arrival time
+		predictions.sort((a, b) => (a.arrivals[0] ?? 999) - (b.arrivals[0] ?? 999));
 
 		return {
 			stopId,
-			stopTitle,
+			stopTitle: stationName,
 			predictions,
 			timestamp: new Date().toISOString()
 		};
@@ -403,7 +383,7 @@ async function fetchSubwayETA(
 			stopId,
 			predictions: [],
 			timestamp: new Date().toISOString(),
-			error: error instanceof Error ? error.message : 'Failed to fetch subway times'
+			error: error instanceof Error ? error.message : 'Failed to fetch subway arrivals'
 		};
 	}
 }
