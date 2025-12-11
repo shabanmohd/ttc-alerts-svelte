@@ -98,17 +98,17 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Pages (`src/routes/`)
 
-| File                              | Status | Purpose                                                        |
-| --------------------------------- | ------ | -------------------------------------------------------------- |
-| `+layout.svelte`                  | ✅     | App layout, auth init, dialogs                                 |
-| `+page.svelte`                    | ✅     | Homepage with alert tabs + ETA                                 |
-| `alerts/+page.svelte`             | ✅     | Alerts page with tabs, subway status grid, accordion sections  |
-| `alerts-archive/+page.svelte.bak` | 📦     | Archived original alerts page                                  |
-| `preferences/+page.svelte`        | ✅     | Route/mode preferences                                         |
-| `settings/+page.svelte`           | ✅     | Settings with stops, routes, prefs, location 🆕 **B**          |
-| `routes/+page.svelte`             | ✅     | Route browser by category 🆕 **B**                             |
-| `routes/[route]/+page.svelte`     | ✅     | Route detail page with active alerts (filtered from resolved)  |
-| `auth/callback/+page.svelte`      | ✅     | Auth callback handler                                          |
+| File                              | Status | Purpose                                                       |
+| --------------------------------- | ------ | ------------------------------------------------------------- |
+| `+layout.svelte`                  | ✅     | App layout, auth init, dialogs                                |
+| `+page.svelte`                    | ✅     | Homepage with alert tabs + ETA                                |
+| `alerts/+page.svelte`             | ✅     | Alerts page with tabs, subway status grid, accordion sections |
+| `alerts-archive/+page.svelte.bak` | 📦     | Archived original alerts page                                 |
+| `preferences/+page.svelte`        | ✅     | Route/mode preferences                                        |
+| `settings/+page.svelte`           | ✅     | Settings with stops, routes, prefs, location 🆕 **B**         |
+| `routes/+page.svelte`             | ✅     | Route browser by category 🆕 **B**                            |
+| `routes/[route]/+page.svelte`     | ✅     | Route detail page with active alerts (filtered from resolved) |
+| `auth/callback/+page.svelte`      | ✅     | Auth callback handler                                         |
 
 ### Backend (`supabase/`)
 
@@ -327,7 +327,8 @@ For local development, use `localhost` and `http://localhost:5173`.
 - ✅ Sections default to expanded state for immediate visibility
 - ✅ Removed left accent borders from inner alert cards (accordion border provides context)
 - ✅ Click-to-scroll from status grid now auto-expands collapsed sections
-- ✅ Smooth transitions with chevron rotation animation
+- ✅ Removed chevron icon for cleaner design (just badge + line name)
+- ✅ Added 2-second background pulse animation when highlighted
 
 **Technical Implementation:**
 
@@ -337,17 +338,35 @@ For local development, use `localhost` and `http://localhost:5173`.
 - New accordion CSS: `.accordion-card`, `.accordion-header`, `.accordion-content`, `.accordion-body`
 - Updated `handleStatusCardClick()` to auto-expand sections when scrolling
 - Effect hook to auto-expand all subway line sections on mount
+- Scroll offset calculation to account for sticky header (56px + 16px padding)
+- Background pulse animation using `color-mix()` for smooth color blending (15% light mode, 25% dark mode)
 
 **Files Updated:**
 
-- `src/routes/alerts/+page.svelte` - Accordion implementation
+- `src/routes/alerts/+page.svelte` - Accordion implementation with pulse animation
 - `static/test-subway-status-ux.html` - Demo page with final Approach I design
+- `APP_IMPLEMENTATION.md` - Changelog entries
+- `DESIGN_SYSTEM.md` - Accordion pattern documentation
 
 **Design Decision:**
 
-- Selected Approach I from test HTML: Clean card with top border, line badge + name, chevron icon
+- Selected Approach I from test HTML: Clean card with top border, line badge + name
+- Removed chevron icon (cleaner, simpler header)
 - Rejected separate issue count text (redundant with multi-status icons on status cards)
 - Simplified inner alert cards by removing left borders (accordion context sufficient)
+- Background pulse animation instead of border pulse for better visibility
+
+**Scheduled Tab Count Badge:**
+
+- ✅ Added count badge to Scheduled tab showing number of unique scheduled closures
+- ✅ Count matches what's displayed in ClosuresView component
+- ✅ Uses `scheduledClosuresCount()` derived that counts `$maintenanceItems`
+
+**Bug Fixes:**
+
+- Fixed highlight not showing: Added `--line-color` CSS variable to accordion card container
+- Fixed scroll position: Manual scroll calculation with header offset instead of `scrollIntoView()`
+- Fixed Scheduled tab count: Now counts only real maintenance items (was including demo data)
 
 ### Dec 20, 2025 - Route Filtering Bug Fix & My Stops UX Improvements
 

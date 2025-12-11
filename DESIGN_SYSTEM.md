@@ -609,6 +609,8 @@ The Subway Status Cards display the current service status for each subway line 
 ```css
 .subway-status-card          /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -637,6 +639,8 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 .closure-type-badge.nightly  /* Blue nightly closure */
 .closure-type-badge.weekend; /* Amber weekend closure */
@@ -1321,16 +1325,16 @@ Collapsible card sections for grouping subway line alerts on the alerts page.
 
 #### CSS Classes & Styling
 
-| Class                   | Purpose                    | Key Properties                                                   |
-| ----------------------- | -------------------------- | ---------------------------------------------------------------- |
-| `.accordion-card`       | Outer card container       | Card styling, border radius, shadow                              |
-| `.accordion-header`     | Clickable header button    | Full width, no intrinsic padding, cursor pointer                 |
-| `.accordion-top-border` | Colored top stripe         | `height: 4px; background: var(--line-color)`                     |
-| `.accordion-header-body`| Header content wrapper     | Flex row, justify between, padding: `0.875rem 1rem`             |
-| `.accordion-header-left`| Badge + name container     | Flex row, gap: `0.625rem`, align center                          |
-| `.accordion-chevron`    | Expand/collapse icon       | `1.25rem × 1.25rem`, rotates -180° when expanded                 |
-| `.accordion-content`    | Expandable content wrapper | `max-height: 0` collapsed, `max-height: 5000px` expanded         |
-| `.accordion-body`       | Inner alert cards wrapper  | Padding: `0.75rem 1rem 1rem`, border-top when expanded           |
+| Class                    | Purpose                    | Key Properties                                           |
+| ------------------------ | -------------------------- | -------------------------------------------------------- |
+| `.accordion-card`        | Outer card container       | Card styling, border radius, shadow                      |
+| `.accordion-header`      | Clickable header button    | Full width, no intrinsic padding, cursor pointer         |
+| `.accordion-top-border`  | Colored top stripe         | `height: 4px; background: var(--line-color)`             |
+| `.accordion-header-body` | Header content wrapper     | Flex row, justify between, padding: `0.875rem 1rem`      |
+| `.accordion-header-left` | Badge + name container     | Flex row, gap: `0.625rem`, align center                  |
+| `.accordion-chevron`     | Expand/collapse icon       | `1.25rem × 1.25rem`, rotates -180° when expanded         |
+| `.accordion-content`     | Expandable content wrapper | `max-height: 0` collapsed, `max-height: 5000px` expanded |
+| `.accordion-body`        | Inner alert cards wrapper  | Padding: `0.75rem 1rem 1rem`, border-top when expanded   |
 
 #### State Management
 
@@ -1363,7 +1367,7 @@ $effect(() => {
 ```svelte
 {#if subwayLine && isFirstForLine}
   {@const isExpanded = expandedSections.has(subwayLine)}
-  
+
   <div class="accordion-card" class:highlighted={isHighlighted}>
     <button
       class="accordion-header"
@@ -1394,12 +1398,12 @@ $effect(() => {
 
 #### Transitions
 
-| Element               | Transition                  | Duration | Easing   |
-| --------------------- | --------------------------- | -------- | -------- |
-| Chevron rotation      | `transform`                 | 0.2s     | ease     |
-| Header hover          | `background-color`          | 0.2s     | ease     |
-| Content expand        | `max-height`                | 0.5s     | ease-in  |
-| Content collapse      | `max-height`                | 0.3s     | ease-out |
+| Element          | Transition         | Duration | Easing   |
+| ---------------- | ------------------ | -------- | -------- |
+| Chevron rotation | `transform`        | 0.2s     | ease     |
+| Header hover     | `background-color` | 0.2s     | ease     |
+| Content expand   | `max-height`       | 0.5s     | ease-in  |
+| Content collapse | `max-height`       | 0.3s     | ease-out |
 
 #### Integration with Status Grid
 
@@ -1415,14 +1419,18 @@ function handleStatusCardClick(lineId: string) {
   if (!expandedSections.has(lineId)) {
     expandedSections = new Set([...expandedSections, lineId]);
   }
-  
+
   // Scroll to section
-  const sectionElement = document.getElementById(`subway-section-${lineId.toLowerCase()}`);
-  sectionElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  
+  const sectionElement = document.getElementById(
+    `subway-section-${lineId.toLowerCase()}`
+  );
+  sectionElement?.scrollIntoView({ behavior: "smooth", block: "start" });
+
   // Highlight for 2.5s
   highlightedLineId = lineId;
-  setTimeout(() => { highlightedLineId = null; }, 2500);
+  setTimeout(() => {
+    highlightedLineId = null;
+  }, 2500);
 }
 ```
 

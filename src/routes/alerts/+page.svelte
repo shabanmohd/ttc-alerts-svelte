@@ -774,16 +774,20 @@
     });
 
     // Return ordered array of line groups plus non-subway alerts
-    const result: { type: 'line' | 'alerts'; lineId?: string; alerts: ThreadWithAlerts[] }[] = [];
-    
+    const result: {
+      type: "line" | "alerts";
+      lineId?: string;
+      alerts: ThreadWithAlerts[];
+    }[] = [];
+
     lineOrder.forEach((lineId) => {
       if (grouped.has(lineId)) {
-        result.push({ type: 'line', lineId, alerts: grouped.get(lineId)! });
+        result.push({ type: "line", lineId, alerts: grouped.get(lineId)! });
       }
     });
-    
+
     if (nonSubway.length > 0) {
-      result.push({ type: 'alerts', alerts: nonSubway });
+      result.push({ type: "alerts", alerts: nonSubway });
     }
 
     return result;
@@ -793,9 +797,9 @@
   $effect(() => {
     const groups = alertsByLine();
     const linesWithAlerts = new Set<string>();
-    
+
     groups.forEach((group) => {
-      if (group.type === 'line' && group.lineId) {
+      if (group.type === "line" && group.lineId) {
         linesWithAlerts.add(group.lineId);
       }
     });
@@ -804,14 +808,14 @@
     if (linesWithAlerts.size > 0) {
       const newExpanded = new Set(expandedSections);
       let hasChanges = false;
-      
+
       linesWithAlerts.forEach((lineId) => {
         if (!newExpanded.has(lineId) && !expandedSections.has(lineId)) {
           newExpanded.add(lineId);
           hasChanges = true;
         }
       });
-      
+
       if (hasChanges) {
         expandedSections = newExpanded;
       }
@@ -876,12 +880,13 @@
     );
     if (sectionElement) {
       const headerHeight = 56; // 3.5rem = 56px (header height)
-      const elementPosition = sectionElement.getBoundingClientRect().top + window.pageYOffset;
+      const elementPosition =
+        sectionElement.getBoundingClientRect().top + window.pageYOffset;
       const offsetPosition = elementPosition - headerHeight - 16; // Extra 16px padding
-      
+
       window.scrollTo({
         top: offsetPosition,
-        behavior: "smooth"
+        behavior: "smooth",
       });
     }
 
@@ -1017,13 +1022,19 @@
                   <div class="status-type-item status-type-{type}">
                     {#if type === "disruption"}
                       <AlertCircle class="w-4 h-4 status-disruption-icon" />
-                      <span class="status-text status-disruption-text">Disruption</span>
+                      <span class="status-text status-disruption-text"
+                        >Disruption</span
+                      >
                     {:else if type === "delay"}
                       <AlertCircle class="w-4 h-4 status-delay-icon" />
                       <span class="status-text status-delay-text">Delay</span>
                     {:else if type === "scheduled"}
-                      <Calendar class="w-4 h-4 status-scheduled-icon flex-shrink-0" />
-                      <span class="status-text status-scheduled-text">Scheduled</span>
+                      <Calendar
+                        class="w-4 h-4 status-scheduled-icon flex-shrink-0"
+                      />
+                      <span class="status-text status-scheduled-text"
+                        >Scheduled</span
+                      >
                     {/if}
                   </div>
                 {/each}
@@ -1079,10 +1090,10 @@
         </div>
       {:else}
         {#each alertsByLine() as group}
-          {#if group.type === 'line' && group.lineId}
+          {#if group.type === "line" && group.lineId}
             {@const lineId = group.lineId}
             {@const lineInfo = getLineInfo(lineId)}
-            {@const sectionId = `subway-section-${lineId.replace(' ', '-').toLowerCase()}`}
+            {@const sectionId = `subway-section-${lineId.replace(" ", "-").toLowerCase()}`}
             {@const isExpanded = expandedSections.has(lineId)}
             {@const isHighlighted = highlightedLineId === lineId}
 
@@ -1115,12 +1126,16 @@
               <div class="accordion-content" class:expanded={isExpanded}>
                 <div class="accordion-body">
                   {#each group.alerts as thread, i (thread.thread_id)}
-                    {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
-                    
+                    {@const isNew = $recentlyAddedThreadIds.has(
+                      thread.thread_id
+                    )}
+
                     <div
                       class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
                       class:alert-highlighted={isHighlighted}
-                      style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+                      style={isNew
+                        ? ""
+                        : `animation-delay: ${Math.min(i * 50, 300)}ms`}
                     >
                       <AlertCard {thread} />
                     </div>
@@ -1134,10 +1149,12 @@
               {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
               {@const subwayLine = getSubwayLineFromThread(thread)}
               {@const lineInfo = subwayLine ? getLineInfo(subwayLine) : null}
-              
+
               <div
                 class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-                style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+                style={isNew
+                  ? ""
+                  : `animation-delay: ${Math.min(i * 50, 300)}ms`}
               >
                 <AlertCard {thread} lineColor={lineInfo?.color} />
               </div>
@@ -1512,19 +1529,31 @@
       background-color: hsl(var(--card));
     }
     15% {
-      background-color: color-mix(in srgb, var(--line-color) 15%, hsl(var(--card)));
+      background-color: color-mix(
+        in srgb,
+        var(--line-color) 15%,
+        hsl(var(--card))
+      );
     }
     30% {
       background-color: hsl(var(--card));
     }
     45% {
-      background-color: color-mix(in srgb, var(--line-color) 15%, hsl(var(--card)));
+      background-color: color-mix(
+        in srgb,
+        var(--line-color) 15%,
+        hsl(var(--card))
+      );
     }
     60% {
       background-color: hsl(var(--card));
     }
     75% {
-      background-color: color-mix(in srgb, var(--line-color) 10%, hsl(var(--card)));
+      background-color: color-mix(
+        in srgb,
+        var(--line-color) 10%,
+        hsl(var(--card))
+      );
     }
     100% {
       background-color: hsl(var(--card));
@@ -1541,19 +1570,31 @@
       background-color: hsl(var(--card));
     }
     15% {
-      background-color: color-mix(in srgb, var(--line-color) 25%, hsl(var(--card)));
+      background-color: color-mix(
+        in srgb,
+        var(--line-color) 25%,
+        hsl(var(--card))
+      );
     }
     30% {
       background-color: hsl(var(--card));
     }
     45% {
-      background-color: color-mix(in srgb, var(--line-color) 25%, hsl(var(--card)));
+      background-color: color-mix(
+        in srgb,
+        var(--line-color) 25%,
+        hsl(var(--card))
+      );
     }
     60% {
       background-color: hsl(var(--card));
     }
     75% {
-      background-color: color-mix(in srgb, var(--line-color) 18%, hsl(var(--card)));
+      background-color: color-mix(
+        in srgb,
+        var(--line-color) 18%,
+        hsl(var(--card))
+      );
     }
     100% {
       background-color: hsl(var(--card));
@@ -1592,8 +1633,6 @@
     align-items: center;
     gap: 0.625rem;
   }
-
-
 
   .accordion-content {
     max-height: 0;
