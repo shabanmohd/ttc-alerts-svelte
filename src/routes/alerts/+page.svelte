@@ -865,12 +865,19 @@
       expandedSections = new Set([...expandedSections, lineId]);
     }
 
-    // Scroll to the line section
+    // Scroll to the line section with offset for sticky header
     const sectionElement = document.getElementById(
       `subway-section-${lineId.replace(" ", "-").toLowerCase()}`
     );
     if (sectionElement) {
-      sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      const headerHeight = 56; // 3.5rem = 56px (header height)
+      const elementPosition = sectionElement.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - headerHeight - 16; // Extra 16px padding
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
     }
 
     // Clear highlight after 2.5 seconds
