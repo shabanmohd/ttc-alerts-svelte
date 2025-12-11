@@ -50,7 +50,7 @@
 
   // ===== DEMO MODE =====
   // Set to true to show demo alerts for testing UI
-  const DEMO_MODE = true;
+  const DEMO_MODE = false;
 
   // Demo alerts for testing (using type assertion for demo data)
   const demoAlerts = (DEMO_MODE
