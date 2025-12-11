@@ -1506,7 +1506,31 @@
   }
 
   .accordion-card.highlighted {
-    box-shadow: 0 0 0 2px var(--line-color), 0 2px 8px rgba(0, 0, 0, 0.15);
+    animation: accordionPulse 2s ease-in-out;
+  }
+
+  @keyframes accordionPulse {
+    0% {
+      box-shadow: 0 0 0 0 var(--line-color), 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    15% {
+      box-shadow: 0 0 0 4px var(--line-color), 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    30% {
+      box-shadow: 0 0 0 2px var(--line-color), 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    45% {
+      box-shadow: 0 0 0 4px var(--line-color), 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    60% {
+      box-shadow: 0 0 0 2px var(--line-color), 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    75% {
+      box-shadow: 0 0 0 3px var(--line-color), 0 3px 10px rgba(0, 0, 0, 0.18);
+    }
+    100% {
+      box-shadow: 0 0 0 0 var(--line-color), 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
   }
 
   .accordion-header {
