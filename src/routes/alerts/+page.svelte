@@ -605,10 +605,9 @@
     return allMaintenance.filter((item) => isMaintenanceHappeningNow(item));
   });
 
-  // Derived: Count of unique scheduled closures (all maintenance items)
+  // Derived: Count of unique scheduled closures (only real maintenance items, not demo)
   let scheduledClosuresCount = $derived(() => {
-    const allMaintenance = [...$maintenanceItems, ...demoMaintenance];
-    return allMaintenance.length;
+    return $maintenanceItems.length;
   });
 
   // Format time for display (convert 24h to 12h format)
