@@ -112,16 +112,16 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Backend (`supabase/`)
 
-| File                                    | Status | Purpose                                                 |
-| --------------------------------------- | ------ | ------------------------------------------------------- |
-| `functions/_shared/auth-utils.ts`       | ✅     | CORS + Supabase client factory                          |
-| `functions/auth-register/index.ts`      | ✅     | User registration + recovery codes (uses Supabase Auth) |
-| `functions/auth-challenge/index.ts`     | ✅     | Generate WebAuthn challenge                             |
-| `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                       |
-| `functions/auth-session/index.ts`       | ✅     | Validate existing session                               |
-| `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                              |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v20: threading overhaul)     |
-| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                             |
+| File                                    | Status | Purpose                                                   |
+| --------------------------------------- | ------ | --------------------------------------------------------- |
+| `functions/_shared/auth-utils.ts`       | ✅     | CORS + Supabase client factory                            |
+| `functions/auth-register/index.ts`      | ✅     | User registration + recovery codes (uses Supabase Auth)   |
+| `functions/auth-challenge/index.ts`     | ✅     | Generate WebAuthn challenge                               |
+| `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                         |
+| `functions/auth-session/index.ts`       | ✅     | Validate existing session                                 |
+| `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v20: threading overhaul)       |
+| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                               |
 | `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B** |
 
 ### Database (EXISTING in Supabase)
@@ -153,18 +153,18 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Stops Components (`src/lib/components/stops/`) 🆕 **Version B Only**
 
-| File                        | Status | Purpose                                                        |
-| --------------------------- | ------ | -------------------------------------------------------------- |
-| `StopSearch.svelte`         | ✅     | Stop search with autocomplete, direction badges, ID search     |
-| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops                               |
-| `MyStops.svelte`            | ✅     | Full-page My Stops list                                        |
-| `MyStopsEmpty.svelte`       | ✅     | Empty state for My Stops                                       |
-| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                           |
-| `RouteDirectionTabs.svelte` | ✅     | Direction tabs for route pages (terminal names for subway)     |
-| `RouteMapPreview.svelte`    | ✅     | Map preview for route stops                                    |
+| File                        | Status | Purpose                                                       |
+| --------------------------- | ------ | ------------------------------------------------------------- |
+| `StopSearch.svelte`         | ✅     | Stop search with autocomplete, direction badges, ID search    |
+| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops                              |
+| `MyStops.svelte`            | ✅     | Full-page My Stops list                                       |
+| `MyStopsEmpty.svelte`       | ✅     | Empty state for My Stops                                      |
+| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                          |
+| `RouteDirectionTabs.svelte` | ✅     | Direction tabs for route pages (terminal names for subway)    |
+| `RouteMapPreview.svelte`    | ✅     | Map preview for route stops                                   |
 | `RouteStopItem.svelte`      | ✅     | Stop item with ETA, platform badges, subway direction parsing |
 | `RouteStopsList.svelte`     | ✅     | List of stops with ETA expand/collapse, routeFilter prop      |
-| `index.ts`                  | ✅     | Component exports                                              |
+| `index.ts`                  | ✅     | Component exports                                             |
 
 ### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
 

@@ -410,8 +410,10 @@ serve(async (req: Request) => {
 		}
 
 		// Handle subway stations
-		if (type === 'subway' && stationName) {
-			const result = await fetchSubwayETA(stationName, stopId, filterRoute);
+		// When type === 'subway', use NTAS API with stopId directly
+		// stationName is optional - only used for display purposes
+		if (type === 'subway') {
+			const result = await fetchSubwayETA(stationName || '', stopId, filterRoute);
 			return new Response(JSON.stringify(result), {
 				status: 200,
 				headers: {

@@ -1130,11 +1130,13 @@ Real-time subway arrivals via TTC NTAS (Next Train Arrival System) API.
 ```typescript
 // Input: "Southbound to Vaughan Metropolitan Centre via Union"
 // Output: { direction: "Southbound", destination: "Vaughan Metropolitan Centre via Union" }
-const boundMatch = direction.match(/^(North|South|East|West)(bound)\s+to\s+(.+)$/i);
+const boundMatch = direction.match(
+  /^(North|South|East|West)(bound)\s+to\s+(.+)$/i
+);
 if (boundMatch) {
   return {
     direction: boundMatch[1] + boundMatch[2], // "Southbound"
-    destination: boundMatch[3].trim()         // "Vaughan Metropolitan Centre via Union"
+    destination: boundMatch[3].trim(), // "Vaughan Metropolitan Centre via Union"
   };
 }
 ```

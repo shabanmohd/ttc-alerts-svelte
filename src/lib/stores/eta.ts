@@ -97,9 +97,21 @@ function saveCache(stops: Map<string, StopETA>) {
 }
 
 /**
+ * Subway route IDs - these use NTAS API instead of NextBus
+ */
+const SUBWAY_ROUTES = ['1', '2', '4', '6'];
+
+/**
+ * Check if a stop serves subway routes (uses NTAS API)
+ */
+function isSubwayStop(stop: SavedStop): boolean {
+	return stop.routes.some(route => SUBWAY_ROUTES.includes(route));
+}
+
+/**
  * Fetch ETA for a single stop from the Edge Function
  */
-async function fetchStopETA(stop: BookmarkedStop): Promise<StopETA> {
+async function fetchStopETA(stop: SavedStop): Promise<StopETA> {
 	const baseETA: StopETA = {
 		stopId: stop.id,
 		stopName: stop.name,
@@ -109,8 +121,14 @@ async function fetchStopETA(stop: BookmarkedStop): Promise<StopETA> {
 	};
 
 	try {
+		// Determine if this is a subway stop to use NTAS API
+		const isSubway = isSubwayStop(stop);
+		
 		const { data, error } = await supabase.functions.invoke('get-eta', {
-			body: { stopId: stop.id }
+			body: { 
+				stopId: stop.id,
+				type: isSubway ? 'subway' : 'surface'
+			}
 		});
 
 		if (error) {
@@ -322,7 +340,7 @@ function createETAStore() {
 	 * Add loading placeholders for newly bookmarked stops.
 	 * This immediately shows the stop in the UI with a loading state.
 	 */
-	function addLoadingPlaceholders(stops: BookmarkedStop[]) {
+	function addLoadingPlaceholders(stops: SavedStop[]) {
 		update((state) => {
 			const newStops = new Map(state.stops);
 			for (const stop of stops) {

@@ -236,7 +236,7 @@
 
   /**
    * Parse direction into simplified format
-   * Handles both surface vehicle format ("North - 133 towards...") 
+   * Handles both surface vehicle format ("North - 133 towards...")
    * and NTAS subway format ("Southbound to Vaughan...")
    */
   function parseDirection(direction: string): {
@@ -244,14 +244,16 @@
     destination: string;
   } {
     // Handle NTAS format: "Southbound to Vaughan..." or "Northbound to Finch"
-    const boundMatch = direction.match(/^(North|South|East|West)(bound)\s+to\s+(.+)$/i);
+    const boundMatch = direction.match(
+      /^(North|South|East|West)(bound)\s+to\s+(.+)$/i
+    );
     if (boundMatch) {
       return {
         direction: boundMatch[1] + boundMatch[2], // "Southbound", "Northbound", etc.
-        destination: boundMatch[3].trim()
+        destination: boundMatch[3].trim(),
       };
     }
-    
+
     const cleaned = direction.replace(/bound$/i, "").trim();
 
     // Pattern: "Direction - Route towards Destination"
@@ -369,12 +371,14 @@
   } {
     const hour = new Date().getHours();
     const isSubway = stop.type === "subway";
-    
+
     if (hour >= 1 && hour < 5) {
       return {
         icon: "moon",
         title: "Limited service",
-        subtitle: isSubway ? "Subway runs 6am–1:30am" : "Most routes run 6am–1am",
+        subtitle: isSubway
+          ? "Subway runs 6am–1:30am"
+          : "Most routes run 6am–1am",
       };
     }
     if (hour >= 5 && hour < 6) {
@@ -388,8 +392,8 @@
     return {
       icon: "clock",
       title: "No arrivals scheduled",
-      subtitle: isSubway 
-        ? "Real-time data unavailable for this station" 
+      subtitle: isSubway
+        ? "Real-time data unavailable for this station"
         : "Check back shortly",
     };
   }
