@@ -5,7 +5,8 @@
   import { cn } from "$lib/utils";
   import type { ThreadWithAlerts, Alert } from "$lib/types/database";
 
-  let { thread }: { thread: ThreadWithAlerts } = $props();
+  let { thread, lineColor }: { thread: ThreadWithAlerts; lineColor?: string } =
+    $props();
 
   let showEarlierUpdates = $state(false);
 
@@ -240,8 +241,10 @@
 <article
   class="alert-card"
   class:expanded={showEarlierUpdates}
+  class:has-line-accent={!!lineColor}
   id={cardId}
   aria-labelledby="{cardId}-title"
+  style={lineColor ? `--alert-line-color: ${lineColor}` : ""}
 >
   <div class="alert-card-content">
     <!-- Main content: Badge on left, details on right -->

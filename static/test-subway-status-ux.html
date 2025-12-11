@@ -1,0 +1,2114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TTC Subway Status UX - Demo Test Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --radius: 0.5rem;
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 40%;
+      --border: 240 5.9% 85%;
+      --accent: 240 4.8% 95.9%;
+      --primary: 240 5.9% 10%;
+      --ring: 240 5.9% 10%;
+    }
+
+    .dark {
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 71%;
+      --border: 240 3.7% 20%;
+      --accent: 240 3.7% 15.9%;
+      --primary: 0 0% 98%;
+      --ring: 240 4.9% 83.9%;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Lexend', system-ui, sans-serif;
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      padding: 1.5rem;
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 2rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 0.75rem;
+    }
+
+    .description {
+      color: hsl(var(--muted-foreground));
+      font-size: 0.9375rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .demo-section {
+      margin-bottom: 2rem;
+      padding: 1rem;
+      border-radius: var(--radius);
+      background-color: hsl(var(--muted) / 0.3);
+      border: 1px solid hsl(var(--border));
+    }
+
+    .demo-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 0.75rem;
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      border: 1px solid hsl(var(--border));
+      background-color: hsl(var(--card));
+      cursor: pointer;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .theme-toggle:hover {
+      background-color: hsl(var(--accent));
+    }
+
+    /* ===== SUBWAY STATUS GRID ===== */
+    .subway-status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      .subway-status-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .subway-status-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      padding: 0.625rem;
+      border-radius: var(--radius);
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      transition: all 0.15s ease;
+      text-align: left;
+      cursor: default;
+    }
+
+    .subway-status-card.clickable {
+      cursor: pointer;
+    }
+
+    .subway-status-card.clickable:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px hsl(var(--foreground) / 0.1);
+    }
+
+    .subway-status-card:focus-visible {
+      outline: 2px solid hsl(var(--ring));
+      outline-offset: 2px;
+    }
+
+    .subway-status-card.status-ok {
+      border-color: hsl(142.1 76.2% 36.3% / 0.3);
+      background-color: hsl(142.1 76.2% 36.3% / 0.05);
+    }
+
+    .subway-status-card.status-delay {
+      border-color: hsl(38 80% 50% / 0.4);
+      background-color: hsl(38 80% 94%);
+    }
+
+    .subway-status-card.status-disruption {
+      border-color: hsl(0 70% 50% / 0.4);
+      background-color: hsl(0 70% 96%);
+    }
+
+    .subway-status-card.status-scheduled {
+      border-color: hsl(270 60% 60% / 0.4);
+      background-color: hsl(270 60% 95%);
+    }
+
+    .dark .subway-status-card.status-delay {
+      background-color: hsl(38 92% 50% / 0.25);
+    }
+
+    .dark .subway-status-card.status-disruption {
+      background-color: hsl(0 63% 31% / 0.25);
+    }
+
+    .dark .subway-status-card.status-scheduled {
+      background-color: hsl(270 50% 30% / 0.35);
+    }
+
+    .subway-status-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .subway-line-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.75rem;
+      height: 1.75rem;
+      padding: 0 0.375rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+    }
+
+    .subway-line-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    /* Alert count badge */
+    .alert-count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.25rem;
+      height: 1.25rem;
+      padding: 0 0.25rem;
+      border-radius: 9999px;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      background-color: hsl(var(--foreground));
+      color: hsl(var(--background));
+      margin-left: auto;
+    }
+
+    .subway-status-indicator {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.375rem;
+    }
+
+    .subway-status-indicator svg {
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .status-text {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .status-ok-text {
+      color: hsl(142.1 71.8% 29.2%);
+    }
+
+    .status-delay-text {
+      color: hsl(28 90% 25%);
+    }
+
+    .status-disruption-text {
+      color: hsl(0 72% 30%);
+    }
+
+    .status-scheduled-text {
+      color: hsl(270 60% 35%);
+    }
+
+    .dark .status-ok-text {
+      color: hsl(142.1 70.6% 45.3%);
+    }
+
+    .dark .status-delay-text {
+      color: hsl(43 96% 70%);
+    }
+
+    .dark .status-disruption-text {
+      color: hsl(0 91% 75%);
+    }
+
+    .dark .status-scheduled-text {
+      color: hsl(270 70% 75%);
+    }
+
+    /* Compound status indicator */
+    .compound-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.625rem;
+      font-weight: 500;
+      color: hsl(270 60% 35%);
+      margin-top: 0.125rem;
+      padding-top: 0.25rem;
+      border-top: 1px dashed hsl(270 60% 60% / 0.3);
+    }
+
+    .compound-status-indicator svg {
+      width: 0.75rem;
+      height: 0.75rem;
+    }
+
+    .dark .compound-status-indicator {
+      color: hsl(270 70% 75%);
+      border-top-color: hsl(270 50% 50% / 0.3);
+    }
+
+    /* ===== SECTION HEADERS ===== */
+    .subway-section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0;
+      margin-top: 0.75rem;
+      margin-bottom: 0.25rem;
+      border-left: 4px solid var(--line-color, #666);
+      padding-left: 0.75rem;
+      transition: all 0.3s ease;
+    }
+
+    .subway-section-header:first-child {
+      margin-top: 0;
+    }
+
+    .subway-section-header.highlighted {
+      background-color: hsl(var(--accent) / 0.5);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      animation: section-highlight-pulse 2.5s ease-out;
+    }
+
+    @keyframes section-highlight-pulse {
+      0% {
+        background-color: hsl(var(--primary) / 0.2);
+      }
+      50% {
+        background-color: hsl(var(--primary) / 0.15);
+      }
+      100% {
+        background-color: hsl(var(--accent) / 0.5);
+      }
+    }
+
+    .section-line-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.5rem;
+      height: 1.5rem;
+      padding: 0 0.25rem;
+      border-radius: 0.25rem;
+      font-size: 0.8125rem;
+      font-weight: 700;
+    }
+
+    .section-line-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    /* ===== ALERT CARDS ===== */
+    .alert-card {
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--border));
+      background-color: hsl(var(--card));
+      overflow: hidden;
+      transition: box-shadow 0.2s ease;
+      margin-bottom: 0.75rem;
+    }
+
+    .alert-card:hover {
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .alert-card.has-line-accent {
+      border-left: 4px solid var(--alert-line-color, hsl(var(--border)));
+    }
+
+    .alert-card-content {
+      padding: 0.875rem 1rem;
+    }
+
+    .alert-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .alert-card-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      flex-wrap: wrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .alert-card-timestamp {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: hsl(var(--muted-foreground));
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .alert-card-text {
+      font-size: 0.9375rem;
+      font-weight: 400;
+      line-height: 1.55;
+      color: hsl(var(--foreground));
+    }
+
+    /* Alert highlight animation */
+    .alert-highlighted .alert-card {
+      animation: alert-highlight-pulse 2.5s ease-out;
+    }
+
+    @keyframes alert-highlight-pulse {
+      0% {
+        transform: scale(1.01);
+        box-shadow: 0 0 0 3px hsl(var(--primary) / 0.3);
+      }
+      50% {
+        transform: scale(1);
+        box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: none;
+      }
+    }
+
+    /* Route badge */
+    .route-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .route-badge.route-line-1 {
+      background-color: #ffc524;
+      color: #000000;
+    }
+
+    .route-badge.route-line-2 {
+      background-color: #00853f;
+      color: #ffffff;
+    }
+
+    .route-badge.route-line-4 {
+      background-color: #a12f7d;
+      color: #ffffff;
+    }
+
+    .route-badge.route-bus {
+      background-color: #c8102e;
+      color: #ffffff;
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      line-height: 1.25rem;
+    }
+
+    .status-badge-disruption {
+      background-color: hsl(0 70% 96%);
+      color: hsl(0 72% 30%);
+    }
+
+    .status-badge-delay {
+      background-color: hsl(38 80% 94%);
+      color: hsl(28 90% 25%);
+    }
+
+    .status-badge-scheduled {
+      background-color: hsl(270 60% 95%);
+      color: hsl(270 60% 35%);
+    }
+
+    .dark .status-badge-disruption {
+      background-color: hsl(0 63% 31% / 0.25);
+      color: hsl(0 91% 75%);
+    }
+
+    .dark .status-badge-delay {
+      background-color: hsl(38 92% 50% / 0.25);
+      color: hsl(43 96% 70%);
+    }
+
+    .dark .status-badge-scheduled {
+      background-color: hsl(270 50% 30% / 0.35);
+      color: hsl(270 70% 75%);
+    }
+
+    /* SVG Icons */
+    .icon {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .icon-check {
+      color: hsl(142.1 71.8% 29.2%);
+    }
+
+    .icon-alert-delay {
+      color: hsl(28 90% 25%);
+    }
+
+    .icon-alert-disruption {
+      color: hsl(0 72% 30%);
+    }
+
+    .icon-scheduled {
+      color: hsl(270 60% 35%);
+    }
+
+    .dark .icon-check {
+      color: hsl(142.1 70.6% 45.3%);
+    }
+
+    .dark .icon-alert-delay {
+      color: hsl(43 96% 70%);
+    }
+
+    .dark .icon-alert-disruption {
+      color: hsl(0 91% 75%);
+    }
+
+    .dark .icon-scheduled {
+      color: hsl(270 70% 75%);
+    }
+
+    /* Interaction hint */
+    .interaction-hint {
+      font-size: 0.75rem;
+      color: hsl(var(--muted-foreground));
+      background-color: hsl(217 91% 60% / 0.1);
+      border: 1px solid hsl(217 91% 60% / 0.3);
+      border-radius: var(--radius);
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .alerts-container {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="document.body.classList.toggle('dark'); document.documentElement.classList.toggle('dark');">
+    Toggle Theme
+  </button>
+
+  <h1>🚇 Subway Status UX Demo</h1>
+  <p class="description">
+    Interactive demo showing all possible states for the multi-alert subway status feature.
+    Click the status cards to see the scroll-and-highlight behavior.
+  </p>
+
+  <!-- CASE 1: All Normal -->
+  <h2>Case 1: All Lines Normal</h2>
+  <div class="demo-section">
+    <div class="demo-label">Status Grid</div>
+    <div class="subway-status-grid">
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #00853f; color: #ffffff;">2</span>
+          <span class="subway-line-name">Line 2</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #a12f7d; color: #ffffff;">4</span>
+          <span class="subway-line-name">Line 4</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #808285; color: #ffffff;">6</span>
+          <span class="subway-line-name">Line 6</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+    </div>
+    <p style="color: hsl(var(--muted-foreground)); font-size: 0.875rem;">✅ No alerts to display when all lines are running normally.</p>
+  </div>
+
+  <!-- CASE 2: Single Alert Per Line -->
+  <h2>Case 2: Single Alert Per Line</h2>
+  <div class="demo-section">
+    <div class="demo-label">Status Grid</div>
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-delay clickable" onclick="highlightSection('line-1-single')">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-alert-delay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="status-text status-delay-text">Delay</span>
+        </div>
+      </button>
+      <button class="subway-status-card status-disruption clickable" onclick="highlightSection('line-2-single')">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #00853f; color: #ffffff;">2</span>
+          <span class="subway-line-name">Line 2</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="status-text status-disruption-text">Disruption</span>
+        </div>
+      </button>
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #a12f7d; color: #ffffff;">4</span>
+          <span class="subway-line-name">Line 4</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+      <button class="subway-status-card status-scheduled clickable" onclick="highlightSection('line-6-single')">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #808285; color: #ffffff;">6</span>
+          <span class="subway-line-name">Line 6</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-scheduled" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="status-text status-scheduled-text">Scheduled Closure</span>
+        </div>
+      </button>
+    </div>
+
+    <div class="interaction-hint">👆 Click on the status cards above to see the scroll-and-highlight effect</div>
+
+    <div class="demo-label">Alert List with Section Headers</div>
+    <div class="alerts-container">
+      <!-- Line 1 Section -->
+      <div class="subway-section-header" id="line-1-single" style="--line-color: #ffc524;">
+        <span class="section-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+        <span class="section-line-name">Line 1</span>
+      </div>
+      <div class="alert-wrapper" id="alert-line-1-single">
+        <article class="alert-card has-line-accent" style="--alert-line-color: #ffc524;">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-line-1">Line 1</span>
+                <span class="status-badge status-badge-delay">Delay</span>
+              </div>
+              <span class="alert-card-timestamp">10 min ago</span>
+            </div>
+            <p class="alert-card-text">Line 1 Yonge-University: Delays of 10-15 minutes due to a medical emergency at Bloor-Yonge Station.</p>
+          </div>
+        </article>
+      </div>
+
+      <!-- Line 2 Section -->
+      <div class="subway-section-header" id="line-2-single" style="--line-color: #00853f;">
+        <span class="section-line-badge" style="background-color: #00853f; color: #ffffff;">2</span>
+        <span class="section-line-name">Line 2</span>
+      </div>
+      <div class="alert-wrapper" id="alert-line-2-single">
+        <article class="alert-card has-line-accent" style="--alert-line-color: #00853f;">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-line-2">Line 2</span>
+                <span class="status-badge status-badge-disruption">Disruption</span>
+              </div>
+              <span class="alert-card-timestamp">20 min ago</span>
+            </div>
+            <p class="alert-card-text">Line 2 Bloor-Danforth: No subway service between Broadview and Kennedy stations due to a fire investigation. Shuttle buses running.</p>
+          </div>
+        </article>
+      </div>
+
+      <!-- Line 6 Section -->
+      <div class="subway-section-header" id="line-6-single" style="--line-color: #808285;">
+        <span class="section-line-badge" style="background-color: #808285; color: #ffffff;">6</span>
+        <span class="section-line-name">Line 6</span>
+      </div>
+      <div class="alert-wrapper" id="alert-line-6-single">
+        <article class="alert-card has-line-accent" style="--alert-line-color: #808285;">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge" style="background-color: #808285; color: #fff;">Line 6</span>
+                <span class="status-badge status-badge-scheduled">Scheduled Closure</span>
+              </div>
+              <span class="alert-card-timestamp">2 hours ago</span>
+            </div>
+            <p class="alert-card-text">Line 6 Finch West: Weekend closure for track maintenance. Shuttle buses operating between Finch West and Humber College.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- CASE 3: Multiple Alerts Same Line with Count Badge -->
+  <h2>Case 3: Multiple Alerts Same Line - UI Approaches</h2>
+  
+  <h3>Approach A: Count Badge in Header (Current)</h3>
+  <p style="color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin-bottom: 0.75rem;">
+    ⚠️ Issue: The badge can be confusing - does "2" mean Line 2 or 2 alerts?
+  </p>
+  <div class="demo-section">
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-disruption clickable" onclick="highlightSection('line-1-multi-a')">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+          <span class="alert-count-badge">2</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="status-text status-disruption-text">Disruption</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <h3>Approach B: Multi-Status with Icons (Final)</h3>
+  <p style="color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin-bottom: 0.75rem;">
+    ✅ Pattern: Show each unique issue type with its icon. No count, just the types.
+  </p>
+  <div class="demo-section">
+    <p style="color: hsl(var(--muted-foreground)); font-size: 0.75rem; margin-bottom: 0.5rem;"><strong>Single alert</strong> - shows normally:</p>
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-disruption clickable">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <div class="multi-status-container">
+            <div class="status-type-item">
+              <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="status-text status-disruption-text">Disruption</span>
+            </div>
+          </div>
+        </div>
+      </button>
+    </div>
+    
+    <p style="color: hsl(var(--muted-foreground)); font-size: 0.75rem; margin: 1rem 0 0.5rem;"><strong>2 alerts, same type</strong> (both disruptions) - shows icon once:</p>
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-disruption clickable">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <div class="multi-status-container">
+            <div class="status-type-item">
+              <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="status-text status-disruption-text">Disruption</span>
+            </div>
+          </div>
+        </div>
+      </button>
+    </div>
+    
+    <p style="color: hsl(var(--muted-foreground)); font-size: 0.75rem; margin: 1rem 0 0.5rem;"><strong>2 alerts, different types</strong> (disruption + delay) - shows both:</p>
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-disruption clickable">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <div class="multi-status-container">
+            <div class="status-type-item">
+              <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="status-text status-disruption-text">Disruption</span>
+            </div>
+            <div class="status-type-item">
+              <svg class="icon icon-alert-delay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="status-text status-delay-text">Delay</span>
+            </div>
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <p style="color: hsl(var(--muted-foreground)); font-size: 0.75rem; margin: 1rem 0 0.5rem;"><strong>2 alerts</strong> (disruption + scheduled):</p>
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-disruption clickable">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <div class="multi-status-container">
+            <div class="status-type-item">
+              <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="status-text status-disruption-text">Disruption</span>
+            </div>
+            <div class="status-type-item">
+              <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span class="status-text status-scheduled-text">Scheduled</span>
+            </div>
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <p style="color: hsl(var(--muted-foreground)); font-size: 0.75rem; margin: 1rem 0 0.5rem;"><strong>3 alerts, all different types</strong>:</p>
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-disruption clickable">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <div class="multi-status-container">
+            <div class="status-type-item">
+              <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="status-text status-disruption-text">Disruption</span>
+            </div>
+            <div class="status-type-item">
+              <svg class="icon icon-alert-delay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="status-text status-delay-text">Delay</span>
+            </div>
+            <div class="status-type-item">
+              <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span class="status-text status-scheduled-text">Scheduled</span>
+            </div>
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <p style="color: hsl(var(--muted-foreground)); font-size: 0.75rem; margin: 1rem 0 0.5rem;"><strong>3 alerts, 2 types</strong> (2 disruptions + 1 delay) - shows each type once:</p>
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-disruption clickable">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <div class="multi-status-container">
+            <div class="status-type-item">
+              <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="status-text status-disruption-text">Disruption</span>
+            </div>
+            <div class="status-type-item">
+              <svg class="icon icon-alert-delay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="status-text status-delay-text">Delay</span>
+            </div>
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <style>
+      .multi-status-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        width: 100%;
+      }
+      .status-type-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+    </style>
+  </div>
+
+  <h3>Approach C: Stacked Status Dots</h3>
+  <p style="color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin-bottom: 0.75rem;">
+    ✅ Visual indicator: Small dots showing severity of each alert (red = disruption, orange = delay, purple = scheduled)
+  </p>
+  <div class="demo-section">
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-disruption clickable" onclick="highlightSection('line-1-multi-c')">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="status-text status-disruption-text">Disruption</span>
+        </div>
+        <div class="status-dots">
+          <span class="status-dot status-dot-disruption" title="Disruption"></span>
+          <span class="status-dot status-dot-delay" title="Delay"></span>
+        </div>
+      </button>
+    </div>
+    <style>
+      .status-dots {
+        display: flex;
+        gap: 0.25rem;
+        margin-top: 0.25rem;
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .status-dot-disruption {
+        background-color: hsl(0 70% 50%);
+      }
+      .status-dot-delay {
+        background-color: hsl(38 80% 50%);
+      }
+      .status-dot-scheduled {
+        background-color: hsl(270 60% 60%);
+      }
+    </style>
+  </div>
+
+  <h3>Approach D: Inline Alert Icons</h3>
+  <p style="color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin-bottom: 0.75rem;">
+    ✅ Shows all active statuses inline with small icons
+  </p>
+  <div class="demo-section">
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-disruption clickable" onclick="highlightSection('line-1-multi-d')">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="multi-status-row">
+          <div class="mini-status mini-status-disruption">
+            <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Disruption</span>
+          </div>
+          <div class="mini-status mini-status-delay">
+            <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Delay</span>
+          </div>
+        </div>
+      </button>
+    </div>
+    <style>
+      .multi-status-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+        margin-top: 0.25rem;
+      }
+      .mini-status {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.625rem;
+        font-weight: 500;
+        padding: 0.125rem 0.375rem;
+        border-radius: 9999px;
+      }
+      .mini-icon {
+        width: 0.625rem;
+        height: 0.625rem;
+      }
+      .mini-status-disruption {
+        background-color: hsl(0 70% 96%);
+        color: hsl(0 72% 30%);
+      }
+      .mini-status-delay {
+        background-color: hsl(38 80% 94%);
+        color: hsl(28 90% 25%);
+      }
+      .mini-status-scheduled {
+        background-color: hsl(270 60% 95%);
+        color: hsl(270 60% 35%);
+      }
+      .dark .mini-status-disruption {
+        background-color: hsl(0 63% 31% / 0.35);
+        color: hsl(0 91% 75%);
+      }
+      .dark .mini-status-delay {
+        background-color: hsl(38 92% 50% / 0.35);
+        color: hsl(43 96% 70%);
+      }
+      .dark .mini-status-scheduled {
+        background-color: hsl(270 50% 30% / 0.45);
+        color: hsl(270 70% 75%);
+      }
+    </style>
+  </div>
+
+  <h3>Approach E: Expanded Card with Alert Summary</h3>
+  <p style="color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin-bottom: 0.75rem;">
+    ✅ Most informative: Shows primary status prominently, lists all alerts below
+  </p>
+  <div class="demo-section">
+    <div class="subway-status-grid" style="grid-template-columns: 1fr;">
+      <button class="subway-status-card status-disruption clickable subway-status-card-expanded" onclick="highlightSection('line-1-multi-e')">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="status-text status-disruption-text">Disruption</span>
+        </div>
+        <div class="alert-summary">
+          <div class="alert-summary-item">
+            <span class="summary-bullet summary-bullet-disruption"></span>
+            <span>No service: St. Clair to Finch</span>
+            <span class="summary-time">5 min ago</span>
+          </div>
+          <div class="alert-summary-item">
+            <span class="summary-bullet summary-bullet-delay"></span>
+            <span>Delays southbound at Eglinton</span>
+            <span class="summary-time">25 min ago</span>
+          </div>
+        </div>
+      </button>
+    </div>
+    <style>
+      .subway-status-card-expanded {
+        max-width: 320px;
+      }
+      .alert-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid hsl(var(--border));
+      }
+      .alert-summary-item {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.6875rem;
+        color: hsl(var(--muted-foreground));
+      }
+      .summary-bullet {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .summary-bullet-disruption {
+        background-color: hsl(0 70% 50%);
+      }
+      .summary-bullet-delay {
+        background-color: hsl(38 80% 50%);
+      }
+      .summary-time {
+        margin-left: auto;
+        color: hsl(var(--muted-foreground) / 0.7);
+        font-size: 0.625rem;
+      }
+    </style>
+  </div>
+
+  <h3 style="margin-top: 2rem; padding: 1rem; background-color: hsl(217 91% 60% / 0.1); border-radius: var(--radius);">
+    ✅ Implementation: Multi-Status with Icons
+  </h3>
+  <p style="color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin: 0.5rem 0 0 0;">
+    This approach is now implemented in the actual alerts page. The pattern is:<br>
+    • <strong>Single alert:</strong> Shows icon + status text (e.g., icon + "Disruption")<br>
+    • <strong>Multiple alerts, same type:</strong> Shows icon + status once (e.g., icon + "Disruption")<br>
+    • <strong>Multiple alerts, different types:</strong> Shows each type with its icon vertically stacked
+  </p>
+
+  <!-- CASE 4: Compound Status (Alert + Scheduled Maintenance) -->
+  <h2>Case 4: Compound Status (Live Alert + Scheduled Closure)</h2>
+  <div class="demo-section">
+    <div class="demo-label">Status Grid with Compound Indicator</div>
+    <div class="subway-status-grid">
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+      <button class="subway-status-card status-disruption clickable" onclick="highlightSection('line-2-compound')">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #00853f; color: #ffffff;">2</span>
+          <span class="subway-line-name">Line 2</span>
+          <span class="alert-count-badge">2</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-alert-disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="status-text status-disruption-text">Disruption</span>
+        </div>
+        <!-- COMPOUND STATUS INDICATOR -->
+        <div class="compound-status-indicator">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>+ Closure active</span>
+        </div>
+      </button>
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #a12f7d; color: #ffffff;">4</span>
+          <span class="subway-line-name">Line 4</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #808285; color: #ffffff;">6</span>
+          <span class="subway-line-name">Line 6</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="interaction-hint">👆 Line 2 shows "Disruption" as primary status with "+ Closure active" secondary indicator. This happens when a live incident occurs during scheduled maintenance.</div>
+
+    <div class="demo-label">Alert List - Compound Scenario</div>
+    <div class="alerts-container">
+      <!-- Line 2 Section - Compound: Disruption + Scheduled -->
+      <div class="subway-section-header" id="line-2-compound" style="--line-color: #00853f;">
+        <span class="section-line-badge" style="background-color: #00853f; color: #ffffff;">2</span>
+        <span class="section-line-name">Line 2</span>
+      </div>
+      <div class="alert-wrapper">
+        <article class="alert-card has-line-accent" style="--alert-line-color: #00853f;">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-line-2">Line 2</span>
+                <span class="status-badge status-badge-disruption">Disruption</span>
+              </div>
+              <span class="alert-card-timestamp">3 min ago</span>
+            </div>
+            <p class="alert-card-text">Line 2 Bloor-Danforth: NEW - No service between Kipling and Jane stations due to emergency at Islington. Shuttle buses being deployed.</p>
+          </div>
+        </article>
+      </div>
+      <div class="alert-wrapper">
+        <article class="alert-card has-line-accent" style="--alert-line-color: #00853f;">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-line-2">Line 2</span>
+                <span class="status-badge status-badge-scheduled">Scheduled Closure</span>
+              </div>
+              <span class="alert-card-timestamp">Started 11 PM</span>
+            </div>
+            <p class="alert-card-text">Line 2 Bloor-Danforth: Weekend early closure between Kennedy and Victoria Park for track repairs. Service resumes Sunday 6 AM.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- CASE 5: Mixed with Bus Alerts -->
+  <h2>Case 5: Mixed Subway + Bus Alerts</h2>
+  <div class="demo-section">
+    <div class="demo-label">Status Grid</div>
+    <div class="subway-status-grid">
+      <button class="subway-status-card status-delay clickable" onclick="highlightSection('line-1-mixed')">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+          <span class="subway-line-name">Line 1</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-alert-delay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span class="status-text status-delay-text">Delay</span>
+        </div>
+      </button>
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #00853f; color: #ffffff;">2</span>
+          <span class="subway-line-name">Line 2</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #a12f7d; color: #ffffff;">4</span>
+          <span class="subway-line-name">Line 4</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+      <div class="subway-status-card status-ok">
+        <div class="subway-status-header">
+          <span class="subway-line-badge" style="background-color: #808285; color: #ffffff;">6</span>
+          <span class="subway-line-name">Line 6</span>
+        </div>
+        <div class="subway-status-indicator">
+          <svg class="icon icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span class="status-text status-ok-text">Normal Service</span>
+        </div>
+      </div>
+    </div>
+
+    <p style="color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin: 0.75rem 0;">ℹ️ Subway alerts appear first (grouped by line), then bus/streetcar alerts below (sorted by time).</p>
+
+    <div class="demo-label">Alert List - Subway First, Then Bus</div>
+    <div class="alerts-container">
+      <!-- Line 1 Section -->
+      <div class="subway-section-header" id="line-1-mixed" style="--line-color: #ffc524;">
+        <span class="section-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+        <span class="section-line-name">Line 1</span>
+      </div>
+      <div class="alert-wrapper">
+        <article class="alert-card has-line-accent" style="--alert-line-color: #ffc524;">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-line-1">Line 1</span>
+                <span class="status-badge status-badge-delay">Delay</span>
+              </div>
+              <span class="alert-card-timestamp">12 min ago</span>
+            </div>
+            <p class="alert-card-text">Line 1 Yonge-University: Minor delays of 5 minutes due to passenger assistance at Union.</p>
+          </div>
+        </article>
+      </div>
+
+      <!-- Bus Alerts (no section header, no line accent) -->
+      <div class="alert-wrapper">
+        <article class="alert-card">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-bus">52</span>
+                <span class="status-badge status-badge-delay">Delay</span>
+              </div>
+              <span class="alert-card-timestamp">8 min ago</span>
+            </div>
+            <p class="alert-card-text">52 Lawrence West: Delays of 15-20 minutes westbound due to traffic congestion at Allen Road.</p>
+          </div>
+        </article>
+      </div>
+      <div class="alert-wrapper">
+        <article class="alert-card">
+          <div class="alert-card-content">
+            <div class="alert-card-header">
+              <div class="alert-card-badges">
+                <span class="route-badge route-bus">85</span>
+                <span class="status-badge status-badge-disruption">Disruption</span>
+              </div>
+              <span class="alert-card-timestamp">15 min ago</span>
+            </div>
+            <p class="alert-card-text">85 Sheppard East: Diverting via Finch Ave due to road closure on Sheppard at Pharmacy.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION HEADER UI APPROACHES -->
+  <h2>Section Header UI Approaches</h2>
+  <p class="description">Different visual designs for the subway line section headers that group alerts.</p>
+
+  <h3>Approach A: Minimal with Left Border (Current)</h3>
+  <div class="demo-section">
+    <div class="section-header-a" style="--line-color: #ffc524;">
+      <span class="section-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+      <span class="section-line-name">Line 1</span>
+    </div>
+    <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+      <div class="alert-card-content">
+        <div class="alert-card-header">
+          <div class="alert-card-badges">
+            <span class="route-badge route-line-1">Line 1</span>
+            <span class="status-badge status-badge-disruption">Disruption</span>
+          </div>
+          <span class="alert-card-timestamp">5 min ago</span>
+        </div>
+        <p class="alert-card-text">Line 1: No service between St. Clair and Finch stations.</p>
+      </div>
+    </div>
+    <style>
+      .section-header-a {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-left: 4px solid var(--line-color);
+        background-color: hsl(var(--muted) / 0.3);
+        border-radius: 0.25rem;
+        margin: 1rem 0 0.5rem;
+      }
+    </style>
+  </div>
+
+  <h3>Approach B: Full Width with Background Color</h3>
+  <div class="demo-section">
+    <div class="section-header-b" style="--line-color: #ffc524; --line-color-rgb: 255, 197, 36;">
+      <span class="section-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+      <span class="section-line-name">Line 1</span>
+    </div>
+    <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+      <div class="alert-card-content">
+        <div class="alert-card-header">
+          <div class="alert-card-badges">
+            <span class="route-badge route-line-1">Line 1</span>
+            <span class="status-badge status-badge-disruption">Disruption</span>
+          </div>
+          <span class="alert-card-timestamp">5 min ago</span>
+        </div>
+        <p class="alert-card-text">Line 1: No service between St. Clair and Finch stations.</p>
+      </div>
+    </div>
+    <style>
+      .section-header-b {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 0.875rem;
+        background-color: rgba(var(--line-color-rgb), 0.15);
+        border-radius: 0.375rem;
+        margin: 1rem 0 0.5rem;
+        border: 1px solid rgba(var(--line-color-rgb), 0.3);
+      }
+      .dark .section-header-b {
+        background-color: rgba(var(--line-color-rgb), 0.12);
+      }
+    </style>
+  </div>
+
+  <h3>Approach C: Sticky Header with Shadow</h3>
+  <div class="demo-section">
+    <div class="section-header-c" style="--line-color: #ffc524;">
+      <span class="section-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+      <span class="section-line-name">Line 1 Yonge-University</span>
+    </div>
+    <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+      <div class="alert-card-content">
+        <div class="alert-card-header">
+          <div class="alert-card-badges">
+            <span class="route-badge route-line-1">Line 1</span>
+            <span class="status-badge status-badge-disruption">Disruption</span>
+          </div>
+          <span class="alert-card-timestamp">5 min ago</span>
+        </div>
+        <p class="alert-card-text">Line 1: No service between St. Clair and Finch stations.</p>
+      </div>
+    </div>
+    <style>
+      .section-header-c {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.75rem 1rem;
+        background-color: hsl(var(--background));
+        border-bottom: 2px solid var(--line-color);
+        margin: 1rem 0 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+      }
+      .section-header-c .section-line-name {
+        font-size: 0.9375rem;
+      }
+    </style>
+  </div>
+
+  <h3>Approach D: Compact Pill Style</h3>
+  <div class="demo-section">
+    <div class="section-header-d">
+      <span class="section-line-pill" style="background-color: #ffc524; color: #000000;">
+        <span class="pill-number">1</span>
+        <span class="pill-name">Line 1</span>
+      </span>
+    </div>
+    <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+      <div class="alert-card-content">
+        <div class="alert-card-header">
+          <div class="alert-card-badges">
+            <span class="route-badge route-line-1">Line 1</span>
+            <span class="status-badge status-badge-disruption">Disruption</span>
+          </div>
+          <span class="alert-card-timestamp">5 min ago</span>
+        </div>
+        <p class="alert-card-text">Line 1: No service between St. Clair and Finch stations.</p>
+      </div>
+    </div>
+    <style>
+      .section-header-d {
+        display: flex;
+        margin: 1rem 0 0.5rem;
+      }
+      .section-line-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+      .pill-number {
+        font-weight: 700;
+      }
+    </style>
+  </div>
+
+  <h3>Approach E: Bold with Top Border Accent</h3>
+  <div class="demo-section">
+    <div class="section-header-e" style="--line-color: #ffc524;">
+      <div class="header-top-accent"></div>
+      <div class="header-content">
+        <span class="section-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+        <div class="header-text">
+          <span class="section-line-name">Line 1</span>
+          <span class="header-subtitle">Yonge-University</span>
+        </div>
+      </div>
+    </div>
+    <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+      <div class="alert-card-content">
+        <div class="alert-card-header">
+          <div class="alert-card-badges">
+            <span class="route-badge route-line-1">Line 1</span>
+            <span class="status-badge status-badge-disruption">Disruption</span>
+          </div>
+          <span class="alert-card-timestamp">5 min ago</span>
+        </div>
+        <p class="alert-card-text">Line 1: No service between St. Clair and Finch stations.</p>
+      </div>
+    </div>
+    <style>
+      .section-header-e {
+        margin: 1rem 0 0.5rem;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        background-color: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+      }
+      .header-top-accent {
+        height: 3px;
+        background-color: var(--line-color);
+      }
+      .header-content {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.75rem 1rem;
+      }
+      .header-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+      }
+      .header-subtitle {
+        font-size: 0.6875rem;
+        color: hsl(var(--muted-foreground));
+        font-weight: 500;
+      }
+    </style>
+  </div>
+
+  <h3>Approach F: Accordion with Chevron</h3>
+  <div class="demo-section">
+    <button class="section-header-f" style="--line-color: #ffc524;" onclick="toggleAccordion('accordion-f')">
+      <div class="header-left">
+        <span class="section-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+        <span class="section-line-name">Line 1</span>
+        <span class="alert-count-indicator">2 issues</span>
+      </div>
+      <svg class="chevron" id="chevron-f" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+    <div class="accordion-content" id="accordion-f">
+      <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+        <div class="alert-card-content">
+          <div class="alert-card-header">
+            <div class="alert-card-badges">
+              <span class="route-badge route-line-1">Line 1</span>
+              <span class="status-badge status-badge-disruption">Disruption</span>
+            </div>
+            <span class="alert-card-timestamp">5 min ago</span>
+          </div>
+          <p class="alert-card-text">Line 1: No service between St. Clair and Finch stations.</p>
+        </div>
+      </div>
+      <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+        <div class="alert-card-content">
+          <div class="alert-card-header">
+            <div class="alert-card-badges">
+              <span class="route-badge route-line-1">Line 1</span>
+              <span class="status-badge status-badge-delay">Delay</span>
+            </div>
+            <span class="alert-card-timestamp">15 min ago</span>
+          </div>
+          <p class="alert-card-text">Line 1: Delays of 5-10 minutes southbound.</p>
+        </div>
+      </div>
+    </div>
+    <style>
+      .section-header-f {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid hsl(var(--border));
+        background-color: hsl(var(--card));
+        border-radius: 0.5rem;
+        margin: 1rem 0 0;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-left: 4px solid var(--line-color);
+      }
+      .section-header-f:hover {
+        background-color: hsl(var(--muted) / 0.5);
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+      }
+      .alert-count-indicator {
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+        font-weight: 500;
+        margin-left: 0.25rem;
+      }
+      .chevron {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: hsl(var(--muted-foreground));
+        transition: transform 0.2s;
+      }
+      .chevron.rotated {
+        transform: rotate(-180deg);
+      }
+      .accordion-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+      }
+      .accordion-content.expanded {
+        max-height: 1000px;
+        transition: max-height 0.5s ease-in;
+      }
+    </style>
+  </div>
+
+  <h3>Approach G: Card-Style Accordion</h3>
+  <div class="demo-section">
+    <button class="section-header-g" style="--line-color: #ffc524; --line-color-rgb: 255, 197, 36;" onclick="toggleAccordion('accordion-g')">
+      <div class="header-content-g">
+        <span class="section-line-badge-large" style="background-color: #ffc524; color: #000000;">1</span>
+        <div class="header-info">
+          <span class="section-line-name-bold">Line 1 Yonge-University</span>
+          <span class="issue-summary">
+            <span class="issue-dot disruption"></span>
+            <span class="issue-dot delay"></span>
+            <span class="issue-text">2 active issues</span>
+          </span>
+        </div>
+      </div>
+      <svg class="chevron-g" id="chevron-g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+    <div class="accordion-content" id="accordion-g">
+      <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+        <div class="alert-card-content">
+          <div class="alert-card-header">
+            <div class="alert-card-badges">
+              <span class="route-badge route-line-1">Line 1</span>
+              <span class="status-badge status-badge-disruption">Disruption</span>
+            </div>
+            <span class="alert-card-timestamp">5 min ago</span>
+          </div>
+          <p class="alert-card-text">Line 1: No service between St. Clair and Finch stations.</p>
+        </div>
+      </div>
+      <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+        <div class="alert-card-content">
+          <div class="alert-card-header">
+            <div class="alert-card-badges">
+              <span class="route-badge route-line-1">Line 1</span>
+              <span class="status-badge status-badge-delay">Delay</span>
+            </div>
+            <span class="alert-card-timestamp">15 min ago</span>
+          </div>
+          <p class="alert-card-text">Line 1: Delays of 5-10 minutes southbound.</p>
+        </div>
+      </div>
+    </div>
+    <style>
+      .section-header-g {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 1rem;
+        border: 1px solid hsl(var(--border));
+        background-color: rgba(var(--line-color-rgb), 0.08);
+        border-radius: 0.75rem;
+        margin: 1rem 0 0;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .section-header-g:hover {
+        background-color: rgba(var(--line-color-rgb), 0.15);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .header-content-g {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .section-line-badge-large {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.5rem;
+        font-size: 1.125rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .header-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .section-line-name-bold {
+        font-size: 0.9375rem;
+        font-weight: 600;
+      }
+      .issue-summary {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+      }
+      .issue-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+      .issue-dot.disruption {
+        background-color: hsl(0 70% 50%);
+      }
+      .issue-dot.delay {
+        background-color: hsl(38 80% 50%);
+      }
+      .chevron-g {
+        width: 1.5rem;
+        height: 1.5rem;
+        color: hsl(var(--muted-foreground));
+        transition: transform 0.2s;
+        flex-shrink: 0;
+      }
+      .chevron-g.rotated {
+        transform: rotate(-180deg);
+      }
+    </style>
+  </div>
+
+  <h3>Approach H: Minimalist Accordion</h3>
+  <div class="demo-section">
+    <button class="section-header-h" onclick="toggleAccordion('accordion-h')">
+      <div class="header-line-h" style="background-color: #ffc524;"></div>
+      <div class="header-text-h">
+        <span class="line-badge-h" style="background-color: #ffc524; color: #000000;">1</span>
+        <span class="line-name-h">Line 1</span>
+        <span class="issue-count-h">2</span>
+      </div>
+      <svg class="chevron-h" id="chevron-h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+    <div class="accordion-content" id="accordion-h">
+      <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+        <div class="alert-card-content">
+          <div class="alert-card-header">
+            <div class="alert-card-badges">
+              <span class="route-badge route-line-1">Line 1</span>
+              <span class="status-badge status-badge-disruption">Disruption</span>
+            </div>
+            <span class="alert-card-timestamp">5 min ago</span>
+          </div>
+          <p class="alert-card-text">Line 1: No service between St. Clair and Finch stations.</p>
+        </div>
+      </div>
+      <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+        <div class="alert-card-content">
+          <div class="alert-card-header">
+            <div class="alert-card-badges">
+              <span class="route-badge route-line-1">Line 1</span>
+              <span class="status-badge status-badge-delay">Delay</span>
+            </div>
+            <span class="alert-card-timestamp">15 min ago</span>
+          </div>
+          <p class="alert-card-text">Line 1: Delays of 5-10 minutes southbound.</p>
+        </div>
+      </div>
+    </div>
+    <style>
+      .section-header-h {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 0;
+        border: none;
+        background: transparent;
+        margin: 1rem 0 0;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      .section-header-h:hover {
+        opacity: 0.8;
+      }
+      .header-line-h {
+        width: 4px;
+        height: 2.5rem;
+        border-radius: 2px;
+        margin-right: 0.75rem;
+      }
+      .header-text-h {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+      }
+      .line-badge-h {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.5rem;
+        height: 1.5rem;
+        padding: 0 0.25rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .line-name-h {
+        font-size: 0.9375rem;
+        font-weight: 600;
+      }
+      .issue-count-h {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.25rem;
+        height: 1.25rem;
+        padding: 0 0.375rem;
+        border-radius: 9999px;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        background-color: hsl(var(--muted));
+        color: hsl(var(--foreground));
+        margin-left: auto;
+        margin-right: 0.5rem;
+      }
+      .chevron-h {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: hsl(var(--muted-foreground));
+        transition: transform 0.2s;
+      }
+      .chevron-h.rotated {
+        transform: rotate(-180deg);
+      }
+    </style>
+  </div>
+
+  <h3>Approach I: Top Border Accordion (Full Width Card) - Selected ✅</h3>
+  <div class="demo-section" style="padding: 0; background: transparent; border: none;">
+    <div class="accordion-card-i">
+      <button class="section-header-i" style="--line-color: #ffc524;" onclick="toggleAccordion('accordion-i')">
+        <div class="top-border-accent-i"></div>
+        <div class="header-body-i">
+          <div class="header-left-i">
+            <span class="section-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+            <span class="section-line-name">Line 1</span>
+          </div>
+          <svg class="chevron-i rotated" id="chevron-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </button>
+      <div class="accordion-content expanded" id="accordion-i">
+        <div class="accordion-body-i">
+          <div class="alert-card-no-accent">
+            <div class="alert-card-content">
+              <div class="alert-card-header">
+                <div class="alert-card-badges">
+                  <span class="route-badge route-line-1">Line 1</span>
+                  <span class="status-badge status-badge-disruption">Disruption</span>
+                </div>
+                <span class="alert-card-timestamp">5 min ago</span>
+              </div>
+              <p class="alert-card-text">Line 1: No service between St. Clair and Finch stations.</p>
+            </div>
+          </div>
+          <div class="alert-card-no-accent" style="margin-top: 0.75rem;">
+            <div class="alert-card-content">
+              <div class="alert-card-header">
+                <div class="alert-card-badges">
+                  <span class="route-badge route-line-1">Line 1</span>
+                  <span class="status-badge status-badge-delay">Delay</span>
+                </div>
+                <span class="alert-card-timestamp">15 min ago</span>
+              </div>
+              <p class="alert-card-text">Line 1: Delays of 5-10 minutes southbound.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <style>
+      .accordion-card-i {
+        margin: 1rem 0;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background-color: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      .section-header-i {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding: 0;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .section-header-i:hover {
+        background-color: hsl(var(--muted) / 0.3);
+      }
+      .top-border-accent-i {
+        height: 4px;
+        background-color: var(--line-color);
+      }
+      .header-body-i {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.875rem 1rem;
+      }
+      .header-left-i {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+      }
+      .chevron-i {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: hsl(var(--muted-foreground));
+        transition: transform 0.2s;
+      }
+      .chevron-i.rotated {
+        transform: rotate(-180deg);
+      }
+      .accordion-body-i {
+        padding: 0.75rem 1rem 1rem;
+        border-top: 1px solid hsl(var(--border));
+      }
+      /* Alert cards without left accent border */
+      .alert-card-no-accent {
+        border-radius: 0.5rem;
+        overflow: hidden;
+        background-color: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        transition: box-shadow 0.2s, transform 0.2s;
+      }
+      .alert-card-no-accent:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </div>
+
+  <h3>Approach J: Top Border Accordion with Status Icons</h3>
+  <div class="demo-section" style="padding: 0; background: transparent; border: none;">
+    <div class="accordion-card-j">
+      <button class="section-header-j" style="--line-color: #ffc524;" onclick="toggleAccordion('accordion-j')">
+        <div class="top-border-accent-j"></div>
+        <div class="header-body-j">
+          <div class="header-content-left-j">
+            <span class="section-line-badge" style="background-color: #ffc524; color: #000000;">1</span>
+            <div class="header-text-j">
+              <span class="section-line-name">Line 1</span>
+              <div class="status-indicators-j">
+                <div class="status-item-j">
+                  <svg class="status-icon-j disruption" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>Disruption</span>
+                </div>
+                <div class="status-item-j">
+                  <svg class="status-icon-j delay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>Delay</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <svg class="chevron-j" id="chevron-j" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </button>
+      <div class="accordion-content" id="accordion-j">
+        <div class="accordion-body-j">
+          <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524;">
+            <div class="alert-card-content">
+              <div class="alert-card-header">
+                <div class="alert-card-badges">
+                  <span class="route-badge route-line-1">Line 1</span>
+                  <span class="status-badge status-badge-disruption">Disruption</span>
+                </div>
+                <span class="alert-card-timestamp">5 min ago</span>
+              </div>
+              <p class="alert-card-text">Line 1: No service between St. Clair and Finch stations.</p>
+            </div>
+          </div>
+          <div class="alert-card has-line-accent" style="--alert-line-color: #ffc524; margin-top: 0.75rem;">
+            <div class="alert-card-content">
+              <div class="alert-card-header">
+                <div class="alert-card-badges">
+                  <span class="route-badge route-line-1">Line 1</span>
+                  <span class="status-badge status-badge-delay">Delay</span>
+                </div>
+                <span class="alert-card-timestamp">15 min ago</span>
+              </div>
+              <p class="alert-card-text">Line 1: Delays of 5-10 minutes southbound.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <style>
+      .accordion-card-j {
+        margin: 1rem 0;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background-color: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      .section-header-j {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding: 0;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .section-header-j:hover {
+        background-color: hsl(var(--muted) / 0.3);
+      }
+      .top-border-accent-j {
+        height: 4px;
+        background-color: var(--line-color);
+      }
+      .header-body-j {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.875rem 1rem;
+      }
+      .header-content-left-j {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .header-text-j {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+      }
+      .status-indicators-j {
+        display: flex;
+        gap: 0.75rem;
+      }
+      .status-item-j {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.6875rem;
+        color: hsl(var(--muted-foreground));
+        font-weight: 500;
+      }
+      .status-icon-j {
+        width: 0.875rem;
+        height: 0.875rem;
+      }
+      .status-icon-j.disruption {
+        color: hsl(0 70% 50%);
+      }
+      .status-icon-j.delay {
+        color: hsl(38 80% 50%);
+      }
+      .chevron-j {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: hsl(var(--muted-foreground));
+        transition: transform 0.2s;
+      }
+      .chevron-j.rotated {
+        transform: rotate(-180deg);
+      }
+      .accordion-body-j {
+        padding: 0.75rem 1rem 1rem;
+        border-top: 1px solid hsl(var(--border));
+      }
+    </style>
+  </div>
+
+  <h3 style="margin-top: 2rem; padding: 1rem; background-color: hsl(217 91% 60% / 0.1); border-radius: var(--radius);">
+    ✅ Top Border Accordion Styles
+  </h3>
+  <p style="color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin: 0.5rem 0 0 0;">
+    <strong>Approach I</strong> - Clean top border accordion with issue count text<br>
+    <strong>Approach J</strong> - Top border accordion with status icons showing each issue type<br><br>
+    Both are full-width cards with the line color accent on top. Click to expand/collapse alerts.
+  </p>
+
+  <script>
+    let highlightTimeout = null;
+
+    function toggleAccordion(accordionId) {
+      const content = document.getElementById(accordionId);
+      const chevronId = 'chevron-' + accordionId.split('-')[1];
+      const chevron = document.getElementById(chevronId);
+      
+      if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        if (chevron) chevron.classList.remove('rotated');
+      } else {
+        content.classList.add('expanded');
+        if (chevron) chevron.classList.add('rotated');
+      }
+    }
+
+    function highlightSection(sectionId) {
+      // Clear any existing highlight
+      document.querySelectorAll('.subway-section-header.highlighted').forEach(el => {
+        el.classList.remove('highlighted');
+      });
+      document.querySelectorAll('.alert-highlighted').forEach(el => {
+        el.classList.remove('alert-highlighted');
+      });
+
+      // Clear existing timeout
+      if (highlightTimeout) {
+        clearTimeout(highlightTimeout);
+      }
+
+      // Find and highlight the section
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        section.classList.add('highlighted');
+
+        // Highlight associated alert cards
+        let sibling = section.nextElementSibling;
+        while (sibling && sibling.classList.contains('alert-wrapper')) {
+          sibling.classList.add('alert-highlighted');
+          sibling = sibling.nextElementSibling;
+        }
+
+        // Clear highlight after 2.5 seconds
+        highlightTimeout = setTimeout(() => {
+          section.classList.remove('highlighted');
+          document.querySelectorAll('.alert-highlighted').forEach(el => {
+            el.classList.remove('alert-highlighted');
+          });
+        }, 2500);
+      }
+    }
+  </script>
+</body>
+</html>

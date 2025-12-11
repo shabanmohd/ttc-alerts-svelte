@@ -102,7 +102,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | --------------------------------- | ------ | -------------------------------------------------------------- |
 | `+layout.svelte`                  | ✅     | App layout, auth init, dialogs                                 |
 | `+page.svelte`                    | ✅     | Homepage with alert tabs + ETA                                 |
-| `alerts/+page.svelte`             | ✅     | Alerts page with Active/Resolved/Scheduled tabs, subway status |
+| `alerts/+page.svelte`             | ✅     | Alerts page with tabs, subway status grid, accordion sections  |
 | `alerts-archive/+page.svelte.bak` | 📦     | Archived original alerts page                                  |
 | `preferences/+page.svelte`        | ✅     | Route/mode preferences                                         |
 | `settings/+page.svelte`           | ✅     | Settings with stops, routes, prefs, location 🆕 **B**          |
@@ -316,6 +316,38 @@ For local development, use `localhost` and `http://localhost:5173`.
 ---
 
 ## Changelog
+
+### Dec 21, 2025 - Subway Alerts Accordion Section Headers
+
+**UX Enhancement:**
+
+- ✅ Replaced static subway section headers with collapsible accordion cards
+- ✅ 4px colored top border for line identification (matches subway line color)
+- ✅ Click to expand/collapse alert section for each subway line
+- ✅ Sections default to expanded state for immediate visibility
+- ✅ Removed left accent borders from inner alert cards (accordion border provides context)
+- ✅ Click-to-scroll from status grid now auto-expands collapsed sections
+- ✅ Smooth transitions with chevron rotation animation
+
+**Technical Implementation:**
+
+- Added `expandedSections` state (Set) to track which lines are expanded
+- Created `alertsByLine` derived store to group alerts by subway line
+- Added `toggleAccordion()` function for expand/collapse
+- New accordion CSS: `.accordion-card`, `.accordion-header`, `.accordion-content`, `.accordion-body`
+- Updated `handleStatusCardClick()` to auto-expand sections when scrolling
+- Effect hook to auto-expand all subway line sections on mount
+
+**Files Updated:**
+
+- `src/routes/alerts/+page.svelte` - Accordion implementation
+- `static/test-subway-status-ux.html` - Demo page with final Approach I design
+
+**Design Decision:**
+
+- Selected Approach I from test HTML: Clean card with top border, line badge + name, chevron icon
+- Rejected separate issue count text (redundant with multi-status icons on status cards)
+- Simplified inner alert cards by removing left borders (accordion context sufficient)
 
 ### Dec 20, 2025 - Route Filtering Bug Fix & My Stops UX Improvements
 

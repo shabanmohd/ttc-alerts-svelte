@@ -50,7 +50,7 @@
 
   // ===== DEMO MODE =====
   // Set to true to show demo alerts for testing UI
-  const DEMO_MODE = false;
+  const DEMO_MODE = true;
 
   // Demo alerts for testing (using type assertion for demo data)
   const demoAlerts = (DEMO_MODE
@@ -176,6 +176,13 @@
   let activeDialog = $state<string | null>(null);
   let unsubscribeRealtime: (() => void) | null = null;
   let maintenancePollingInterval: ReturnType<typeof setInterval> | null = null;
+
+  // State for subway status card click-to-scroll highlighting
+  let highlightedLineId = $state<string | null>(null);
+  let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // State for accordion sections (expanded by default)
+  let expandedSections = $state<Set<string>>(new Set());
 
   // Get current tab from URL, default to 'active'
   let currentTab = $derived<AlertsTab>(
@@ -382,15 +389,30 @@
     return true;
   }
 
-  // Get active alert for a specific subway line
-  function getActiveAlertForLine(lineId: string): ThreadWithAlerts | null {
+  // Get ALL active alerts for a specific subway line (for count and grouping)
+  function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
     const active = activeAlerts();
-    return (
-      active.find((thread) => {
-        const routes = getThreadRoutes(thread);
-        return routes.some((r) => routeMatchesLine(r, lineId));
-      }) || null
+    return active.filter((thread) => {
+      const routes = getThreadRoutes(thread);
+      return routes.some((r) => routeMatchesLine(r, lineId));
+    });
+  }
+
+  // Get the most severe active alert for a specific subway line (for status display)
+  function getActiveAlertForLine(lineId: string): ThreadWithAlerts | null {
+    const lineAlerts = getAllAlertsForLine(lineId);
+    if (lineAlerts.length === 0) return null;
+
+    // Priority order: disruption > delay > other
+    const disruption = lineAlerts.find(
+      (t) => getAlertStatusType(t) === "disruption"
     );
+    if (disruption) return disruption;
+
+    const delay = lineAlerts.find((t) => getAlertStatusType(t) === "delay");
+    if (delay) return delay;
+
+    return lineAlerts[0];
   }
 
   // Get scheduled maintenance happening now for a specific line
@@ -432,34 +454,87 @@
     return "Disruption";
   }
 
-  // Helper: get status type (delay vs disruption) for styling
+  // Helper: get status type (delay vs disruption vs scheduled) for styling
   function getAlertStatusType(
     alert: ThreadWithAlerts | null
-  ): "delay" | "disruption" {
+  ): "delay" | "disruption" | "scheduled" {
     if (!alert?.latestAlert?.effect) return "disruption";
     const effect = alert.latestAlert.effect.toUpperCase();
 
     if (effect.includes("DELAY") || effect.includes("SIGNIFICANT_DELAYS"))
       return "delay";
 
+    if (effect.includes("SCHEDULED") || effect.includes("CLOSURE"))
+      return "scheduled";
+
     return "disruption";
+  }
+
+  // Helper: get display name for status type
+  function getStatusTypeName(
+    type: "delay" | "disruption" | "scheduled"
+  ): string {
+    switch (type) {
+      case "delay":
+        return "Delay";
+      case "disruption":
+        return "Disruption";
+      case "scheduled":
+        return "Scheduled";
+    }
   }
 
   // Derived: subway status for each line
   let subwayStatuses = $derived(() => {
     return SUBWAY_LINES.map((line) => {
+      const allAlerts = getAllAlertsForLine(line.id);
       const activeAlert = getActiveAlertForLine(line.id);
       const activeMaintenance = getActiveMaintenanceForLine(line.id);
       const alertType = getAlertStatusType(activeAlert);
+
+      // Count total issues: alerts + active maintenance
+      const alertCount =
+        allAlerts.length +
+        (activeMaintenance &&
+        !allAlerts.some((a) => a.thread_id.startsWith("maintenance-"))
+          ? 1
+          : 0);
+
+      // Check for compound status (both live alert AND scheduled maintenance)
+      const hasCompoundStatus =
+        allAlerts.length > 0 &&
+        activeMaintenance &&
+        !allAlerts.some((a) => a.thread_id.startsWith("maintenance-"));
+
+      // Get unique alert types for display (e.g., ["Disruption", "Delay"])
+      const alertTypes = new Set<"delay" | "disruption" | "scheduled">();
+      for (const alert of allAlerts) {
+        alertTypes.add(getAlertStatusType(alert));
+      }
+      // Add scheduled if there's active maintenance not already counted
+      if (
+        activeMaintenance &&
+        !allAlerts.some((a) => a.thread_id.startsWith("maintenance-"))
+      ) {
+        alertTypes.add("scheduled");
+      }
+      // Convert to array in priority order (disruption > delay > scheduled)
+      const uniqueTypes: ("delay" | "disruption" | "scheduled")[] = [];
+      if (alertTypes.has("disruption")) uniqueTypes.push("disruption");
+      if (alertTypes.has("delay")) uniqueTypes.push("delay");
+      if (alertTypes.has("scheduled")) uniqueTypes.push("scheduled");
 
       return {
         ...line,
         hasAlert: !!activeAlert,
         alert: activeAlert,
         alertStatusText: getAlertStatusText(activeAlert),
-        alertType, // "delay" or "disruption"
+        alertType, // "delay" or "disruption" (most severe)
         hasMaintenance: !!activeMaintenance,
         maintenance: activeMaintenance,
+        alertCount, // Total number of issues for this line
+        hasCompoundStatus, // Both live alert AND scheduled closure
+        uniqueTypes, // Array of unique alert types for multi-status display
         // More specific status: "ok", "delay", "disruption", or "scheduled"
         status: activeAlert
           ? alertType
@@ -611,30 +686,198 @@
     return activeMaintenanceNow().map(maintenanceToThread);
   });
 
-  // Derived: Combined active alerts and maintenance, sorted with subway first
+  // Helper: get subway line ID from thread
+  function getSubwayLineFromThread(thread: ThreadWithAlerts): string | null {
+    const routes = getThreadRoutes(thread);
+    for (const route of routes) {
+      const normalized = normalizeLineId(route).toLowerCase();
+      if (normalized.startsWith("line")) {
+        return normalized.replace("line ", "Line ");
+      }
+    }
+    return null;
+  }
+
+  // Derived: Combined active alerts and maintenance, grouped by subway line with section headers
   let combinedActiveAlerts = $derived(() => {
     const alerts = filteredActiveAlerts();
     const maintenance = activeMaintenanceThreads();
     const combined = [...alerts, ...maintenance];
 
-    // Sort: subway lines first, then by date
-    return combined.sort((a, b) => {
-      const aRoutes = getThreadRoutes(a);
-      const bRoutes = getThreadRoutes(b);
-      const aIsSubway = aRoutes.some((r) => isSubwayRoute(r));
-      const bIsSubway = bRoutes.some((r) => isSubwayRoute(r));
+    // Separate subway and non-subway alerts
+    const subwayAlerts = combined.filter((t) => {
+      const routes = getThreadRoutes(t);
+      return routes.some((r) => isSubwayRoute(r));
+    });
+    const nonSubwayAlerts = combined.filter((t) => {
+      const routes = getThreadRoutes(t);
+      return !routes.some((r) => isSubwayRoute(r));
+    });
 
-      // Subway first
-      if (aIsSubway && !bIsSubway) return -1;
-      if (!aIsSubway && bIsSubway) return 1;
+    // Group subway alerts by line ID, maintaining line order (1, 2, 4, 6)
+    const lineOrder = ["Line 1", "Line 2", "Line 4", "Line 6"];
+    const groupedSubway: ThreadWithAlerts[] = [];
 
-      // Then by date (newest first)
+    for (const lineId of lineOrder) {
+      const lineAlerts = subwayAlerts
+        .filter((t) => {
+          const threadLine = getSubwayLineFromThread(t);
+          return threadLine === lineId;
+        })
+        .sort((a, b) => {
+          // Within a line, sort by severity then date
+          const aType = getAlertStatusType(a);
+          const bType = getAlertStatusType(b);
+          if (aType === "disruption" && bType !== "disruption") return -1;
+          if (bType === "disruption" && aType !== "disruption") return 1;
+          return (
+            new Date(b.latestAlert?.created_at || 0).getTime() -
+            new Date(a.latestAlert?.created_at || 0).getTime()
+          );
+        });
+      groupedSubway.push(...lineAlerts);
+    }
+
+    // Sort non-subway by date
+    const sortedNonSubway = nonSubwayAlerts.sort((a, b) => {
       return (
         new Date(b.latestAlert?.created_at || 0).getTime() -
         new Date(a.latestAlert?.created_at || 0).getTime()
       );
     });
+
+    return [...groupedSubway, ...sortedNonSubway];
   });
+
+  // Derived: Group subway alerts by line for accordion rendering
+  let alertsByLine = $derived(() => {
+    const combined = combinedActiveAlerts();
+    const lineOrder = ["Line 1", "Line 2", "Line 4", "Line 6"];
+    const grouped = new Map<string, ThreadWithAlerts[]>();
+    const nonSubway: ThreadWithAlerts[] = [];
+
+    combined.forEach((thread) => {
+      const line = getSubwayLineFromThread(thread);
+      if (line) {
+        if (!grouped.has(line)) {
+          grouped.set(line, []);
+        }
+        grouped.get(line)!.push(thread);
+      } else {
+        nonSubway.push(thread);
+      }
+    });
+
+    // Return ordered array of line groups plus non-subway alerts
+    const result: { type: 'line' | 'alerts'; lineId?: string; alerts: ThreadWithAlerts[] }[] = [];
+    
+    lineOrder.forEach((lineId) => {
+      if (grouped.has(lineId)) {
+        result.push({ type: 'line', lineId, alerts: grouped.get(lineId)! });
+      }
+    });
+    
+    if (nonSubway.length > 0) {
+      result.push({ type: 'alerts', alerts: nonSubway });
+    }
+
+    return result;
+  });
+
+  // Effect: Initialize all subway line sections as expanded by default
+  $effect(() => {
+    const groups = alertsByLine();
+    const linesWithAlerts = new Set<string>();
+    
+    groups.forEach((group) => {
+      if (group.type === 'line' && group.lineId) {
+        linesWithAlerts.add(group.lineId);
+      }
+    });
+
+    // Expand all sections with alerts if not already tracked
+    if (linesWithAlerts.size > 0) {
+      const newExpanded = new Set(expandedSections);
+      let hasChanges = false;
+      
+      linesWithAlerts.forEach((lineId) => {
+        if (!newExpanded.has(lineId) && !expandedSections.has(lineId)) {
+          newExpanded.add(lineId);
+          hasChanges = true;
+        }
+      });
+      
+      if (hasChanges) {
+        expandedSections = newExpanded;
+      }
+    }
+  });
+
+  // Helper: check if this is the first alert for a new subway line (for section headers)
+  function isFirstAlertForLine(
+    thread: ThreadWithAlerts,
+    index: number
+  ): boolean {
+    const combined = combinedActiveAlerts();
+    const currentLine = getSubwayLineFromThread(thread);
+    if (!currentLine) return false;
+
+    // Check if previous alert was a different line or non-subway
+    if (index === 0) return true;
+    const prevThread = combined[index - 1];
+    const prevLine = getSubwayLineFromThread(prevThread);
+    return prevLine !== currentLine;
+  }
+
+  // Helper: get line info for section header
+  function getLineInfo(lineId: string) {
+    return SUBWAY_LINES.find((l) => l.id === lineId);
+  }
+
+  // Toggle accordion section
+  function toggleAccordion(lineId: string) {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(lineId)) {
+      newExpanded.delete(lineId);
+    } else {
+      newExpanded.add(lineId);
+    }
+    expandedSections = newExpanded;
+  }
+
+  // Click handler for subway status cards - scroll to line section and highlight
+  function handleStatusCardClick(lineId: string) {
+    const lineAlerts = getAllAlertsForLine(lineId);
+    const activeMaint = getActiveMaintenanceForLine(lineId);
+
+    if (lineAlerts.length === 0 && !activeMaint) return; // No alerts to scroll to
+
+    // Clear any existing highlight timeout
+    if (highlightTimeout) {
+      clearTimeout(highlightTimeout);
+    }
+
+    // Set highlighted line (immediately switches if different line)
+    highlightedLineId = lineId;
+
+    // Expand the section if it's collapsed
+    if (!expandedSections.has(lineId)) {
+      expandedSections = new Set([...expandedSections, lineId]);
+    }
+
+    // Scroll to the line section
+    const sectionElement = document.getElementById(
+      `subway-section-${lineId.replace(" ", "-").toLowerCase()}`
+    );
+    if (sectionElement) {
+      sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    // Clear highlight after 2.5 seconds
+    highlightTimeout = setTimeout(() => {
+      highlightedLineId = null;
+    }, 2500);
+  }
 
   function handleOpenDialog(dialog: string) {
     activeDialog = dialog;
@@ -721,13 +964,23 @@
       aria-label="Subway line status"
     >
       {#each subwayStatuses() as line (line.id)}
-        <div
+        <button
+          type="button"
           class="subway-status-card"
           class:status-ok={line.status === "ok"}
           class:status-delay={line.status === "delay"}
           class:status-disruption={line.status === "disruption"}
           class:status-scheduled={line.status === "scheduled"}
+          class:clickable={line.status !== "ok"}
           style="--line-color: {line.color}"
+          onclick={() => handleStatusCardClick(line.id)}
+          disabled={line.status === "ok"}
+          aria-label="{line.name}: {line.status === 'ok'
+            ? 'Normal Service'
+            : `${line.alertCount} issue${line.alertCount > 1 ? 's' : ''}: ${line.uniqueTypes.map((t) => getStatusTypeName(t)).join(', ')}`}. {line.status !==
+          'ok'
+            ? 'Click to view alerts.'
+            : ''}"
         >
           <div class="subway-status-header">
             <span
@@ -742,24 +995,27 @@
             {#if line.status === "ok"}
               <CheckCircle class="w-4 h-4 text-green-600 dark:text-green-500" />
               <span class="status-text status-ok-text">Normal Service</span>
-            {:else if line.status === "delay"}
-              <AlertCircle class="w-4 h-4 status-delay-icon" />
-              <span class="status-text status-delay-text"
-                >{line.alertStatusText}</span
-              >
-            {:else if line.status === "disruption"}
-              <AlertCircle class="w-4 h-4 status-disruption-icon" />
-              <span class="status-text status-disruption-text"
-                >{line.alertStatusText}</span
-              >
-            {:else if line.status === "scheduled"}
-              <Calendar class="w-4 h-4 status-scheduled-icon flex-shrink-0" />
-              <span class="status-text status-scheduled-text"
-                >Scheduled Closure</span
-              >
+            {:else}
+              <!-- Show all unique issue types with icons -->
+              <div class="multi-status-container">
+                {#each line.uniqueTypes as type}
+                  <div class="status-type-item status-type-{type}">
+                    {#if type === "disruption"}
+                      <AlertCircle class="w-4 h-4 status-disruption-icon" />
+                      <span class="status-text status-disruption-text">Disruption</span>
+                    {:else if type === "delay"}
+                      <AlertCircle class="w-4 h-4 status-delay-icon" />
+                      <span class="status-text status-delay-text">Delay</span>
+                    {:else if type === "scheduled"}
+                      <Calendar class="w-4 h-4 status-scheduled-icon flex-shrink-0" />
+                      <span class="status-text status-scheduled-text">Scheduled</span>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
             {/if}
           </div>
-        </div>
+        </button>
       {/each}
     </div>
 
@@ -807,14 +1063,80 @@
           <p class="text-sm">No active service disruptions right now.</p>
         </div>
       {:else}
-        {#each combinedActiveAlerts() as thread, i (thread.thread_id)}
-          {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
-          <div
-            class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-            style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
-          >
-            <AlertCard {thread} />
-          </div>
+        {#each alertsByLine() as group}
+          {#if group.type === 'line' && group.lineId}
+            {@const lineId = group.lineId}
+            {@const lineInfo = getLineInfo(lineId)}
+            {@const sectionId = `subway-section-${lineId.replace(' ', '-').toLowerCase()}`}
+            {@const isExpanded = expandedSections.has(lineId)}
+            {@const isHighlighted = highlightedLineId === lineId}
+
+            <!-- Accordion section for subway line -->
+            <div
+              class="accordion-card"
+              class:highlighted={isHighlighted}
+              id={sectionId}
+            >
+              <button
+                class="accordion-header"
+                style="--line-color: {lineInfo?.color || '#666'}"
+                onclick={() => toggleAccordion(lineId)}
+              >
+                <div class="accordion-top-border"></div>
+                <div class="accordion-header-body">
+                  <div class="accordion-header-left">
+                    <span
+                      class="section-line-badge"
+                      style="background-color: {lineInfo?.color ||
+                        '#666'}; color: {lineInfo?.textColor || '#fff'}"
+                    >
+                      {lineId.replace("Line ", "")}
+                    </span>
+                    <span class="section-line-name">{lineId}</span>
+                  </div>
+                  <svg
+                    class="accordion-chevron"
+                    class:rotated={isExpanded}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </button>
+              <div class="accordion-content" class:expanded={isExpanded}>
+                <div class="accordion-body">
+                  {#each group.alerts as thread, i (thread.thread_id)}
+                    {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
+                    
+                    <div
+                      class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
+                      class:alert-highlighted={isHighlighted}
+                      style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+                    >
+                      <AlertCard {thread} />
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            </div>
+          {:else}
+            <!-- Non-subway alerts (no accordion) -->
+            {#each group.alerts as thread, i (thread.thread_id)}
+              {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
+              {@const subwayLine = getSubwayLineFromThread(thread)}
+              {@const lineInfo = subwayLine ? getLineInfo(subwayLine) : null}
+              
+              <div
+                class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
+                style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+              >
+                <AlertCard {thread} lineColor={lineInfo?.color} />
+              </div>
+            {/each}
+          {/if}
         {/each}
       {/if}
     </div>
@@ -997,6 +1319,36 @@
     background-color: hsl(var(--card));
     border: 1px solid hsl(var(--border));
     transition: all 0.15s ease;
+    text-align: left;
+    cursor: default;
+  }
+
+  /* Clickable state for cards with alerts */
+  .subway-status-card.clickable {
+    cursor: pointer;
+  }
+
+  .subway-status-card.clickable:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px hsl(var(--foreground) / 0.1);
+  }
+
+  .subway-status-card.clickable:active {
+    transform: translateY(0);
+  }
+
+  .subway-status-card:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  .subway-status-card:disabled {
+    cursor: default;
+  }
+
+  .subway-status-card:disabled:hover {
+    transform: none;
+    box-shadow: none;
   }
 
   .subway-status-card.status-ok {
@@ -1032,6 +1384,20 @@
   }
 
   .subway-status-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Multi-status container for showing multiple issue types */
+  .multi-status-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+  }
+
+  .status-type-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1118,5 +1484,103 @@
   :global(.dark .status-scheduled-icon),
   :global(.dark) .status-scheduled-text {
     color: hsl(270 70% 75%) !important;
+  }
+
+  /* Accordion Section Headers */
+  .accordion-card {
+    margin: 1rem 0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s;
+  }
+
+  .accordion-card.highlighted {
+    box-shadow: 0 0 0 2px var(--line-color), 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .accordion-header {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .accordion-header:hover {
+    background-color: hsl(var(--muted) / 0.3);
+  }
+
+  .accordion-top-border {
+    height: 4px;
+    background-color: var(--line-color);
+  }
+
+  .accordion-header-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem;
+  }
+
+  .accordion-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .accordion-chevron {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: hsl(var(--muted-foreground));
+    transition: transform 0.2s;
+  }
+
+  .accordion-chevron.rotated {
+    transform: rotate(-180deg);
+  }
+
+  .accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+  }
+
+  .accordion-content.expanded {
+    max-height: 5000px; /* Large enough for multiple alerts */
+    transition: max-height 0.5s ease-in;
+  }
+
+  .accordion-body {
+    padding: 0.75rem 1rem 1rem;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .accordion-body > div:not(:first-child) {
+    margin-top: 0.75rem;
+  }
+
+  .section-line-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75rem;
+    height: 1.75rem;
+    padding: 0 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  .section-line-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
   }
 </style>

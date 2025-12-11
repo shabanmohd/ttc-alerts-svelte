@@ -1297,6 +1297,143 @@ The switch has distinct on/off states with icons inside the thumb:
 - `settings/+page.svelte` - Reduce Motion
 - `preferences/+page.svelte` - Reduce Motion, Weather Warnings
 
+### Subway Alerts Accordion Sections
+
+Collapsible card sections for grouping subway line alerts on the alerts page.
+
+#### Layout Structure
+
+```
+┌──────────────────────────────────────────────────┐
+│  ████ 4px colored top border (line color)        │
+├──────────────────────────────────────────────────┤
+│  [1] Line 1            ▼ chevron (rotates -180°)│
+│  Clickable header                                │
+├──────────────────────────────────────────────────┤
+│  ┌────────────────────────────────────────────┐  │
+│  │ Alert Card 1 (no left border)              │  │
+│  └────────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────────┐  │
+│  │ Alert Card 2 (no left border)              │  │
+│  └────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────┘
+```
+
+#### CSS Classes & Styling
+
+| Class                   | Purpose                    | Key Properties                                                   |
+| ----------------------- | -------------------------- | ---------------------------------------------------------------- |
+| `.accordion-card`       | Outer card container       | Card styling, border radius, shadow                              |
+| `.accordion-header`     | Clickable header button    | Full width, no intrinsic padding, cursor pointer                 |
+| `.accordion-top-border` | Colored top stripe         | `height: 4px; background: var(--line-color)`                     |
+| `.accordion-header-body`| Header content wrapper     | Flex row, justify between, padding: `0.875rem 1rem`             |
+| `.accordion-header-left`| Badge + name container     | Flex row, gap: `0.625rem`, align center                          |
+| `.accordion-chevron`    | Expand/collapse icon       | `1.25rem × 1.25rem`, rotates -180° when expanded                 |
+| `.accordion-content`    | Expandable content wrapper | `max-height: 0` collapsed, `max-height: 5000px` expanded         |
+| `.accordion-body`       | Inner alert cards wrapper  | Padding: `0.75rem 1rem 1rem`, border-top when expanded           |
+
+#### State Management
+
+```typescript
+// State: Set of expanded line IDs
+let expandedSections = $state<Set<string>>(new Set());
+
+// Toggle function
+function toggleAccordion(lineId: string) {
+  const newExpanded = new Set(expandedSections);
+  if (newExpanded.has(lineId)) {
+    newExpanded.delete(lineId);
+  } else {
+    newExpanded.add(lineId);
+  }
+  expandedSections = newExpanded;
+}
+
+// Auto-expand all sections on mount
+$effect(() => {
+  const linesWithAlerts = /* derive from alerts */;
+  const newExpanded = new Set(expandedSections);
+  linesWithAlerts.forEach(lineId => newExpanded.add(lineId));
+  expandedSections = newExpanded;
+});
+```
+
+#### Component Structure (Svelte)
+
+```svelte
+{#if subwayLine && isFirstForLine}
+  {@const isExpanded = expandedSections.has(subwayLine)}
+  
+  <div class="accordion-card" class:highlighted={isHighlighted}>
+    <button
+      class="accordion-header"
+      style="--line-color: {lineInfo?.color}"
+      onclick={() => toggleAccordion(subwayLine)}
+    >
+      <div class="accordion-top-border"></div>
+      <div class="accordion-header-body">
+        <div class="accordion-header-left">
+          <span class="section-line-badge" style="background-color: {lineInfo?.color}; color: {lineInfo?.textColor}">
+            {subwayLine.replace("Line ", "")}
+          </span>
+          <span class="section-line-name">{subwayLine}</span>
+        </div>
+        <svg class="accordion-chevron" class:rotated={isExpanded} viewBox="0 0 24 24">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </button>
+    <div class="accordion-content" class:expanded={isExpanded}>
+      <div class="accordion-body">
+        <!-- Alert cards here -->
+      </div>
+    </div>
+  </div>
+{/if}
+```
+
+#### Transitions
+
+| Element               | Transition                  | Duration | Easing   |
+| --------------------- | --------------------------- | -------- | -------- |
+| Chevron rotation      | `transform`                 | 0.2s     | ease     |
+| Header hover          | `background-color`          | 0.2s     | ease     |
+| Content expand        | `max-height`                | 0.5s     | ease-in  |
+| Content collapse      | `max-height`                | 0.3s     | ease-out |
+
+#### Integration with Status Grid
+
+When clicking a subway status card in the grid:
+
+1. Auto-expands the accordion section if collapsed
+2. Scrolls to the section smoothly
+3. Highlights the accordion card for 2.5 seconds
+
+```typescript
+function handleStatusCardClick(lineId: string) {
+  // Expand section if collapsed
+  if (!expandedSections.has(lineId)) {
+    expandedSections = new Set([...expandedSections, lineId]);
+  }
+  
+  // Scroll to section
+  const sectionElement = document.getElementById(`subway-section-${lineId.toLowerCase()}`);
+  sectionElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  
+  // Highlight for 2.5s
+  highlightedLineId = lineId;
+  setTimeout(() => { highlightedLineId = null; }, 2500);
+}
+```
+
+#### ⚠️ Critical: Do NOT Change
+
+1. **4px top border** - Provides line color context, removed from inner alert cards
+2. **Max-height transitions** - Enables smooth expand/collapse animation
+3. **Default expanded state** - All sections start expanded for immediate visibility
+4. **Chevron rotation** - `-180deg` matches native accordion patterns
+5. **Highlight shadow** - Uses `var(--line-color)` for visual linking with status cards
+
 ### Step Indicators (Accordion Headers)
 
 For multi-step wizards/accordions showing completion status. Uses **primary color** to indicate completed steps.
