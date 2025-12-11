@@ -102,10 +102,39 @@ function saveCache(stops: Map<string, StopETA>) {
 const SUBWAY_ROUTES = ['1', '2', '4', '6'];
 
 /**
+ * NTAS stop code ranges for subway platforms
+ * These IDs are reserved for subway stations in the TTC system
+ */
+const SUBWAY_STOP_ID_RANGES = [
+	{ min: 13731, max: 13866 },   // Line 1 & 2 core stations
+	{ min: 14109, max: 14949 },   // Line 1 extensions & Line 4
+	{ min: 15656, max: 15667 },   // Line 1 Vaughan extension
+	{ min: 16289, max: 16324 }    // Line 6 Eglinton Crosstown
+];
+
+/**
  * Check if a stop serves subway routes (uses NTAS API)
+ * Uses both route IDs AND stop ID ranges to detect subway stops
  */
 function isSubwayStop(stop: SavedStop): boolean {
-	return stop.routes.some(route => SUBWAY_ROUTES.includes(route));
+	// Method 1: Check if routes include subway lines
+	if (stop.routes && stop.routes.length > 0) {
+		if (stop.routes.some(route => SUBWAY_ROUTES.includes(route))) {
+			return true;
+		}
+	}
+	
+	// Method 2: Check if stop ID falls within subway stop code ranges
+	const stopIdNum = parseInt(stop.id, 10);
+	if (!isNaN(stopIdNum)) {
+		for (const range of SUBWAY_STOP_ID_RANGES) {
+			if (stopIdNum >= range.min && stopIdNum <= range.max) {
+				return true;
+			}
+		}
+	}
+	
+	return false;
 }
 
 /**
@@ -123,6 +152,7 @@ async function fetchStopETA(stop: SavedStop): Promise<StopETA> {
 	try {
 		// Determine if this is a subway stop to use NTAS API
 		const isSubway = isSubwayStop(stop);
+		console.log(`[ETA] Stop ${stop.id} (${stop.name}): routes=${JSON.stringify(stop.routes)}, isSubway=${isSubway}`);
 		
 		const { data, error } = await supabase.functions.invoke('get-eta', {
 			body: { 
