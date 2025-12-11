@@ -17,9 +17,35 @@
    * - "North - 133 Neilson towards Morningside Heights via Scarborough Centre Stn and Centenary"
    * - "East - 116 Morningside towards Finch"
    * - "Southbound towards Kennedy Station"
+   * - "Southbound to Vaughan Metropolitan Centre via Union" (NTAS format)
    */
   function parseDirection(direction: string): { line1: string; line2: string; line3: string } {
-    // Remove "bound" suffix
+    // Handle NTAS format: "Southbound to Vaughan..." or "Northbound to Finch"
+    const boundMatch = direction.match(/^(North|South|East|West)bound\s+to\s+(.+)$/i);
+    if (boundMatch) {
+      const directionWord = boundMatch[1];
+      const afterTo = boundMatch[2].trim();
+      
+      // Check for "via" in the destination
+      const viaIndex = afterTo.toLowerCase().indexOf(' via ');
+      if (viaIndex > -1) {
+        const destination = afterTo.substring(0, viaIndex).trim();
+        const viaDetails = afterTo.substring(viaIndex + 5).trim();
+        return {
+          line1: `${directionWord}bound`,
+          line2: `to ${destination}`,
+          line3: `via ${viaDetails}`
+        };
+      }
+      
+      return {
+        line1: `${directionWord}bound`,
+        line2: `to ${afterTo}`,
+        line3: ''
+      };
+    }
+    
+    // Remove "bound" suffix for other formats
     const cleaned = direction.replace(/bound$/i, '').trim();
     
     // Pattern: "Direction - Route towards Destination via Details"

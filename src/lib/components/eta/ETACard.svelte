@@ -86,8 +86,20 @@
    * Parse direction into a single destination line
    * "North - 133 Neilson towards Morningside Heights via Scarborough Centre Stn" 
    * → { direction: "North", destination: "Morningside Heights via Scarborough Centre Stn" }
+   * "Southbound to Vaughan Metropolitan Centre via Union"
+   * → { direction: "South", destination: "Vaughan Metropolitan Centre via Union" }
    */
   function parseDirection(direction: string): { direction: string; destination: string } {
+    // Handle NTAS format: "Southbound to Vaughan..." or "Northbound to Finch"
+    // Also handles "Eastbound to Kennedy" etc.
+    const boundMatch = direction.match(/^(North|South|East|West)bound\s+to\s+(.+)$/i);
+    if (boundMatch) {
+      return {
+        direction: boundMatch[1],
+        destination: boundMatch[2].trim()
+      };
+    }
+    
     const cleaned = direction.replace(/bound$/i, '').trim();
     
     // Pattern: "Direction - Route towards Destination via Details"
