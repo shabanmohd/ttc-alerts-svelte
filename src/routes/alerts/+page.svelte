@@ -1102,16 +1102,6 @@
                     </span>
                     <span class="section-line-name">{lineId}</span>
                   </div>
-                  <svg
-                    class="accordion-chevron"
-                    class:rotated={isExpanded}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
                 </div>
               </button>
               <div class="accordion-content" class:expanded={isExpanded}>
@@ -1586,7 +1576,6 @@
   .accordion-header-body {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 0.875rem 1rem;
   }
 
@@ -1596,16 +1585,7 @@
     gap: 0.625rem;
   }
 
-  .accordion-chevron {
-    width: 1.25rem;
-    height: 1.25rem;
-    color: hsl(var(--muted-foreground));
-    transition: transform 0.2s;
-  }
 
-  .accordion-chevron.rotated {
-    transform: rotate(-180deg);
-  }
 
   .accordion-content {
     max-height: 0;
