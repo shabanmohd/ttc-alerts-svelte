@@ -297,7 +297,10 @@
     const normalizedRoute = normalizeLineId(route).toLowerCase();
     const normalizedLine = lineId.toLowerCase();
     // Use startsWith to match "Line 1 (Yonge - University)" with "Line 1"
-    return normalizedRoute === normalizedLine || normalizedRoute.startsWith(normalizedLine + " ");
+    return (
+      normalizedRoute === normalizedLine ||
+      normalizedRoute.startsWith(normalizedLine + " ")
+    );
   }
 
   // Helper: parse date as local time (Toronto time)

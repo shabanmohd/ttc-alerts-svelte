@@ -68,21 +68,21 @@
     const end = parseLocalDate(item.end_date);
     const startDay = start.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
     const endDay = end.getDay();
-    
+
     // Full weekend closure detection:
     // 1. Classic: Sat (6) to Sun (0)
     // 2. Extended: Fri (5) to Sun (0) - weekend closure starting Friday night
     // 3. Extended: Fri (5) to Mon (1) - through the weekend
-    const isWeekendClosure = 
+    const isWeekendClosure =
       (startDay === 6 && endDay === 0) || // Sat-Sun
       (startDay === 5 && endDay === 0) || // Fri-Sun (starts Friday night)
       (startDay === 5 && endDay === 1) || // Fri-Mon (through weekend)
-      (startDay === 6 && endDay === 1);   // Sat-Mon
-    
+      (startDay === 6 && endDay === 1); // Sat-Mon
+
     if (isWeekendClosure) {
       return { type: "weekend", label: "Full weekend closure" };
     }
-    
+
     // Nightly early closure: starts at 10 PM or later
     const startHour = parseTimeHour(item.start_time);
     if (startHour !== null && startHour >= 22) {
