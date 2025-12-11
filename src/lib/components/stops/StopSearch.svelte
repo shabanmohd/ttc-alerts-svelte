@@ -160,7 +160,8 @@
 
   function selectStop(stop: TTCStop) {
     showResults = false;
-    query = stop.name;
+    query = "";
+    results = [];
     highlightedIndex = -1;
     hasSearched = false;
     onSelect?.(stop);
