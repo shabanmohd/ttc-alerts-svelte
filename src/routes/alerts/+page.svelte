@@ -1511,25 +1511,54 @@
 
   @keyframes accordionPulse {
     0% {
-      box-shadow: 0 0 0 0 var(--line-color), 0 1px 3px rgba(0, 0, 0, 0.1);
+      background-color: hsl(var(--card));
     }
     15% {
-      box-shadow: 0 0 0 4px var(--line-color), 0 4px 12px rgba(0, 0, 0, 0.2);
+      background-color: color-mix(in srgb, var(--line-color) 15%, hsl(var(--card)));
     }
     30% {
-      box-shadow: 0 0 0 2px var(--line-color), 0 2px 8px rgba(0, 0, 0, 0.15);
+      background-color: hsl(var(--card));
     }
     45% {
-      box-shadow: 0 0 0 4px var(--line-color), 0 4px 12px rgba(0, 0, 0, 0.2);
+      background-color: color-mix(in srgb, var(--line-color) 15%, hsl(var(--card)));
     }
     60% {
-      box-shadow: 0 0 0 2px var(--line-color), 0 2px 8px rgba(0, 0, 0, 0.15);
+      background-color: hsl(var(--card));
     }
     75% {
-      box-shadow: 0 0 0 3px var(--line-color), 0 3px 10px rgba(0, 0, 0, 0.18);
+      background-color: color-mix(in srgb, var(--line-color) 10%, hsl(var(--card)));
     }
     100% {
-      box-shadow: 0 0 0 0 var(--line-color), 0 1px 3px rgba(0, 0, 0, 0.1);
+      background-color: hsl(var(--card));
+    }
+  }
+
+  /* Dark mode adjustment for pulse visibility */
+  :global(.dark) .accordion-card.highlighted {
+    animation: accordionPulseDark 2s ease-in-out;
+  }
+
+  @keyframes accordionPulseDark {
+    0% {
+      background-color: hsl(var(--card));
+    }
+    15% {
+      background-color: color-mix(in srgb, var(--line-color) 25%, hsl(var(--card)));
+    }
+    30% {
+      background-color: hsl(var(--card));
+    }
+    45% {
+      background-color: color-mix(in srgb, var(--line-color) 25%, hsl(var(--card)));
+    }
+    60% {
+      background-color: hsl(var(--card));
+    }
+    75% {
+      background-color: color-mix(in srgb, var(--line-color) 18%, hsl(var(--card)));
+    }
+    100% {
+      background-color: hsl(var(--card));
     }
   }
 
