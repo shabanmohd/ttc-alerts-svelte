@@ -5,6 +5,7 @@
     filterPredictionsForRoute,
     type ETAPrediction,
   } from "$lib/services/nextbus";
+  import { fetchSubwayETA, isSubwayStop } from "$lib/services/subway-eta";
   import {
     ChevronDown,
     ChevronUp,
@@ -113,16 +114,20 @@
     onGetETA?.(stop.id);
 
     try {
-      const response = await fetchStopETA(stop.id);
+      // Use subway ETA service for subway stops, NextBus for surface vehicles
+      const response = isSubwayStop(stop.type)
+        ? await fetchSubwayETA(stop.name, stop.id, routeFilter)
+        : await fetchStopETA(stop.id);
 
       if (response.error) {
         etaError = response.error;
         etaPredictions = [];
       } else {
-        // Filter for specific route if provided
-        etaPredictions = routeFilter
-          ? filterPredictionsForRoute(response, routeFilter)
-          : response.predictions;
+        // Filter for specific route if provided (only for surface vehicles)
+        etaPredictions =
+          routeFilter && !isSubwayStop(stop.type)
+            ? filterPredictionsForRoute(response, routeFilter)
+            : response.predictions;
         lastFetched = new Date();
       }
     } catch (error) {
@@ -300,15 +305,20 @@
     etaError = null;
 
     try {
-      const response = await fetchStopETA(stop.id);
+      // Use subway ETA service for subway stops, NextBus for surface vehicles
+      const response = isSubwayStop(stop.type)
+        ? await fetchSubwayETA(stop.name, stop.id, routeFilter, true) // forceRefresh=true
+        : await fetchStopETA(stop.id);
 
       if (response.error) {
         etaError = response.error;
         etaPredictions = [];
       } else {
-        etaPredictions = routeFilter
-          ? filterPredictionsForRoute(response, routeFilter)
-          : response.predictions;
+        // Filter for specific route if provided (only for surface vehicles)
+        etaPredictions =
+          routeFilter && !isSubwayStop(stop.type)
+            ? filterPredictionsForRoute(response, routeFilter)
+            : response.predictions;
         lastFetched = new Date();
       }
     } catch (error) {
