@@ -605,6 +605,12 @@
     return allMaintenance.filter((item) => isMaintenanceHappeningNow(item));
   });
 
+  // Derived: Count of unique scheduled closures (all maintenance items)
+  let scheduledClosuresCount = $derived(() => {
+    const allMaintenance = [...$maintenanceItems, ...demoMaintenance];
+    return allMaintenance.length;
+  });
+
   // Format time for display (convert 24h to 12h format)
   function formatTimeDisplay(timeStr: string | null): string {
     if (!timeStr) return "";
@@ -958,6 +964,9 @@
     >
       <Calendar class="w-4 h-4" aria-hidden="true" />
       <span>Scheduled</span>
+      {#if scheduledClosuresCount() > 0}
+        <span class="tab-count">{scheduledClosuresCount()}</span>
+      {/if}
     </button>
   </div>
 
