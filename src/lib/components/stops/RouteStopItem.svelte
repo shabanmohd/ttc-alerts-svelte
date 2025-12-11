@@ -244,11 +244,11 @@
     destination: string;
   } {
     // Handle NTAS format: "Southbound to Vaughan..." or "Northbound to Finch"
-    const boundMatch = direction.match(/^(North|South|East|West)bound\s+to\s+(.+)$/i);
+    const boundMatch = direction.match(/^(North|South|East|West)(bound)\s+to\s+(.+)$/i);
     if (boundMatch) {
       return {
-        direction: boundMatch[1],
-        destination: boundMatch[2].trim()
+        direction: boundMatch[1] + boundMatch[2], // "Southbound", "Northbound", etc.
+        destination: boundMatch[3].trim()
       };
     }
     

@@ -87,16 +87,16 @@
    * "North - 133 Neilson towards Morningside Heights via Scarborough Centre Stn" 
    * → { direction: "North", destination: "Morningside Heights via Scarborough Centre Stn" }
    * "Southbound to Vaughan Metropolitan Centre via Union"
-   * → { direction: "South", destination: "Vaughan Metropolitan Centre via Union" }
+   * → { direction: "Southbound", destination: "Vaughan Metropolitan Centre via Union" }
    */
   function parseDirection(direction: string): { direction: string; destination: string } {
     // Handle NTAS format: "Southbound to Vaughan..." or "Northbound to Finch"
     // Also handles "Eastbound to Kennedy" etc.
-    const boundMatch = direction.match(/^(North|South|East|West)bound\s+to\s+(.+)$/i);
+    const boundMatch = direction.match(/^(North|South|East|West)(bound)\s+to\s+(.+)$/i);
     if (boundMatch) {
       return {
-        direction: boundMatch[1],
-        destination: boundMatch[2].trim()
+        direction: boundMatch[1] + boundMatch[2], // "Southbound", "Northbound", etc.
+        destination: boundMatch[3].trim()
       };
     }
     
