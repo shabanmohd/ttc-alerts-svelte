@@ -220,6 +220,11 @@ html {
   background-color: hsl(var(--background));
   overscroll-behavior: none;
   overscroll-behavior-y: none;
+  /* iOS viewport fixes */
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
 }
 
 html.dark {
@@ -237,6 +242,10 @@ body {
   /* Prevent iOS Safari bounce showing white background */
   min-height: 100vh;
   min-height: 100dvh;
+  /* iOS scrolling fixes */
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ============================================
@@ -440,6 +449,9 @@ header.sticky {
   justify-content: space-around;
   align-items: center;
   z-index: 50;
+  /* Key fix: use transform to force GPU layer */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 @media (min-width: 1024px) {

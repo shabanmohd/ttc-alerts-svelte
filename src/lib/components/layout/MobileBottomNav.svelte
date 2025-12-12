@@ -2,6 +2,7 @@
   import { _ } from "svelte-i18n";
   import { Home, AlertTriangle, Settings, Route } from "lucide-svelte";
   import { page } from "$app/stores";
+  import { onMount } from "svelte";
 
   function isActive(href: string): boolean {
     const currentPath = $page.url.pathname;
@@ -23,6 +24,28 @@
     }
     return false;
   }
+
+  // Fix for iOS dynamic viewport
+  onMount(() => {
+    const setViewportHeight = () => {
+      document.documentElement.style.setProperty(
+        '--viewport-height',
+        `${window.innerHeight}px`
+      );
+    };
+
+    setViewportHeight();
+    window.addEventListener('resize', setViewportHeight);
+    
+    // Also handle orientation change
+    window.addEventListener('orientationchange', () => {
+      setTimeout(setViewportHeight, 100);
+    });
+
+    return () => {
+      window.removeEventListener('resize', setViewportHeight);
+    };
+  });
 </script>
 
 <nav class="mobile-bottom-nav">
