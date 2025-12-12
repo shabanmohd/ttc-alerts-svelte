@@ -763,6 +763,22 @@ The Subway Status Cards display the current service status for each subway line 
 /* Card container */
 /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -791,6 +807,22 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
@@ -899,18 +931,18 @@ transition: all 0.2s ease;
 
 ### Micro-Animations (layout.css)
 
-| Animation      | Duration | Easing   | Use Case                                                  |
-| -------------- | -------- | -------- | --------------------------------------------------------- |
-| `fadeIn`       | 0.2s     | ease-out | General appearance, modal backdrops, hamburger menu       |
-| `fadeInUp`     | 0.25s    | ease-out | List items, cards entering                                |
-| `fadeInDown`   | 0.25s    | ease-out | Dropdowns, expandable content, hamburger menu panel       |
-| `fadeOut`      | 0.15s    | ease-in  | Elements disappearing                                     |
-| `scaleIn`      | 0.2s     | ease-out | Checkmarks, success feedback                              |
-| `slideInRight` | 0.25s    | ease-out | Side panels, drawer content                               |
-| `slideOutLeft` | 0.2s     | ease-in  | Page exits                                                |
-| `focusPulse`   | 0.6s     | ease-out | Input autofocus highlight                                 |
-| `successFlash` | 0.4s     | ease-out | Add/bookmark feedback                                     |
-| `ping`         | 1s       | cubic    | Connection status indicator (pulsing dot when connected)  |
+| Animation      | Duration | Easing   | Use Case                                                 |
+| -------------- | -------- | -------- | -------------------------------------------------------- |
+| `fadeIn`       | 0.2s     | ease-out | General appearance, modal backdrops, hamburger menu      |
+| `fadeInUp`     | 0.25s    | ease-out | List items, cards entering                               |
+| `fadeInDown`   | 0.25s    | ease-out | Dropdowns, expandable content, hamburger menu panel      |
+| `fadeOut`      | 0.15s    | ease-in  | Elements disappearing                                    |
+| `scaleIn`      | 0.2s     | ease-out | Checkmarks, success feedback                             |
+| `slideInRight` | 0.25s    | ease-out | Side panels, drawer content                              |
+| `slideOutLeft` | 0.2s     | ease-in  | Page exits                                               |
+| `focusPulse`   | 0.6s     | ease-out | Input autofocus highlight                                |
+| `successFlash` | 0.4s     | ease-out | Add/bookmark feedback                                    |
+| `ping`         | 1s       | cubic    | Connection status indicator (pulsing dot when connected) |
 
 ### Utility Classes
 

@@ -141,7 +141,6 @@
   .pull-to-refresh-container {
     position: relative;
     height: 100%;
-    overflow: hidden;
   }
 
   .pull-indicator {

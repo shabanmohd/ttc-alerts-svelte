@@ -70,7 +70,10 @@
   }
 </script>
 
-<header class="sticky top-0 z-40 w-full border-b border-border bg-background">
+<header
+  class="sticky top-0 w-full border-b border-border"
+  style="z-index: 1000; background-color: hsl(var(--background));"
+>
   <div class="header-container">
     <!-- Logo (mobile only) -->
     <a href="/" class="header-left">
@@ -268,7 +271,10 @@
 
         <!-- Theme Toggle -->
         <button
-          onclick={toggleTheme}
+          onclick={() => {
+            toggleTheme();
+            mobileMenuOpen = false;
+          }}
           class="flex items-center justify-between w-full px-3 py-3 rounded-lg transition-colors"
           style="background-color: {isDark
             ? 'hsl(240 3.7% 20%)'

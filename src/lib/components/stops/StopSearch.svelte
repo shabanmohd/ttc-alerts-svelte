@@ -62,10 +62,19 @@
     }
   }
 
+  // Handle scroll to close dropdown
+  function handleScroll() {
+    if (showResults) {
+      showResults = false;
+      highlightedIndex = -1;
+    }
+  }
+
   // Initialize database on mount
   onMount(async () => {
     if (browser) {
       document.addEventListener("click", handleClickOutside);
+      window.addEventListener("scroll", handleScroll, true);
       // Auto-focus input for mobile keyboard trigger
       if (autoFocus) {
         setTimeout(() => inputRef?.focus(), 100);
@@ -83,6 +92,7 @@
   onDestroy(() => {
     if (browser) {
       document.removeEventListener("click", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
     }
   });
 
@@ -248,7 +258,7 @@
   }
 </script>
 
-<div class="relative w-full" bind:this={containerRef}>
+<div class="relative w-full z-0" bind:this={containerRef}>
   {#if onClose}
     <div class="flex items-center justify-between mb-3 p-3 pb-0">
       <h3 class="font-semibold">Add a Stop</h3>
@@ -327,7 +337,7 @@
   {#if showResults}
     <div
       data-stop-results
-      class="absolute top-full z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-md border shadow-lg"
+      class="absolute top-full z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-md border shadow-lg stop-results-list"
       style="background-color: hsl(var(--popover)); color: hsl(var(--popover-foreground)); border-color: hsl(var(--border));"
       role="listbox"
     >
@@ -424,6 +434,29 @@
   :global(.light) .stop-result-item.highlighted,
   :root:not(.dark) .stop-result-item.highlighted {
     background-color: rgba(0, 0, 0, 0.08);
+  }
+
+  /* Visible scrollbar for better UX */
+  .stop-results-list {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  .stop-results-list::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .stop-results-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .stop-results-list::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+
+  .stop-results-list::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
   }
 
   /* Focus highlight animation is defined globally in layout.css */
