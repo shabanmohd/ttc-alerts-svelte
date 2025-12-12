@@ -122,7 +122,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                         |
 | `functions/auth-session/index.ts`       | ✅     | Validate existing session                                 |
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v20: threading overhaul)       |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v27: alert_id fix + TTC API cross-check) |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                               |
 | `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B** |
 
@@ -345,13 +345,45 @@ For local development, use `localhost` and `http://localhost:5173`.
 | auth-verify        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`        |
 | auth-session       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`       |
 | auth-recover       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`       |
-| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v20)  |
+| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v27)  |
 | get-eta            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`            |
 | scrape-maintenance | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance` |
 
 ---
 
 ## Changelog
+
+### Dec 12, 2025 - Critical Bug Fix: alert_id Generation (poll-alerts v27)
+
+**Root Cause Analysis:**
+
+- ❌ INSERT into `alert_cache` was silently failing because `alert_id` (NOT NULL primary key) was never provided
+- ❌ All new alerts after a schema change were rejected with "null value in column alert_id violates not-null constraint"
+- ❌ Deduplication was checking `bluesky_uri` which was NULL for all records
+- ❌ No new alerts were being captured - `newAlerts: 0` on every poll
+
+**The Fix (v27):**
+
+| Change | Before | After |
+| ------ | ------ | ----- |
+| alert_id generation | Not provided | Extract from URI: `bsky-{post_id}` |
+| Deduplication check | `bluesky_uri` (NULL) | `alert_id` (unique) |
+| Insert success | All failing | All succeeding |
+
+**Impact:**
+
+| Metric | Before | After |
+| ------ | ------ | ----- |
+| New alerts captured | 0 | 7 (immediate) |
+| DB accuracy vs TTC API | 22% | 67% |
+| Routes tracked | 2 | 6 |
+| Postgres errors | 50+ per poll | 0 |
+
+**Files Updated:**
+
+- `supabase/functions/poll-alerts/index.ts` - alert_id generation (v27)
+- `alert-categorization-and-threading.md` - Updated to v5.6
+- `scripts/validate-ttc-crosscheck.ts` - Validation script (NEW)
 
 ### Dec 11, 2025 - TTC Live API Cross-Check (poll-alerts v26)
 
