@@ -785,13 +785,13 @@ CREATE TABLE planned_maintenance (
 
 **TTC Live API Cross-Check:**
 
-| Step                | Description                                      |
-| ------------------- | ------------------------------------------------ |
-| Fetch TTC API       | GET `alerts.ttc.ca/api/alerts/live-alerts`       |
-| Extract routes      | Parse `routes[]` and `siteWideCustom[]` arrays   |
-| Compare             | Check if our unresolved threads' routes are active |
-| Resolve stale       | Mark threads resolved if route no longer in TTC API |
-| Graceful fallback   | If TTC API unavailable, skip resolution step     |
+| Step              | Description                                         |
+| ----------------- | --------------------------------------------------- |
+| Fetch TTC API     | GET `alerts.ttc.ca/api/alerts/live-alerts`          |
+| Extract routes    | Parse `routes[]` and `siteWideCustom[]` arrays      |
+| Compare           | Check if our unresolved threads' routes are active  |
+| Resolve stale     | Mark threads resolved if route no longer in TTC API |
+| Graceful fallback | If TTC API unavailable, skip resolution step        |
 
 **Why TTC Live API?**
 

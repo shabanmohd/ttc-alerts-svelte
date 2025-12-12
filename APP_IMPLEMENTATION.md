@@ -114,17 +114,17 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Backend (`supabase/`)
 
-| File                                    | Status | Purpose                                                   |
-| --------------------------------------- | ------ | --------------------------------------------------------- |
-| `functions/_shared/auth-utils.ts`       | ✅     | CORS + Supabase client factory                            |
-| `functions/auth-register/index.ts`      | ✅     | User registration + recovery codes (uses Supabase Auth)   |
-| `functions/auth-challenge/index.ts`     | ✅     | Generate WebAuthn challenge                               |
-| `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                         |
-| `functions/auth-session/index.ts`       | ✅     | Validate existing session                                 |
-| `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                |
+| File                                    | Status | Purpose                                                             |
+| --------------------------------------- | ------ | ------------------------------------------------------------------- |
+| `functions/_shared/auth-utils.ts`       | ✅     | CORS + Supabase client factory                                      |
+| `functions/auth-register/index.ts`      | ✅     | User registration + recovery codes (uses Supabase Auth)             |
+| `functions/auth-challenge/index.ts`     | ✅     | Generate WebAuthn challenge                                         |
+| `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                                   |
+| `functions/auth-session/index.ts`       | ✅     | Validate existing session                                           |
+| `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                          |
 | `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v27: alert_id fix + TTC API cross-check) |
-| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                               |
-| `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B** |
+| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                                         |
+| `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B**           |
 
 ### Database (EXISTING in Supabase)
 
@@ -364,20 +364,20 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 **The Fix (v27):**
 
-| Change | Before | After |
-| ------ | ------ | ----- |
-| alert_id generation | Not provided | Extract from URI: `bsky-{post_id}` |
-| Deduplication check | `bluesky_uri` (NULL) | `alert_id` (unique) |
-| Insert success | All failing | All succeeding |
+| Change              | Before               | After                              |
+| ------------------- | -------------------- | ---------------------------------- |
+| alert_id generation | Not provided         | Extract from URI: `bsky-{post_id}` |
+| Deduplication check | `bluesky_uri` (NULL) | `alert_id` (unique)                |
+| Insert success      | All failing          | All succeeding                     |
 
 **Impact:**
 
-| Metric | Before | After |
-| ------ | ------ | ----- |
-| New alerts captured | 0 | 7 (immediate) |
-| DB accuracy vs TTC API | 22% | 67% |
-| Routes tracked | 2 | 6 |
-| Postgres errors | 50+ per poll | 0 |
+| Metric                 | Before       | After         |
+| ---------------------- | ------------ | ------------- |
+| New alerts captured    | 0            | 7 (immediate) |
+| DB accuracy vs TTC API | 22%          | 67%           |
+| Routes tracked         | 2            | 6             |
+| Postgres errors        | 50+ per poll | 0             |
 
 **Files Updated:**
 
@@ -396,13 +396,13 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 **How It Works:**
 
-| Step              | Description                                                  |
-| ----------------- | ------------------------------------------------------------ |
-| Fetch TTC API     | GET `https://alerts.ttc.ca/api/alerts/live-alerts`           |
-| Extract routes    | Parse `routes[]` and `siteWideCustom[]` arrays               |
+| Step              | Description                                                      |
+| ----------------- | ---------------------------------------------------------------- |
+| Fetch TTC API     | GET `https://alerts.ttc.ca/api/alerts/live-alerts`               |
+| Extract routes    | Parse `routes[]` and `siteWideCustom[]` arrays                   |
 | Compare           | Check if our unresolved threads' routes are in TTC active alerts |
-| Resolve stale     | Mark threads resolved if route no longer in TTC API          |
-| Graceful fallback | If TTC API unavailable, skip resolution (don't break function) |
+| Resolve stale     | Mark threads resolved if route no longer in TTC API              |
+| Graceful fallback | If TTC API unavailable, skip resolution (don't break function)   |
 
 **Impact:**
 
