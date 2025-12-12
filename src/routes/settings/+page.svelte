@@ -7,7 +7,6 @@
     Trash2,
     Globe,
     Palette,
-    Type,
     HelpCircle,
     Bug,
     Lightbulb,
@@ -221,12 +220,6 @@
 
   async function handleThemeChange(theme: "light" | "dark" | "system") {
     await localPreferences.updatePreference("theme", theme);
-  }
-
-  async function handleTextSizeChange(
-    size: "default" | "large" | "extra-large"
-  ) {
-    await localPreferences.updatePreference("textSize", size);
   }
 
   async function handleReduceMotionChange() {
@@ -476,44 +469,6 @@
                 : 'border border-input hover:bg-accent/50'}"
               style={isSelected ? "border-color: hsl(var(--foreground));" : ""}
               onclick={() => handleThemeChange(option.value)}
-            >
-              {#if isSelected}
-                <span
-                  class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
-                  style="background-color: hsl(var(--foreground));"
-                >
-                  <Check
-                    class="h-3 w-3"
-                    style="color: hsl(var(--background));"
-                  />
-                </span>
-              {:else}
-                <span
-                  class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"
-                ></span>
-              {/if}
-              <span>{$_(option.labelKey)}</span>
-            </button>
-          {/each}
-        </div>
-      </fieldset>
-
-      <!-- Text Size -->
-      <fieldset>
-        <legend class="text-sm font-medium mb-3 flex items-center gap-2">
-          <Type class="h-4 w-4" />
-          {$_("settings.textSize")}
-        </legend>
-        <div class="flex flex-wrap gap-2">
-          {#each [{ value: "default" as const, labelKey: "textSize.default", size: "text-sm" }, { value: "large" as const, labelKey: "textSize.large", size: "text-base" }, { value: "extra-large" as const, labelKey: "textSize.extraLarge", size: "text-lg" }] as option}
-            {@const isSelected = $localPreferences.textSize === option.value}
-            <button
-              class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {isSelected
-                ? 'border-2'
-                : 'border border-input hover:bg-accent/50'}"
-              style={isSelected ? "border-color: hsl(var(--foreground));" : ""}
-              onclick={() => handleTextSizeChange(option.value)}
-              aria-label={$_(option.labelKey) + " text size"}
             >
               {#if isSelected}
                 <span

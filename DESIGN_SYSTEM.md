@@ -899,17 +899,18 @@ transition: all 0.2s ease;
 
 ### Micro-Animations (layout.css)
 
-| Animation      | Duration | Easing   | Use Case                      |
-| -------------- | -------- | -------- | ----------------------------- |
-| `fadeIn`       | 0.2s     | ease-out | General appearance            |
-| `fadeInUp`     | 0.25s    | ease-out | List items, cards entering    |
-| `fadeInDown`   | 0.25s    | ease-out | Dropdowns, expandable content |
-| `fadeOut`      | 0.15s    | ease-in  | Elements disappearing         |
-| `scaleIn`      | 0.2s     | ease-out | Checkmarks, success feedback  |
-| `slideInRight` | 0.25s    | ease-out | Side panels, drawer content   |
-| `slideOutLeft` | 0.2s     | ease-in  | Page exits                    |
-| `focusPulse`   | 0.6s     | ease-out | Input autofocus highlight     |
-| `successFlash` | 0.4s     | ease-out | Add/bookmark feedback         |
+| Animation      | Duration | Easing   | Use Case                                                  |
+| -------------- | -------- | -------- | --------------------------------------------------------- |
+| `fadeIn`       | 0.2s     | ease-out | General appearance, modal backdrops, hamburger menu       |
+| `fadeInUp`     | 0.25s    | ease-out | List items, cards entering                                |
+| `fadeInDown`   | 0.25s    | ease-out | Dropdowns, expandable content, hamburger menu panel       |
+| `fadeOut`      | 0.15s    | ease-in  | Elements disappearing                                     |
+| `scaleIn`      | 0.2s     | ease-out | Checkmarks, success feedback                              |
+| `slideInRight` | 0.25s    | ease-out | Side panels, drawer content                               |
+| `slideOutLeft` | 0.2s     | ease-in  | Page exits                                                |
+| `focusPulse`   | 0.6s     | ease-out | Input autofocus highlight                                 |
+| `successFlash` | 0.4s     | ease-out | Add/bookmark feedback                                     |
+| `ping`         | 1s       | cubic    | Connection status indicator (pulsing dot when connected)  |
 
 ### Utility Classes
 
@@ -1099,6 +1100,139 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
 - Text centered under icons via `text-align: center`
 - Active state uses primary color
 - 4 tabs max for mobile usability
+
+### Header/Navigation Patterns
+
+#### Language Toggle
+
+The language toggle appears in both the header and settings page, using the same `localPreferences` store for synchronization.
+
+**Header Implementation:**
+
+```svelte
+<div class="flex items-center gap-0.5 border border-border rounded-md p-0.5">
+  {#each getSupportedLanguages() as lang}
+    <button
+      onclick={() => localPreferences.updatePreference('language', lang.code)}
+      class="min-w-[2.25rem] px-2 py-1 text-xs font-semibold rounded transition-all duration-150"
+      style={$language === lang.code
+        ? 'background-color: hsl(var(--foreground)); color: hsl(var(--background));'
+        : 'background-color: transparent; color: hsl(var(--muted-foreground));'}
+    >
+      {lang.code.toUpperCase()}
+    </button>
+  {/each}
+</div>
+```
+
+**Design Rules:**
+
+- **Selected state**: Inverted colors (`foreground` bg / `background` text) for maximum contrast
+- **Unselected state**: Transparent bg / `muted-foreground` text
+- **Explicit inline styles**: Use HSL variables instead of Tailwind classes for reliable rendering across themes
+- **Synchronization**: Always use `localPreferences.updatePreference('language', code)` to keep header and settings in sync
+
+#### Connection Status Indicator
+
+The connection status indicator shows real-time connection state with accessible visual cues.
+
+**Implementation:**
+
+```svelte
+{#if $isConnected}
+  <!-- Connected: pulsing green dot -->
+  <span class="relative flex h-2 w-2">
+    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+  </span>
+{:else}
+  <!-- Disconnected: hollow gray circle -->
+  <span class="w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500"></span>
+{/if}
+```
+
+**Accessibility:**
+
+- **Shape differentiation**: Filled circle (connected) vs hollow circle (disconnected)
+- **Animation**: Pulsing animation provides motion-based feedback
+- **ARIA attributes**: Add `role="status"` and `aria-live="polite"` to container
+- **Not color-only**: Relies on shape + animation, not just color contrast
+
+#### Mobile Hamburger Menu
+
+The mobile hamburger menu uses animations and explicit styling for consistent appearance.
+
+**Animations:**
+
+- **Backdrop**: `animate-fade-in` (0.2s fade in)
+- **Header bar**: `animate-fade-in` (0.2s fade in)
+- **Menu panel**: `animate-fade-in-down` (0.25s slide down from top)
+
+**Styling Pattern:**
+
+```svelte
+<!-- Backdrop -->
+<button class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm animate-fade-in" />
+
+<!-- Header bar -->
+<div
+  class="fixed left-0 right-0 top-0 z-[102] animate-fade-in"
+  style="background-color: hsl(var(--background)); border-color: hsl(var(--border));"
+>
+  <!-- Logo + Close button -->
+</div>
+
+<!-- Menu content -->
+<div
+  class="fixed left-0 right-0 top-[57px] z-[101] animate-fade-in-down"
+  style="background-color: hsl(var(--background));"
+>
+  <!-- Menu items with explicit text colors -->
+  <button style="color: hsl(var(--foreground));">
+    <!-- Icon + Text -->
+  </button>
+</div>
+```
+
+**Menu Item Styling:**
+
+- Use explicit inline styles: `style="color: hsl(var(--foreground));"`
+- Hover states: `onmouseenter/onmouseleave` handlers for `backgroundColor`
+- Section headers: `style="color: hsl(var(--muted-foreground));"`
+- Theme toggle button: Dynamic background based on `isDark` variable
+
+```svelte
+<button
+  style="background-color: {isDark ? 'hsl(240 3.7% 20%)' : 'hsl(240 5.9% 88%)'}; color: hsl(var(--foreground));"
+>
+  {isDark ? 'Dark Mode' : 'Light Mode'}
+</button>
+```
+
+#### Desktop Refresh + Status Group
+
+On desktop, the refresh button and status indicator are grouped together to show their relationship.
+
+**Implementation:**
+
+```svelte
+<div class="hidden sm:flex items-center gap-0 bg-muted/50 rounded-md px-0">
+  <button class="flex p-1.5 rounded-l-md hover:bg-accent">
+    <RefreshCw class="w-4 h-4" />
+  </button>
+  <div class="w-px h-4 bg-border"></div>
+  <div class="flex items-center gap-1.5 px-2 py-1.5">
+    <!-- Status indicator + time -->
+  </div>
+</div>
+```
+
+**Design Rules:**
+
+- **Visual grouping**: Shared `bg-muted/50` background container
+- **Divider**: 1px vertical line (`w-px h-4 bg-border`) between button and status
+- **No gap**: `gap-0` to make them flush together
+- **Rounded edges**: Only left side of refresh button is rounded (`rounded-l-md`)
 
 ---
 

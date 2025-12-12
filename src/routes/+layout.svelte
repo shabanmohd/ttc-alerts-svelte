@@ -4,15 +4,15 @@
   import { Toaster } from "$lib/components/ui/sonner";
   import Sidebar from "$lib/components/layout/Sidebar.svelte";
   import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
+  import PullToRefresh from "$lib/components/layout/PullToRefresh.svelte";
   import { HowToUseDialog } from "$lib/components/dialogs";
   import { onMount, onDestroy } from "svelte";
   import {
-    initAuth,
-    subscribeToAuth,
-    isAuthenticated,
-    userName,
-  } from "$lib/stores/auth";
-  import { subscribeToAlerts, fetchAlerts } from "$lib/stores/alerts";
+    subscribeToAlerts,
+    fetchAlerts,
+    refreshAlerts,
+  } from "$lib/stores/alerts";
+  import { etaStore } from "$lib/stores/eta";
   import { initializeStorage } from "$lib/services/storage";
   import { savedStops } from "$lib/stores/savedStops";
   import { savedRoutes } from "$lib/stores/savedRoutes";
@@ -29,7 +29,6 @@
   let { children } = $props();
 
   let activeDialog = $state<string | null>(null);
-  let unsubscribeAuth: (() => void) | null = null;
   let unsubscribeAlerts: (() => void) | null = null;
 
   function handleOpenDialog(dialog: string) {
@@ -38,6 +37,11 @@
 
   function handleCloseDialog() {
     activeDialog = null;
+  }
+
+  // Pull-to-refresh handler
+  async function handlePullRefresh() {
+    await Promise.all([refreshAlerts(), etaStore.refreshAll()]);
   }
 
   // Initialize app on mount
@@ -53,10 +57,6 @@
       localPreferences.init(),
     ]);
 
-    // Initialize auth and subscribe to changes
-    await initAuth();
-    unsubscribeAuth = subscribeToAuth();
-
     // Fetch initial alerts
     await fetchAlerts();
 
@@ -66,7 +66,6 @@
 
   onDestroy(() => {
     // Cleanup subscriptions
-    if (unsubscribeAuth) unsubscribeAuth();
     if (unsubscribeAlerts) unsubscribeAlerts();
   });
 </script>
@@ -87,10 +86,12 @@
 <!-- Desktop Sidebar -->
 <Sidebar onOpenDialog={handleOpenDialog} />
 
-<!-- Main wrapper -->
-<div class="main-wrapper">
-  {@render children()}
-</div>
+<!-- Main wrapper with pull-to-refresh -->
+<PullToRefresh onRefresh={handlePullRefresh}>
+  <div class="main-wrapper">
+    {@render children()}
+  </div>
+</PullToRefresh>
 
 <!-- Mobile Bottom Navigation -->
 <MobileBottomNav />

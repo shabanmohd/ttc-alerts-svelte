@@ -7,28 +7,15 @@
     Bug,
     Lightbulb,
     Info,
-    LogOut,
     Route,
   } from "lucide-svelte";
-  import { Separator } from "$lib/components/ui/separator";
-  import { Button } from "$lib/components/ui/button";
   import { page } from "$app/stores";
-  import {
-    isAuthenticated,
-    userName,
-    userInitial,
-    signOut,
-  } from "$lib/stores/auth";
   import { _ } from "svelte-i18n";
 
   let { onOpenDialog }: { onOpenDialog?: (dialog: string) => void } = $props();
 
   function handleDialog(dialog: string) {
     onOpenDialog?.(dialog);
-  }
-
-  async function handleSignOut() {
-    await signOut();
   }
 
   function isNavActive(href: string): boolean {
@@ -87,35 +74,6 @@
   </nav>
 
   <div class="sidebar-footer">
-    <!-- User Section (only show when authenticated) -->
-    {#if $isAuthenticated}
-      <div class="px-3 py-2 mb-2">
-        <div class="flex items-center gap-3">
-          <div
-            class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0"
-          >
-            <span class="text-sm font-bold text-primary-foreground"
-              >{$userInitial}</span
-            >
-          </div>
-          <div class="min-w-0 flex-1">
-            <p class="text-sm font-semibold truncate">{$userName}</p>
-            <p class="text-xs text-muted-foreground font-normal">Signed in</p>
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          class="w-full mt-2 justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-          onclick={handleSignOut}
-        >
-          <LogOut class="w-4 h-4 mr-2" aria-hidden="true" />
-          Sign Out
-        </Button>
-      </div>
-      <Separator class="my-2" />
-    {/if}
-
     <!-- Help & Info Links -->
     <div class="sidebar-footer-links">
       <button

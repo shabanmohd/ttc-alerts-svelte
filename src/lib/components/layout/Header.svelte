@@ -5,36 +5,22 @@
     Moon,
     Menu,
     HelpCircle,
-    LogOut,
-    ChevronDown,
-    Settings,
-    Wifi,
-    WifiOff,
+    Bug,
+    Lightbulb,
+    Info,
     X,
   } from "lucide-svelte";
-  import { Button } from "$lib/components/ui/button";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { lastUpdated, refreshAlerts, isConnected } from "$lib/stores/alerts";
   import { etaStore } from "$lib/stores/eta";
-  import {
-    language,
-    setLanguage,
-    getSupportedLanguages,
-  } from "$lib/stores/language";
+  import { language, getSupportedLanguages } from "$lib/stores/language";
   import { localPreferences } from "$lib/stores/localPreferences";
   import { onMount } from "svelte";
   import { _ } from "svelte-i18n";
 
   let {
-    isAuthenticated = false,
-    username = "",
     onOpenDialog,
-    onSignOut,
   }: {
-    isAuthenticated?: boolean;
-    username?: string;
     onOpenDialog?: (dialog: string) => void;
-    onSignOut?: () => void;
   } = $props();
 
   let isDark = $state(false);
@@ -44,7 +30,6 @@
 
   // Track dark mode state reactively
   $effect(() => {
-    // Re-check when tick changes (which happens on theme toggle or interval)
     tick; // dependency
     isDark =
       typeof document !== "undefined" &&
@@ -60,42 +45,28 @@
   });
 
   async function toggleTheme() {
-    // Toggle between light and dark, respecting current state
     const currentlyDark = document.documentElement.classList.contains("dark");
-
-    // If on system, switch to explicit light/dark based on current appearance
-    // Otherwise toggle between light and dark
     const newTheme = currentlyDark ? "light" : "dark";
     await localPreferences.updatePreference("theme", newTheme);
-    tick++; // Trigger effect to update isDark state
+    tick++;
   }
 
   async function handleRefresh() {
     if (isRefreshing) return;
-
     isRefreshing = true;
-    // Refresh both alerts and ETAs (context-aware - each handles its own state)
     await Promise.all([refreshAlerts(), etaStore.refreshAll()]);
     isRefreshing = false;
   }
 
-  function formatLastUpdated(date: Date | null, _tick: number): string {
+  // Compact time format (just "2m" or "now")
+  function formatCompactTime(date: Date | null, _tick: number): string {
     if (!date) return "";
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diff < 60) return $_("header.justNow");
-    if (diff < 3600)
-      return $_("header.updated", {
-        values: { time: `${Math.floor(diff / 60)}m` },
-      });
-    return $_("header.updated", {
-      values: { time: `${Math.floor(diff / 3600)}h` },
-    });
-  }
-
-  function getUserInitial(name: string): string {
-    return name.charAt(0).toUpperCase() || "U";
+    if (diff < 60) return $_("time.justNow") || "now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+    return `${Math.floor(diff / 3600)}h`;
   }
 </script>
 
@@ -109,25 +80,10 @@
 
     <!-- Right side actions -->
     <div class="header-right">
-      <!-- Last updated + Refresh (always visible) -->
-      <div
-        class="flex items-center gap-1 text-xs text-muted-foreground font-normal"
-      >
-        {#if $lastUpdated}
-          <span id="last-updated">{formatLastUpdated($lastUpdated, tick)}</span>
-        {/if}
-        <!-- Connection status indicator -->
-        {#if $isConnected}
-          <span class="text-green-500" title={$_("header.liveUpdates")}>
-            <Wifi class="w-3 h-3" aria-hidden="true" />
-          </span>
-        {:else}
-          <span class="text-muted-foreground" title={$_("header.connecting")}>
-            <WifiOff class="w-3 h-3" aria-hidden="true" />
-          </span>
-        {/if}
+      <!-- Refresh + Status Group (desktop only) -->
+      <div class="hidden sm:flex items-center bg-muted/50 rounded-md">
         <button
-          class="p-1.5 rounded-md hover:bg-accent transition-colors"
+          class="flex p-1.5 rounded-l-md hover:bg-accent transition-colors"
           onclick={handleRefresh}
           title={$_("common.refresh")}
           aria-label={$_("common.refresh")}
@@ -138,19 +94,94 @@
             aria-hidden="true"
           />
         </button>
+        <div class="w-px h-4 bg-border"></div>
+        <div
+          class="flex items-center gap-1.5 px-2 py-1.5 text-xs text-muted-foreground font-normal"
+          title={$isConnected
+            ? $_("header.liveUpdates")
+            : $_("header.connecting")}
+          role="status"
+          aria-live="polite"
+        >
+          {#if $isConnected}
+            <!-- Connected: pulsing green dot -->
+            <span class="relative flex h-2 w-2">
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
+              ></span>
+              <span
+                class="relative inline-flex rounded-full h-2 w-2 bg-green-500"
+              ></span>
+            </span>
+          {:else}
+            <!-- Disconnected: hollow gray circle -->
+            <span
+              class="w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500 flex-shrink-0"
+            ></span>
+          {/if}
+          {#if $lastUpdated}
+            <span class="tabular-nums"
+              >{formatCompactTime($lastUpdated, tick)}</span
+            >
+          {/if}
+        </div>
       </div>
 
-      <!-- Help button (hidden on mobile) -->
-      <button
-        class="hidden sm:flex p-2 rounded-md hover:bg-accent transition-colors"
-        onclick={() => onOpenDialog?.("how-to-use")}
-        title={$_("header.howToUse")}
-        aria-label={$_("header.howToUse")}
+      <!-- Mobile-only: Compact Status (dot + time) -->
+      <div
+        class="sm:hidden flex items-center gap-1.5 text-xs text-muted-foreground font-normal"
+        title={$isConnected
+          ? $_("header.liveUpdates")
+          : $_("header.connecting")}
+        role="status"
+        aria-live="polite"
       >
-        <HelpCircle class="w-5 h-5" aria-hidden="true" />
-      </button>
+        {#if $isConnected}
+          <!-- Connected: pulsing green dot -->
+          <span class="relative flex h-2 w-2">
+            <span
+              class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
+            ></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"
+            ></span>
+          </span>
+        {:else}
+          <!-- Disconnected: hollow gray circle -->
+          <span
+            class="w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500 flex-shrink-0"
+          ></span>
+        {/if}
+        {#if $lastUpdated}
+          <span class="tabular-nums"
+            >{formatCompactTime($lastUpdated, tick)}</span
+          >
+        {/if}
+      </div>
 
-      <!-- Theme toggle (hidden on mobile) -->
+      <!-- Language Toggle (always visible on both mobile and desktop) -->
+      <div
+        class="flex items-center gap-0.5 border border-border rounded-md p-0.5"
+      >
+        {#each getSupportedLanguages() as lang}
+          <button
+            onclick={() =>
+              localPreferences.updatePreference("language", lang.code)}
+            class="min-w-[2.25rem] px-2 py-1 text-xs font-semibold rounded transition-all duration-150"
+            style={$language === lang.code
+              ? "background-color: hsl(var(--foreground)); color: hsl(var(--background));"
+              : "background-color: transparent; color: hsl(var(--muted-foreground));"}
+            aria-label={$_("header.switchLanguage", {
+              values: { language: lang.name },
+            })}
+            aria-pressed={$language === lang.code}
+            translate="no"
+          >
+            {lang.code.toUpperCase()}
+          </button>
+        {/each}
+      </div>
+
+      <!-- Theme toggle (desktop only) -->
       <button
         class="hidden sm:flex p-2 rounded-md hover:bg-accent transition-colors"
         onclick={toggleTheme}
@@ -164,70 +195,23 @@
         {/if}
       </button>
 
-      <!-- Language toggle (hidden on mobile) -->
-      <div
-        class="hidden sm:flex items-center gap-1 border border-border rounded-md p-0.5"
+      <!-- Help button (desktop only) -->
+      <button
+        class="hidden sm:flex p-2 rounded-md hover:bg-accent transition-colors"
+        onclick={() => onOpenDialog?.("how-to-use")}
+        title={$_("header.howToUse")}
+        aria-label={$_("header.howToUse")}
       >
-        {#each getSupportedLanguages() as lang}
-          <button
-            onclick={() => setLanguage(lang.code)}
-            class="px-2.5 py-1 text-xs font-medium rounded transition-all duration-150 {$language ===
-            lang.code
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'bg-transparent hover:bg-secondary text-muted-foreground'}"
-            aria-label={$_("header.switchLanguage", {
-              values: { language: lang.name },
-            })}
-            aria-pressed={$language === lang.code}
-            translate="no"
-          >
-            {lang.code.toUpperCase()}
-          </button>
-        {/each}
-      </div>
+        <HelpCircle class="w-5 h-5" aria-hidden="true" />
+      </button>
 
-      <!-- User Menu (hidden on mobile, only when authenticated) -->
-      {#if isAuthenticated}
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger
-            class="hidden sm:inline-flex items-center gap-2 h-9 px-3 py-2 rounded-md hover:bg-accent transition-colors"
-          >
-            <div
-              class="w-7 h-7 rounded-full bg-primary flex items-center justify-center"
-            >
-              <span class="text-xs font-semibold text-primary-foreground"
-                >{getUserInitial(username)}</span
-              >
-            </div>
-            <span class="text-sm font-medium max-w-[100px] truncate"
-              >{username}</span
-            >
-            <ChevronDown class="w-4 h-4" aria-hidden="true" />
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content align="end" class="w-48">
-            <div class="px-3 py-2 border-b border-border">
-              <p class="text-sm font-semibold">{username}</p>
-              <p class="text-xs text-muted-foreground font-normal">Signed in</p>
-            </div>
-            <DropdownMenu.Item href="/preferences">
-              <Settings class="w-4 h-4 mr-2" aria-hidden="true" />
-              Preferences
-            </DropdownMenu.Item>
-            <DropdownMenu.Item onclick={onSignOut} class="text-destructive">
-              <LogOut class="w-4 h-4 mr-2" aria-hidden="true" />
-              Sign Out
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
-      {/if}
-
-      <!-- Mobile Menu Button (only on mobile) -->
+      <!-- Mobile Menu Button -->
       {#if !mobileMenuOpen}
         <button
           class="sm:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
           onclick={() => (mobileMenuOpen = true)}
-          title="Menu"
-          aria-label="Open menu"
+          title={$_("header.menu")}
+          aria-label={$_("header.openMenu")}
           aria-expanded={mobileMenuOpen}
         >
           <Menu class="w-5 h-5" aria-hidden="true" />
@@ -237,151 +221,154 @@
   </div>
 </header>
 
-<!-- Mobile Menu Dropdown (OUTSIDE header for proper z-index stacking) -->
+<!-- Mobile Menu Panel -->
 {#if mobileMenuOpen}
-  <!-- Backdrop to close menu when clicking outside -->
+  <!-- Backdrop -->
   <button
-    class="sm:hidden fixed inset-0 z-[100]"
-    style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);"
+    class="sm:hidden fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm animate-fade-in"
     onclick={() => (mobileMenuOpen = false)}
-    aria-label="Close menu"
+    aria-label={$_("header.closeMenu")}
   ></button>
 
-  <!-- Close button header bar -->
+  <!-- Header bar with close button -->
   <div
-    class="sm:hidden fixed left-0 right-0 top-0 z-[102] flex items-center justify-between px-4 h-[57px] border-b"
-    style="background: white; border-color: #e5e5e5;"
+    class="sm:hidden fixed left-0 right-0 top-0 z-[102] flex items-center justify-between px-4 h-[57px] border-b animate-fade-in"
+    style="background-color: hsl(var(--background)); border-color: hsl(var(--border));"
   >
-    <div class="dark:hidden absolute inset-0" style="background: white;"></div>
-    <div
-      class="hidden dark:block absolute inset-0"
-      style="background: #0a0a0a;"
-    ></div>
-    <div class="relative flex items-center gap-2">
+    <div class="flex items-center gap-2">
       <span class="text-xl">🚇</span>
-      <span class="font-bold tracking-tight">{$_("header.appName")}</span>
+      <span
+        class="font-bold tracking-tight"
+        style="color: hsl(var(--foreground));">{$_("header.appName")}</span
+      >
     </div>
     <button
-      class="relative flex items-center justify-center w-9 h-9 rounded-full bg-foreground text-background hover:opacity-80 transition-opacity"
+      class="flex items-center justify-center w-9 h-9 rounded-full bg-foreground text-background hover:opacity-80 transition-opacity"
       onclick={() => (mobileMenuOpen = false)}
-      aria-label="Close menu"
+      aria-label={$_("header.closeMenu")}
     >
       <X class="w-5 h-5" aria-hidden="true" />
     </button>
   </div>
 
+  <!-- Menu Content -->
   <div
-    class="sm:hidden fixed left-0 right-0 top-[57px] z-[101] border-t shadow-xl max-h-[calc(100vh-57px)] overflow-y-auto"
-    style="background: white; border-color: #e5e5e5;"
+    class="sm:hidden fixed left-0 right-0 top-[57px] z-[101] border-t border-border shadow-xl max-h-[calc(100vh-57px)] overflow-y-auto animate-fade-in-down"
+    style="background-color: hsl(var(--background));"
   >
-    <div class="dark:hidden absolute inset-0" style="background: white;"></div>
-    <div
-      class="hidden dark:block absolute inset-0"
-      style="background: #0a0a0a;"
-    ></div>
-    <nav class="relative px-4 py-3 space-y-1">
-      {#if isAuthenticated}
-        <div
-          class="flex items-center gap-3 px-3 py-3 border-b border-border mb-2"
-        >
-          <div
-            class="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
-          >
-            <span class="text-sm font-bold text-primary-foreground"
-              >{getUserInitial(username)}</span
-            >
-          </div>
-          <div>
-            <p class="text-sm font-semibold">{username}</p>
-            <p class="text-xs text-muted-foreground font-normal">Signed in</p>
-          </div>
-        </div>
-      {/if}
-
-      <button
-        onclick={() => {
-          mobileMenuOpen = false;
-          onOpenDialog?.("how-to-use");
-        }}
-        class="flex items-center gap-3 w-full px-3 py-3 rounded-lg hover:bg-accent transition-colors text-left"
-      >
-        <HelpCircle class="w-5 h-5" aria-hidden="true" />
-        <span class="text-sm">How to Use</span>
-      </button>
-
-      <!-- Divider -->
-      <div class="h-px bg-border my-2"></div>
-
-      <!-- Theme toggle -->
-      <div class="px-3 py-2">
+    <nav class="px-4 py-4 space-y-4">
+      <!-- APPEARANCE Section -->
+      <div>
         <p
-          class="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide"
+          class="px-3 mb-2 text-xs font-semibold uppercase tracking-wider"
+          style="color: hsl(var(--muted-foreground));"
         >
-          Appearance
+          {$_("header.appearance")}
         </p>
+
+        <!-- Theme Toggle -->
         <button
-          onclick={() => {
-            toggleTheme();
-          }}
-          class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg bg-muted/50 hover:bg-accent transition-colors"
+          onclick={toggleTheme}
+          class="flex items-center justify-between w-full px-3 py-3 rounded-lg transition-colors"
+          style="background-color: {isDark
+            ? 'hsl(240 3.7% 20%)'
+            : 'hsl(240 5.9% 88%)'}; color: hsl(var(--foreground));"
         >
-          <span class="text-sm">{isDark ? "Dark Mode" : "Light Mode"}</span>
+          <span class="text-sm font-medium"
+            >{isDark ? $_("header.darkMode") : $_("header.lightMode")}</span
+          >
           {#if isDark}
-            <Sun class="w-5 h-5 text-muted-foreground" aria-hidden="true" />
+            <Sun
+              class="w-5 h-5"
+              style="color: hsl(var(--muted-foreground));"
+              aria-hidden="true"
+            />
           {:else}
-            <Moon class="w-5 h-5 text-muted-foreground" aria-hidden="true" />
+            <Moon
+              class="w-5 h-5"
+              style="color: hsl(var(--muted-foreground));"
+              aria-hidden="true"
+            />
           {/if}
         </button>
       </div>
 
-      <!-- Language toggle (mobile) -->
-      <div class="px-3 py-2">
+      <div class="h-px bg-border"></div>
+
+      <!-- HELP & INFO Section -->
+      <div>
         <p
-          class="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide"
+          class="px-3 mb-2 text-xs font-semibold uppercase tracking-wider"
+          style="color: hsl(var(--muted-foreground));"
         >
-          Language
+          Help & Info
         </p>
-        <div class="flex gap-2">
-          {#each getSupportedLanguages() as lang}
-            <button
-              onclick={() => {
-                setLanguage(lang.code);
-              }}
-              class="flex-1 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {$language ===
-              lang.code
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted/50 hover:bg-accent'}"
-              translate="no"
-            >
-              {lang.nativeName}
-            </button>
-          {/each}
-        </div>
-      </div>
 
-      {#if isAuthenticated}
-        <!-- Divider -->
-        <div class="h-px bg-border my-2"></div>
-
-        <a
-          href="/preferences"
-          onclick={() => (mobileMenuOpen = false)}
-          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg hover:bg-accent transition-colors text-left"
-        >
-          <Settings class="w-5 h-5" aria-hidden="true" />
-          <span class="text-sm">Preferences</span>
-        </a>
         <button
           onclick={() => {
             mobileMenuOpen = false;
-            onSignOut?.();
+            onOpenDialog?.("how-to-use");
           }}
-          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg hover:bg-destructive/10 transition-colors text-left text-destructive"
+          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-colors text-left"
+          style="color: hsl(var(--foreground));"
+          onmouseenter={(e) =>
+            (e.currentTarget.style.backgroundColor = "hsl(var(--accent))")}
+          onmouseleave={(e) =>
+            (e.currentTarget.style.backgroundColor = "transparent")}
         >
-          <LogOut class="w-5 h-5" aria-hidden="true" />
-          <span class="text-sm font-medium">Sign Out</span>
+          <HelpCircle class="w-5 h-5" aria-hidden="true" />
+          <span class="text-sm font-medium">{$_("sidebar.howToUse")}</span>
         </button>
-      {/if}
+
+        <button
+          onclick={() => {
+            mobileMenuOpen = false;
+            onOpenDialog?.("report-bug");
+          }}
+          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-colors text-left"
+          style="color: hsl(var(--foreground));"
+          onmouseenter={(e) =>
+            (e.currentTarget.style.backgroundColor = "hsl(var(--accent))")}
+          onmouseleave={(e) =>
+            (e.currentTarget.style.backgroundColor = "transparent")}
+        >
+          <Bug class="w-5 h-5" aria-hidden="true" />
+          <span class="text-sm font-medium">{$_("sidebar.reportBug")}</span>
+        </button>
+
+        <button
+          onclick={() => {
+            mobileMenuOpen = false;
+            onOpenDialog?.("feature-request");
+          }}
+          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-colors text-left"
+          style="color: hsl(var(--foreground));"
+          onmouseenter={(e) =>
+            (e.currentTarget.style.backgroundColor = "hsl(var(--accent))")}
+          onmouseleave={(e) =>
+            (e.currentTarget.style.backgroundColor = "transparent")}
+        >
+          <Lightbulb class="w-5 h-5" aria-hidden="true" />
+          <span class="text-sm font-medium">{$_("sidebar.featureRequest")}</span
+          >
+        </button>
+
+        <button
+          onclick={() => {
+            mobileMenuOpen = false;
+            onOpenDialog?.("about");
+          }}
+          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-colors text-left"
+          style="color: hsl(var(--foreground));"
+          onmouseenter={(e) =>
+            (e.currentTarget.style.backgroundColor = "hsl(var(--accent))")}
+          onmouseleave={(e) =>
+            (e.currentTarget.style.backgroundColor = "transparent")}
+        >
+          <Info class="w-5 h-5" aria-hidden="true" />
+          <span class="text-sm font-medium">{$_("sidebar.about")}</span>
+        </button>
+      </div>
     </nav>
   </div>
 {/if}

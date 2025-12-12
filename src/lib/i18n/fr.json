@@ -448,7 +448,10 @@
     "locationEnabled": "Localisation activée",
     "locationBlocked": "Localisation bloquée",
     "locationUnsupported": "Localisation non supportée",
-    "unavailable": "Indisponible"
+    "unavailable": "Indisponible",
+    "helpAndInfo": "Aide et informations",
+    "helpDescription": "Apprenez à utiliser l'application et obtenez de l'aide.",
+    "requestFeature": "Demande de fonctionnalité"
   },
   "theme": {
     "light": "Clair",

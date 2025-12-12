@@ -468,7 +468,10 @@
     "locationEnabled": "Location enabled",
     "locationBlocked": "Location blocked",
     "locationUnsupported": "Location not supported",
-    "unavailable": "Unavailable"
+    "unavailable": "Unavailable",
+    "helpAndInfo": "Help & Info",
+    "helpDescription": "Learn how to use the app and get support.",
+    "requestFeature": "Request Feature"
   },
   "theme": {
     "light": "Light",

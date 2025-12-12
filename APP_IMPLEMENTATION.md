@@ -83,7 +83,8 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/StatusBadge.svelte`         | ✅     | Status indicators (Delay, Detour, Resumed, etc.)          |
 | `components/dialogs/HowToUseDialog.svelte`     | ✅     | User guide                                                |
 | `components/dialogs/InstallPWADialog.svelte`   | ✅     | PWA install prompt                                        |
-| `components/layout/Header.svelte`              | ✅     | App header with hamburger menu (mobile)                   |
+| `components/layout/Header.svelte`              | ✅     | App header - language toggle, status indicator, hamburger |
+| `components/layout/PullToRefresh.svelte`       | ✅     | Touch-based pull-to-refresh (80px threshold, mobile-only) |
 | `components/layout/Sidebar.svelte`             | ✅     | Desktop navigation                                        |
 | `components/layout/MobileBottomNav.svelte`     | ✅     | Mobile navigation                                         |
 | `components/ui/*`                              | ✅     | shadcn-svelte base components                             |
@@ -184,13 +185,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### i18n (`src/lib/i18n/`) 🆕 **Version B Only**
 
-| File                      | Status | Purpose                                       |
-| ------------------------- | ------ | --------------------------------------------- |
-| `index.ts`                | ✅     | svelte-i18n setup with locale detection       |
-| `en.json`                 | ✅     | English translations (SOURCE - edit this)     |
-| `fr.json`                 | ✅     | French translations (SOURCE - edit this)      |
-| `translations/en.json`    | ✅     | English translations (GENERATED - don't edit) |
-| `translations/fr.json`    | ✅     | French translations (GENERATED - don't edit)  |
+| File                   | Status | Purpose                                       |
+| ---------------------- | ------ | --------------------------------------------- |
+| `index.ts`             | ✅     | svelte-i18n setup with locale detection       |
+| `en.json`              | ✅     | English translations (SOURCE - edit this)     |
+| `fr.json`              | ✅     | French translations (SOURCE - edit this)      |
+| `translations/en.json` | ✅     | English translations (GENERATED - don't edit) |
+| `translations/fr.json` | ✅     | French translations (GENERATED - don't edit)  |
 
 **Translation Automation Workflow:**
 
@@ -200,6 +201,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 4. **Build Process**: `npm run translate && npm run build` (or just `npm run build` which runs translate first)
 
 **Adding New Translation Keys:**
+
 1. Add the English key to `src/lib/i18n/en.json`
 2. Add the French translation to `src/lib/i18n/fr.json` (or leave for DeepL auto-translate)
 3. Run `npm run translate` to sync to translations folder
@@ -252,11 +254,11 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
-| File                   | Status | Purpose                                                         |
-| ---------------------- | ------ | --------------------------------------------------------------- |
-| `transform-gtfs.js`    | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT |
-| `generate-icons.js`    | ✅     | Generate PWA icons from source                                  |
-| `translate-i18n.cjs`   | ✅     | Sync i18n source files to translations folder, DeepL API        |
+| File                 | Status | Purpose                                                         |
+| -------------------- | ------ | --------------------------------------------------------------- |
+| `transform-gtfs.js`  | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT |
+| `generate-icons.js`  | ✅     | Generate PWA icons from source                                  |
+| `translate-i18n.cjs` | ✅     | Sync i18n source files to translations folder, DeepL API        |
 
 ### Migrations (`supabase/migrations/`)
 
@@ -845,6 +847,40 @@ normalizeRouteId(route1) === normalizeRouteId(route2);
 - auth-register, auth-challenge, auth-verify, auth-session, auth-recover, poll-alerts, scrape-maintenance
 - poll-alerts v5: Fixed schema mismatches (header_text→title, table names, JSONB fields)
 - Threading now works correctly for SERVICE_RESUMED alerts (25% similarity threshold)
+
+### Dec 11, 2025 - Header/Navigation UX Improvements
+
+**Pull-to-Refresh Implementation:**
+- Added `PullToRefresh.svelte` component with 80px threshold and touch-only detection
+- Integrated into `+layout.svelte` for all pages
+- Removed refresh button from mobile hamburger menu
+
+**Header Redesign:**
+- Removed all auth code (username, sign in/out, user menu)
+- Moved language toggle to always-visible position (header + settings sync)
+- Grouped desktop refresh button + status indicator with visual connection
+- Reordered mobile header: Logo | Status | Language | Hamburger
+
+**Hamburger Menu:**
+- Restructured into 2 sections: Appearance, Help & Info
+- Added animations: `animate-fade-in` (backdrop/header), `animate-fade-in-down` (panel)
+- Fixed text visibility with explicit HSL inline styles for all elements
+- Made theme toggle darker in light mode with dynamic background colors
+
+**Accessibility Improvements:**
+- Connection status: Pulsing filled dot (connected) vs hollow circle (disconnected)
+- Shape + animation differentiation (not color-only)
+- Added `role="status"` and `aria-live="polite"` for screen readers
+- Language toggle: Maximum contrast with inverted colors (foreground bg / background text)
+
+**Settings Page:**
+- Removed text size options (no longer needed)
+- Language toggle synced with header via `localPreferences` store
+- Reduce Motion toggle verified working (adds `.reduce-motion` class to `<html>`)
+
+**Persistence:**
+- Language and theme stored in IndexedDB (same system as saved stops/routes)
+- Uses `localPreferences.updatePreference()` for all setting changes
 
 ### Dec 4, 2025 - Schema Adaptation
 
