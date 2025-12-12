@@ -61,7 +61,7 @@
 | **Info/Planned**     | `214 80% 96%` | `224 76% 30%` | `213 94% 75%` |
 | **Success**          | `142 60% 94%` | `142 72% 22%` | `142 69% 68%` |
 | **Teal/Resumed**     | `168 76% 90%` | `172 66% 22%` | `168 71% 70%` |
-| **Orange/Detour**    | `24 80% 94%`  | `24 90% 28%`  | `30 95% 70%`  |
+| **Gray/Detour**      | `220 14% 94%` | `220 9% 35%`  | `220 14% 80%` |
 
 ### TTC Brand Colors
 
@@ -411,7 +411,7 @@ border-color: hsl(var(--border));
 - `.status-badge-resumed` - Teal
 - `.status-badge-disruption` - Red
 - `.status-badge-delay` - Amber
-- `.status-badge-detour` - Orange
+- `.status-badge-detour` - Gray
 - `.status-badge-planned` - Blue
 
 ### Direction Badges
@@ -811,6 +811,70 @@ The Subway Status Cards display the current service status for each subway line 
 /* Card container */
 /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -839,6 +903,70 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */

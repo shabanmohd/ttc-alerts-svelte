@@ -1,8 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 28 - Fixed effect mapping for proper status display (Delay vs Disruption)
-const FUNCTION_VERSION = 28;
+// VERSION 29 - Fixed thread categories update when SERVICE_RESUMED is matched
+const FUNCTION_VERSION = 29;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -526,11 +526,18 @@ serve(async (req) => {
           : [];
         const mergedRoutes = [...new Set([...existingRoutes, ...routes])];
 
+        // Merge categories: combine thread's existing categories with new alert's category
+        const existingCategories = Array.isArray(matchedThread.categories) 
+          ? matchedThread.categories 
+          : [];
+        const mergedCategories = [...new Set([...existingCategories, category])];
+
         // Update thread - IMPORTANT: Preserve original incident title when SERVICE_RESUMED
         // The thread title should describe the incident, not just "service has resumed"
         const updates: any = {
           updated_at: new Date().toISOString(),
-          affected_routes: mergedRoutes
+          affected_routes: mergedRoutes,
+          categories: mergedCategories  // Update categories to include SERVICE_RESUMED when resolved
         };
 
         // Only update title if NOT a SERVICE_RESUMED alert

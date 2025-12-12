@@ -148,7 +148,7 @@
     if (lineMatch) {
       return lineMatch[1];
     }
-    
+
     // Check for "1 Yonge" or "2 Bloor" format (number + subway line name)
     const routeLower = route.toLowerCase();
     if (routeLower.includes("yonge") || routeLower.includes("university")) {
@@ -166,7 +166,7 @@
     if (routeLower.includes("finch west")) {
       return "Line 6";
     }
-    
+
     return route;
   }
 
@@ -175,14 +175,16 @@
    */
   function isSubwayLineRoute(route: string): boolean {
     const routeLower = route.toLowerCase();
-    return routeLower.startsWith("line") ||
-           routeLower.includes("yonge") ||
-           routeLower.includes("university") ||
-           routeLower.includes("bloor") ||
-           routeLower.includes("danforth") ||
-           routeLower.includes("sheppard") ||
-           routeLower.includes("eglinton") ||
-           routeLower.includes("finch west");
+    return (
+      routeLower.startsWith("line") ||
+      routeLower.includes("yonge") ||
+      routeLower.includes("university") ||
+      routeLower.includes("bloor") ||
+      routeLower.includes("danforth") ||
+      routeLower.includes("sheppard") ||
+      routeLower.includes("eglinton") ||
+      routeLower.includes("finch west")
+    );
   }
 
   /**
@@ -271,10 +273,17 @@
       extractRouteName(latestAlert?.header_text || "", route)
     )
   );
+
+  // For resolved threads, prefer thread.categories (which includes SERVICE_RESUMED)
+  // For active threads, prefer latestAlert.categories (most recent status)
   const categories = $derived(
-    parseJsonArray(latestAlert?.categories) ||
-      parseJsonArray(thread.categories) ||
-      []
+    thread.is_resolved
+      ? parseJsonArray(thread.categories) ||
+          parseJsonArray(latestAlert?.categories) ||
+          []
+      : parseJsonArray(latestAlert?.categories) ||
+          parseJsonArray(thread.categories) ||
+          []
   );
 
   const cardId = $derived(`alert-${thread.thread_id}`);
@@ -307,7 +316,12 @@
       <div class="flex-1 min-w-0">
         <div class="flex items-center justify-between gap-2 mb-1.5">
           <!-- Show SERVICE_RESUMED badge for resolved threads if they have that category -->
-          <StatusBadge category={thread.is_resolved && parseJsonArray(categories).includes('SERVICE_RESUMED') ? 'SERVICE_RESUMED' : getMainCategory(categories, rawRoutes)} />
+          <StatusBadge
+            category={thread.is_resolved &&
+            parseJsonArray(categories).includes("SERVICE_RESUMED")
+              ? "SERVICE_RESUMED"
+              : getMainCategory(categories, rawRoutes)}
+          />
           <time
             class="alert-card-timestamp"
             datetime={latestAlert?.created_at || ""}

@@ -23,6 +23,7 @@
       case "DELAY":
         return "status-badge-delay";
       case "DETOUR":
+      case "DIVERSION": // Same styling as DETOUR
         return "status-badge-detour";
       case "PLANNED_SERVICE_DISRUPTION":
       case "PLANNED":
@@ -51,7 +52,7 @@
       SERVICE_DISRUPTION: "status.disruption",
       DELAY: "status.delay",
       DETOUR: "status.detour",
-      DIVERSION: "status.detour",  // Map DIVERSION to "Detour" label
+      DIVERSION: "status.detour", // Map DIVERSION to "Detour" label
       SHUTTLE: "status.shuttle",
       PLANNED_SERVICE_DISRUPTION: "status.planned",
       PLANNED: "status.planned",
