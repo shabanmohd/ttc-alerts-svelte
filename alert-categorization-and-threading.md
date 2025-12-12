@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 5.4  
-**Date:** December 10, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v23 + pg_cron automation)  
+**Version:** 5.5  
+**Date:** December 11, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v24 + auto-resolve + pg_cron automation)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -746,19 +746,45 @@ CREATE TABLE planned_maintenance (
 
 ### `poll-alerts`
 
-**Trigger:** Cron schedule (every 2 minutes)  
-**Purpose:** Fetch, categorize, and thread alerts from Bluesky
-**Version:** v14 (December 2025)
+**Trigger:** Cron schedule (every 30 seconds)  
+**Purpose:** Fetch, categorize, thread, and auto-resolve alerts from Bluesky
+**Version:** v24 (December 11, 2025)
 
 **Flow:**
 
-1. Fetch latest posts from @ttcalerts.bsky.social
-2. For each post:
+1. **Auto-Resolve Old Alerts** (NEW in v24)
+   - Query all unresolved threads with latest alerts
+   - Calculate alert age in hours
+   - Mark as resolved if age exceeds threshold for effect type
+   - Log auto-resolved threads
+
+2. Fetch latest posts from @ttcalerts.bsky.social
+3. For each post:
    - Extract text and routes (including letter suffix variants)
    - Determine category from keywords
    - Find or create incident thread (using route family matching + enhanced similarity)
    - Store in `alert_cache`
-3. Update Realtime subscriptions
+4. Update Realtime subscriptions
+
+**Auto-Resolve Thresholds:**
+
+| Effect Type         | Threshold | Rationale                           |
+| ------------------- | --------- | ----------------------------------- |
+| NO_SERVICE          | 6 hours   | Medical emergencies, short outages  |
+| STOP_MOVED          | 6 hours   | Temporary stop relocations          |
+| REDUCED_SERVICE     | 6 hours   | Service reductions                  |
+| MODIFIED_SERVICE    | 6 hours   | Temporary service changes           |
+| ADDITIONAL_SERVICE  | 6 hours   | Extra service periods               |
+| SIGNIFICANT_DELAYS  | 8 hours   | Delay incidents                     |
+| OTHER_EFFECT        | 8 hours   | "Slower than usual" type alerts     |
+| DETOUR              | 12 hours  | Route diversions                    |
+| UNKNOWN_EFFECT      | 12 hours  | Conservative threshold for unknowns |
+
+**Why Auto-Resolve?**
+- TTC doesn't always post SERVICE_RESUMED alerts (especially for medical emergencies)
+- Prevents old alerts from showing incorrectly in subway status cards
+- Runs every 30 seconds, resolves alerts immediately when threshold is reached
+- Returns `autoResolvedCount` in response for monitoring
 
 ### `scrape-maintenance`
 

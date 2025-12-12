@@ -353,6 +353,48 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 11, 2025 - Auto-Resolve Old Alerts (poll-alerts v24)
+
+**Auto-Resolve Logic:**
+
+- ✅ Automatically marks old unresolved alerts as resolved based on effect type
+- ✅ Runs every time poll-alerts Edge Function is called (every 30 seconds)
+- ✅ Handles cases where TTC doesn't post SERVICE_RESUMED alerts
+- ✅ Prevents old alerts from incorrectly showing in subway status cards
+
+**Resolution Thresholds by Effect Type:**
+
+| Effect Type              | Threshold | Rationale                           |
+| ------------------------ | --------- | ----------------------------------- |
+| NO_SERVICE               | 6 hours   | Medical emergencies, short outages  |
+| STOP_MOVED               | 6 hours   | Temporary stop relocations          |
+| REDUCED_SERVICE          | 6 hours   | Service reductions                  |
+| MODIFIED_SERVICE         | 6 hours   | Temporary service changes           |
+| ADDITIONAL_SERVICE       | 6 hours   | Extra service periods               |
+| SIGNIFICANT_DELAYS       | 8 hours   | Delay incidents                     |
+| OTHER_EFFECT             | 8 hours   | "Slower than usual" type alerts     |
+| DETOUR                   | 12 hours  | Route diversions                    |
+| UNKNOWN_EFFECT (default) | 12 hours  | Conservative threshold for unknowns |
+
+**Impact:**
+
+- Fixed subway status cards showing "Disruption" for 3-day-old medical emergency
+- Auto-resolved 25 old alerts on first run
+- Prevents false positives in subway status display
+- No manual cleanup needed for forgotten SERVICE_RESUMED posts
+
+**Files Updated:**
+
+- `supabase/functions/poll-alerts/index.ts` - Added auto-resolve logic (v24)
+
+**Technical Details:**
+
+- Queries all unresolved threads with latest alerts
+- Calculates alert age in hours
+- Marks threads as resolved if age >= threshold
+- Returns `autoResolvedCount` in response
+- Logs each auto-resolved thread with effect type and age
+
 ### Dec 11, 2025 - Mobile Bottom Navigation Compact Mode
 
 **Compact Mode Implementation:**

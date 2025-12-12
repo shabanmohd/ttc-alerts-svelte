@@ -1,8 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 23 - Fixed stale candidate threads causing SERVICE_RESUMED not to match
-const FUNCTION_VERSION = 23;
+// VERSION 24 - Added auto-resolve for old alerts based on effect type thresholds
+const FUNCTION_VERSION = 24;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -203,6 +203,71 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // === AUTO-RESOLVE OLD ALERTS ===
+    // Automatically mark old unresolved alerts as resolved based on their effect type
+    // This handles cases where TTC doesn't post SERVICE_RESUMED alerts
+    const now = new Date();
+    const autoResolveThresholds = {
+      // Medical emergencies and short-term disruptions: 6 hours
+      NO_SERVICE: 6,
+      STOP_MOVED: 6,
+      REDUCED_SERVICE: 6,
+      MODIFIED_SERVICE: 6,
+      ADDITIONAL_SERVICE: 6,
+      // Delays: 8 hours
+      SIGNIFICANT_DELAYS: 8,
+      OTHER_EFFECT: 8, // Catches "slower than usual" type alerts
+      // Detours: 12 hours
+      DETOUR: 12,
+      // Unknown effects: 12 hours (conservative)
+      UNKNOWN_EFFECT: 12
+    };
+
+    // Get all unresolved threads with their latest alerts
+    const { data: unresolvedThreads } = await supabase
+      .from('incident_threads')
+      .select(`
+        thread_id,
+        affected_routes,
+        alert_cache!inner(
+          alert_id,
+          effect,
+          created_at,
+          is_latest
+        )
+      `)
+      .eq('is_resolved', false)
+      .eq('alert_cache.is_latest', true);
+
+    let autoResolvedCount = 0;
+    if (unresolvedThreads) {
+      for (const thread of unresolvedThreads) {
+        const alert = Array.isArray(thread.alert_cache) 
+          ? thread.alert_cache[0] 
+          : thread.alert_cache;
+        
+        if (!alert) continue;
+
+        const effect = alert.effect || 'UNKNOWN_EFFECT';
+        const thresholdHours = autoResolveThresholds[effect] || 12;
+        const alertAge = (now.getTime() - new Date(alert.created_at).getTime()) / (1000 * 60 * 60); // hours
+
+        if (alertAge >= thresholdHours) {
+          // Mark thread as resolved
+          await supabase
+            .from('incident_threads')
+            .update({ 
+              is_resolved: true,
+              updated_at: now.toISOString()
+            })
+            .eq('thread_id', thread.thread_id);
+          
+          autoResolvedCount++;
+          console.log(`Auto-resolved thread ${thread.thread_id} (${effect}, ${alertAge.toFixed(1)}h old)`);
+        }
+      }
+    }
 
     // Fetch latest posts from @ttcalerts
     const response = await fetch(
@@ -547,6 +612,7 @@ serve(async (req) => {
         success: true, 
         newAlerts, 
         updatedThreads,
+        autoResolvedCount,
         version: FUNCTION_VERSION,
         timestamp: new Date().toISOString()
       }),

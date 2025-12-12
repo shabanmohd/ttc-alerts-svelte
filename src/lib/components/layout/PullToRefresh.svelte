@@ -32,7 +32,7 @@
 
     // Check actual scroll position (body scrolls due to iOS fixes)
     const scrollTop = document.body.scrollTop || window.scrollY;
-    
+
     // Only allow pull-to-refresh when at the very top (within 5px)
     if (scrollTop > 5) {
       isPulling = false;

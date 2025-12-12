@@ -33,7 +33,7 @@ Added JavaScript to track actual viewport height:
 
     setViewportHeight();
     window.addEventListener('resize', setViewportHeight);
-    
+
     // Also handle orientation change
     window.addEventListener('orientationchange', () => {
       setTimeout(setViewportHeight, 100);
@@ -59,7 +59,7 @@ Added `transform: translateZ(0)` to force the nav onto its own GPU layer:
   right: 0;
   /* ... other styles ... */
   z-index: 50;
-  
+
   /* Key fix: use transform to force GPU layer */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
@@ -67,6 +67,7 @@ Added `transform: translateZ(0)` to force the nav onto its own GPU layer:
 ```
 
 **Why it works:**
+
 - Forces browser to create a separate compositing layer
 - Prevents repaints/reflows from affecting the nav
 - Smoother animations and positioning
@@ -82,7 +83,7 @@ html {
   background-color: hsl(var(--background));
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  
+
   /* iOS viewport fixes */
   height: 100%;
   overflow: hidden;
@@ -96,7 +97,7 @@ body {
   /* ... other styles ... */
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  
+
   /* iOS scrolling fixes */
   height: 100%;
   overflow-y: auto;
@@ -105,6 +106,7 @@ body {
 ```
 
 **Why it works:**
+
 - `html` is `position: fixed` - Prevents viewport shifts
 - `body` handles scrolling - Maintains smooth scroll behavior
 - `-webkit-overflow-scrolling: touch` - Native iOS momentum scrolling
@@ -115,6 +117,7 @@ body {
 ### Position Fixed on iOS
 
 `position: fixed` on iOS doesn't work the same as desktop browsers:
+
 - When toolbar hides/shows, fixed elements can shift
 - The viewport height changes dynamically
 - Need to explicitly handle these cases
@@ -122,12 +125,14 @@ body {
 ### GPU Compositing
 
 CSS properties that trigger GPU compositing:
+
 - `transform: translateZ(0)` or `translate3d(0,0,0)`
 - `will-change: transform`
 - Certain `filter` properties
 - `opacity` animations
 
 For bottom navs, `translateZ(0)` is preferred because:
+
 - Simple and effective
 - No performance overhead of `will-change`
 - Wide browser support
@@ -141,6 +146,7 @@ For bottom navs, `translateZ(0)` is preferred because:
 ## Files Modified
 
 1. **src/lib/components/layout/MobileBottomNav.svelte**
+
    - Added `onMount` hook with viewport height tracking
    - Handles `resize` and `orientationchange` events
 
@@ -152,6 +158,7 @@ For bottom navs, `translateZ(0)` is preferred because:
 ## Testing
 
 Test on:
+
 - ✅ iOS Safari (iPhone)
 - ✅ iOS Chrome (iPhone)
 - ✅ iOS Safari (iPad)
@@ -163,15 +170,19 @@ Test on:
 If this solution doesn't work in your case, try:
 
 1. **Use `dvh` (Dynamic Viewport Height):**
+
    ```css
    height: 100dvh;
    ```
+
    Only works in newer iOS versions (iOS 15.4+)
 
 2. **Use `env(safe-area-inset-bottom)`:**
+
    ```css
    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
    ```
+
    Already implemented in this project
 
 3. **Use IntersectionObserver:**
@@ -194,4 +205,5 @@ If this solution doesn't work in your case, try:
 ## Commit Reference
 
 Implemented in commit: `703ae8f` (Dec 11, 2025)
+
 - "fix: iOS bottom nav offset when swiping up in Chrome/Safari"
