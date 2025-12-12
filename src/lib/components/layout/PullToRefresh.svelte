@@ -30,9 +30,14 @@
   function handleTouchStart(e: TouchEvent) {
     if (!isTouchDevice || isRefreshing) return;
 
-    // Only start pull if at top of scroll
-    const scrollTop = containerEl?.scrollTop ?? 0;
-    if (scrollTop > 0) return;
+    // Check actual scroll position (body scrolls due to iOS fixes)
+    const scrollTop = document.body.scrollTop || window.scrollY;
+    
+    // Only allow pull-to-refresh when at the very top (within 5px)
+    if (scrollTop > 5) {
+      isPulling = false;
+      return;
+    }
 
     startY = e.touches[0].clientY;
     isPulling = true;
@@ -41,19 +46,32 @@
   function handleTouchMove(e: TouchEvent) {
     if (!isPulling || isRefreshing) return;
 
+    // Double-check we're still at the top
+    const scrollTop = document.body.scrollTop || window.scrollY;
+    if (scrollTop > 5) {
+      isPulling = false;
+      pullDistance = 0;
+      return;
+    }
+
     const currentY = e.touches[0].clientY;
     const diff = currentY - startY;
 
+    // Only track downward pulls (positive diff)
     if (diff > 0) {
       // Apply resistance after threshold
       const resisted =
         diff > THRESHOLD ? THRESHOLD + (diff - THRESHOLD) * RESISTANCE : diff;
       pullDistance = Math.min(resisted, MAX_PULL);
 
-      // Prevent default scroll when pulling
-      if (pullDistance > 10) {
+      // Prevent default scroll when pulling (stronger threshold)
+      if (pullDistance > 20) {
         e.preventDefault();
       }
+    } else {
+      // If user scrolls up, cancel pull
+      isPulling = false;
+      pullDistance = 0;
     }
   }
 

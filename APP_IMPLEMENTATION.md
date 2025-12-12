@@ -353,6 +353,94 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 11, 2025 - Mobile Bottom Navigation Compact Mode
+
+**Compact Mode Implementation:**
+
+- ✅ Added automatic compact mode for mobile bottom navigation
+- ✅ Activates when scrolling down past 100px threshold
+- ✅ Expands when scrolling up or at page top (< 10px)
+- ✅ Labels fade out/in with smooth transitions (0.4s cubic-bezier)
+- ✅ Navigation height reduces from ~64px to ~48px in compact mode
+- ✅ Slight background transparency (95%) in compact mode
+- ✅ 5px scroll delta buffer prevents jittery state changes
+- ✅ Icons remain full size (22px) for accessible tap targets
+- ✅ Active indicator (blue top bar) persists in both modes
+
+**Pull-to-Refresh Sensitivity Fix:**
+
+- ✅ Fixed accidental triggers during normal scrolling
+- ✅ Now only activates when within 5px of page top (was > 0)
+- ✅ Continuous scroll monitoring cancels pull if user scrolls down
+- ✅ Requires 20px pull distance before preventing default scroll (was 10px)
+- ✅ Upward scroll movement immediately cancels pull gesture
+- ✅ Uses correct scroll position detection (document.body.scrollTop)
+
+**Files Updated:**
+
+- `src/lib/components/layout/MobileBottomNav.svelte` - Scroll detection, compact state management
+- `src/routes/layout.css` - Compact mode styles with smooth transitions
+- `src/lib/components/layout/PullToRefresh.svelte` - Stricter scroll position checks
+- `DESIGN_SYSTEM.md` - Added Mobile Bottom Navigation Compact Mode section
+
+**UX Benefits:**
+
+- More screen real estate during content browsing (labels hidden when scrolling)
+- Maintains navigation accessibility (icons always visible)
+- Smooth, natural transitions feel responsive not jarring
+- Pull-to-refresh only works when intended (at page top)
+
+### Dec 11, 2025 - Header/Navigation UX Improvements
+
+**Pull-to-Refresh Implementation:**
+
+- Added `PullToRefresh.svelte` component with 80px threshold and touch-only detection
+- Integrated into `+layout.svelte` for all pages
+- Removed refresh button from mobile hamburger menu
+- Removed `overflow: hidden` from pull-to-refresh container to fix sticky header
+
+**Header Redesign:**
+
+- Removed all auth code (username, sign in/out, user menu)
+- Moved language toggle to always-visible position (header + settings sync)
+- Grouped desktop refresh button + status indicator with visual connection
+- Reordered mobile header: Logo | Status | Language | Hamburger
+- Fixed z-index layering: Header now uses `z-index: 1000` to stay above all content
+
+**Hamburger Menu:**
+
+- Restructured into 2 sections: Appearance, Help & Info
+- Added animations: `animate-fade-in` (backdrop/header), `animate-fade-in-down` (panel)
+- Fixed text visibility with explicit HSL inline styles for all elements
+- Made theme toggle darker in light mode with dynamic background colors
+- Theme toggle now closes menu after selection
+
+**Accessibility Improvements:**
+
+- Connection status: Pulsing filled dot (connected) vs hollow circle (disconnected)
+- Shape + animation differentiation (not color-only)
+- Added `role="status"` and `aria-live="polite"` for screen readers
+- Language toggle: Maximum contrast with inverted colors (foreground bg / background text)
+
+**Settings Page:**
+
+- Removed text size options (no longer needed)
+- Language toggle synced with header via `localPreferences` store
+- Reduce Motion toggle verified working (adds `.reduce-motion` class to `<html>`)
+
+**Search Components:**
+
+- Added visible scrollbars to stop and route search dropdowns (8px, translucent)
+- Search dropdowns automatically close on scroll to prevent overlapping sticky header
+- Fixed z-index hierarchy: search containers use `z-0`, dropdowns use `z-30`, header uses `z-1000`
+- Added scroll event listeners to both StopSearch and RouteSearch components
+
+**Persistence:**
+
+- Language and theme stored in IndexedDB (same system as saved stops/routes)
+- Uses `localPreferences.updatePreference()` for all setting changes
+- Language automatically detects device default (browser language) on first visit
+
 ### Dec 21, 2025 - UI Refinements & Production Cleanup
 
 **Demo Mode Removal:**

@@ -4,6 +4,12 @@
   import { page } from "$app/stores";
   import { onMount } from "svelte";
 
+  let isCompact = $state(false);
+  let lastScrollY = 0;
+  let scrollThreshold = 100; // Pixels scrolled down before compact mode
+  let scrollDelta = 0; // Track scroll movement
+  let compactBuffer = 20; // Buffer zone to prevent flickering
+
   function isActive(href: string): boolean {
     const currentPath = $page.url.pathname;
     const homeParam = $page.url.searchParams.get("home");
@@ -25,7 +31,38 @@
     return false;
   }
 
-  // Fix for iOS dynamic viewport
+  // Handle scroll for compact mode with smooth transitions
+  function handleScroll() {
+    // Scroll happens on body element due to iOS fixes
+    const currentScrollY = document.body.scrollTop || window.scrollY;
+    scrollDelta = currentScrollY - lastScrollY;
+
+    // If at top (within 10px), always show full nav
+    if (currentScrollY < 10) {
+      isCompact = false;
+      lastScrollY = currentScrollY;
+      return;
+    }
+
+    // Require sustained scrolling to trigger compact mode
+    // Scrolling down and past threshold + buffer
+    if (scrollDelta > 0 && currentScrollY > scrollThreshold) {
+      // Only compact if scrolling down more than buffer
+      if (scrollDelta > 5 || isCompact) {
+        isCompact = true;
+      }
+    }
+    // Scrolling up: need to scroll up beyond buffer to expand
+    else if (scrollDelta < 0) {
+      if (Math.abs(scrollDelta) > 5 || !isCompact) {
+        isCompact = false;
+      }
+    }
+
+    lastScrollY = currentScrollY;
+  }
+
+  // Fix for iOS dynamic viewport + scroll handling
   onMount(() => {
     const setViewportHeight = () => {
       document.documentElement.style.setProperty(
@@ -42,13 +79,20 @@
       setTimeout(setViewportHeight, 100);
     });
 
+    // Add scroll listener for compact mode
+    // Listen on both window and body since scrolling happens on body
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    document.body.addEventListener("scroll", handleScroll, { passive: true });
+
     return () => {
       window.removeEventListener("resize", setViewportHeight);
+      window.removeEventListener("scroll", handleScroll);
+      document.body.removeEventListener("scroll", handleScroll);
     };
   });
 </script>
 
-<nav class="mobile-bottom-nav">
+<nav class="mobile-bottom-nav" class:compact={isCompact}>
   <a href="/" class="nav-item {isActive('/') ? 'active' : ''}">
     <Home />
     <span>{$_("navigation.home")}</span>

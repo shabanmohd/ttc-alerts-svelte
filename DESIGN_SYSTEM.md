@@ -1266,6 +1266,87 @@ On desktop, the refresh button and status indicator are grouped together to show
 - **No gap**: `gap-0` to make them flush together
 - **Rounded edges**: Only left side of refresh button is rounded (`rounded-l-md`)
 
+#### Mobile Bottom Navigation Compact Mode
+
+The mobile bottom navigation features an automatic compact mode that activates during scrolling, providing more screen space while maintaining accessibility.
+
+**Behavior:**
+
+- **Scroll down** past 100px → compacts (labels fade out, height reduces)
+- **Scroll up** → expands (labels fade in, full height restored)
+- **At page top** (< 10px) → always expanded
+- **Scroll buffer**: Requires 5px scroll delta to prevent jittery state changes
+
+**Implementation:**
+
+```typescript
+let isCompact = $state(false);
+let lastScrollY = 0;
+let scrollThreshold = 100;
+let scrollDelta = 0;
+
+function handleScroll() {
+  const currentScrollY = document.body.scrollTop || window.scrollY;
+  scrollDelta = currentScrollY - lastScrollY;
+
+  // Always expand at top
+  if (currentScrollY < 10) {
+    isCompact = false;
+    lastScrollY = currentScrollY;
+    return;
+  }
+
+  // Compact on sustained downward scroll
+  if (scrollDelta > 0 && currentScrollY > scrollThreshold) {
+    if (scrollDelta > 5 || isCompact) isCompact = true;
+  }
+  // Expand on upward scroll
+  else if (scrollDelta < 0) {
+    if (Math.abs(scrollDelta) > 5 || !isCompact) isCompact = false;
+  }
+
+  lastScrollY = currentScrollY;
+}
+```
+
+**CSS Transitions:**
+
+```css
+.mobile-bottom-nav {
+  transition: padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-bottom-nav.compact {
+  padding-top: 0.25rem; /* Reduced from 0.5rem */
+  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom));
+  background: hsl(var(--background) / 0.95); /* Slight transparency */
+}
+
+.mobile-bottom-nav .nav-item span {
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 1.2rem;
+  opacity: 1;
+}
+
+.mobile-bottom-nav.compact .nav-item span {
+  max-height: 0; /* Collapse labels */
+  opacity: 0; /* Fade out */
+  margin-top: 0;
+}
+```
+
+**Design Rules:**
+
+- **Smooth easing**: `cubic-bezier(0.4, 0, 0.2, 1)` for natural acceleration/deceleration
+- **400ms duration**: Balanced between responsiveness and smoothness
+- **Independent transitions**: max-height, opacity, margin-top animate separately for labels
+- **Active indicator persists**: Top blue bar remains visible in compact mode (adjusted position)
+- **Icon size unchanged**: 22px icons stay full size for tap targets
+- **GPU acceleration**: Uses `transform: translateZ(0)` for smooth animations
+
 ---
 
 ## 10. Dark Mode
