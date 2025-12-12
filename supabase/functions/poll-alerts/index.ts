@@ -1,8 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 24 - Added auto-resolve for old alerts based on effect type thresholds
-const FUNCTION_VERSION = 26;
+// VERSION 27 - Fixed alert_id generation from bluesky URI
+const FUNCTION_VERSION = 27;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -326,13 +326,15 @@ serve(async (req) => {
     let newAlerts = 0;
     let updatedThreads = 0;
 
-    // Get existing alerts from last 24 hours
+    // Get existing alert_ids from last 24 hours for deduplication
+    // NOTE: We use alert_id (not bluesky_uri) because alert_id is the primary key
+    // and is derived from the bluesky post ID
     const { data: existingAlerts } = await supabase
       .from('alert_cache')
-      .select('bluesky_uri, header_text')
+      .select('alert_id')
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
-    const existingUris = new Set(existingAlerts?.map(a => a.bluesky_uri) || []);
+    const existingAlertIds = new Set(existingAlerts?.map(a => a.alert_id) || []);
 
     // NOTE: We now fetch candidate threads INSIDE the loop to catch newly created threads
     // This fixes the bug where SERVICE_RESUMED wouldn't find threads created in the same batch
@@ -342,16 +344,29 @@ serve(async (req) => {
       if (!post?.record?.text) continue;
       
       const uri = post.uri;
-      if (existingUris.has(uri)) continue;
+
+      // Extract post_id from URI to generate alert_id
+      // URI format: at://did:plc:xxx/app.bsky.feed.post/{post_id}
+      const postIdMatch = uri.match(/\/app\.bsky\.feed\.post\/([^/]+)$/);
+      if (!postIdMatch) {
+        console.warn('Could not extract post_id from URI:', uri);
+        continue;
+      }
+      const alertId = `bsky-${postIdMatch[1]}`;
+
+      // Skip if we already have this alert (deduplication)
+      if (existingAlertIds.has(alertId)) continue;
 
       const text = post.record.text;
       const { category, priority } = categorizeAlert(text);
       const routes = extractRoutes(text);
       
       // Create alert record matching alert_cache schema
+      // CRITICAL: alert_id is required (NOT NULL) - must be generated from bluesky URI
       // NOTE: JSONB columns need arrays passed directly, not stringified
       // The Supabase client handles serialization automatically
       const alert = {
+        alert_id: alertId,
         bluesky_uri: uri,
         header_text: text.split('\n')[0].substring(0, 200),
         description_text: text,
