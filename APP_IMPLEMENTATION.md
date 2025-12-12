@@ -353,7 +353,38 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
-### Dec 11, 2025 - Auto-Resolve Old Alerts (poll-alerts v24)
+### Dec 11, 2025 - TTC Live API Cross-Check (poll-alerts v26)
+
+**TTC Live API Integration:**
+
+- ✅ Cross-checks resolution status with official TTC API (`alerts.ttc.ca/api/alerts/live-alerts`)
+- ✅ Only marks alerts resolved if they're NOT in TTC's active alerts
+- ✅ Replaced time-based auto-resolve with authoritative TTC data
+- ✅ Graceful fallback if TTC API is unavailable
+
+**How It Works:**
+
+| Step              | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| Fetch TTC API     | GET `https://alerts.ttc.ca/api/alerts/live-alerts`           |
+| Extract routes    | Parse `routes[]` and `siteWideCustom[]` arrays               |
+| Compare           | Check if our unresolved threads' routes are in TTC active alerts |
+| Resolve stale     | Mark threads resolved if route no longer in TTC API          |
+| Graceful fallback | If TTC API unavailable, skip resolution (don't break function) |
+
+**Impact:**
+
+- More accurate resolution than time-based approach
+- Data matches official TTC service status
+- Handles cases where TTC doesn't post SERVICE_RESUMED to Bluesky
+- Returns `ttcApiResolvedCount` and `ttcApiError` in response
+
+**Files Updated:**
+
+- `supabase/functions/poll-alerts/index.ts` - TTC API cross-check (v26)
+- `alert-categorization-and-threading.md` - Updated documentation
+
+### Dec 11, 2025 - Auto-Resolve Old Alerts (poll-alerts v24) [SUPERSEDED by v26]
 
 **Auto-Resolve Logic:**
 

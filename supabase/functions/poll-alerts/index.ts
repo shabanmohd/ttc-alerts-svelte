@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // VERSION 24 - Added auto-resolve for old alerts based on effect type thresholds
-const FUNCTION_VERSION = 24;
+const FUNCTION_VERSION = 26;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -204,69 +204,106 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // === AUTO-RESOLVE OLD ALERTS ===
-    // Automatically mark old unresolved alerts as resolved based on their effect type
-    // This handles cases where TTC doesn't post SERVICE_RESUMED alerts
+    // === CROSS-CHECK WITH TTC LIVE API ===
+    // Use official TTC API as authoritative source for resolution status
     const now = new Date();
-    const autoResolveThresholds = {
-      // Medical emergencies and short-term disruptions: 6 hours
-      NO_SERVICE: 6,
-      STOP_MOVED: 6,
-      REDUCED_SERVICE: 6,
-      MODIFIED_SERVICE: 6,
-      ADDITIONAL_SERVICE: 6,
-      // Delays: 8 hours
-      SIGNIFICANT_DELAYS: 8,
-      OTHER_EFFECT: 8, // Catches "slower than usual" type alerts
-      // Detours: 12 hours
-      DETOUR: 12,
-      // Unknown effects: 12 hours (conservative)
-      UNKNOWN_EFFECT: 12
-    };
-
-    // Get all unresolved threads with their latest alerts
-    const { data: unresolvedThreads } = await supabase
-      .from('incident_threads')
-      .select(`
-        thread_id,
-        affected_routes,
-        alert_cache!inner(
-          alert_id,
-          effect,
-          created_at,
-          is_latest
-        )
-      `)
-      .eq('is_resolved', false)
-      .eq('alert_cache.is_latest', true);
-
-    let autoResolvedCount = 0;
-    if (unresolvedThreads) {
-      for (const thread of unresolvedThreads) {
-        const alert = Array.isArray(thread.alert_cache) 
-          ? thread.alert_cache[0] 
-          : thread.alert_cache;
+    let ttcApiResolvedCount = 0;
+    let ttcApiError: string | null = null;
+    
+    try {
+      // Fetch live alerts from TTC official API
+      const ttcResponse = await fetch('https://alerts.ttc.ca/api/alerts/live-alerts', {
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      if (ttcResponse.ok) {
+        const ttcData = await ttcResponse.json();
         
-        if (!alert) continue;
-
-        const effect = alert.effect || 'UNKNOWN_EFFECT';
-        const thresholdHours = autoResolveThresholds[effect] || 12;
-        const alertAge = (now.getTime() - new Date(alert.created_at).getTime()) / (1000 * 60 * 60); // hours
-
-        if (alertAge >= thresholdHours) {
-          // Mark thread as resolved
-          await supabase
-            .from('incident_threads')
-            .update({ 
-              is_resolved: true,
-              updated_at: now.toISOString()
-            })
-            .eq('thread_id', thread.thread_id);
-          
-          autoResolvedCount++;
-          console.log(`Auto-resolved thread ${thread.thread_id} (${effect}, ${alertAge.toFixed(1)}h old)`);
+        // Extract all currently active routes from TTC API
+        const activeRoutes = new Set<string>();
+        
+        // Process routes array (main service alerts)
+        if (ttcData.routes && Array.isArray(ttcData.routes)) {
+          for (const alert of ttcData.routes) {
+            if (alert.route) {
+              // Handle route like "1", "501", "Line 1", etc.
+              const route = alert.route.toString();
+              activeRoutes.add(route);
+              
+              // Also add subway line format variations
+              if (/^[1-4]$/.test(route)) {
+                activeRoutes.add(`Line ${route}`);
+              }
+            }
+          }
         }
+        
+        // Process siteWideCustom (scheduled closures, major alerts)
+        if (ttcData.siteWideCustom && Array.isArray(ttcData.siteWideCustom)) {
+          for (const alert of ttcData.siteWideCustom) {
+            if (alert.route) {
+              const route = alert.route.toString();
+              activeRoutes.add(route);
+              if (/^[1-4]$/.test(route)) {
+                activeRoutes.add(`Line ${route}`);
+              }
+            }
+          }
+        }
+        
+        console.log(`TTC API shows ${activeRoutes.size} routes with active alerts: ${[...activeRoutes].join(', ')}`);
+        
+        // Get all unresolved threads from our database
+        const { data: unresolvedThreads } = await supabase
+          .from('incident_threads')
+          .select('thread_id, title, affected_routes')
+          .eq('is_resolved', false);
+        
+        if (unresolvedThreads) {
+          for (const thread of unresolvedThreads) {
+            const threadRoutes = thread.affected_routes || [];
+            
+            // Check if ANY of the thread's routes are still active in TTC API
+            const isStillActive = threadRoutes.some((route: string) => {
+              // Direct match
+              if (activeRoutes.has(route)) return true;
+              
+              // Check route number match (e.g., "501" matches "501")
+              const routeNum = route.match(/^(\d+)/)?.[1];
+              if (routeNum && activeRoutes.has(routeNum)) return true;
+              
+              // Check subway line variations
+              if (route.toLowerCase().startsWith('line')) {
+                const lineNum = route.match(/\d+/)?.[0];
+                if (lineNum && (activeRoutes.has(lineNum) || activeRoutes.has(`Line ${lineNum}`))) return true;
+              }
+              
+              return false;
+            });
+            
+            if (!isStillActive) {
+              // Route is no longer in TTC API - mark as resolved
+              await supabase
+                .from('incident_threads')
+                .update({ 
+                  is_resolved: true,
+                  resolved_at: now.toISOString(),
+                  updated_at: now.toISOString()
+                })
+                .eq('thread_id', thread.thread_id);
+              
+              ttcApiResolvedCount++;
+              console.log(`TTC API resolved: ${thread.title} (routes: ${threadRoutes.join(', ')} not in active alerts)`);
+            }
+          }
+        }
+      } else {
+        ttcApiError = `TTC API returned ${ttcResponse.status}`;
+        console.warn('TTC API unavailable:', ttcApiError);
       }
+    } catch (ttcErr) {
+      ttcApiError = ttcErr.message;
+      console.warn('TTC API fetch failed:', ttcApiError);
     }
 
     // Fetch latest posts from @ttcalerts
@@ -471,6 +508,7 @@ serve(async (req) => {
         // Resolve thread if SERVICE_RESUMED
         if (category === 'SERVICE_RESUMED') {
           updates.is_resolved = true;
+          updates.resolved_at = new Date().toISOString();
         }
 
         await supabase
@@ -553,7 +591,8 @@ serve(async (req) => {
                 title: headerTitle,
                 categories: [category],
                 affected_routes: routes,
-                is_resolved: category === 'SERVICE_RESUMED'
+                is_resolved: category === 'SERVICE_RESUMED',
+                resolved_at: category === 'SERVICE_RESUMED' ? now.toISOString() : null
               })
               .select()
               .single();
@@ -612,7 +651,8 @@ serve(async (req) => {
         success: true, 
         newAlerts, 
         updatedThreads,
-        autoResolvedCount,
+        ttcApiResolvedCount,
+        ttcApiError,
         version: FUNCTION_VERSION,
         timestamp: new Date().toISOString()
       }),

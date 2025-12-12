@@ -2,7 +2,7 @@
 
 **Version:** 5.5  
 **Date:** December 11, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v24 + auto-resolve + pg_cron automation)  
+**Status:** ✅ Implemented and Active (poll-alerts v26 + TTC API cross-check + pg_cron automation)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -747,16 +747,19 @@ CREATE TABLE planned_maintenance (
 ### `poll-alerts`
 
 **Trigger:** Cron schedule (every 30 seconds)  
-**Purpose:** Fetch, categorize, thread, and auto-resolve alerts from Bluesky
-**Version:** v24 (December 11, 2025)
+**Purpose:** Fetch, categorize, thread alerts from Bluesky + cross-check resolution with TTC Live API
+**Version:** v26 (December 11, 2025)
 
 **Flow:**
 
-1. **Auto-Resolve Old Alerts** (NEW in v24)
-   - Query all unresolved threads with latest alerts
-   - Calculate alert age in hours
-   - Mark as resolved if age exceeds threshold for effect type
-   - Log auto-resolved threads
+1. **TTC Live API Cross-Check** (NEW in v26)
+
+   - Fetch active alerts from `https://alerts.ttc.ca/api/alerts/live-alerts`
+   - Extract all routes with active disruptions
+   - Query unresolved threads in our database
+   - Mark threads as resolved if their routes are NOT in TTC's active alerts
+   - Log resolved threads with reason
+   - Falls back gracefully if TTC API is unavailable
 
 2. Fetch latest posts from @ttcalerts.bsky.social
 3. For each post:
@@ -766,25 +769,23 @@ CREATE TABLE planned_maintenance (
    - Store in `alert_cache`
 4. Update Realtime subscriptions
 
-**Auto-Resolve Thresholds:**
+**TTC Live API Cross-Check:**
 
-| Effect Type         | Threshold | Rationale                           |
-| ------------------- | --------- | ----------------------------------- |
-| NO_SERVICE          | 6 hours   | Medical emergencies, short outages  |
-| STOP_MOVED          | 6 hours   | Temporary stop relocations          |
-| REDUCED_SERVICE     | 6 hours   | Service reductions                  |
-| MODIFIED_SERVICE    | 6 hours   | Temporary service changes           |
-| ADDITIONAL_SERVICE  | 6 hours   | Extra service periods               |
-| SIGNIFICANT_DELAYS  | 8 hours   | Delay incidents                     |
-| OTHER_EFFECT        | 8 hours   | "Slower than usual" type alerts     |
-| DETOUR              | 12 hours  | Route diversions                    |
-| UNKNOWN_EFFECT      | 12 hours  | Conservative threshold for unknowns |
+| Step                | Description                                      |
+| ------------------- | ------------------------------------------------ |
+| Fetch TTC API       | GET `alerts.ttc.ca/api/alerts/live-alerts`       |
+| Extract routes      | Parse `routes[]` and `siteWideCustom[]` arrays   |
+| Compare             | Check if our unresolved threads' routes are active |
+| Resolve stale       | Mark threads resolved if route no longer in TTC API |
+| Graceful fallback   | If TTC API unavailable, skip resolution step     |
 
-**Why Auto-Resolve?**
-- TTC doesn't always post SERVICE_RESUMED alerts (especially for medical emergencies)
-- Prevents old alerts from showing incorrectly in subway status cards
-- Runs every 30 seconds, resolves alerts immediately when threshold is reached
-- Returns `autoResolvedCount` in response for monitoring
+**Why TTC Live API?**
+
+- Authoritative source for current service status
+- More accurate than time-based auto-resolve
+- Handles cases where TTC doesn't post SERVICE_RESUMED to Bluesky
+- Real-time cross-reference ensures data accuracy
+- Returns `ttcApiResolvedCount` and `ttcApiError` in response for monitoring
 
 ### `scrape-maintenance`
 
