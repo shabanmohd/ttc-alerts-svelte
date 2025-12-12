@@ -140,13 +140,49 @@
    * Normalize subway line names to just "Line X" format.
    * E.g., "Line 1 Yonge-University" -> "Line 1"
    * E.g., "Line 2 Bloor-Danforth" -> "Line 2"
+   * E.g., "1 Yonge" -> "Line 1"
    */
   function normalizeSubwayLine(route: string): string {
+    // Check if already in "Line X" format
     const lineMatch = route.match(/^(Line\s*\d+)/i);
     if (lineMatch) {
       return lineMatch[1];
     }
+    
+    // Check for "1 Yonge" or "2 Bloor" format (number + subway line name)
+    const routeLower = route.toLowerCase();
+    if (routeLower.includes("yonge") || routeLower.includes("university")) {
+      return "Line 1";
+    }
+    if (routeLower.includes("bloor") || routeLower.includes("danforth")) {
+      return "Line 2";
+    }
+    if (routeLower.includes("sheppard")) {
+      return "Line 4";
+    }
+    if (routeLower.includes("eglinton")) {
+      return "Line 5";
+    }
+    if (routeLower.includes("finch west")) {
+      return "Line 6";
+    }
+    
     return route;
+  }
+
+  /**
+   * Check if a route string represents a subway line.
+   */
+  function isSubwayLineRoute(route: string): boolean {
+    const routeLower = route.toLowerCase();
+    return routeLower.startsWith("line") ||
+           routeLower.includes("yonge") ||
+           routeLower.includes("university") ||
+           routeLower.includes("bloor") ||
+           routeLower.includes("danforth") ||
+           routeLower.includes("sheppard") ||
+           routeLower.includes("eglinton") ||
+           routeLower.includes("finch west");
   }
 
   /**
@@ -162,14 +198,15 @@
    * E.g., ["123", "123C", "123D", "123 Sherway"] -> ["123"]
    * E.g., ["37", "85", "939"] -> ["37", "85", "939"]
    * E.g., ["Line 1 Yonge-University"] -> ["Line 1"]
+   * E.g., ["1 Yonge"] -> ["Line 1"]
    */
   function getDisplayRoutes(routes: string[]): string[] {
     // Group routes by their base number
     const routesByBase = new Map<string, string[]>();
 
     for (const route of routes) {
-      // Check if it's a subway line first
-      if (route.toLowerCase().startsWith("line")) {
+      // Check if it's a subway line first (including "1 Yonge" format)
+      if (isSubwayLineRoute(route)) {
         const normalizedLine = normalizeSubwayLine(route);
         if (!routesByBase.has(normalizedLine)) {
           routesByBase.set(normalizedLine, []);
