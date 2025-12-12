@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" translate="yes">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -26,6 +26,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300..700&display=swap" rel="stylesheet">
+    
+    <!-- Blocking language script to set lang from saved preference -->
+    <script>
+      (function() {
+        const savedLang = localStorage.getItem('ttc-language');
+        if (savedLang && ['en', 'fr'].includes(savedLang)) {
+          document.documentElement.lang = savedLang;
+        }
+      })();
+    </script>
     
     <!-- SEO -->
     <meta name="description" content="Real-time TTC service alerts for Toronto transit. Get instant notifications about delays, disruptions, and service changes." />

@@ -128,6 +128,7 @@
     role="checkbox"
     aria-checked={selected}
     aria-label={ariaLabel}
+    translate="no"
   >
     <span class="route-check" aria-hidden="true">
       <Check class="check-icon" />
@@ -145,6 +146,7 @@
     )}
     role="status"
     aria-label={ariaLabel}
+    translate="no"
   >
     {route}
   </span>

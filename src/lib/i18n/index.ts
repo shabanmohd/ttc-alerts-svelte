@@ -1,76 +1,96 @@
-import { browser } from '$app/environment';
-import { init, register, getLocaleFromNavigator, locale } from 'svelte-i18n';
+import { register, init, getLocaleFromNavigator, locale, _ } from 'svelte-i18n';
+import { derived, get } from 'svelte/store';
 
-// Register translation files
-register('en', () => import('./en.json'));
-register('fr', () => import('./fr.json'));
+// Re-export core svelte-i18n exports for convenient imports
+export { _, locale, locales, isLoading } from 'svelte-i18n';
 
-// Default locale
-const DEFAULT_LOCALE = 'en';
-const SUPPORTED_LOCALES = ['en', 'fr'];
+// Supported languages
+export const SUPPORTED_LANGUAGES = ['en', 'fr'] as const;
+export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
-// Guard against multiple initialization
-let initialized = false;
+export const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
+  en: 'English',
+  fr: 'Français'
+};
 
-/**
- * Get the saved locale from localStorage or browser preference
- */
-function getInitialLocale(): string {
-  if (browser) {
-    // Check localStorage first
-    const saved = localStorage.getItem('ttc-locale');
-    if (saved && SUPPORTED_LOCALES.includes(saved)) {
-      return saved;
-    }
-
-    // Fall back to browser preference
-    const browserLocale = getLocaleFromNavigator();
-    if (browserLocale) {
-      // Extract language code (e.g., 'en-US' -> 'en')
-      const lang = browserLocale.split('-')[0];
-      if (SUPPORTED_LOCALES.includes(lang)) {
-        return lang;
-      }
-    }
-  }
-
-  return DEFAULT_LOCALE;
-}
+// Register translations from the new translations folder
+register('en', () => import('./translations/en.json'));
+register('fr', () => import('./translations/fr.json'));
 
 /**
- * Initialize i18n - safe to call multiple times, will only init once
+ * Initialize i18n with saved or browser preference
  */
-export function setupI18n() {
-  if (initialized) return;
-  initialized = true;
-  
+export function initI18n() {
+  // Check localStorage for saved language
+  const saved = typeof localStorage !== 'undefined' 
+    ? localStorage.getItem('ttc-language') 
+    : null;
+
   init({
-    fallbackLocale: DEFAULT_LOCALE,
-    initialLocale: getInitialLocale()
+    fallbackLocale: 'en',
+    initialLocale: saved || getLocaleFromNavigator() || 'en',
   });
 }
 
 /**
- * Set the locale and save to localStorage
+ * Set the current language and persist to localStorage
  */
-export function setLocale(newLocale: string) {
-  if (SUPPORTED_LOCALES.includes(newLocale)) {
-    locale.set(newLocale);
-    if (browser) {
-      localStorage.setItem('ttc-locale', newLocale);
-    }
+export function setLanguage(lang: SupportedLanguage) {
+  locale.set(lang);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('ttc-language', lang);
   }
 }
 
 /**
- * Get list of supported locales
+ * Get the current language
  */
-export function getSupportedLocales() {
-  return [
-    { code: 'en', name: 'English' },
-    { code: 'fr', name: 'Français' }
-  ];
+export function getCurrentLanguage(): SupportedLanguage {
+  const current = get(locale);
+  if (current && SUPPORTED_LANGUAGES.includes(current as SupportedLanguage)) {
+    return current as SupportedLanguage;
+  }
+  return 'en';
 }
 
-// Re-export svelte-i18n functions for convenience
-export { _, locale, isLoading } from 'svelte-i18n';
+/**
+ * Derived store for the current language
+ */
+export const currentLanguage = derived(locale, ($locale) => {
+  if ($locale && SUPPORTED_LANGUAGES.includes($locale as SupportedLanguage)) {
+    return $locale as SupportedLanguage;
+  }
+  return 'en';
+});
+
+/**
+ * Check if a translation key exists
+ * Useful for development to catch missing translations
+ */
+export function hasTranslation(key: string): boolean {
+  const translator = get(_);
+  const translated = translator(key);
+  // If the key is returned as-is, translation is missing
+  return translated !== key;
+}
+
+/**
+ * Development helper: Log missing translations
+ * Only logs in development mode
+ */
+export function checkMissingTranslations(keys: string[]): string[] {
+  if (import.meta.env.PROD) return [];
+  
+  const missing: string[] = [];
+  for (const key of keys) {
+    if (!hasTranslation(key)) {
+      missing.push(key);
+    }
+  }
+  
+  if (missing.length > 0) {
+    console.warn('[i18n] Missing translations:', missing);
+  }
+  
+  return missing;
+}

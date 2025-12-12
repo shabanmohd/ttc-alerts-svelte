@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
@@ -280,7 +281,7 @@
     onclick={handleBack}
   >
     <ArrowLeft class="h-4 w-4 mr-1" />
-    Back to Routes
+    {$_("routes.backToRoutes")}
   </Button>
 
   <!-- Route Header -->
@@ -323,7 +324,7 @@
   <section class="mt-6">
     <h2 class="section-title">
       <Bell class="h-4 w-4" />
-      Active Alerts
+      {$_("routes.activeAlerts")}
     </h2>
 
     <div class="space-y-3 mt-3">
@@ -348,9 +349,11 @@
           <div class="no-alerts-icon">
             <CheckCircle class="h-6 w-6" />
           </div>
-          <p class="no-alerts-title">No active alerts</p>
+          <p class="no-alerts-title">{$_("routes.noActiveAlerts")}</p>
           <p class="no-alerts-description">
-            Service is running normally on {routeId}
+            {$_("routes.serviceRunningNormally", {
+              values: { route: routeId },
+            })}
           </p>
         </div>
       {:else}
@@ -365,10 +368,10 @@
   <section class="mt-6">
     <h2 class="section-title">
       <MapPin class="h-4 w-4" />
-      Stops & Live ETA
+      {$_("routes.stopsAndETA")}
     </h2>
     <p class="text-xs text-muted-foreground -mt-1 mb-3">
-      Real-time arrival predictions • Schedule times at{" "}
+      {$_("routes.realtimePredictions")}{" "}
       <a
         href="https://www.ttc.ca/routes-and-schedules"
         target="_blank"

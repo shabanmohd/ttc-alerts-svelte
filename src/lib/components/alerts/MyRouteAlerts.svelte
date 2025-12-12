@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import {
     Search,
     Plus,
@@ -60,7 +61,7 @@
     if (selectedRouteFilter === confirmDeleteRoute.id) {
       selectedRouteFilter = null;
     }
-    toast.success("Route removed", {
+    toast.success($_("toasts.routeRemoved"), {
       description: confirmDeleteRoute.name,
     });
     confirmDeleteRoute = null;
@@ -175,7 +176,7 @@
   <div class="search-section">
     <RouteSearch
       bind:this={routeSearchRef}
-      placeholder="Search by route number or name..."
+      placeholder={$_("search.placeholderRoute")}
     />
     {#if hasRoutes}
       <Button
@@ -185,10 +186,10 @@
         onclick={toggleEditMode}
       >
         {#if isEditMode}
-          Done
+          {$_("common.done")}
         {:else}
           <Pencil class="h-3 w-3 mr-1" />
-          Edit
+          {$_("common.edit")}
         {/if}
       </Button>
     {/if}
@@ -225,7 +226,7 @@
             aria-selected={selectedRouteFilter === null}
             onclick={() => (selectedRouteFilter = null)}
           >
-            All saved routes
+            {$_("myRoutes.allSavedRoutes")}
           </button>
           {#each $savedRoutes as route (route.id)}
             <button
@@ -277,10 +278,9 @@
       <div class="empty-state-icon">
         <MapPinned class="h-8 w-8" />
       </div>
-      <h3 class="empty-state-title">No routes saved yet</h3>
+      <h3 class="empty-state-title">{$_("myRoutes.noRoutesSaved")}</h3>
       <p class="empty-state-description">
-        Use the search bar above to find and save your regular routes. Get
-        alerts for delays and disruptions.
+        {$_("myRoutes.useSearchBar")}
       </p>
     </button>
   {:else if myAlerts.length === 0}
@@ -289,9 +289,9 @@
       <div class="empty-state-icon success">
         <Bell class="h-8 w-8" />
       </div>
-      <h3 class="empty-state-title">All clear!</h3>
+      <h3 class="empty-state-title">{$_("myRoutes.allClear")}</h3>
       <p class="empty-state-description">
-        No active alerts for your saved routes. Service is running normally.
+        {$_("myRoutes.noActiveAlerts")}
       </p>
       <button
         type="button"
@@ -303,7 +303,7 @@
         <span class="refresh-icon" class:spinning={isRefreshing}>
           <RefreshCw class="h-4 w-4" />
         </span>
-        {isRefreshing ? "Refreshing..." : "Refresh"}
+        {isRefreshing ? $_("common.loading") : $_("common.refresh")}
       </button>
     </div>
   {:else}
@@ -344,12 +344,13 @@
         <Trash2 class="h-7 w-7 text-destructive" aria-hidden="true" />
       </div>
       <Dialog.Title class="text-center text-lg font-semibold"
-        >Remove Route?</Dialog.Title
+        >{$_("myRoutes.removeRouteTitle")}</Dialog.Title
       >
       <Dialog.Description class="text-center text-sm text-muted-foreground">
-        Are you sure you want to remove <span
-          class="font-medium text-foreground">"{confirmDeleteRoute?.name}"</span
-        >? You can add it back anytime.
+        {$_("myRoutes.removeRouteConfirm", {
+          values: { route: confirmDeleteRoute?.name },
+        })}
+        {$_("toasts.canAddBackAnytime")}
       </Dialog.Description>
     </Dialog.Header>
     <Dialog.Footer
@@ -358,7 +359,8 @@
       <Button
         variant="outline"
         class="w-full sm:w-auto"
-        onclick={() => (confirmDeleteRoute = null)}>Cancel</Button
+        onclick={() => (confirmDeleteRoute = null)}
+        >{$_("common.cancel")}</Button
       >
       <Button
         variant="destructive"
@@ -366,7 +368,7 @@
         style="background-color: hsl(var(--destructive)); color: white;"
         onclick={confirmRemoveRoute}
       >
-        Remove Route
+        {$_("myRoutes.removeRoute")}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

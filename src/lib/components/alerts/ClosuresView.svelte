@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { ExternalLink, Train } from "lucide-svelte";
   import RouteBadge from "./RouteBadge.svelte";
   import { cn } from "$lib/utils";
@@ -63,7 +64,7 @@
    */
   function getClosureBadge(
     item: PlannedMaintenance
-  ): { type: "nightly" | "weekend"; label: string } | null {
+  ): { type: "nightly" | "weekend"; translationKey: string } | null {
     const start = parseLocalDate(item.start_date);
     const end = parseLocalDate(item.end_date);
     const startDay = start.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
@@ -80,13 +81,16 @@
       (startDay === 6 && endDay === 1); // Sat-Mon
 
     if (isWeekendClosure) {
-      return { type: "weekend", label: "Full weekend closure" };
+      return { type: "weekend", translationKey: "closures.fullWeekendClosure" };
     }
 
     // Nightly early closure: starts at 10 PM or later
     const startHour = parseTimeHour(item.start_time);
     if (startHour !== null && startHour >= 22) {
-      return { type: "nightly", label: "Nightly early closure" };
+      return {
+        type: "nightly",
+        translationKey: "closures.nightlyEarlyClosure",
+      };
     }
     return null;
   }
@@ -262,21 +266,21 @@
   const tabs = [
     {
       id: "starting-soon",
-      label: "Starting Soon",
-      shortLabel: "Soon",
-      ariaLabel: "View maintenance starting soon",
+      labelKey: "closures.tabs.startingSoon",
+      shortLabelKey: "closures.tabs.soon",
+      ariaLabelKey: "closures.tabs.ariaStartingSoon",
     },
     {
       id: "weekend",
-      label: "This Weekend",
-      shortLabel: "Weekend",
-      ariaLabel: "View weekend maintenance",
+      labelKey: "closures.tabs.thisWeekend",
+      shortLabelKey: "closures.tabs.weekend",
+      ariaLabelKey: "closures.tabs.ariaWeekend",
     },
     {
       id: "coming-up",
-      label: "Coming Up",
-      shortLabel: "Coming",
-      ariaLabel: "View upcoming maintenance",
+      labelKey: "closures.tabs.comingUp",
+      shortLabelKey: "closures.tabs.coming",
+      ariaLabelKey: "closures.tabs.ariaComingUp",
     },
   ] as const;
 </script>
@@ -286,8 +290,8 @@
   <div class="closures-header">
     <div class="closures-header-content">
       <h2 id="closures-heading" class="closures-title">
-        <span class="closures-title-short">Subway Closures</span>
-        <span class="closures-title-full">Planned Subway Closures</span>
+        <span class="closures-title-short">{$_("closures.title")}</span>
+        <span class="closures-title-full">{$_("closures.titleFull")}</span>
       </h2>
     </div>
   </div>
@@ -298,16 +302,19 @@
       <div class="closures-empty-icon">
         <Train class="h-8 w-8" />
       </div>
-      <h3 class="closures-empty-title">No planned closures</h3>
+      <h3 class="closures-empty-title">{$_("closures.noPlannedClosures")}</h3>
       <p class="closures-empty-description">
-        All subway lines are operating normally. Check back for scheduled
-        maintenance.
+        {$_("closures.operatingNormally")}
       </p>
     </div>
   {:else}
     <!-- Tabs -->
     <div class="closures-tabs-wrapper">
-      <div class="closures-tabs" role="tablist" aria-label="Closure timeframe">
+      <div
+        class="closures-tabs"
+        role="tablist"
+        aria-label={$_("closures.tabs.ariaClosureTimeframe")}
+      >
         {#each tabs as tab}
           {@const count = tabCounts()[tab.id]}
           <button
@@ -315,11 +322,12 @@
             onclick={() => (activeTab = tab.id)}
             role="tab"
             aria-selected={activeTab === tab.id}
-            aria-label={tab.ariaLabel}
+            aria-label={$_(tab.ariaLabelKey)}
             type="button"
           >
-            <span class="closures-tab-label-short">{tab.shortLabel}</span>
-            <span class="closures-tab-label-full">{tab.label}</span>
+            <span class="closures-tab-label-short">{$_(tab.shortLabelKey)}</span
+            >
+            <span class="closures-tab-label-full">{$_(tab.labelKey)}</span>
             <span class="closures-tab-count">{count}</span>
           </button>
         {/each}
@@ -358,14 +366,18 @@
                   {formatDateRange(item.start_date, item.end_date)}
                 </time>
                 {#if startTime && closureBadge?.type !== "weekend"}
-                  <span class="closure-card-time">from {startTime}</span>
+                  <span class="closure-card-time"
+                    >{$_("closures.fromTime", {
+                      values: { time: startTime },
+                    })}</span
+                  >
                 {/if}
               </div>
             </div>
             <div class="closure-card-footer">
               {#if closureBadge}
                 <span class="closure-type-badge {closureBadge.type}">
-                  {closureBadge.label}
+                  {$_(closureBadge.translationKey)}
                 </span>
               {:else}
                 <span></span>
@@ -377,10 +389,8 @@
                   rel="noopener noreferrer"
                   class="closure-card-link"
                 >
-                  More details <ExternalLink
-                    class="h-3 w-3"
-                    aria-hidden="true"
-                  />
+                  {$_("common.moreDetails")}
+                  <ExternalLink class="h-3 w-3" aria-hidden="true" />
                 </a>
               {/if}
             </div>

@@ -1,56 +1,45 @@
 <script lang="ts">
-  import { Home, AlertTriangle, Settings, Route } from 'lucide-svelte';
-  import { page } from '$app/stores';
-  
+  import { _ } from "svelte-i18n";
+  import { Home, AlertTriangle, Settings, Route } from "lucide-svelte";
+  import { page } from "$app/stores";
+
   function isActive(href: string): boolean {
     const currentPath = $page.url.pathname;
-    const homeParam = $page.url.searchParams.get('home');
-    
-    if (href === '/settings') {
-      return currentPath === '/settings';
+    const homeParam = $page.url.searchParams.get("home");
+
+    if (href === "/settings") {
+      return currentPath === "/settings";
     }
-    if (href === '/routes') {
+    if (href === "/routes") {
       // Active for /routes but not /routes/[route] detail pages
-      return currentPath === '/routes';
+      return currentPath === "/routes";
     }
-    if (href === '/alerts') {
-      return currentPath === '/alerts';
+    if (href === "/alerts") {
+      return currentPath === "/alerts";
     }
     // Home tab: active when on / with any ?home= param or no param
-    if (href === '/') {
-      return currentPath === '/' || currentPath === '';
+    if (href === "/") {
+      return currentPath === "/" || currentPath === "";
     }
     return false;
   }
 </script>
 
 <nav class="mobile-bottom-nav">
-  <a 
-    href="/"
-    class="nav-item {isActive('/') ? 'active' : ''}"
-  >
+  <a href="/" class="nav-item {isActive('/') ? 'active' : ''}">
     <Home />
-    <span>Home</span>
+    <span>{$_("navigation.home")}</span>
   </a>
-  <a 
-    href="/alerts"
-    class="nav-item {isActive('/alerts') ? 'active' : ''}"
-  >
+  <a href="/alerts" class="nav-item {isActive('/alerts') ? 'active' : ''}">
     <AlertTriangle />
-    <span>Alerts</span>
+    <span>{$_("navigation.alerts")}</span>
   </a>
-  <a 
-    href="/routes"
-    class="nav-item {isActive('/routes') ? 'active' : ''}"
-  >
+  <a href="/routes" class="nav-item {isActive('/routes') ? 'active' : ''}">
     <Route />
-    <span>Routes</span>
+    <span>{$_("navigation.routes")}</span>
   </a>
-  <a 
-    href="/settings"
-    class="nav-item {isActive('/settings') ? 'active' : ''}"
-  >
+  <a href="/settings" class="nav-item {isActive('/settings') ? 'active' : ''}">
     <Settings />
-    <span>Settings</span>
+    <span>{$_("navigation.settings")}</span>
   </a>
 </nav>

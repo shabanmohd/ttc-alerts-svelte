@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import {
     MapPin,
     Route,
@@ -89,14 +90,14 @@
     const currentState = locationPermission === "granted";
 
     if (!browser || !("geolocation" in navigator)) {
-      toast.error("Location is not supported on this device");
+      toast.error($_("toasts.locationNotSupported"));
       return;
     }
 
     // If already in desired state, show info message
     if (checked === currentState) {
       if (checked) {
-        toast.info("To change location access, use your browser settings", {
+        toast.info($_("toasts.locationChangeInBrowser"), {
           description:
             "Look for the location/site settings in your browser menu",
           duration: 5000,
@@ -107,7 +108,7 @@
 
     // If trying to turn off when granted
     if (!checked && locationPermission === "granted") {
-      toast.info("To disable location, use your browser settings", {
+      toast.info($_("toasts.locationDisableInBrowser"), {
         description: "Look for the location/site settings in your browser menu",
         duration: 5000,
       });
@@ -116,7 +117,7 @@
 
     // If permission was denied
     if (locationPermission === "denied") {
-      toast.info("Location access was blocked", {
+      toast.info($_("toasts.locationBlocked"), {
         description:
           "Enable location in your browser settings to use this feature",
         duration: 5000,
@@ -141,14 +142,14 @@
       });
 
       locationPermission = "granted";
-      toast.success("Location access enabled");
+      toast.success($_("toasts.locationEnabled"));
     } catch (error) {
       const geoError = error as GeolocationPositionError;
       if (geoError.code === geoError.PERMISSION_DENIED) {
         locationPermission = "denied";
-        toast.error("Location access denied");
+        toast.error($_("toasts.locationDenied"));
       } else {
-        toast.error("Failed to get location");
+        toast.error($_("toasts.locationFailed"));
       }
     } finally {
       isCheckingLocation = false;
@@ -174,11 +175,11 @@
     });
 
     if (success) {
-      toast.success(`Saved ${stop.name}`);
+      toast.success($_("toasts.stopAdded"), { description: stop.name });
     } else if (savedStops.isAtMax) {
-      toast.error("Maximum 20 stops reached");
+      toast.error($_("toasts.maxStopsReached"));
     } else {
-      toast.info("Stop already saved");
+      toast.info($_("toasts.stopAlreadySaved"));
     }
   }
 
@@ -191,7 +192,7 @@
     if (!confirmDeleteStop) return;
     const success = await savedStops.remove(confirmDeleteStop.id);
     if (success) {
-      toast.success("Stop removed");
+      toast.success($_("toasts.stopRemoved"));
     }
     confirmDeleteStop = null;
   }
@@ -205,7 +206,7 @@
     if (!confirmDeleteRoute) return;
     const success = await savedRoutes.remove(confirmDeleteRoute.id);
     if (success) {
-      toast.success("Route removed");
+      toast.success($_("toasts.routeRemoved"));
     }
     confirmDeleteRoute = null;
   }
@@ -243,12 +244,12 @@
     await savedRoutes.clear();
     await localPreferences.reset();
     showClearAllDialog = false;
-    toast.success("All data cleared");
+    toast.success($_("toasts.allDataCleared"));
   }
 </script>
 
 <svelte:head>
-  <title>Settings - TTC Alerts</title>
+  <title>{$_("pages.settings.title")}</title>
 </svelte:head>
 
 <Header />
@@ -260,10 +261,10 @@
       class="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2"
     >
       <Settings class="h-7 w-7" />
-      Settings
+      {$_("settings.title")}
     </h1>
     <p class="text-muted-foreground mt-2">
-      Manage your saved stops, routes, and preferences.
+      {$_("settings.description")}
     </p>
   </div>
 
@@ -272,19 +273,21 @@
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <MapPin class="h-5 w-5 text-primary" />
-        Saved Stops
+        {$_("settings.savedStops")}
       </Card.Title>
       <Card.Description>
-        Save your frequently used stops for quick access.
+        {$_("settings.savedStopsDesc")}
       </Card.Description>
     </Card.Header>
     <Card.Content class="space-y-4">
       <!-- Search to add stops -->
       <div>
-        <p class="text-sm text-muted-foreground mb-2">Add a stop:</p>
+        <p class="text-sm text-muted-foreground mb-2">
+          {$_("settings.addStop")}
+        </p>
         <StopSearch
           onSelect={handleStopSelect}
-          placeholder="Search by name or stop ID..."
+          placeholder={$_("search.placeholderStop")}
         />
       </div>
 
@@ -292,9 +295,9 @@
       {#if $savedStops.length > 0}
         <div class="space-y-2">
           <p class="text-sm font-medium">
-            Your saved stops: <span class="text-muted-foreground font-normal"
-              >({$savedStops.length}/20)</span
-            >
+            {$_("settings.savedStopsCount", {
+              values: { count: $savedStops.length },
+            })}
           </p>
           <div class="space-y-2">
             {#each $savedStops as stop, i (stop.id)}
@@ -335,26 +338,28 @@
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <Route class="h-5 w-5 text-primary" />
-        Saved Routes
+        {$_("settings.savedRoutes")}
       </Card.Title>
       <Card.Description>
-        Save routes you use regularly to filter alerts.
+        {$_("settings.savedRoutesDesc")}
       </Card.Description>
     </Card.Header>
     <Card.Content class="space-y-4">
       <!-- Search to add routes -->
       <div>
-        <p class="text-sm text-muted-foreground mb-2">Add a route:</p>
-        <RouteSearch placeholder="Search routes by number or name..." />
+        <p class="text-sm text-muted-foreground mb-2">
+          {$_("settings.addRoute")}
+        </p>
+        <RouteSearch placeholder={$_("search.placeholderRoute")} />
       </div>
 
       <!-- Saved routes list -->
       {#if $savedRoutes.length > 0}
         <div class="space-y-2">
           <p class="text-sm font-medium">
-            Your saved routes: <span class="text-muted-foreground font-normal"
-              >({$savedRoutes.length}/20)</span
-            >
+            {$_("settings.savedRoutesCount", {
+              values: { count: $savedRoutes.length },
+            })}
           </p>
           <div class="space-y-2">
             {#each $savedRoutes as route, i (route.id)}
@@ -382,7 +387,7 @@
         </div>
       {:else}
         <p class="text-sm text-muted-foreground text-center py-4">
-          No saved routes yet. Search above to add routes.
+          {$_("settings.noSavedRoutes")}
         </p>
       {/if}
     </Card.Content>
@@ -393,16 +398,16 @@
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <SlidersHorizontal class="h-5 w-5 text-primary" />
-        Preferences
+        {$_("settings.preferences")}
       </Card.Title>
-      <Card.Description>Customize your app experience.</Card.Description>
+      <Card.Description>{$_("settings.preferencesDesc")}</Card.Description>
     </Card.Header>
     <Card.Content class="space-y-6">
       <!-- Language -->
       <fieldset>
         <legend class="text-sm font-medium mb-3 flex items-center gap-2">
           <Globe class="h-4 w-4" />
-          Language
+          {$_("settings.language")}
         </legend>
         <div class="flex gap-2">
           <button
@@ -460,10 +465,10 @@
       <fieldset>
         <legend class="text-sm font-medium mb-3 flex items-center gap-2">
           <Palette class="h-4 w-4" />
-          Theme
+          {$_("settings.theme")}
         </legend>
         <div class="flex flex-wrap gap-2">
-          {#each [{ value: "light" as const, label: "Light" }, { value: "dark" as const, label: "Dark" }, { value: "system" as const, label: "System" }] as option}
+          {#each [{ value: "light" as const, labelKey: "theme.light" }, { value: "dark" as const, labelKey: "theme.dark" }, { value: "system" as const, labelKey: "theme.system" }] as option}
             {@const isSelected = $localPreferences.theme === option.value}
             <button
               class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {isSelected
@@ -487,7 +492,7 @@
                   class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"
                 ></span>
               {/if}
-              <span>{option.label}</span>
+              <span>{$_(option.labelKey)}</span>
             </button>
           {/each}
         </div>
@@ -497,10 +502,10 @@
       <fieldset>
         <legend class="text-sm font-medium mb-3 flex items-center gap-2">
           <Type class="h-4 w-4" />
-          Text Size
+          {$_("settings.textSize")}
         </legend>
         <div class="flex flex-wrap gap-2">
-          {#each [{ value: "default" as const, label: "Default", size: "text-sm", name: "Default" }, { value: "large" as const, label: "Large", size: "text-base", name: "Large" }, { value: "extra-large" as const, label: "Extra Large", size: "text-lg", name: "Extra Large" }] as option}
+          {#each [{ value: "default" as const, labelKey: "textSize.default", size: "text-sm" }, { value: "large" as const, labelKey: "textSize.large", size: "text-base" }, { value: "extra-large" as const, labelKey: "textSize.extraLarge", size: "text-lg" }] as option}
             {@const isSelected = $localPreferences.textSize === option.value}
             <button
               class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {isSelected
@@ -508,7 +513,7 @@
                 : 'border border-input hover:bg-accent/50'}"
               style={isSelected ? "border-color: hsl(var(--foreground));" : ""}
               onclick={() => handleTextSizeChange(option.value)}
-              aria-label="{option.name} text size"
+              aria-label={$_(option.labelKey) + " text size"}
             >
               {#if isSelected}
                 <span
@@ -525,7 +530,7 @@
                   class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"
                 ></span>
               {/if}
-              <span>{option.label}</span>
+              <span>{$_(option.labelKey)}</span>
             </button>
           {/each}
         </div>
@@ -539,10 +544,10 @@
             class="text-sm font-medium flex items-center gap-2"
           >
             <CirclePause class="h-4 w-4" />
-            Reduce Motion
+            {$_("settings.reduceMotion")}
           </span>
           <p id="reduce-motion-desc" class="text-xs text-muted-foreground">
-            Minimize animations
+            {$_("settings.minimizeAnimations")}
           </p>
         </div>
         <Switch
@@ -561,23 +566,23 @@
             class="text-sm font-medium flex items-center gap-2"
           >
             <MapPinned class="h-4 w-4" />
-            Location Access
+            {$_("settings.locationAccess")}
           </span>
           <p id="location-desc" class="text-xs text-muted-foreground">
             {#if locationPermission === "granted"}
-              Enabled - used for nearby stops
+              {$_("settings.locationEnabled")}
             {:else if locationPermission === "denied"}
-              Blocked - update in browser settings
+              {$_("settings.locationBlocked")}
             {:else if locationPermission === "unsupported"}
-              Not supported on this device
+              {$_("settings.locationUnsupported")}
             {:else}
-              Enable to find nearby stops
+              {$_("settings.locationDescription")}
             {/if}
           </p>
         </div>
         {#if locationPermission === "unsupported"}
           <span class="text-xs text-muted-foreground px-2 py-1 rounded bg-muted"
-            >Unavailable</span
+            >{$_("settings.unavailable")}</span
           >
         {:else}
           <button
@@ -617,10 +622,10 @@
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <Trash2 class="h-5 w-5 text-primary" />
-        Data Management
+        {$_("settings.dataManagement")}
       </Card.Title>
       <Card.Description>
-        Clear all your saved data and reset preferences.
+        {$_("settings.dataManagementDesc")}
       </Card.Description>
     </Card.Header>
     <Card.Content class="space-y-3">
@@ -631,10 +636,10 @@
         onclick={handleClearAllData}
       >
         <Trash2 class="h-4 w-4" />
-        Clear All Data
+        {$_("settings.clearAllData")}
       </Button>
       <p class="text-xs text-muted-foreground text-center">
-        This will delete all saved stops, routes, and reset preferences.
+        {$_("settings.clearAllDataDesc")}
       </p>
     </Card.Content>
   </Card.Root>
@@ -645,10 +650,10 @@
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <HelpCircle class="h-5 w-5 text-primary" />
-        Help & Info
+        {$_("settings.helpAndInfo")}
       </Card.Title>
       <Card.Description>
-        Get help, report issues, or learn more about the app.
+        {$_("settings.helpDescription")}
       </Card.Description>
     </Card.Header>
     <Card.Content class="space-y-3">
@@ -658,7 +663,7 @@
         onclick={() => (activeDialog = "how-to-use")}
       >
         <HelpCircle class="h-4 w-4" />
-        How to Use
+        {$_("sidebar.howToUse")}
       </Button>
       <Button
         variant="outline"
@@ -666,7 +671,7 @@
         href="mailto:feedback@ttc-alerts.app"
       >
         <Bug class="h-4 w-4" />
-        Report a Bug
+        {$_("sidebar.reportBug")}
       </Button>
       <Button
         variant="outline"
@@ -674,7 +679,7 @@
         href="mailto:feedback@ttc-alerts.app"
       >
         <Lightbulb class="h-4 w-4" />
-        Request a Feature
+        {$_("settings.requestFeature")}
       </Button>
       <Button
         variant="outline"
@@ -682,7 +687,7 @@
         onclick={() => (activeDialog = "about")}
       >
         <Info class="h-4 w-4" />
-        About
+        {$_("sidebar.about")}
       </Button>
     </Card.Content>
   </Card.Root>
@@ -690,7 +695,7 @@
   <!-- Return Home -->
   <Button variant="ghost" class="w-full gap-2 mb-6" href="/">
     <Home class="h-4 w-4" />
-    Return to Homepage
+    {$_("settings.returnHome")}
   </Button>
 </main>
 

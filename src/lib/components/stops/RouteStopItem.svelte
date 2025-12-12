@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import type { TTCStop } from "$lib/data/stops-db";
   import {
     fetchStopETA,
@@ -298,9 +299,12 @@
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diff < 60) return "Just now";
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 60) return $_("time.justNow");
+    if (diff < 3600)
+      return $_("time.minutesAgo", {
+        values: { count: Math.floor(diff / 60) },
+      });
+    return $_("time.hoursAgo", { values: { count: Math.floor(diff / 3600) } });
   }
 
   /**
@@ -354,7 +358,7 @@
 
     if (isSaved) {
       await savedStops.remove(stop.id);
-      toast.info("Stop removed", {
+      toast.info($_("toasts.stopRemoved"), {
         description: stop.name,
       });
     } else if (!atMax) {
@@ -365,12 +369,14 @@
       });
       if (added) {
         showSavedFeedback = true;
-        toast.success("Stop added", {
+        toast.success($_("toasts.stopAdded"), {
           description: stop.name,
         });
       } else {
-        toast.info("Stop already saved", {
-          description: `${stop.name} is already in your stops`,
+        toast.info($_("toasts.stopAlreadySaved"), {
+          description: $_("toast.stopAlreadyInYourStops", {
+            values: { stopName: stop.name },
+          }),
         });
       }
     }

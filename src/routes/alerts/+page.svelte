@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { onMount, onDestroy } from "svelte";
   import {
     SearchX,
@@ -962,7 +963,7 @@
       onclick={() => handleTabClick("active")}
     >
       <AlertTriangle class="w-4 h-4" aria-hidden="true" />
-      <span>Active</span>
+      <span>{$_("status.active")}</span>
       {#if activeAlerts().length > 0}
         <span class="tab-count">{activeAlerts().length}</span>
       {/if}
@@ -975,7 +976,7 @@
       onclick={() => handleTabClick("resolved")}
     >
       <CheckCircle class="w-4 h-4" aria-hidden="true" />
-      <span>Resolved</span>
+      <span>{$_("status.resolved")}</span>
       {#if resolvedAlerts().length > 0}
         <span class="tab-count">{resolvedAlerts().length}</span>
       {/if}
@@ -988,7 +989,7 @@
       onclick={() => handleTabClick("scheduled")}
     >
       <Calendar class="w-4 h-4" aria-hidden="true" />
-      <span>Scheduled</span>
+      <span>{$_("status.scheduled")}</span>
       {#if scheduledClosuresCount() > 0}
         <span class="tab-count">{scheduledClosuresCount()}</span>
       {/if}
@@ -1017,7 +1018,7 @@
           onclick={() => handleStatusCardClick(line.id)}
           disabled={line.status === "ok"}
           aria-label="{line.name}: {line.status === 'ok'
-            ? 'Normal Service'
+            ? $_('status.normalService')
             : `${line.alertCount} issue${line.alertCount > 1 ? 's' : ''}: ${line.uniqueTypes.map((t) => getStatusTypeName(t)).join(', ')}`}. {line.status !==
           'ok'
             ? 'Click to view alerts.'
@@ -1035,7 +1036,9 @@
           <div class="subway-status-indicator">
             {#if line.status === "ok"}
               <CheckCircle class="w-4 h-4 text-green-600 dark:text-green-500" />
-              <span class="status-text status-ok-text">Normal Service</span>
+              <span class="status-text status-ok-text"
+                >{$_("status.normalService")}</span
+              >
             {:else}
               <!-- Show all unique issue types with icons -->
               <div class="multi-status-container">
@@ -1044,17 +1047,19 @@
                     {#if type === "disruption"}
                       <AlertCircle class="w-4 h-4 status-disruption-icon" />
                       <span class="status-text status-disruption-text"
-                        >Disruption</span
+                        >{$_("status.disruption")}</span
                       >
                     {:else if type === "delay"}
                       <AlertCircle class="w-4 h-4 status-delay-icon" />
-                      <span class="status-text status-delay-text">Delay</span>
+                      <span class="status-text status-delay-text"
+                        >{$_("status.delay")}</span
+                      >
                     {:else if type === "scheduled"}
                       <Calendar
                         class="w-4 h-4 status-scheduled-icon flex-shrink-0"
                       />
                       <span class="status-text status-scheduled-text"
-                        >Scheduled</span
+                        >{$_("status.scheduled")}</span
                       >
                     {/if}
                   </div>
@@ -1106,8 +1111,8 @@
           <CheckCircle
             class="h-12 w-12 mx-auto mb-4 opacity-50 text-green-500"
           />
-          <p class="text-lg mb-2 font-medium">All clear!</p>
-          <p class="text-sm">No active service disruptions right now.</p>
+          <p class="text-lg mb-2 font-medium">{$_("emptyStates.allClear")}</p>
+          <p class="text-sm">{$_("emptyStates.noActiveDisruptions")}</p>
         </div>
       {:else}
         {#each alertsByLine() as group}
@@ -1219,15 +1224,17 @@
         <div class="text-center py-12" role="alert">
           <p class="text-destructive mb-4">{$error}</p>
           <Button variant="link" onclick={() => fetchAlerts()}>
-            Try again
+            {$_("common.tryAgain")}
           </Button>
         </div>
       {:else if filteredResolvedAlerts().length === 0}
         <div class="text-center py-12 text-muted-foreground">
           <SearchX class="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p class="text-lg mb-2 font-medium">No resolved alerts</p>
+          <p class="text-lg mb-2 font-medium">
+            {$_("emptyStates.noResolvedAlerts")}
+          </p>
           <p class="text-sm">
-            Resolved alerts from the past 24 hours will appear here.
+            {$_("emptyStates.resolvedAlertsAppear")}
           </p>
         </div>
       {:else}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { Search, X, Bookmark, Check } from "lucide-svelte";
   import { onMount, onDestroy } from "svelte";
   import { browser } from "$app/environment";
@@ -359,12 +360,12 @@
       setTimeout(() => {
         recentlyAddedRoute = null;
       }, 500);
-      toast.success("Route added", {
+      toast.success($_("toasts.routeAdded"), {
         description: `${route.route} ${route.name}`,
       });
     } else {
       // Route already saved - just show info toast
-      toast.info("Route already saved", {
+      toast.info($_("toasts.routeAlreadySaved"), {
         description: `${route.route} ${route.name} is already in your routes`,
       });
     }

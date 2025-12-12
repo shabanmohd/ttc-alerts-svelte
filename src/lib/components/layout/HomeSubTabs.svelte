@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { MapPin, Route } from "lucide-svelte";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
@@ -10,9 +11,9 @@
     ($page.url.searchParams.get("home") as HomeTab) || "stops"
   );
 
-  const tabs: Array<{ id: HomeTab; label: string; icon: typeof MapPin }> = [
-    { id: "stops", label: "My Stops", icon: MapPin },
-    { id: "routes", label: "My Routes", icon: Route },
+  const tabs: Array<{ id: HomeTab; labelKey: string; icon: typeof MapPin }> = [
+    { id: "stops", labelKey: "tabs.myStops", icon: MapPin },
+    { id: "routes", labelKey: "tabs.myRoutes", icon: Route },
   ];
 
   function handleTabClick(tabId: HomeTab) {
@@ -38,7 +39,7 @@
       onclick={() => handleTabClick(tab.id)}
     >
       <Icon class="w-4 h-4" aria-hidden="true" />
-      <span>{tab.label}</span>
+      <span>{$_(tab.labelKey)}</span>
     </button>
   {/each}
 </div>

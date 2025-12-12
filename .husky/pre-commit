@@ -1,0 +1,16 @@
+# Check for missing translations before commit
+# This ensures all English keys have French translations
+
+npm run translate:check
+
+# If check fails, provide helpful message
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Missing translations detected!"
+  echo ""
+  echo "Run 'npm run translate' to auto-translate, or:"
+  echo "  - Set DEEPL_API_KEY environment variable first"
+  echo "  - Or manually add translations to src/lib/i18n/fr.json"
+  echo ""
+  exit 1
+fi

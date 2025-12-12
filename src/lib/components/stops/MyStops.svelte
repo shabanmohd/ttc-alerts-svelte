@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { onMount, onDestroy } from "svelte";
   import {
     MapPin,
@@ -79,11 +80,13 @@
     });
 
     if (!added) {
-      toast.info("Stop already saved", {
-        description: `${stop.name} is already in your stops`,
+      toast.info($_("toasts.stopAlreadySaved"), {
+        description: $_("toast.stopAlreadyInYourStops", {
+          values: { stopName: stop.name },
+        }),
       });
     } else {
-      toast.success("Stop added", {
+      toast.success($_("toasts.stopAdded"), {
         description: stop.name,
       });
     }
@@ -99,7 +102,7 @@
   function confirmRemoveStop() {
     if (!confirmDeleteStop) return;
     savedStops.remove(confirmDeleteStop.id);
-    toast.success("Stop removed", {
+    toast.success($_("toasts.stopRemoved"), {
       description: confirmDeleteStop.name,
     });
     confirmDeleteStop = null;
@@ -120,7 +123,7 @@
   <div class="search-section">
     <StopSearch
       bind:this={stopSearchRef}
-      placeholder="Search by name or stop ID..."
+      placeholder={$_("search.placeholderStop")}
       showNearbyButton={true}
       showBookmarkButton={true}
       onSelect={handleStopSelect}
@@ -133,7 +136,7 @@
       <div class="header-left">
         <h2 class="section-title">
           <Clock class="h-4 w-4 text-primary" />
-          Live Arrivals
+          {$_("stops.liveArrivals")}
           {#if loading}
             <RefreshCw class="h-3 w-3 animate-spin text-muted-foreground" />
           {/if}
@@ -147,10 +150,10 @@
           onclick={toggleEditMode}
         >
           {#if isEditMode}
-            Done
+            {$_("common.done")}
           {:else}
             <Pencil class="h-3 w-3 mr-1" />
-            Edit
+            {$_("common.edit")}
           {/if}
         </Button>
       </div>
@@ -199,10 +202,9 @@
       <div class="empty-state-icon">
         <MapPin class="h-8 w-8" />
       </div>
-      <h3 class="empty-state-title">Add your first stop</h3>
+      <h3 class="empty-state-title">{$_("stops.addFirstStop")}</h3>
       <p class="empty-state-description">
-        Use the search bar above to find stops. Tap the location icon to find
-        nearby stops.
+        {$_("stops.addFirstStopDescription")}
       </p>
     </button>
   {/if}
@@ -226,12 +228,13 @@
         <Trash2 class="h-7 w-7 text-destructive" aria-hidden="true" />
       </div>
       <Dialog.Title class="text-center text-lg font-semibold"
-        >Remove Stop?</Dialog.Title
+        >{$_("stops.removeStopTitle")}</Dialog.Title
       >
       <Dialog.Description class="text-center text-sm text-muted-foreground">
-        Are you sure you want to remove <span
-          class="font-medium text-foreground">"{confirmDeleteStop?.name}"</span
-        >? You can add it back anytime.
+        {$_("stops.removeStopConfirm", {
+          values: { name: confirmDeleteStop?.name },
+        })}
+        {$_("toasts.canAddBackAnytime")}
       </Dialog.Description>
     </Dialog.Header>
     <Dialog.Footer
@@ -240,7 +243,7 @@
       <Button
         variant="outline"
         class="w-full sm:w-auto"
-        onclick={() => (confirmDeleteStop = null)}>Cancel</Button
+        onclick={() => (confirmDeleteStop = null)}>{$_("common.cancel")}</Button
       >
       <Button
         variant="destructive"
@@ -248,7 +251,7 @@
         style="background-color: hsl(var(--destructive)); color: white;"
         onclick={confirmRemoveStop}
       >
-        Remove Stop
+        {$_("stops.removeStop")}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

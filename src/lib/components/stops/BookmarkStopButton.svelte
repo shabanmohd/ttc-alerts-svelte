@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { Bookmark } from "lucide-svelte";
   import {
     savedStops,
@@ -51,7 +52,7 @@
 
     if (isSaved) {
       await savedStops.remove(stop.id);
-      toast.info("Stop removed", {
+      toast.info($_("toasts.stopRemoved"), {
         description: stop.name,
       });
     } else if (!atMax) {
@@ -62,12 +63,14 @@
       });
 
       if (added) {
-        toast.success("Stop added", {
+        toast.success($_("toasts.stopAdded"), {
           description: stop.name,
         });
       } else {
-        toast.info("Stop already saved", {
-          description: `${stop.name} is already in your stops`,
+        toast.info($_("toasts.stopAlreadySaved"), {
+          description: $_("toast.stopAlreadyInYourStops", {
+            values: { stopName: stop.name },
+          }),
         });
       }
     }

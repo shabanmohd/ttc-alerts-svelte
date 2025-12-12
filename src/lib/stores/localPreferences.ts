@@ -8,7 +8,7 @@
 import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { preferencesStorage, type UserPreferences, DEFAULT_PREFERENCES } from '$lib/services/storage';
-import { setLocale } from '$lib/i18n';
+import { setLanguage } from '$lib/stores/language';
 
 // Re-export types
 export type { UserPreferences };
@@ -78,7 +78,7 @@ function createLocalPreferencesStore() {
   // Apply language/locale
   function applyLanguage(lang: UserPreferences['language']) {
     if (!browser) return;
-    setLocale(lang);
+    setLanguage(lang as 'en' | 'fr');
   }
 
   // Auto-initialize

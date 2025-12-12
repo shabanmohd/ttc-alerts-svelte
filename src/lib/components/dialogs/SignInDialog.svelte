@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import * as Dialog from "$lib/components/ui/dialog";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
@@ -177,12 +178,12 @@
       {#if step === "displayName"}
         <div class="space-y-3 animate-fade-in">
           <div class="space-y-2">
-            <Label for="displayName">Display Name</Label>
+            <Label for="displayName">{$_("auth.displayName")}</Label>
             <Input
               id="displayName"
               type="text"
               bind:value={displayName}
-              placeholder="Your name"
+              placeholder={$_("auth.yourNamePlaceholder")}
               class="h-12"
               disabled={isLoading}
               onkeydown={handleKeydown}
@@ -277,12 +278,12 @@
       {:else if step === "recovery"}
         <div class="space-y-3 animate-fade-in">
           <div class="space-y-2">
-            <Label for="recovery-code">Recovery Code</Label>
+            <Label for="recovery-code">{$_("auth.recoveryCode")}</Label>
             <Input
               id="recovery-code"
               type="text"
               bind:value={recoveryCode}
-              placeholder="XXXX-XXXX"
+              placeholder={$_("auth.recoveryCodePlaceholder")}
               class="h-12 font-mono text-center tracking-wider"
               disabled={isLoading}
               onkeydown={handleKeydown}
@@ -291,8 +292,7 @@
               autofocus
             />
             <p class="text-xs text-muted-foreground">
-              Enter one of the 8-character recovery codes you saved when
-              creating your account.
+              {$_("auth.enterRecoveryDescription")}
             </p>
           </div>
 

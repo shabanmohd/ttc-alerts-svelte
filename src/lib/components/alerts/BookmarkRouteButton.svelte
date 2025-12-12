@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { Bookmark, Check } from "lucide-svelte";
   import { savedRoutes, isAtMaxSavedRoutes } from "$lib/stores/savedRoutes";
   import { cn } from "$lib/utils";
@@ -63,18 +64,18 @@
 
     if (isSaved) {
       await savedRoutes.remove(route);
-      toast.info("Route removed", {
+      toast.info($_("toasts.routeRemoved"), {
         description: `${route} ${name}`,
       });
     } else if (!atMax) {
       const added = await savedRoutes.add({ id: route, name, type });
       if (added) {
         showSavedFeedback = true;
-        toast.success("Route added", {
+        toast.success($_("toasts.routeAdded"), {
           description: `${route} ${name}`,
         });
       } else {
-        toast.info("Route already saved", {
+        toast.info($_("toasts.routeAlreadySaved"), {
           description: `${route} ${name} is already in your routes`,
         });
       }
@@ -96,25 +97,25 @@
     ? `Remove route ${route} from saved routes`
     : `Save route ${route} to My Routes`}
   title={!isSaved && atMax
-    ? "Maximum 20 saved routes reached"
+    ? $_("routes.maxReached")
     : isSaved
-      ? "Remove from My Routes"
-      : "Save to My Routes"}
+      ? $_("routes.removeFromMyRoutes")
+      : $_("routes.saveToMyRoutes")}
 >
   {#if showSavedFeedback}
     <Check size={iconSizes[size]} />
     {#if showLabel}
-      <span>Saved!</span>
+      <span>{$_("common.saved")}</span>
     {/if}
   {:else if isSaved}
     <Bookmark size={iconSizes[size]} class="fill-current" />
     {#if showLabel}
-      <span>Saved to My Routes</span>
+      <span>{$_("routes.savedToMyRoutes")}</span>
     {/if}
   {:else}
     <Bookmark size={iconSizes[size]} />
     {#if showLabel}
-      <span>Save to My Routes</span>
+      <span>{$_("routes.saveToMyRoutes")}</span>
     {/if}
   {/if}
 </button>

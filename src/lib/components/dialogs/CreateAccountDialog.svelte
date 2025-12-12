@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import * as Dialog from "$lib/components/ui/dialog";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
@@ -119,7 +120,7 @@
         copiedIndex = null;
       }, 2000);
     } catch {
-      toast.error("Failed to copy code");
+      toast.error($_("toast.failedToCopyCode"));
     }
   }
 
@@ -127,15 +128,15 @@
     try {
       const allCodes = recoveryCodes.join("\n");
       await navigator.clipboard.writeText(allCodes);
-      toast.success("All recovery codes copied!");
+      toast.success($_("toasts.codesCopied"));
     } catch {
-      toast.error("Failed to copy codes");
+      toast.error($_("toasts.copyFailed"));
     }
   }
 
   function handleFinish() {
     if (!acknowledgedCodes) {
-      toast.error("Please confirm you have saved your recovery codes");
+      toast.error($_("toasts.confirmSaveCodes"));
       return;
     }
 
@@ -220,14 +221,16 @@
       {#if step === "displayName"}
         <div class="space-y-3 animate-fade-in">
           <div class="space-y-2">
-            <Label for="create-displayName">Choose a display name</Label>
+            <Label for="create-displayName"
+              >{$_("auth.chooseDisplayName")}</Label
+            >
             <div class="relative">
               <Input
                 id="create-displayName"
                 type="text"
                 bind:value={displayName}
                 oninput={handleDisplayNameInput}
-                placeholder="Your name"
+                placeholder={$_("auth.yourNamePlaceholder")}
                 class="h-12 pr-10"
                 disabled={isLoading}
                 onkeydown={handleKeydown}

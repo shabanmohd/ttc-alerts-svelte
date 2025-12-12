@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import {
     Search,
     TrainFrontTunnel,
@@ -318,36 +319,51 @@
   }
 
   const categories = [
-    { id: "all", label: "All", icon: LayoutGrid, routes: [] }, // Special "All" option
+    {
+      id: "all",
+      labelKey: "routeCategories.all",
+      icon: LayoutGrid,
+      routes: [],
+    }, // Special "All" option
     {
       id: "subway",
-      label: "Subway",
+      labelKey: "routeCategories.subway",
       icon: TrainFrontTunnel,
       routes: SUBWAY_LINES,
     },
     {
       id: "streetcar",
-      label: "Streetcars",
+      labelKey: "routeCategories.streetcars",
       icon: TramFront,
       routes: STREETCAR_ROUTES,
     },
-    { id: "bus", label: "Regular Bus", icon: Bus, routes: REGULAR_BUS_ROUTES },
-    { id: "express", label: "Express Bus", icon: Zap, routes: EXPRESS_ROUTES },
+    {
+      id: "bus",
+      labelKey: "routeCategories.regularBus",
+      icon: Bus,
+      routes: REGULAR_BUS_ROUTES,
+    },
+    {
+      id: "express",
+      labelKey: "routeCategories.expressBus",
+      icon: Zap,
+      routes: EXPRESS_ROUTES,
+    },
     {
       id: "night-bus",
-      label: "Blue Night Bus",
+      labelKey: "routeCategories.blueNightBus",
       icon: Moon,
       routes: NIGHT_ROUTES,
     },
     {
       id: "night-streetcar",
-      label: "Blue Night Streetcar",
+      labelKey: "routeCategories.blueNightStreetcar",
       icon: Moon,
       routes: NIGHT_STREETCAR_ROUTES,
     },
     {
       id: "community",
-      label: "Community Bus",
+      labelKey: "routeCategories.communityBus",
       icon: Users,
       routes: COMMUNITY_ROUTES,
     },
@@ -367,7 +383,7 @@
 </script>
 
 <svelte:head>
-  <title>Routes - TTC Alerts</title>
+  <title>{$_("pages.routes.title")}</title>
   <meta
     name="description"
     content="Browse all TTC routes - subway, streetcar, bus, express, and night service"
@@ -389,7 +405,7 @@
       />
       <Input
         type="text"
-        placeholder="Search routes by number or name..."
+        placeholder={$_("search.placeholderRoute")}
         bind:value={searchQuery}
         class="pl-9"
       />
@@ -439,7 +455,7 @@
 
   <!-- Category Filter Toggles -->
   <div class="flex flex-wrap gap-2 mb-6">
-    {#each categories as { id, label, icon: Icon }}
+    {#each categories as { id, labelKey, icon: Icon }}
       {@const isSelected =
         activeCategory === id || (id === "all" && activeCategory === null)}
       <button
@@ -457,14 +473,14 @@
           : ""}
       >
         <Icon class="h-4 w-4" />
-        {label}
+        {$_(labelKey)}
       </button>
     {/each}
   </div>
 
   <!-- Route Categories -->
   <div class="space-y-8">
-    {#each displayCategories as { id, label, icon: Icon, routes }}
+    {#each displayCategories as { id, labelKey, icon: Icon, routes }}
       {@const routeType =
         id === "subway"
           ? "subway"
@@ -474,7 +490,7 @@
       <section id="category-{id}" class="scroll-mt-20">
         <h2 class="text-lg font-semibold flex items-center gap-2 mb-3">
           <Icon class="h-5 w-5" />
-          {label}
+          {$_(labelKey)}
           <span class="text-sm font-normal text-muted-foreground"
             >({routes.length})</span
           >

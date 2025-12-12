@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Badge } from "$lib/components/ui/badge";
   import { cn } from "$lib/utils";
+  import { _ } from "svelte-i18n";
 
   let {
     category,
@@ -40,33 +41,42 @@
   }
 
   /**
+   * Get the i18n key for the category
+   */
+  function getCategoryKey(category: string): string {
+    const cat = category.toUpperCase();
+
+    const categoryKeyMap: Record<string, string> = {
+      SERVICE_RESUMED: "status.serviceResumed",
+      SERVICE_DISRUPTION: "status.disruption",
+      DELAY: "status.delay",
+      DETOUR: "status.detour",
+      PLANNED_SERVICE_DISRUPTION: "status.planned",
+      PLANNED: "status.planned",
+      SCHEDULED_CLOSURE: "status.scheduledClosure",
+      ACCESSIBILITY: "status.accessibility",
+      BUS: "routes.bus",
+      STREETCAR: "routes.streetcar",
+      SUBWAY: "routes.subway",
+      OTHER: "common.other",
+    };
+
+    return categoryKeyMap[cat] ?? "";
+  }
+
+  /**
    * Format the category string for display in the badge.
    */
   function formatCategory(category: string): string {
-    const cat = category.toUpperCase();
+    const key = getCategoryKey(category);
+    if (key) {
+      return $_?.(key) ?? category;
+    }
 
-    const categoryMap: Record<string, string> = {
-      SERVICE_RESUMED: "Service Resumed",
-      SERVICE_DISRUPTION: "Disruption",
-      DELAY: "Delay",
-      DETOUR: "Detour",
-      PLANNED_SERVICE_DISRUPTION: "Planned",
-      PLANNED: "Planned",
-      SCHEDULED_CLOSURE: "Scheduled Closure",
-      ACCESSIBILITY: "Accessibility",
-      BUS: "Bus",
-      STREETCAR: "Streetcar",
-      SUBWAY: "Subway",
-      OTHER: "Other",
-    };
-
-    return (
-      categoryMap[cat] ??
-      category
-        .replace(/_/g, " ")
-        .toLowerCase()
-        .replace(/\b\w/g, (l) => l.toUpperCase())
-    );
+    return category
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   }
 </script>
 

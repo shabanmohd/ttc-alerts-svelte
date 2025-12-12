@@ -3,6 +3,7 @@
   import RouteBadge from "./RouteBadge.svelte";
   import StatusBadge from "./StatusBadge.svelte";
   import { cn } from "$lib/utils";
+  import { _ } from "svelte-i18n";
   import type { ThreadWithAlerts, Alert } from "$lib/types/database";
 
   let { thread, lineColor }: { thread: ThreadWithAlerts; lineColor?: string } =
@@ -21,14 +22,18 @@
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diff < 0) return "Just now";
-    if (diff < 60) return "Just now";
-    if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+    if (diff < 0) return $_("time.justNow");
+    if (diff < 60) return $_("time.justNow");
+    if (diff < 3600)
+      return $_("time.minutesAgo", {
+        values: { count: Math.floor(diff / 60) },
+      });
     if (diff < 86400)
-      return `${Math.floor(diff / 3600)} hour${Math.floor(diff / 3600) > 1 ? "s" : ""} ago`;
+      return $_("time.hoursAgo", {
+        values: { count: Math.floor(diff / 3600) },
+      });
     const days = Math.floor(diff / 86400);
-    if (days === 1) return "1 day ago";
-    if (days < 7) return `${days} days ago`;
+    if (days < 7) return $_("time.daysAgo", { values: { count: days } });
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
 
@@ -313,9 +318,9 @@
       type="button"
     >
       <span
-        >{earlierAlerts.length} earlier update{earlierAlerts.length > 1
-          ? "s"
-          : ""}</span
+        >{$_("alerts.earlierUpdates", {
+          values: { count: earlierAlerts.length },
+        })}</span
       >
       <ChevronDown
         class={cn(
