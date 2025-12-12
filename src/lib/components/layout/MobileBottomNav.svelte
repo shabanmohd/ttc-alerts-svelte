@@ -29,21 +29,21 @@
   onMount(() => {
     const setViewportHeight = () => {
       document.documentElement.style.setProperty(
-        '--viewport-height',
+        "--viewport-height",
         `${window.innerHeight}px`
       );
     };
 
     setViewportHeight();
-    window.addEventListener('resize', setViewportHeight);
-    
+    window.addEventListener("resize", setViewportHeight);
+
     // Also handle orientation change
-    window.addEventListener('orientationchange', () => {
+    window.addEventListener("orientationchange", () => {
       setTimeout(setViewportHeight, 100);
     });
 
     return () => {
-      window.removeEventListener('resize', setViewportHeight);
+      window.removeEventListener("resize", setViewportHeight);
     };
   });
 </script>
