@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 5.5  
-**Date:** December 11, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v26 + TTC API cross-check + pg_cron automation)  
+**Version:** 5.6  
+**Date:** December 12, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v27 + TTC API cross-check + pg_cron automation)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -32,6 +32,7 @@ This document describes the alert categorization and threading system designed t
 4. **Incident threading** - Group related updates using Jaccard similarity + route matching
 5. **Frontend filtering** - Mutually exclusive category filters in UI
 6. **Planned alert separation** - Maintenance alerts excluded from main feed
+7. **TTC API cross-check** - Official TTC Live API used for resolution verification
 
 ---
 
@@ -39,14 +40,18 @@ This document describes the alert categorization and threading system designed t
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  Bluesky API    │────▶│  poll-alerts         │────▶│  Supabase DB    │
+│  Bluesky API    │────▶│  poll-alerts (v27)   │────▶│  Supabase DB    │
 │  @ttcalerts     │     │  (Edge Function)     │     │  alert_cache    │
 └─────────────────┘     └──────────────────────┘     │  incident_      │
-                                                      │  threads        │
-                                                      └────────┬────────┘
-                                                               │
-                        ┌──────────────────────┐               │
-                        │  Svelte Frontend     │◀──────────────┘
+        │                        │                    │  threads        │
+        │                        ▼                    └────────┬────────┘
+        │               ┌──────────────────────┐               │
+        │               │  TTC Live API        │               │
+        │               │  (Cross-check)       │               │
+        │               └──────────────────────┘               │
+        │                                                      │
+        │               ┌──────────────────────┐               │
+        └──────────────▶│  Svelte Frontend     │◀──────────────┘
                         │  alerts.ts store     │
                         │  + Realtime sub      │
                         └──────────────────────┘
@@ -58,6 +63,7 @@ This document describes the alert categorization and threading system designed t
 - **Backend:** Supabase (PostgreSQL + Edge Functions + Realtime)
 - **Hosting:** Cloudflare Pages
 - **Data Source:** Bluesky AT Protocol (public API)
+- **Verification:** TTC Live API (alerts.ttc.ca)
 
 ---
 
@@ -71,8 +77,15 @@ This document describes the alert categorization and threading system designed t
 - **API:** Bluesky AT Protocol public API
 - **Endpoint:** `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
 - **Polling:** Edge function fetches last 50 posts per invocation
-- **Deduplication:** Uses `bluesky_uri` as unique identifier
+- **Deduplication:** Uses `alert_id` (generated from bluesky URI post_id as `bsky-{post_id}`)
 - **Status:** ✅ Enabled (primary and only source)
+
+**TTC Live API (Cross-Check):**
+
+- **Endpoint:** `https://alerts.ttc.ca/api/alerts/live-alerts`
+- **Purpose:** Verify alert resolution status (not for ingestion)
+- **Usage:** If a route is no longer in TTC API, thread is marked resolved
+- **Status:** ✅ Enabled (v26+)
 
 **GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear on Bluesky)
 
@@ -84,6 +97,7 @@ This document describes the alert categorization and threading system designed t
 - **Enhanced similarity** - Jaccard + location keywords + cause matching
 - **Tuned thresholds** - 40% general, 25% DIVERSION, 10% SERVICE_RESUMED
 - **Latest first** - Most recent update at top of thread
+- **TTC API authority** - Official API is authoritative for resolution status
 
 ---
 
