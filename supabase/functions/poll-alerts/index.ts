@@ -1,8 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 27 - Fixed alert_id generation from bluesky URI
-const FUNCTION_VERSION = 27;
+// VERSION 28 - Fixed effect mapping for proper status display (Delay vs Disruption)
+const FUNCTION_VERSION = 28;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,6 +40,25 @@ const ALERT_CATEGORIES = {
     priority: 5
   }
 };
+
+// Map category to effect (for subway status display: Delay vs Disruption)
+function categoryToEffect(category: string): string {
+  switch (category) {
+    case 'SERVICE_RESUMED':
+      return 'RESUMED';
+    case 'DELAY':
+      return 'SIGNIFICANT_DELAYS';
+    case 'DIVERSION':
+      return 'DETOUR';
+    case 'SHUTTLE':
+      return 'MODIFIED_SERVICE';
+    case 'PLANNED_CLOSURE':
+      return 'SCHEDULED';
+    case 'SERVICE_DISRUPTION':
+    default:
+      return 'NO_SERVICE';
+  }
+}
 
 // Extract routes from alert text
 function extractRoutes(text: string): string[] {
@@ -374,7 +393,7 @@ serve(async (req) => {
         affected_routes: JSON.parse(JSON.stringify(routes)), // Force clean array
         created_at: post.record.createdAt,
         is_latest: true,
-        effect: category === 'SERVICE_RESUMED' ? 'RESUMED' : 'DISRUPTION'
+        effect: categoryToEffect(category)
       };
 
       // Insert alert

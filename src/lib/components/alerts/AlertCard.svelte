@@ -269,7 +269,8 @@
       <!-- Status + Description on right -->
       <div class="flex-1 min-w-0">
         <div class="flex items-center justify-between gap-2 mb-1.5">
-          <StatusBadge category={getMainCategory(categories, rawRoutes)} />
+          <!-- Show SERVICE_RESUMED badge for resolved threads if they have that category -->
+          <StatusBadge category={thread.is_resolved && parseJsonArray(categories).includes('SERVICE_RESUMED') ? 'SERVICE_RESUMED' : getMainCategory(categories, rawRoutes)} />
           <time
             class="alert-card-timestamp"
             datetime={latestAlert?.created_at || ""}
