@@ -8,6 +8,7 @@
     Bug,
     Lightbulb,
     Info,
+    Check,
     X,
   } from "lucide-svelte";
   import { lastUpdated, refreshAlerts, isConnected } from "$lib/stores/alerts";
@@ -270,7 +271,7 @@
         </p>
 
         <!-- Theme Options - Light and Dark -->
-        <div class="flex flex-col gap-2">
+        <div class="flex gap-2">
           <!-- Light Mode Button -->
           <button
             onclick={async () => {
@@ -279,22 +280,25 @@
               }
               mobileMenuOpen = false;
             }}
-            class="flex items-center justify-between w-full px-3 py-3 rounded-lg transition-colors"
-            style="background-color: {!isDark
-              ? 'hsl(240 5.9% 88%)'
-              : 'transparent'}; color: hsl(var(--foreground)); border: {!isDark ? '2px solid hsl(var(--primary))' : '1px solid hsl(var(--border))'};"
+            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {!isDark
+              ? 'border-2'
+              : 'border border-input hover:bg-accent/50'}"
+            style={!isDark ? "border-color: hsl(var(--foreground));" : ""}
           >
-            <span class="flex items-center gap-3">
-              <Sun
-                class="w-5 h-5"
-                style="color: {!isDark ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'};"
-                aria-hidden="true"
-              />
-              <span class="text-sm font-medium">{$_("header.lightMode")}</span>
-            </span>
             {#if !isDark}
-              <span class="w-2 h-2 rounded-full bg-primary"></span>
+              <span
+                class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+                style="background-color: hsl(var(--foreground));"
+              >
+                <Check class="h-3 w-3" style="color: hsl(var(--background));" />
+              </span>
+            {:else}
+              <span
+                class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"
+              ></span>
             {/if}
+            <Sun class="w-4 h-4" aria-hidden="true" />
+            <span class="text-sm">{$_("header.lightMode")}</span>
           </button>
 
           <!-- Dark Mode Button -->
@@ -305,22 +309,25 @@
               }
               mobileMenuOpen = false;
             }}
-            class="flex items-center justify-between w-full px-3 py-3 rounded-lg transition-colors"
-            style="background-color: {isDark
-              ? 'hsl(240 3.7% 20%)'
-              : 'transparent'}; color: hsl(var(--foreground)); border: {isDark ? '2px solid hsl(var(--primary))' : '1px solid hsl(var(--border))'};"
+            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {isDark
+              ? 'border-2'
+              : 'border border-input hover:bg-accent/50'}"
+            style={isDark ? "border-color: hsl(var(--foreground));" : ""}
           >
-            <span class="flex items-center gap-3">
-              <Moon
-                class="w-5 h-5"
-                style="color: {isDark ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'};"
-                aria-hidden="true"
-              />
-              <span class="text-sm font-medium">{$_("header.darkMode")}</span>
-            </span>
             {#if isDark}
-              <span class="w-2 h-2 rounded-full bg-primary"></span>
+              <span
+                class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+                style="background-color: hsl(var(--foreground));"
+              >
+                <Check class="h-3 w-3" style="color: hsl(var(--background));" />
+              </span>
+            {:else}
+              <span
+                class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"
+              ></span>
             {/if}
+            <Moon class="w-4 h-4" aria-hidden="true" />
+            <span class="text-sm">{$_("header.darkMode")}</span>
           </button>
         </div>
       </div>
