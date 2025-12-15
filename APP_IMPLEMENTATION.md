@@ -241,7 +241,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 - **Annual Holiday Updates**: 2025 & 2026 holiday schedules (update from https://www.ttc.ca/riding-the-ttc/Updates/Holiday-service)
 - **Line Hours**: Lines 1/2/4 subway (6am-2am Mon-Sat, 8am-2am Sun) vs Line 6 LRT (5:30am-1:30am)
-- **Suspended Lines**: Easy toggle when lines are suspended/restored (Line 6 currently suspended)
+- **Suspended Lines**: Easy toggle when lines are suspended/restored (Line 6 enabled - opened Dec 14, 2024)
 - **Service Frequency**: Rush hour (2-3 min), off-peak (4-5 min), weekend, Sunday, holiday
 - **Empty State Messages**: Context-aware messages based on time/day/holiday/line suspension and vehicle type (bus vs subway)
 
@@ -352,6 +352,30 @@ For local development, use `localhost` and `http://localhost:5173`.
 ---
 
 ## Changelog
+
+### Dec 15, 2025 - Line 6 Finch West LRT Launch & ETA Improvements
+
+**Line 6 Finch West LRT:**
+
+- ✅ Line 6 opened to the public on December 14, 2024
+- ✅ Updated `ttc-service-info.ts` - removed suspension, Line 6 now operational
+- ✅ Added Line 6 schedule-based ETA fallback when NTAS has no real-time data
+- ✅ ETA Edge Function generates scheduled arrivals based on service frequency
+- ✅ Line 6 name corrected: "Line 6 Finch West" (not "Eglinton Crosstown")
+
+**ETA Display Improvements:**
+
+- ✅ Live GPS data: Shows minutes countdown with live signal icon
+- ✅ Scheduled data: Shows arrival times in AM/PM format (e.g., "10:35 AM")
+- ✅ "Scheduled" badge indicates non-real-time predictions
+- ✅ Route pages: Line 5 (under construction) shows informational message, no ETA section
+
+**Files Updated:**
+
+- `src/lib/utils/ttc-service-info.ts` - Line 6 enabled
+- `src/lib/components/stops/RouteStopItem.svelte` - Scheduled vs live ETA display
+- `src/routes/routes/[route]/+page.svelte` - Line 5 under construction handling
+- `supabase/functions/get-eta/index.ts` - Line 6 scheduled ETA fallback
 
 ### Dec 12, 2025 - Critical Bug Fix: alert_id Generation (poll-alerts v27)
 

@@ -61,7 +61,7 @@
 | **Info/Planned**     | `214 80% 96%` | `224 76% 30%` | `213 94% 75%` |
 | **Success**          | `142 60% 94%` | `142 72% 22%` | `142 69% 68%` |
 | **Teal/Resumed**     | `168 76% 90%` | `172 66% 22%` | `168 71% 70%` |
-| **Gray/Detour**      | `220 14% 94%` | `220 9% 35%`  | `220 14% 80%` |
+| **Orange/Detour**    | `24 80% 94%`  | `24 90% 28%`  | `30 95% 70%`  |
 
 ### TTC Brand Colors
 
@@ -233,7 +233,6 @@ Dialogs are used for confirmation prompts (delete, clear data) and informational
     style="background-color: hsl(var(--background)); border: 1px solid hsl(var(--border));"
   >
     <Dialog.Header>
-      <!-- Icon Circle -->
       <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
         <Trash2 class="h-7 w-7 text-destructive" />
       </div>
@@ -246,47 +245,12 @@ Dialogs are used for confirmation prompts (delete, clear data) and informational
       <Button variant="outline" class="w-full sm:w-auto" onclick={() => showDialog = false}>
         Cancel
       </Button>
-      <Button
-        variant="destructive"
-        class="w-full sm:w-auto"
-        style="background-color: hsl(var(--destructive)); color: white;"
-        onclick={handleConfirm}
-      >
+      <Button variant="destructive" class="w-full sm:w-auto" onclick={handleConfirm}>
         Confirm
       </Button>
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
-```
-
-#### Dialog Styling Rules
-
-| Element            | Classes/Styles                                                                      |
-| ------------------ | ----------------------------------------------------------------------------------- |
-| **Content**        | `class="sm:max-w-md"` + inline `background-color` and `border` for reliability      |
-| **Icon Container** | `mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-{type}/10` |
-| **Icon**           | `h-7 w-7 text-{type}` (e.g., `text-destructive` for delete dialogs)                 |
-| **Title**          | `text-center text-lg font-semibold`                                                 |
-| **Description**    | `text-center text-sm text-muted-foreground`                                         |
-| **Footer**         | `flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-center`                    |
-| **Buttons**        | `w-full sm:w-auto` for responsive sizing                                            |
-
-#### Button Order (Mobile-First)
-
-- Mobile: Buttons stack vertically with **destructive action on top** (more accessible)
-- Desktop: Buttons in row with Cancel on left, Action on right
-
-#### Destructive Button Styling
-
-Due to Tailwind CSS variable processing, always add explicit inline styles for destructive buttons:
-
-```svelte
-<Button
-  variant="destructive"
-  style="background-color: hsl(var(--destructive)); color: white;"
->
-  Delete
-</Button>
 ```
 
 #### Dialog Types by Icon Color
@@ -300,23 +264,22 @@ Due to Tailwind CSS variable processing, always add explicit inline styles for d
 
 ### Tab Indicators
 
-Active tabs use a 2px bottom line indicator to show the current selection. This pattern is used across all tabbed navigation in the app.
+Active tabs use a 2px bottom line indicator to show the current selection.
 
 #### Usage Locations
 
-| Component                  | Tabs                                     | Implementation          |
-| -------------------------- | ---------------------------------------- | ----------------------- |
-| `HomeSubTabs.svelte`       | My Stops / My Routes                     | `:after` pseudo-element |
-| `alerts/+page.svelte`      | Active / Resolved / Scheduled            | `:after` pseudo-element |
-| `MaintenanceWidget.svelte` | Starting Soon / This Weekend / Coming Up | `border-bottom`         |
-| `ClosuresView.svelte`      | Starting Soon / This Weekend / Coming Up | `:after` pseudo-element |
+| Component                  | Tabs                                     |
+| -------------------------- | ---------------------------------------- |
+| `HomeSubTabs.svelte`       | My Stops / My Routes                     |
+| `alerts/+page.svelte`      | Active / Resolved / Scheduled            |
+| `MaintenanceWidget.svelte` | Starting Soon / This Weekend / Coming Up |
+| `ClosuresView.svelte`      | Starting Soon / This Weekend / Coming Up |
 
-#### CSS Pattern (Pseudo-Element)
+#### CSS Pattern
 
 ```css
 .tab {
   position: relative;
-  /* ... other tab styles */
 }
 
 .tab.active:after {
@@ -331,28 +294,6 @@ Active tabs use a 2px bottom line indicator to show the current selection. This 
   border-radius: 1px;
 }
 ```
-
-#### CSS Pattern (Border-Bottom)
-
-```css
-.tab {
-  border-bottom: 2px solid transparent;
-  /* ... other tab styles */
-}
-
-.tab.active {
-  border-bottom-color: hsl(var(--primary));
-  /* or specific color: rgb(139 92 246) for purple */
-}
-```
-
-#### Guidelines
-
-- **Width**: 2rem (32px) centered under the tab text
-- **Height**: 2px
-- **Color**: Primary color `hsl(var(--primary))` or theme-specific (e.g., purple for maintenance tabs)
-- **Position**: Absolute positioned at `bottom: 0`, centered with `left: 50%` + `transform: translateX(-50%)`
-- **Transition**: Inherits tab transition for smooth state changes
 
 ### Input Fields
 
@@ -411,12 +352,12 @@ border-color: hsl(var(--border));
 - `.status-badge-resumed` - Teal
 - `.status-badge-disruption` - Red
 - `.status-badge-delay` - Amber
-- `.status-badge-detour` - Gray
+- `.status-badge-detour` - Orange
 - `.status-badge-planned` - Blue
 
 ### Direction Badges
 
-Direction badges indicate the travel direction of a stop (extracted from GTFS trip headsigns). Used in StopSearch dropdown, ETACard headers, route page direction tabs, and subway platform badges.
+Direction badges indicate the travel direction of a stop (extracted from GTFS trip headsigns). Used in StopSearch dropdown and ETACard headers.
 
 ```svelte
 <!-- Tailwind classes for direction colors -->
@@ -439,36 +380,10 @@ Direction badges indicate the travel direction of a stop (extracted from GTFS tr
 | **Northbound** | `emerald-600/20` | `emerald-700` | `emerald-400` | `emerald-600/40` |
 | **Southbound** | `rose-600/20`    | `rose-700`    | `rose-400`    | `rose-600/40`    |
 
-**Subway Terminal Direction Labels:**
-
-| Line   | Direction 0 (GTFS) | Direction 1 (GTFS)     | Color (0/1)     |
-| ------ | ------------------ | ---------------------- | --------------- |
-| Line 1 | Towards VMC        | Towards Finch          | amber / emerald |
-| Line 2 | Towards Kennedy    | Towards Kipling        | sky / amber     |
-| Line 4 | Towards Don Mills  | Towards Sheppard-Yonge | sky / amber     |
-| Line 6 | Towards Finch West | Towards Humber College | sky / amber     |
-
-> **Note**: Subway direction tabs use terminal station names instead of cardinal directions for clarity. Platform badges on stops still show Eastbound/Westbound/Northbound/Southbound.
-
-**Mobile Short Labels:**
-
-| Full Label             | Mobile Label |
-| ---------------------- | ------------ |
-| Towards VMC            | VMC          |
-| Towards Finch          | Finch        |
-| Towards Kennedy        | Kennedy      |
-| Towards Kipling        | Kipling      |
-| Towards Don Mills      | Don Mills    |
-| Towards Sheppard-Yonge | Shep-Yonge   |
-| Towards Finch West     | Finch W      |
-| Towards Humber College | Humber       |
-
 **Usage Locations:**
 
 - `StopSearch.svelte` - Search dropdown results
 - `ETACard.svelte` - Saved stop card headers
-- `RouteDirectionTabs.svelte` - Route page direction tabs (mobile: short labels)
-- `RouteStopItem.svelte` - Subway platform badges (uppercase)
 
 ### Alert Cards
 
@@ -747,266 +662,11 @@ The Subway Status Cards display the current service status for each subway line 
 #### CSS Classes
 
 ```css
-.subway-status-card          /* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
+.subway-status-card                    /* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
-.subway-status-card.status-scheduled; /* Scheduled closure */
+.subway-status-card.status-scheduled;  /* Scheduled closure */
 ```
 
 ### Closure Type Badges
@@ -1031,271 +691,9 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
-/* Base badge styles */
 .closure-type-badge.nightly  /* Blue nightly closure */
-.closure-type-badge.weekend; /* Amber weekend closure */
+.closure-type-badge.weekend  /* Amber weekend closure */
 ```
-
-#### WCAG Compliance
-
-Both badge types meet **WCAG AA** contrast requirements (4.5:1 minimum):
-
-- Nightly (light mode): ~7:1 contrast ratio
-- Weekend (light mode): ~8:1 contrast ratio
 
 ---
 
@@ -1335,53 +733,10 @@ Both badge types meet **WCAG AA** contrast requirements (4.5:1 minimum):
 }
 ```
 
-### Safe Areas (iOS PWA)
-
-iOS PWA standalone mode requires special handling for the status bar notch and home indicator:
-
-**Header (safe-area-inset-top):**
+### Safe Areas (iOS)
 
 ```css
-/* Header component */
-padding-top: env(safe-area-inset-top, 0px);
-
-/* Mobile menu panel header */
-height: calc(57px + env(safe-area-inset-top, 0px));
-padding-top: env(safe-area-inset-top, 0px);
-
-/* Menu content positioning */
-top: calc(57px + env(safe-area-inset-top, 0px));
-```
-
-**Bottom Nav (safe-area-inset-bottom):**
-
-```css
-/* MobileBottomNav */
-padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
-
-/* PWA standalone mode - fill home indicator area */
-@media (display-mode: standalone) {
-  body::after {
-    content: "";
-    position: fixed;
-    bottom: 0;
-    height: env(safe-area-inset-bottom, 34px);
-    background-color: hsl(var(--background));
-  }
-}
-```
-
-**Viewport Meta (app.html):**
-
-```html
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1, viewport-fit=cover"
-/>
-<meta
-  name="apple-mobile-web-app-status-bar-style"
-  content="black-translucent"
-/>
+padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 ```
 
 ---
@@ -1405,85 +760,49 @@ transition: all 0.15s ease;
 transition: all 0.2s ease;
 
 /* Utility classes */
-.transition-default {
-  transition: all 0.15s ease;
-}
-.transition-colors {
-  transition: color 0.15s ease, background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-.transition-transform {
-  transition: transform 0.15s ease;
-}
-.transition-opacity {
-  transition: opacity 0.15s ease;
-}
+.transition-default { transition: all 0.15s ease; }
+.transition-colors { transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
+.transition-transform { transition: transform 0.15s ease; }
+.transition-opacity { transition: opacity 0.15s ease; }
 ```
 
 ### Micro-Animations (layout.css)
 
-| Animation      | Duration | Easing   | Use Case                                                 |
-| -------------- | -------- | -------- | -------------------------------------------------------- |
-| `fadeIn`       | 0.2s     | ease-out | General appearance, modal backdrops, hamburger menu      |
-| `fadeInUp`     | 0.25s    | ease-out | List items, cards entering                               |
-| `fadeInDown`   | 0.25s    | ease-out | Dropdowns, expandable content, hamburger menu panel      |
-| `fadeOut`      | 0.15s    | ease-in  | Elements disappearing                                    |
-| `scaleIn`      | 0.2s     | ease-out | Checkmarks, success feedback                             |
-| `slideInRight` | 0.25s    | ease-out | Side panels, drawer content                              |
-| `slideOutLeft` | 0.2s     | ease-in  | Page exits                                               |
-| `focusPulse`   | 0.6s     | ease-out | Input autofocus highlight                                |
-| `successFlash` | 0.4s     | ease-out | Add/bookmark feedback                                    |
-| `ping`         | 1s       | cubic    | Connection status indicator (pulsing dot when connected) |
+| Animation          | Duration | Easing   | Use Case                        |
+| ------------------ | -------- | -------- | ------------------------------- |
+| `fadeIn`           | 0.2s     | ease-out | General appearance              |
+| `fadeInUp`         | 0.25s    | ease-out | List items, cards entering      |
+| `fadeInDown`       | 0.25s    | ease-out | Dropdowns, expandable content   |
+| `fadeOut`          | 0.15s    | ease-in  | Elements disappearing           |
+| `scaleIn`          | 0.2s     | ease-out | Checkmarks, success feedback    |
+| `slideInRight`     | 0.25s    | ease-out | Side panels, drawer content     |
+| `slideOutLeft`     | 0.2s     | ease-in  | Page exits                      |
+| `focusPulse`       | 0.6s     | ease-out | Input autofocus highlight       |
+| `successFlash`     | 0.4s     | ease-out | Add/bookmark feedback           |
 
 ### Utility Classes
 
 ```css
 /* Animation classes */
-.animate-fade-in {
-  animation: fadeIn 0.2s ease-out forwards;
-}
-.animate-fade-in-up {
-  animation: fadeInUp 0.25s ease-out forwards;
-}
-.animate-fade-in-down {
-  animation: fadeInDown 0.25s ease-out forwards;
-}
-.animate-fade-out {
-  animation: fadeOut 0.15s ease-in forwards;
-}
-.animate-scale-in {
-  animation: scaleIn 0.2s ease-out forwards;
-}
-.animate-slide-in-right {
-  animation: slideInRight 0.25s ease-out forwards;
-}
+.animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+.animate-fade-in-up { animation: fadeInUp 0.25s ease-out forwards; }
+.animate-fade-in-down { animation: fadeInDown 0.25s ease-out forwards; }
+.animate-fade-out { animation: fadeOut 0.15s ease-in forwards; }
+.animate-scale-in { animation: scaleIn 0.2s ease-out forwards; }
+.animate-slide-in-right { animation: slideInRight 0.25s ease-out forwards; }
 
 /* Staggered list animations */
-.stagger-1 {
-  animation-delay: 0.05s;
-}
-.stagger-2 {
-  animation-delay: 0.1s;
-}
-.stagger-3 {
-  animation-delay: 0.15s;
-}
-.stagger-4 {
-  animation-delay: 0.2s;
-}
-.stagger-5 {
-  animation-delay: 0.25s;
-}
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
 
 /* Focus highlight for input autofocus */
-.focus-highlight {
-  animation: focusPulse 0.6s ease-out forwards;
-}
+.focus-highlight { animation: focusPulse 0.6s ease-out forwards; }
 
 /* Success flash for add/remove actions */
-.animate-success-flash {
-  animation: successFlash 0.4s ease-out;
-}
+.animate-success-flash { animation: successFlash 0.4s ease-out; }
 ```
 
 ### Staggered List Pattern
@@ -1492,8 +811,8 @@ Use dynamic delay for list items (capped at 200-300ms max):
 
 ```svelte
 {#each items as item, i (item.id)}
-  <div
-    class="animate-fade-in-up"
+  <div 
+    class="animate-fade-in-up" 
     style="animation-delay: {Math.min(i * 50, 300)}ms"
   >
     <!-- content -->
@@ -1541,12 +860,8 @@ Triggered when clicking empty state cards to autofocus search input:
 ```css
 /* Success flash for bookmark add/remove */
 @keyframes successFlash {
-  0% {
-    background-color: hsl(142 76% 36% / 0.15);
-  }
-  100% {
-    background-color: transparent;
-  }
+  0% { background-color: hsl(142 76% 36% / 0.15); }
+  100% { background-color: transparent; }
 }
 ```
 
@@ -1555,25 +870,15 @@ Triggered when clicking empty state cards to autofocus search input:
 ```css
 /* Refresh pulse */
 @keyframes pulse-ring {
-  0% {
-    box-shadow: 0 0 0 0 hsl(217 91% 60% / 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px hsl(217 91% 60% / 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 hsl(217 91% 60% / 0);
-  }
+  0% { box-shadow: 0 0 0 0 hsl(217 91% 60% / 0.4); }
+  70% { box-shadow: 0 0 0 10px hsl(217 91% 60% / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(217 91% 60% / 0); }
 }
 
 /* Spinner rotation */
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 ```
 
@@ -1623,302 +928,6 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
 - Text centered under icons via `text-align: center`
 - Active state uses primary color
 - 4 tabs max for mobile usability
-
-### Header/Navigation Patterns
-
-#### Language Toggle
-
-The language toggle appears in both the header and settings page, using the same `localPreferences` store for synchronization.
-
-**Header Implementation:**
-
-```svelte
-<div class="flex items-center gap-0.5 border border-border rounded-md p-0.5">
-  {#each getSupportedLanguages() as lang}
-    <button
-      onclick={() => localPreferences.updatePreference('language', lang.code)}
-      class="min-w-[2.25rem] px-2 py-1 text-xs font-semibold rounded transition-all duration-150"
-      style={$language === lang.code
-        ? 'background-color: hsl(var(--foreground)); color: hsl(var(--background));'
-        : 'background-color: transparent; color: hsl(var(--muted-foreground));'}
-    >
-      {lang.code.toUpperCase()}
-    </button>
-  {/each}
-</div>
-```
-
-**Design Rules:**
-
-- **Selected state**: Inverted colors (`foreground` bg / `background` text) for maximum contrast
-- **Unselected state**: Transparent bg / `muted-foreground` text
-- **Explicit inline styles**: Use HSL variables instead of Tailwind classes for reliable rendering across themes
-- **Synchronization**: Always use `localPreferences.updatePreference('language', code)` to keep header and settings in sync
-
-#### Connection Status Indicator
-
-The connection status indicator shows real-time connection state with accessible visual cues.
-
-**Implementation:**
-
-```svelte
-{#if $isConnected}
-  <!-- Connected: pulsing green dot -->
-  <span class="relative flex h-2 w-2">
-    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-  </span>
-{:else}
-  <!-- Disconnected: hollow gray circle -->
-  <span class="w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500"></span>
-{/if}
-```
-
-**Accessibility:**
-
-- **Shape differentiation**: Filled circle (connected) vs hollow circle (disconnected)
-- **Animation**: Pulsing animation provides motion-based feedback
-- **ARIA attributes**: Add `role="status"` and `aria-live="polite"` to container
-- **Not color-only**: Relies on shape + animation, not just color contrast
-
-#### Mobile Hamburger Menu
-
-The mobile hamburger menu uses animations, scroll lock, and explicit styling for consistent appearance.
-
-**Hamburger/Close Icon Animation:**
-
-```svelte
-<!-- Hamburger icon rotates out, X icon rotates in -->
-<button class="relative w-9 h-9">
-  <span class="absolute inset-0 flex items-center justify-center transition-all duration-200
-    {mobileMenuOpen ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'}">
-    <Menu />
-  </span>
-  <span class="absolute inset-0 flex items-center justify-center transition-all duration-200
-    {mobileMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'}">
-    <X />
-  </span>
-</button>
-```
-
-**Scroll Lock:**
-
-```typescript
-// Lock body scroll when menu is open
-$effect(() => {
-  if (typeof document !== "undefined") {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-  }
-  return () => {
-    if (typeof document !== "undefined") {
-      document.body.style.overflow = "";
-    }
-  };
-});
-```
-
-**Animations:**
-
-- **Backdrop**: `animate-fade-in` (0.2s fade in)
-- **Header bar**: `animate-fade-in` (0.2s fade in)
-- **Menu panel**: `animate-fade-in-down` (0.25s slide down from top)
-- **Menu sections**: Staggered `animate-fade-in-up` with 50ms, 100ms delays
-
-**Staggered Section Animation:**
-
-```svelte
-<!-- Section 1 -->
-<div class="animate-fade-in-up" style="animation-delay: 50ms;">
-  <!-- Appearance section -->
-</div>
-
-<!-- Section 2 -->
-<div class="animate-fade-in-up" style="animation-delay: 100ms;">
-  <!-- Help & Info section -->
-</div>
-```
-
-**Theme Toggle with Checkmark Selection:**
-
-```svelte
-<!-- Light/Dark buttons with checkmark indicator -->
-<button class="flex-1 h-12 px-4 rounded-xl transition-all font-medium
-  inline-flex items-center gap-2 active:scale-[0.98]
-  {isSelected ? 'border-2' : 'border border-input hover:bg-accent/50'}"
-  style={isSelected ? "border-color: hsl(var(--foreground));" : ""}
->
-  {#if isSelected}
-    <span class="h-5 w-5 rounded-full flex items-center justify-center animate-scale-in"
-      style="background-color: hsl(var(--foreground));">
-      <Check class="h-3 w-3" style="color: hsl(var(--background));" />
-    </span>
-  {:else}
-    <span class="h-5 w-5 rounded-full border-2 border-muted-foreground/30"></span>
-  {/if}
-  <Sun class="w-4 h-4" />
-  <span class="text-sm">Light</span>
-</button>
-```
-
-**Close Button (Inverted Colors):**
-
-```svelte
-<button class="flex items-center justify-center w-9 h-9 rounded-full
-  bg-foreground text-background hover:opacity-80 transition-opacity">
-  <X class="w-5 h-5" />
-</button>
-```
-
-**Styling Pattern:**
-
-```svelte
-<!-- Backdrop -->
-<button class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm animate-fade-in" />
-
-<!-- Header bar -->
-<div
-  class="fixed left-0 right-0 top-0 z-[102] animate-fade-in"
-  style="background-color: hsl(var(--background)); border-color: hsl(var(--border));"
->
-  <!-- Logo + Close button -->
-</div>
-
-<!-- Menu content -->
-<div
-  class="fixed left-0 right-0 top-[57px] z-[101] animate-fade-in-down"
-  style="background-color: hsl(var(--background));"
->
-  <!-- Menu items with explicit text colors -->
-  <button style="color: hsl(var(--foreground));">
-    <!-- Icon + Text -->
-  </button>
-</div>
-```
-
-**Menu Item Press Feedback:**
-
-```svelte
-<!-- All interactive elements get press feedback -->
-<button class="... active:scale-[0.98]">
-  <!-- Content -->
-</button>
-```
-
-**Menu Item Styling:**
-
-- Use explicit inline styles: `style="color: hsl(var(--foreground));"`
-- Hover states: `onmouseenter/onmouseleave` handlers for `backgroundColor`
-- Section headers: `style="color: hsl(var(--muted-foreground));"`
-- Press feedback: `active:scale-[0.98]` on all buttons
-
-#### Desktop Refresh + Status Group
-
-On desktop, the refresh button and status indicator are grouped together to show their relationship.
-
-**Implementation:**
-
-```svelte
-<div class="hidden sm:flex items-center gap-0 bg-muted/50 rounded-md px-0">
-  <button class="flex p-1.5 rounded-l-md hover:bg-accent">
-    <RefreshCw class="w-4 h-4" />
-  </button>
-  <div class="w-px h-4 bg-border"></div>
-  <div class="flex items-center gap-1.5 px-2 py-1.5">
-    <!-- Status indicator + time -->
-  </div>
-</div>
-```
-
-**Design Rules:**
-
-- **Visual grouping**: Shared `bg-muted/50` background container
-- **Divider**: 1px vertical line (`w-px h-4 bg-border`) between button and status
-- **No gap**: `gap-0` to make them flush together
-- **Rounded edges**: Only left side of refresh button is rounded (`rounded-l-md`)
-
-#### Mobile Bottom Navigation Compact Mode
-
-The mobile bottom navigation features an automatic compact mode that activates during scrolling, providing more screen space while maintaining accessibility.
-
-**Behavior:**
-
-- **Scroll down** past 100px → compacts (labels fade out, height reduces)
-- **Scroll up** → expands (labels fade in, full height restored)
-- **At page top** (< 10px) → always expanded
-- **Scroll buffer**: Requires 5px scroll delta to prevent jittery state changes
-
-**Implementation:**
-
-```typescript
-let isCompact = $state(false);
-let lastScrollY = 0;
-let scrollThreshold = 100;
-let scrollDelta = 0;
-
-function handleScroll() {
-  const currentScrollY = document.body.scrollTop || window.scrollY;
-  scrollDelta = currentScrollY - lastScrollY;
-
-  // Always expand at top
-  if (currentScrollY < 10) {
-    isCompact = false;
-    lastScrollY = currentScrollY;
-    return;
-  }
-
-  // Compact on sustained downward scroll
-  if (scrollDelta > 0 && currentScrollY > scrollThreshold) {
-    if (scrollDelta > 5 || isCompact) isCompact = true;
-  }
-  // Expand on upward scroll
-  else if (scrollDelta < 0) {
-    if (Math.abs(scrollDelta) > 5 || !isCompact) isCompact = false;
-  }
-
-  lastScrollY = currentScrollY;
-}
-```
-
-**CSS Transitions:**
-
-```css
-.mobile-bottom-nav {
-  transition: padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s
-      cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.mobile-bottom-nav.compact {
-  padding-top: 0.25rem; /* Reduced from 0.5rem */
-  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom));
-  background: hsl(var(--background) / 0.95); /* Slight transparency */
-}
-
-.mobile-bottom-nav .nav-item span {
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s
-      cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  max-height: 1.2rem;
-  opacity: 1;
-}
-
-.mobile-bottom-nav.compact .nav-item span {
-  max-height: 0; /* Collapse labels */
-  opacity: 0; /* Fade out */
-  margin-top: 0;
-}
-```
-
-**Design Rules:**
-
-- **Smooth easing**: `cubic-bezier(0.4, 0, 0.2, 1)` for natural acceleration/deceleration
-- **400ms duration**: Balanced between responsiveness and smoothness
-- **Independent transitions**: max-height, opacity, margin-top animate separately for labels
-- **Active indicator persists**: Top blue bar remains visible in compact mode (adjusted position)
-- **Icon size unchanged**: 22px icons stay full size for tap targets
-- **GPU acceleration**: Uses `transform: translateZ(0)` for smooth animations
 
 ---
 
@@ -2287,144 +1296,59 @@ The switch has distinct on/off states with icons inside the thumb:
 
 ### Subway Alerts Accordion Sections
 
-Collapsible card sections for grouping subway line alerts on the alerts page.
+The Alerts page uses collapsible accordion sections to organize subway alerts by line. Each section shows:
 
-#### Layout Structure
+- Subway line badge with line number and name
+- Current status (Normal Service / Delay / Disruption)
+- Alert count badge when expanded alerts exist
+- Smooth expand/collapse animation
 
-```
-┌──────────────────────────────────────────────────┐
-│  ████ 4px colored top border (line color)        │
-├──────────────────────────────────────────────────┤
-│  [1] Line 1            ▼ chevron (rotates -180°)│
-│  Clickable header                                │
-├──────────────────────────────────────────────────┤
-│  ┌────────────────────────────────────────────┐  │
-│  │ Alert Card 1 (no left border)              │  │
-│  └────────────────────────────────────────────┘  │
-│  ┌────────────────────────────────────────────┐  │
-│  │ Alert Card 2 (no left border)              │  │
-│  └────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────┘
-```
-
-#### CSS Classes & Styling
-
-| Class                    | Purpose                    | Key Properties                                           |
-| ------------------------ | -------------------------- | -------------------------------------------------------- |
-| `.accordion-card`        | Outer card container       | Card styling, border radius, shadow                      |
-| `.accordion-header`      | Clickable header button    | Full width, no intrinsic padding, cursor pointer         |
-| `.accordion-top-border`  | Colored top stripe         | `height: 4px; background: var(--line-color)`             |
-| `.accordion-header-body` | Header content wrapper     | Flex row, justify between, padding: `0.875rem 1rem`      |
-| `.accordion-header-left` | Badge + name container     | Flex row, gap: `0.625rem`, align center                  |
-| `.accordion-chevron`     | Expand/collapse icon       | `1.25rem × 1.25rem`, rotates -180° when expanded         |
-| `.accordion-content`     | Expandable content wrapper | `max-height: 0` collapsed, `max-height: 5000px` expanded |
-| `.accordion-body`        | Inner alert cards wrapper  | Padding: `0.75rem 1rem 1rem`, border-top when expanded   |
-
-#### State Management
-
-```typescript
-// State: Set of expanded line IDs
-let expandedSections = $state<Set<string>>(new Set());
-
-// Toggle function
-function toggleAccordion(lineId: string) {
-  const newExpanded = new Set(expandedSections);
-  if (newExpanded.has(lineId)) {
-    newExpanded.delete(lineId);
-  } else {
-    newExpanded.add(lineId);
-  }
-  expandedSections = newExpanded;
-}
-
-// Auto-expand all sections on mount
-$effect(() => {
-  const linesWithAlerts = /* derive from alerts */;
-  const newExpanded = new Set(expandedSections);
-  linesWithAlerts.forEach(lineId => newExpanded.add(lineId));
-  expandedSections = newExpanded;
-});
-```
-
-#### Component Structure (Svelte)
+#### Accordion Structure
 
 ```svelte
-{#if subwayLine && isFirstForLine}
-  {@const isExpanded = expandedSections.has(subwayLine)}
-
-  <div class="accordion-card" class:highlighted={isHighlighted}>
-    <button
-      class="accordion-header"
-      style="--line-color: {lineInfo?.color}"
-      onclick={() => toggleAccordion(subwayLine)}
-    >
-      <div class="accordion-top-border"></div>
-      <div class="accordion-header-body">
-        <div class="accordion-header-left">
-          <span class="section-line-badge" style="background-color: {lineInfo?.color}; color: {lineInfo?.textColor}">
-            {subwayLine.replace("Line ", "")}
-          </span>
-          <span class="section-line-name">{subwayLine}</span>
-        </div>
-        <svg class="accordion-chevron" class:rotated={isExpanded} viewBox="0 0 24 24">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </div>
-    </button>
-    <div class="accordion-content" class:expanded={isExpanded}>
-      <div class="accordion-body">
-        <!-- Alert cards here -->
-      </div>
+<div class="subway-alerts-accordion">
+  <button class="accordion-header" onclick={toggleExpanded}>
+    <div class="line-info">
+      <span class="line-badge line-{lineNumber}">{lineNumber}</span>
+      <span class="line-name">{lineName}</span>
     </div>
-  </div>
-{/if}
+    <div class="status-indicator status-{status}">
+      <StatusIcon />
+      <span>{statusText}</span>
+    </div>
+    <ChevronDown class="expand-icon" />
+  </button>
+  {#if expanded}
+    <div class="accordion-content">
+      <!-- Alert cards -->
+    </div>
+  {/if}
+</div>
 ```
 
-#### Transitions
+#### Line Badge Colors
 
-| Element          | Transition         | Duration | Easing   |
-| ---------------- | ------------------ | -------- | -------- |
-| Chevron rotation | `transform`        | 0.2s     | ease     |
-| Header hover     | `background-color` | 0.2s     | ease     |
-| Content expand   | `max-height`       | 0.5s     | ease-in  |
-| Content collapse | `max-height`       | 0.3s     | ease-out |
+| Line   | Background | Text  |
+| ------ | ---------- | ----- |
+| Line 1 | `#FFC524`  | Black |
+| Line 2 | `#00853F`  | White |
+| Line 4 | `#A12F7D`  | White |
+| Line 6 | `#8B5A2B`  | White |
 
-#### Integration with Status Grid
+#### Highlight Animation
 
-When clicking a subway status card in the grid:
+When navigating from subway status cards to accordion sections, a focus highlight animation draws attention:
 
-1. Auto-expands the accordion section if collapsed
-2. Scrolls to the section smoothly
-3. Highlights the accordion card for 2.5 seconds
+```css
+@keyframes highlight-pulse {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: hsl(var(--line-color) / 0.15); }
+}
 
-```typescript
-function handleStatusCardClick(lineId: string) {
-  // Expand section if collapsed
-  if (!expandedSections.has(lineId)) {
-    expandedSections = new Set([...expandedSections, lineId]);
-  }
-
-  // Scroll to section
-  const sectionElement = document.getElementById(
-    `subway-section-${lineId.toLowerCase()}`
-  );
-  sectionElement?.scrollIntoView({ behavior: "smooth", block: "start" });
-
-  // Highlight for 2.5s
-  highlightedLineId = lineId;
-  setTimeout(() => {
-    highlightedLineId = null;
-  }, 2500);
+.accordion-header.highlighted {
+  animation: highlight-pulse 1s ease-in-out 2;
 }
 ```
-
-#### ⚠️ Critical: Do NOT Change
-
-1. **4px top border** - Provides line color context, removed from inner alert cards
-2. **Max-height transitions** - Enables smooth expand/collapse animation
-3. **Default expanded state** - All sections start expanded for immediate visibility
-4. **Chevron rotation** - `-180deg` matches native accordion patterns
-5. **Highlight shadow** - Uses `var(--line-color)` for visual linking with status cards
 
 ### Step Indicators (Accordion Headers)
 
@@ -2477,4 +1401,4 @@ html {
 
 ---
 
-_Last updated: December 5, 2025_
+_Last updated: December 15, 2025_
