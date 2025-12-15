@@ -231,19 +231,25 @@
         class="sm:hidden flex p-2 rounded-md hover:bg-accent transition-all active:scale-95"
         onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
         title={mobileMenuOpen ? $_("header.closeMenu") : $_("header.menu")}
-        aria-label={mobileMenuOpen ? $_("header.closeMenu") : $_("header.openMenu")}
+        aria-label={mobileMenuOpen
+          ? $_("header.closeMenu")
+          : $_("header.openMenu")}
         aria-expanded={mobileMenuOpen}
       >
         <span class="relative w-5 h-5">
           <!-- Hamburger icon - fades out and rotates when menu opens -->
-          <Menu 
-            class="w-5 h-5 absolute inset-0 transition-all duration-200 {mobileMenuOpen ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'}" 
-            aria-hidden="true" 
+          <Menu
+            class="w-5 h-5 absolute inset-0 transition-all duration-200 {mobileMenuOpen
+              ? 'opacity-0 rotate-90 scale-75'
+              : 'opacity-100 rotate-0 scale-100'}"
+            aria-hidden="true"
           />
           <!-- X icon - fades in and rotates when menu opens -->
-          <X 
-            class="w-5 h-5 absolute inset-0 transition-all duration-200 {mobileMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'}" 
-            aria-hidden="true" 
+          <X
+            class="w-5 h-5 absolute inset-0 transition-all duration-200 {mobileMenuOpen
+              ? 'opacity-100 rotate-0 scale-100'
+              : 'opacity-0 -rotate-90 scale-75'}"
+            aria-hidden="true"
           />
         </span>
       </button>

@@ -89,6 +89,10 @@
     "featureRequest": "Feature Request",
     "about": "About"
   },
+  "emptyStates": {
+    "allClear": "All clear!",
+    "noActiveDisruptions": "No active disruptions on the TTC right now."
+  },
   "tabs": {
     "allAlerts": "All Alerts",
     "myAlerts": "My Alerts",
