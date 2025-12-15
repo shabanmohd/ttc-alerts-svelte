@@ -220,11 +220,9 @@ html {
   background-color: hsl(var(--background));
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  /* iOS viewport fixes */
-  height: 100%;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
+  /* Use dvh for proper mobile viewport height */
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 html.dark {
@@ -239,12 +237,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  /* Prevent iOS Safari bounce showing white background */
+  /* Proper height for iOS */
   min-height: 100vh;
   min-height: 100dvh;
-  /* iOS scrolling fixes */
-  height: 100%;
-  overflow-y: auto;
+  /* Disable pull-to-refresh */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -444,12 +440,13 @@ header.sticky {
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid hsl(var(--border));
   padding-top: 0.5rem;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  /* Simple padding with safe area inset - no fallback needed */
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 50;
-  /* Key fix: use transform to force GPU layer */
+  /* GPU acceleration */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   /* Smooth transitions for compact mode */
@@ -457,24 +454,11 @@ header.sticky {
     background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Fallback for iOS PWA where env() might not work - extend with padding */
-@supports (padding-bottom: constant(safe-area-inset-bottom)) {
-  .mobile-bottom-nav {
-    padding-bottom: calc(0.5rem + constant(safe-area-inset-bottom));
-  }
-}
-
 /* Compact mode: reduce padding and slight transparency */
 .mobile-bottom-nav.compact {
   padding-top: 0.25rem;
-  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom));
   background: hsl(var(--background) / 0.95);
-}
-
-@supports (padding-bottom: constant(safe-area-inset-bottom)) {
-  .mobile-bottom-nav.compact {
-    padding-bottom: calc(0.25rem + constant(safe-area-inset-bottom));
-  }
 }
 
 @media (min-width: 1024px) {
@@ -2228,17 +2212,7 @@ html.reduce-motion .eta-live-indicator svg {
 /* Ensure background color fills safe areas on iOS PWA */
 @media (display-mode: standalone) {
   html, body {
+    /* Background color will show in safe areas */
     background-color: hsl(var(--background));
-    /* Ensure full viewport height */
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-  }
-  
-  /* On iOS PWA, extend the bottom nav background to cover any gap below */
-  .mobile-bottom-nav {
-    /* Slightly extend the element downward using box-shadow */
-    box-shadow: 
-      0 -1px 0 0 hsl(var(--border)),
-      0 50px 0 50px hsl(var(--background));
   }
 }
