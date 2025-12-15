@@ -284,13 +284,13 @@
             >{isDark ? $_("header.darkMode") : $_("header.lightMode")}</span
           >
           {#if isDark}
-            <Sun
+            <Moon
               class="w-5 h-5"
               style="color: hsl(var(--muted-foreground));"
               aria-hidden="true"
             />
           {:else}
-            <Moon
+            <Sun
               class="w-5 h-5"
               style="color: hsl(var(--muted-foreground));"
               aria-hidden="true"
