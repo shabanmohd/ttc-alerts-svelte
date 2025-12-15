@@ -444,11 +444,10 @@ header.sticky {
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid hsl(var(--border));
   padding-top: 0.5rem;
-  /* Add extra padding-bottom for safe area */
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 34px));
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   display: flex;
   justify-content: space-around;
-  align-items: flex-start; /* Align items to top so they don't stretch into safe area */
+  align-items: center;
   z-index: 50;
   /* Key fix: use transform to force GPU layer */
   transform: translateZ(0);
@@ -458,13 +457,24 @@ header.sticky {
     background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Remove the ::after pseudo - nav now includes safe area in its height */
+/* Fallback for iOS PWA where env() might not work - extend with padding */
+@supports (padding-bottom: constant(safe-area-inset-bottom)) {
+  .mobile-bottom-nav {
+    padding-bottom: calc(0.5rem + constant(safe-area-inset-bottom));
+  }
+}
 
 /* Compact mode: reduce padding and slight transparency */
 .mobile-bottom-nav.compact {
   padding-top: 0.25rem;
-  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 34px));
+  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
   background: hsl(var(--background) / 0.95);
+}
+
+@supports (padding-bottom: constant(safe-area-inset-bottom)) {
+  .mobile-bottom-nav.compact {
+    padding-bottom: calc(0.25rem + constant(safe-area-inset-bottom));
+  }
 }
 
 @media (min-width: 1024px) {
@@ -2222,5 +2232,13 @@ html.reduce-motion .eta-live-indicator svg {
     /* Ensure full viewport height */
     min-height: 100vh;
     min-height: -webkit-fill-available;
+  }
+  
+  /* On iOS PWA, extend the bottom nav background to cover any gap below */
+  .mobile-bottom-nav {
+    /* Slightly extend the element downward using box-shadow */
+    box-shadow: 
+      0 -1px 0 0 hsl(var(--border)),
+      0 50px 0 50px hsl(var(--background));
   }
 }
