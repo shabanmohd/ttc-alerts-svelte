@@ -79,17 +79,17 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/FilterChips.svelte`         | ✅     | Category filter buttons                                   |
 | `components/alerts/MaintenanceWidget.svelte`   | ✅     | Scheduled maintenance display                             |
 | `components/alerts/MyRouteAlerts.svelte`       | ✅     | My Routes tab with responsive route badge tabs            |
-| `components/alerts/RouteBadge.svelte`          | ✅     | TTC-branded route badges (full names, colors)             |
-| `components/alerts/StatusBadge.svelte`         | ✅     | Status indicators (Delay, Detour, Resumed, etc.)          |
-| `components/dialogs/HowToUseDialog.svelte`     | ✅     | User guide                                                |
-| `components/dialogs/InstallPWADialog.svelte`   | ✅     | PWA install prompt                                        |
-| `components/layout/Header.svelte`              | ✅     | App header - language toggle, status indicator, hamburger |
-| `components/layout/PullToRefresh.svelte`       | ✅     | Touch-based pull-to-refresh (80px threshold, mobile-only) |
-| `components/layout/Sidebar.svelte`             | ✅     | Desktop navigation                                        |
-| `components/layout/MobileBottomNav.svelte`     | ✅     | Mobile navigation                                         |
-| `components/ui/*`                              | ✅     | shadcn-svelte base components                             |
-| `services/webauthn.ts`                         | ✅     | WebAuthn browser API wrapper                              |
-| `stores/alerts.ts`                             | ✅     | Alerts state + date validation filter                     |
+| `components/alerts/RouteBadge.svelte`          | ✅     | TTC-branded route badges (full names, colors)                        |
+| `components/alerts/StatusBadge.svelte`         | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                     |
+| `components/dialogs/HowToUseDialog.svelte`     | ✅     | User guide                                                           |
+| `components/dialogs/InstallPWADialog.svelte`   | ✅     | PWA install prompt                                                   |
+| `components/layout/Header.svelte`              | ✅     | App header - language toggle, hamburger menu w/ iOS safe area        |
+| `components/layout/PullToRefresh.svelte`       | ✅     | Touch-based pull-to-refresh (80px threshold, mobile-only)            |
+| `components/layout/Sidebar.svelte`             | ✅     | Desktop navigation                                                   |
+| `components/layout/MobileBottomNav.svelte`     | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom                |
+| `components/ui/*`                              | ✅     | shadcn-svelte base components                                        |
+| `services/webauthn.ts`                         | ✅     | WebAuthn browser API wrapper                                         |
+| `stores/alerts.ts`                             | ✅     | Alerts state + date validation filter                                |
 | `stores/auth.ts`                               | ✅     | Custom WebAuthn auth store                                |
 | `stores/preferences.ts`                        | ✅     | User preferences state                                    |
 | `types/auth.ts`                                | ✅     | Auth TypeScript types                                     |

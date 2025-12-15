@@ -1079,10 +1079,44 @@ Both badge types meet **WCAG AA** contrast requirements (4.5:1 minimum):
 }
 ```
 
-### Safe Areas (iOS)
+### Safe Areas (iOS PWA)
 
+iOS PWA standalone mode requires special handling for the status bar notch and home indicator:
+
+**Header (safe-area-inset-top):**
 ```css
-padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+/* Header component */
+padding-top: env(safe-area-inset-top, 0px);
+
+/* Mobile menu panel header */
+height: calc(57px + env(safe-area-inset-top, 0px));
+padding-top: env(safe-area-inset-top, 0px);
+
+/* Menu content positioning */
+top: calc(57px + env(safe-area-inset-top, 0px));
+```
+
+**Bottom Nav (safe-area-inset-bottom):**
+```css
+/* MobileBottomNav */
+padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+
+/* PWA standalone mode - fill home indicator area */
+@media (display-mode: standalone) {
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    height: env(safe-area-inset-bottom, 34px);
+    background-color: hsl(var(--background));
+  }
+}
+```
+
+**Viewport Meta (app.html):**
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 ```
 
 ---
