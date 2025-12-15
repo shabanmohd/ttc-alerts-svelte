@@ -124,13 +124,15 @@ export const SUSPENDED_LINES: Record<string, {
   // },
 
   // ============================================
-  // Line 6 Finch West LRT - Currently suspended
+  // Line 6 Finch West LRT - OPERATIONAL (opened Dec 14, 2024)
   // ============================================
-  line6: {
-    message: 'Line 6 Finch West LRT is currently not in service.',
-    replacement: '336 Finch West bus provides replacement service.',
-    normalHours: 'When operational: First train ~5:30am weekdays, ~6am Sat, ~8am Sun.'
-  },
+  line6: null,
+  // Example when suspended:
+  // line6: {
+  //   message: 'Line 6 Finch West LRT is currently not in service.',
+  //   replacement: '336 Finch West bus provides replacement service.',
+  //   normalHours: 'When operational: First train ~5:30am weekdays, ~6am Sat, ~8am Sun.'
+  // },
 };
 
 /**

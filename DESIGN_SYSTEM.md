@@ -663,10 +663,11 @@ The Subway Status Cards display the current service status for each subway line 
 
 ```css
 .subway-status-card                    /* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
-.subway-status-card.status-scheduled;  /* Scheduled closure */
+.subway-status-card.status-scheduled; /* Scheduled closure */
 ```
 
 ### Closure Type Badges
@@ -691,8 +692,9 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
 .closure-type-badge.nightly  /* Blue nightly closure */
-.closure-type-badge.weekend  /* Amber weekend closure */
+.closure-type-badge.weekend; /* Amber weekend closure */
 ```
 
 ---
@@ -760,49 +762,84 @@ transition: all 0.15s ease;
 transition: all 0.2s ease;
 
 /* Utility classes */
-.transition-default { transition: all 0.15s ease; }
-.transition-colors { transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
-.transition-transform { transition: transform 0.15s ease; }
-.transition-opacity { transition: opacity 0.15s ease; }
+.transition-default {
+  transition: all 0.15s ease;
+}
+.transition-colors {
+  transition: color 0.15s ease, background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+.transition-transform {
+  transition: transform 0.15s ease;
+}
+.transition-opacity {
+  transition: opacity 0.15s ease;
+}
 ```
 
 ### Micro-Animations (layout.css)
 
-| Animation          | Duration | Easing   | Use Case                        |
-| ------------------ | -------- | -------- | ------------------------------- |
-| `fadeIn`           | 0.2s     | ease-out | General appearance              |
-| `fadeInUp`         | 0.25s    | ease-out | List items, cards entering      |
-| `fadeInDown`       | 0.25s    | ease-out | Dropdowns, expandable content   |
-| `fadeOut`          | 0.15s    | ease-in  | Elements disappearing           |
-| `scaleIn`          | 0.2s     | ease-out | Checkmarks, success feedback    |
-| `slideInRight`     | 0.25s    | ease-out | Side panels, drawer content     |
-| `slideOutLeft`     | 0.2s     | ease-in  | Page exits                      |
-| `focusPulse`       | 0.6s     | ease-out | Input autofocus highlight       |
-| `successFlash`     | 0.4s     | ease-out | Add/bookmark feedback           |
+| Animation      | Duration | Easing   | Use Case                      |
+| -------------- | -------- | -------- | ----------------------------- |
+| `fadeIn`       | 0.2s     | ease-out | General appearance            |
+| `fadeInUp`     | 0.25s    | ease-out | List items, cards entering    |
+| `fadeInDown`   | 0.25s    | ease-out | Dropdowns, expandable content |
+| `fadeOut`      | 0.15s    | ease-in  | Elements disappearing         |
+| `scaleIn`      | 0.2s     | ease-out | Checkmarks, success feedback  |
+| `slideInRight` | 0.25s    | ease-out | Side panels, drawer content   |
+| `slideOutLeft` | 0.2s     | ease-in  | Page exits                    |
+| `focusPulse`   | 0.6s     | ease-out | Input autofocus highlight     |
+| `successFlash` | 0.4s     | ease-out | Add/bookmark feedback         |
 
 ### Utility Classes
 
 ```css
 /* Animation classes */
-.animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
-.animate-fade-in-up { animation: fadeInUp 0.25s ease-out forwards; }
-.animate-fade-in-down { animation: fadeInDown 0.25s ease-out forwards; }
-.animate-fade-out { animation: fadeOut 0.15s ease-in forwards; }
-.animate-scale-in { animation: scaleIn 0.2s ease-out forwards; }
-.animate-slide-in-right { animation: slideInRight 0.25s ease-out forwards; }
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.25s ease-out forwards;
+}
+.animate-fade-in-down {
+  animation: fadeInDown 0.25s ease-out forwards;
+}
+.animate-fade-out {
+  animation: fadeOut 0.15s ease-in forwards;
+}
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+.animate-slide-in-right {
+  animation: slideInRight 0.25s ease-out forwards;
+}
 
 /* Staggered list animations */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+.stagger-5 {
+  animation-delay: 0.25s;
+}
 
 /* Focus highlight for input autofocus */
-.focus-highlight { animation: focusPulse 0.6s ease-out forwards; }
+.focus-highlight {
+  animation: focusPulse 0.6s ease-out forwards;
+}
 
 /* Success flash for add/remove actions */
-.animate-success-flash { animation: successFlash 0.4s ease-out; }
+.animate-success-flash {
+  animation: successFlash 0.4s ease-out;
+}
 ```
 
 ### Staggered List Pattern
@@ -811,8 +848,8 @@ Use dynamic delay for list items (capped at 200-300ms max):
 
 ```svelte
 {#each items as item, i (item.id)}
-  <div 
-    class="animate-fade-in-up" 
+  <div
+    class="animate-fade-in-up"
     style="animation-delay: {Math.min(i * 50, 300)}ms"
   >
     <!-- content -->
@@ -860,8 +897,12 @@ Triggered when clicking empty state cards to autofocus search input:
 ```css
 /* Success flash for bookmark add/remove */
 @keyframes successFlash {
-  0% { background-color: hsl(142 76% 36% / 0.15); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: hsl(142 76% 36% / 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 ```
 
@@ -870,15 +911,25 @@ Triggered when clicking empty state cards to autofocus search input:
 ```css
 /* Refresh pulse */
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 hsl(217 91% 60% / 0.4); }
-  70% { box-shadow: 0 0 0 10px hsl(217 91% 60% / 0); }
-  100% { box-shadow: 0 0 0 0 hsl(217 91% 60% / 0); }
+  0% {
+    box-shadow: 0 0 0 0 hsl(217 91% 60% / 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px hsl(217 91% 60% / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 hsl(217 91% 60% / 0);
+  }
 }
 
 /* Spinner rotation */
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 ```
 
@@ -1341,8 +1392,13 @@ When navigating from subway status cards to accordion sections, a focus highligh
 
 ```css
 @keyframes highlight-pulse {
-  0%, 100% { background-color: transparent; }
-  50% { background-color: hsl(var(--line-color) / 0.15); }
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: hsl(var(--line-color) / 0.15);
+  }
 }
 
 .accordion-header.highlighted {

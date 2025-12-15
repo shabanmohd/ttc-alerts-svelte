@@ -308,6 +308,26 @@
   }
 
   /**
+   * Convert minutes from now to AM/PM time object
+   * Returns { time: string, period: string } for flexible display
+   */
+  function minutesToTimeObject(minutes: number): {
+    time: string;
+    period: string;
+  } {
+    const now = new Date();
+    const arrivalTime = new Date(now.getTime() + minutes * 60 * 1000);
+    const hours = arrivalTime.getHours();
+    const mins = arrivalTime.getMinutes();
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return {
+      time: `${displayHours}:${mins.toString().padStart(2, "0")}`,
+      period,
+    };
+  }
+
+  /**
    * Handle refresh button click
    */
   function handleRefresh(e: MouseEvent) {
@@ -606,25 +626,67 @@
                 </div>
                 <div class="flex items-baseline justify-end gap-1 mt-2">
                   {#if prediction.arrivals.length > 0}
-                    <span
-                      class="text-5xl font-bold text-foreground tabular-nums"
-                      >{primaryTime}</span
-                    >
                     {#if prediction.isLive}
+                      <!-- Live GPS data: show minutes countdown -->
+                      <span
+                        class="text-5xl font-bold text-foreground tabular-nums"
+                        >{primaryTime}</span
+                      >
                       <LiveSignalIcon size="lg" class="self-start mt-1.5" />
-                    {/if}
-                    {#if secondaryTimes.length > 0}
-                      {#each secondaryTimes as time}
-                        <span
-                          class="text-3xl font-semibold text-muted-foreground tabular-nums"
-                          >, {time}</span
-                        >
-                        {#if prediction.isLive}
+                      {#if secondaryTimes.length > 0}
+                        {#each secondaryTimes as time}
+                          <span
+                            class="text-3xl font-semibold text-muted-foreground tabular-nums"
+                            >, {time}</span
+                          >
                           <LiveSignalIcon size="md" class="self-start mt-1" />
-                        {/if}
-                      {/each}
+                        {/each}
+                      {/if}
+                      <span class="text-lg text-muted-foreground ml-1">min</span
+                      >
+                    {:else}
+                      <!-- Scheduled: show times with small AM/PM -->
+                      {@const primaryTimeObj = minutesToTimeObject(primaryTime)}
+                      {@const allTimeObjs = [
+                        primaryTimeObj,
+                        ...secondaryTimes.map((t) => minutesToTimeObject(t)),
+                      ]}
+                      {@const allSamePeriod = allTimeObjs.every(
+                        (t) => t.period === primaryTimeObj.period
+                      )}
+                      <span
+                        class="text-4xl font-bold text-foreground tabular-nums"
+                        >{primaryTimeObj.time}</span
+                      >
+                      {#if !allSamePeriod}
+                        <span class="text-base text-muted-foreground"
+                          >{primaryTimeObj.period}</span
+                        >
+                      {/if}
+                      {#if secondaryTimes.length > 0}
+                        {#each secondaryTimes as time, i}
+                          {@const timeObj = allTimeObjs[i + 1]}
+                          <span
+                            class="text-2xl font-semibold text-muted-foreground tabular-nums"
+                            >, {timeObj.time}</span
+                          >
+                          {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
+                            <span class="text-sm text-muted-foreground"
+                              >{timeObj.period}</span
+                            >
+                          {/if}
+                        {/each}
+                      {/if}
+                      {#if allSamePeriod}
+                        <span class="text-sm text-muted-foreground ml-0.5"
+                          >{primaryTimeObj.period}</span
+                        >
+                      {/if}
+                      <span
+                        class="text-[10px] text-amber-600 dark:text-amber-400 ml-2 self-end mb-1.5 font-medium"
+                        >Scheduled</span
+                      >
                     {/if}
-                    <span class="text-lg text-muted-foreground ml-1">min</span>
                   {:else}
                     <span class="text-5xl font-bold text-muted-foreground/50"
                       >–</span
@@ -655,24 +717,66 @@
                 </div>
                 {#if prediction.arrivals.length > 0}
                   <div class="flex items-baseline gap-1 flex-shrink-0">
-                    <span
-                      class="text-4xl font-bold text-foreground tabular-nums"
-                      >{primaryTime}</span
-                    >
                     {#if prediction.isLive}
+                      <!-- Live GPS data: show minutes countdown -->
+                      <span
+                        class="text-4xl font-bold text-foreground tabular-nums"
+                        >{primaryTime}</span
+                      >
                       <LiveSignalIcon size="md" class="self-start mt-1" />
-                    {/if}
-                    {#if secondaryTimes.length > 0}
-                      {#each secondaryTimes as time}
-                        <span class="text-base text-foreground/70 tabular-nums"
-                          >, {time}</span
-                        >
-                        {#if prediction.isLive}
+                      {#if secondaryTimes.length > 0}
+                        {#each secondaryTimes as time}
+                          <span
+                            class="text-base text-foreground/70 tabular-nums"
+                            >, {time}</span
+                          >
                           <LiveSignalIcon size="sm" class="self-center" />
-                        {/if}
-                      {/each}
+                        {/each}
+                      {/if}
+                      <span class="text-base text-foreground/70 ml-1">min</span>
+                    {:else}
+                      <!-- Scheduled: show times with small AM/PM -->
+                      {@const primaryTimeObj = minutesToTimeObject(primaryTime)}
+                      {@const allTimeObjs = [
+                        primaryTimeObj,
+                        ...secondaryTimes.map((t) => minutesToTimeObject(t)),
+                      ]}
+                      {@const allSamePeriod = allTimeObjs.every(
+                        (t) => t.period === primaryTimeObj.period
+                      )}
+                      <span
+                        class="text-3xl font-bold text-foreground tabular-nums"
+                        >{primaryTimeObj.time}</span
+                      >
+                      {#if !allSamePeriod}
+                        <span class="text-xs text-foreground/70"
+                          >{primaryTimeObj.period}</span
+                        >
+                      {/if}
+                      {#if secondaryTimes.length > 0}
+                        {#each secondaryTimes as time, i}
+                          {@const timeObj = allTimeObjs[i + 1]}
+                          <span
+                            class="text-base text-foreground/70 tabular-nums"
+                            >, {timeObj.time}</span
+                          >
+                          {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
+                            <span class="text-xs text-foreground/70"
+                              >{timeObj.period}</span
+                            >
+                          {/if}
+                        {/each}
+                      {/if}
+                      {#if allSamePeriod}
+                        <span class="text-sm text-foreground/70 ml-0.5"
+                          >{primaryTimeObj.period}</span
+                        >
+                      {/if}
+                      <span
+                        class="text-[10px] text-amber-600 dark:text-amber-400 ml-2 self-end mb-0.5 font-medium"
+                        >Scheduled</span
+                      >
                     {/if}
-                    <span class="text-base text-foreground/70 ml-1">min</span>
                   </div>
                 {:else}
                   <span class="text-4xl font-bold text-muted-foreground/50"

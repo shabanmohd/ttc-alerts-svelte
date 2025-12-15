@@ -278,6 +278,42 @@ interface NTASArrival {
 }
 
 /**
+ * Get Line 6 service frequency in minutes based on current time
+ * TTC Line 6 Finch West LRT schedule (opened Dec 14, 2024)
+ */
+function getLine6FrequencyMinutes(): number {
+	const now = new Date();
+	const torontoTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Toronto' }));
+	const day = torontoTime.getDay();
+	const hour = torontoTime.getHours();
+	
+	// Weekend: 10 minute frequency
+	if (day === 0 || day === 6) {
+		return 10;
+	}
+	
+	// Weekday rush hour (6-9am, 3-7pm): 5 minute frequency
+	if ((hour >= 6 && hour < 9) || (hour >= 15 && hour < 19)) {
+		return 5;
+	}
+	
+	// Weekday off-peak: 7-8 minute frequency (use 7)
+	return 7;
+}
+
+/**
+ * Generate estimated schedule-based arrivals for Line 6
+ * Used when NTAS API returns no real-time data
+ */
+function generateLine6ScheduledArrivals(directionText: string): number[] {
+	const frequency = getLine6FrequencyMinutes();
+	// Generate 3 estimated arrival times based on frequency
+	// Add a random offset 0-frequency to simulate "train could arrive anytime within frequency window"
+	const randomOffset = Math.floor(Math.random() * frequency);
+	return [randomOffset, randomOffset + frequency, randomOffset + frequency * 2];
+}
+
+/**
  * Fetch real-time subway arrivals from TTC NTAS API
  * 
  * The stopId from our DB IS the NTAS stop code (e.g., 13864 for Bloor-Yonge Southbound).
@@ -340,10 +376,18 @@ async function fetchSubwayETA(
 			}
 			
 			// Parse arrival times: "0, 4, 11" -> [0, 4, 11]
-			const arrivals = arrival.nextTrains
+			let arrivals = arrival.nextTrains
 				.split(',')
 				.map(t => parseInt(t.trim(), 10))
 				.filter(n => !isNaN(n) && n >= 0);
+			
+			// For Line 6: Generate schedule-based estimates if no real-time data
+			// (Line 6 opened Dec 14, 2024 - NTAS may not have real-time data yet)
+			let isLive = arrivals.length > 0;
+			if (arrival.line === '6' && arrivals.length === 0) {
+				arrivals = generateLine6ScheduledArrivals(arrival.directionText);
+				isLive = false; // Mark as scheduled, not live
+			}
 			
 			if (arrivals.length > 0) {
 				// Determine line name
@@ -351,7 +395,7 @@ async function fetchSubwayETA(
 					'1': 'Line 1 Yonge-University',
 					'2': 'Line 2 Bloor-Danforth',
 					'4': 'Line 4 Sheppard',
-					'6': 'Line 6 Eglinton Crosstown'
+					'6': 'Line 6 Finch West'
 				};
 				
 				predictions.push({
@@ -359,7 +403,8 @@ async function fetchSubwayETA(
 					routeTitle: lineNames[arrival.line] || `Line ${arrival.line}`,
 					direction: arrival.directionText,
 					arrivals,
-					isLive: true // NTAS provides real-time data!
+					isLive, // true for real-time NTAS data, false for scheduled estimates
+					scheduledTime: !isLive ? 'Estimated' : undefined
 				});
 			}
 		}

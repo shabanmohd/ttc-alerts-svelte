@@ -75,6 +75,9 @@
 
   let routeName = $derived(ROUTE_NAMES[routeId] || "");
 
+  // Check if this is a not-yet-operational line
+  let isNotOperational = $derived(routeId === "Line 5");
+
   /**
    * Check if a thread is resolved (service resumed or marked resolved)
    */
@@ -320,49 +323,51 @@
     />
   </div>
 
-  <!-- Active Alerts Section -->
-  <section class="mt-6">
-    <h2 class="section-title">
-      <Bell class="h-4 w-4" />
-      {$_("routes.activeAlerts")}
-    </h2>
+  <!-- Active Alerts Section (hidden for lines not yet operational) -->
+  {#if !isNotOperational}
+    <section class="mt-6">
+      <h2 class="section-title">
+        <Bell class="h-4 w-4" />
+        {$_("routes.activeAlerts")}
+      </h2>
 
-    <div class="space-y-3 mt-3">
-      {#if $isLoading}
-        {#each Array(2) as _}
-          <div class="alert-card" aria-hidden="true">
-            <div class="alert-card-content">
-              <div class="alert-card-header">
-                <div class="alert-card-badges">
-                  <Skeleton class="h-6 w-16 rounded-md" />
-                  <Skeleton class="h-5 w-20 rounded-full" />
+      <div class="space-y-3 mt-3">
+        {#if $isLoading}
+          {#each Array(2) as _}
+            <div class="alert-card" aria-hidden="true">
+              <div class="alert-card-content">
+                <div class="alert-card-header">
+                  <div class="alert-card-badges">
+                    <Skeleton class="h-6 w-16 rounded-md" />
+                    <Skeleton class="h-5 w-20 rounded-full" />
+                  </div>
+                  <Skeleton class="h-4 w-16" />
                 </div>
-                <Skeleton class="h-4 w-16" />
+                <Skeleton class="h-4 w-full mt-3" />
+                <Skeleton class="h-4 w-3/4 mt-2" />
               </div>
-              <Skeleton class="h-4 w-full mt-3" />
-              <Skeleton class="h-4 w-3/4 mt-2" />
             </div>
+          {/each}
+        {:else if routeAlerts.length === 0}
+          <div class="no-alerts">
+            <div class="no-alerts-icon">
+              <CheckCircle class="h-6 w-6" />
+            </div>
+            <p class="no-alerts-title">{$_("routes.noActiveAlerts")}</p>
+            <p class="no-alerts-description">
+              {$_("routes.serviceRunningNormally", {
+                values: { route: routeId },
+              })}
+            </p>
           </div>
-        {/each}
-      {:else if routeAlerts.length === 0}
-        <div class="no-alerts">
-          <div class="no-alerts-icon">
-            <CheckCircle class="h-6 w-6" />
-          </div>
-          <p class="no-alerts-title">{$_("routes.noActiveAlerts")}</p>
-          <p class="no-alerts-description">
-            {$_("routes.serviceRunningNormally", {
-              values: { route: routeId },
-            })}
-          </p>
-        </div>
-      {:else}
-        {#each routeAlerts as thread (thread.thread_id)}
-          <AlertCard {thread} />
-        {/each}
-      {/if}
-    </div>
-  </section>
+        {:else}
+          {#each routeAlerts as thread (thread.thread_id)}
+            <AlertCard {thread} />
+          {/each}
+        {/if}
+      </div>
+    </section>
+  {/if}
 
   <!-- Stops & Live ETA Section -->
   <section class="mt-6">
@@ -370,18 +375,46 @@
       <MapPin class="h-4 w-4" />
       {$_("routes.stopsAndETA")}
     </h2>
-    <p class="text-xs text-muted-foreground -mt-1 mb-3">
-      {$_("routes.realtimePredictions")}{" "}
-      <a
-        href="https://www.ttc.ca/routes-and-schedules"
-        target="_blank"
-        rel="noopener"
-        class="underline hover:text-foreground">ttc.ca</a
-      >
-    </p>
+    {#if !isNotOperational}
+      <p class="text-xs text-muted-foreground -mt-1 mb-3">
+        {$_("routes.realtimePredictions")}{" "}
+        <a
+          href="https://www.ttc.ca/routes-and-schedules"
+          target="_blank"
+          rel="noopener"
+          class="underline hover:text-foreground">ttc.ca</a
+        >
+      </p>
+    {/if}
 
     <div class="stops-section mt-3">
-      {#if isLoadingStops}
+      {#if isNotOperational}
+        <!-- Not yet operational message -->
+        <div class="stops-empty animate-fade-in">
+          <div
+            class="flex items-center gap-2 text-amber-600 dark:text-amber-400"
+          >
+            <span class="text-2xl">🚧</span>
+            <span class="font-semibold">Under Construction</span>
+          </div>
+          <p class="text-sm text-muted-foreground mt-2 max-w-sm text-center">
+            The Eglinton Crosstown LRT (Line 5) is currently under construction
+            and not yet open to the public.
+          </p>
+          <p class="text-xs text-muted-foreground mt-2">
+            Stop data and real-time arrivals will be available once the line
+            opens.
+          </p>
+          <a
+            href="https://www.metrolinx.com/en/projects-and-programs/eglinton-crosstown-lrt"
+            target="_blank"
+            rel="noopener"
+            class="text-xs text-primary hover:underline mt-3"
+          >
+            Learn more at Metrolinx →
+          </a>
+        </div>
+      {:else if isLoadingStops}
         <!-- Loading state -->
         <div class="stops-loading animate-fade-in">
           <div class="direction-tabs-skeleton">
