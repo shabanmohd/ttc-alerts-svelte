@@ -37,6 +37,23 @@
       document.documentElement.classList.contains("dark");
   });
 
+  // Lock body scroll when mobile menu is open
+  $effect(() => {
+    if (typeof document !== "undefined") {
+      if (mobileMenuOpen) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "";
+      }
+    }
+    // Cleanup on unmount
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.style.overflow = "";
+      }
+    };
+  });
+
   // Update relative time every 30 seconds
   onMount(() => {
     const interval = setInterval(() => {
