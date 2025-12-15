@@ -444,7 +444,8 @@ header.sticky {
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid hsl(var(--border));
   padding-top: 0.5rem;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  /* Use fallback value of 34px for iPhone home indicator area */
+  padding-bottom: calc(0.5rem + max(env(safe-area-inset-bottom, 0px), 0px));
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -464,6 +465,7 @@ header.sticky {
   bottom: 0;
   left: 0;
   right: 0;
+  /* Use fallback of 34px (typical iPhone home indicator) if env not supported */
   height: env(safe-area-inset-bottom, 0px);
   background: inherit;
   z-index: -1;
@@ -2228,21 +2230,26 @@ html.reduce-motion .eta-live-indicator svg {
 @media (display-mode: standalone) {
   html, body {
     background-color: hsl(var(--background));
+    /* Ensure full viewport height */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
-}
-
-/* iOS Safari specific - fill bottom safe area with background */
-@supports (-webkit-touch-callout: none) {
-  body::before {
+  
+  /* Fill the bottom safe area with background color */
+  body::after {
     content: '';
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    height: env(safe-area-inset-bottom, 0px);
+    height: env(safe-area-inset-bottom, 34px);
     background-color: hsl(var(--background));
     z-index: 49; /* Below nav (z-50) but above content */
     pointer-events: none;
   }
 }
 
+/* iOS Safari specific - additional bottom safe area coverage */
+@supports (-webkit-touch-callout: none) {
+  /* Remove the body::before that was here - it conflicts with the above */
+}

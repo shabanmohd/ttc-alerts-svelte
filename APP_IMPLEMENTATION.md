@@ -170,12 +170,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
 
-| File                       | Status | Purpose                                                                              |
-| -------------------------- | ------ | ------------------------------------------------------------------------------------ |
-| `ETABadge.svelte`          | ✅     | Individual arrival time badge with urgency                                           |
-| `ETACard.svelte`           | ✅     | Route-grouped ETA card, NTAS direction parsing, vehicle-type aware empty state       |
-| `ETAWidget.svelte`         | ✅     | Homepage widget showing bookmarked stop ETAs                                         |
-| `ETADirectionSlide.svelte` | ✅     | Direction carousel slide for ETA swiper 🆕                                           |
+| File                       | Status | Purpose                                                                        |
+| -------------------------- | ------ | ------------------------------------------------------------------------------ |
+| `ETABadge.svelte`          | ✅     | Individual arrival time badge with urgency                                     |
+| `ETACard.svelte`           | ✅     | Route-grouped ETA card, NTAS direction parsing, vehicle-type aware empty state |
+| `ETAWidget.svelte`         | ✅     | Homepage widget showing bookmarked stop ETAs                                   |
+| `ETADirectionSlide.svelte` | ✅     | Direction carousel slide for ETA swiper 🆕                                     |
 
 ### Weather Components (`src/lib/components/weather/`) 🆕 **Version B Only**
 
@@ -211,10 +211,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Stores (`src/lib/stores/`) 🆕 **Version B additions**
 
-| File                  | Status | Purpose                                                        | Version |
-| --------------------- | ------ | -------------------------------------------------------------- | ------- |
-| `alerts.ts`           | ✅     | Alerts state + date validation filter                          | A & B   |
-| `auth.ts`             | ✅     | Custom WebAuthn auth store                                     | A & B   |
+| File                  | Status | Purpose                                                               | Version |
+| --------------------- | ------ | --------------------------------------------------------------------- | ------- |
+| `alerts.ts`           | ✅     | Alerts state + date validation filter                                 | A & B   |
+| `auth.ts`             | ✅     | Custom WebAuthn auth store                                            | A & B   |
 | `preferences.ts`      | ✅     | User preferences state (cloud sync)                                   | A & B   |
 | `localPreferences.ts` | ✅     | Local preferences (theme, text size, reduce motion, i18n)             | **B**   |
 | `visibility.ts`       | ✅     | Track document visibility for polling control                         | **B**   |
