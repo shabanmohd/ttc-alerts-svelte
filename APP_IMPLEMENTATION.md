@@ -170,12 +170,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
 
-| File                       | Status | Purpose                                                           |
-| -------------------------- | ------ | ----------------------------------------------------------------- |
-| `ETABadge.svelte`          | ✅     | Individual arrival time badge with urgency                        |
-| `ETACard.svelte`           | ✅     | Route-grouped ETA card, NTAS direction parsing (Southbound to...) |
-| `ETAWidget.svelte`         | ✅     | Homepage widget showing bookmarked stop ETAs                      |
-| `ETADirectionSlide.svelte` | ✅     | Direction carousel slide for ETA swiper 🆕                        |
+| File                       | Status | Purpose                                                                              |
+| -------------------------- | ------ | ------------------------------------------------------------------------------------ |
+| `ETABadge.svelte`          | ✅     | Individual arrival time badge with urgency                                           |
+| `ETACard.svelte`           | ✅     | Route-grouped ETA card, NTAS direction parsing, vehicle-type aware empty state       |
+| `ETAWidget.svelte`         | ✅     | Homepage widget showing bookmarked stop ETAs                                         |
+| `ETADirectionSlide.svelte` | ✅     | Direction carousel slide for ETA swiper 🆕                                           |
 
 ### Weather Components (`src/lib/components/weather/`) 🆕 **Version B Only**
 
@@ -215,14 +215,14 @@ Real-time Toronto Transit alerts with biometric authentication.
 | --------------------- | ------ | -------------------------------------------------------------- | ------- |
 | `alerts.ts`           | ✅     | Alerts state + date validation filter                          | A & B   |
 | `auth.ts`             | ✅     | Custom WebAuthn auth store                                     | A & B   |
-| `preferences.ts`      | ✅     | User preferences state (cloud sync)                            | A & B   |
-| `localPreferences.ts` | ✅     | Local preferences (theme, text size, reduce motion, i18n)      | **B**   |
-| `visibility.ts`       | ✅     | Track document visibility for polling control                  | **B**   |
-| `accessibility.ts`    | ✅     | Text scaling and reduce motion settings                        | **B**   |
-| `bookmarks.ts`        | ✅     | Bookmarked stops (localStorage + Supabase sync)                | **B**   |
-| `savedStops.ts`       | ✅     | Saved stops (IndexedDB storage)                                | **B**   |
-| `savedRoutes.ts`      | ✅     | Saved routes (IndexedDB storage)                               | **B**   |
-| `eta.ts`              | ✅     | ETA state with auto-refresh, subway detection by stop ID range | **B**   |
+| `preferences.ts`      | ✅     | User preferences state (cloud sync)                                   | A & B   |
+| `localPreferences.ts` | ✅     | Local preferences (theme, text size, reduce motion, i18n)             | **B**   |
+| `visibility.ts`       | ✅     | Track document visibility for polling control                         | **B**   |
+| `accessibility.ts`    | ✅     | Text scaling and reduce motion settings                               | **B**   |
+| `bookmarks.ts`        | ✅     | Bookmarked stops (localStorage + Supabase sync)                       | **B**   |
+| `savedStops.ts`       | ✅     | Saved stops (IndexedDB storage)                                       | **B**   |
+| `savedRoutes.ts`      | ✅     | Saved routes (IndexedDB storage)                                      | **B**   |
+| `eta.ts`              | ✅     | ETA state with auto-refresh, subway detection via route name patterns | **B**   |
 
 ### Services (`src/lib/services/`)
 
@@ -243,7 +243,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 - **Line Hours**: Lines 1/2/4 subway (6am-2am Mon-Sat, 8am-2am Sun) vs Line 6 LRT (5:30am-1:30am)
 - **Suspended Lines**: Easy toggle when lines are suspended/restored (Line 6 currently suspended)
 - **Service Frequency**: Rush hour (2-3 min), off-peak (4-5 min), weekend, Sunday, holiday
-- **Empty State Messages**: Context-aware messages based on time/day/holiday/line suspension
+- **Empty State Messages**: Context-aware messages based on time/day/holiday/line suspension and vehicle type (bus vs subway)
 
 ### Configuration (`src/`)
 

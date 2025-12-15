@@ -9,6 +9,7 @@
   } from "lucide-svelte";
   import { savedStops } from "$lib/stores/savedStops";
   import { type StopETA, type ETAPrediction } from "$lib/stores/eta";
+  import { isSubwayLine } from "$lib/services/subway-eta";
   import LiveSignalIcon from "./LiveSignalIcon.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -32,6 +33,18 @@
   }: Props = $props();
 
   let isRefreshing = $state(false);
+
+  /**
+   * Check if this stop serves subway routes
+   */
+  let isSubway = $derived.by(() => {
+    // Look up the saved stop to get its routes
+    const savedStop = $savedStops.find((s) => s.id === eta.stopId);
+    if (savedStop?.routes && savedStop.routes.length > 0) {
+      return savedStop.routes.some((route) => isSubwayLine(route));
+    }
+    return false;
+  });
 
   /**
    * Format stop name as cross-streets
@@ -243,7 +256,7 @@
     </div>
   {:else if sortedPredictions.length === 0}
     <!-- No Predictions - Context-aware message with refresh button -->
-    {@const emptyState = getEmptyStateMessage(true)}
+    {@const emptyState = getEmptyStateMessage(isSubway, eta.stopId)}
     <div class="p-5 flex flex-col items-center gap-2 text-center">
       {#if emptyState.icon === "moon"}
         <Moon class="h-6 w-6 text-muted-foreground/50 mb-1" />

@@ -457,6 +457,18 @@ header.sticky {
     background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* iOS PWA safe area fill - extends nav background to cover home indicator area */
+.mobile-bottom-nav::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-bottom, 0px);
+  background: inherit;
+  z-index: -1;
+}
+
 /* Compact mode: reduce padding and slight transparency */
 .mobile-bottom-nav.compact {
   padding-top: 0.25rem;
@@ -2207,3 +2219,30 @@ html.reduce-motion .eta-live-indicator svg {
   border: 1px solid hsl(28 55% 32%) !important;
   color: hsl(43 90% 85%) !important;
 }
+
+/* ============================================
+   iOS PWA STANDALONE MODE FIXES
+   ============================================ */
+
+/* Ensure background color fills safe areas on iOS PWA */
+@media (display-mode: standalone) {
+  html, body {
+    background-color: hsl(var(--background));
+  }
+}
+
+/* iOS Safari specific - fill bottom safe area with background */
+@supports (-webkit-touch-callout: none) {
+  body::before {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-bottom, 0px);
+    background-color: hsl(var(--background));
+    z-index: 49; /* Below nav (z-50) but above content */
+    pointer-events: none;
+  }
+}
+

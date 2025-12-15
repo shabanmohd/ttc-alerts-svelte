@@ -97,41 +97,20 @@ function saveCache(stops: Map<string, StopETA>) {
 }
 
 /**
- * Subway route IDs - these use NTAS API instead of NextBus
+ * Subway route patterns - these use NTAS API instead of NextBus
+ * Routes are stored as "Line 1", "Line 2", "Line 4", "Line 6" in the stops database
  */
-const SUBWAY_ROUTES = ['1', '2', '4', '6'];
-
-/**
- * NTAS stop code ranges for subway platforms
- * These IDs are reserved for subway stations in the TTC system
- */
-const SUBWAY_STOP_ID_RANGES = [
-	{ min: 13731, max: 13866 },   // Line 1 & 2 core stations
-	{ min: 14109, max: 14949 },   // Line 1 extensions & Line 4
-	{ min: 15656, max: 15667 },   // Line 1 Vaughan extension
-	{ min: 16289, max: 16324 }    // Line 6 Eglinton Crosstown
-];
+const SUBWAY_ROUTE_PATTERN = /^Line\s*[1246]$/i;
 
 /**
  * Check if a stop serves subway routes (uses NTAS API)
- * Uses both route IDs AND stop ID ranges to detect subway stops
+ * Only relies on route IDs - subway stops have routes like "Line 1", "Line 2", etc.
+ * Bus/streetcar stops have numeric routes like "39", "501", etc.
  */
 function isSubwayStop(stop: SavedStop): boolean {
-	// Method 1: Check if routes include subway lines
+	// Check if any routes match subway line patterns
 	if (stop.routes && stop.routes.length > 0) {
-		if (stop.routes.some(route => SUBWAY_ROUTES.includes(route))) {
-			return true;
-		}
-	}
-	
-	// Method 2: Check if stop ID falls within subway stop code ranges
-	const stopIdNum = parseInt(stop.id, 10);
-	if (!isNaN(stopIdNum)) {
-		for (const range of SUBWAY_STOP_ID_RANGES) {
-			if (stopIdNum >= range.min && stopIdNum <= range.max) {
-				return true;
-			}
-		}
+		return stop.routes.some(route => SUBWAY_ROUTE_PATTERN.test(route));
 	}
 	
 	return false;

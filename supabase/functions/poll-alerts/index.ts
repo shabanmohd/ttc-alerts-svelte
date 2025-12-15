@@ -1,8 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 29 - Fixed thread categories update when SERVICE_RESUMED is matched
-const FUNCTION_VERSION = 29;
+// VERSION 30 - Fixed SERVICE_RESUMED matching: require location overlap not just route
+const FUNCTION_VERSION = 30;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
