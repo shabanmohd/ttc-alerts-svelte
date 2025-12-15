@@ -209,18 +209,20 @@
         <HelpCircle class="w-5 h-5" aria-hidden="true" />
       </button>
 
-      <!-- Mobile Menu Button -->
-      {#if !mobileMenuOpen}
-        <button
-          class="sm:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
-          onclick={() => (mobileMenuOpen = true)}
-          title={$_("header.menu")}
-          aria-label={$_("header.openMenu")}
-          aria-expanded={mobileMenuOpen}
-        >
+      <!-- Mobile Menu Button - toggles between hamburger and X -->
+      <button
+        class="sm:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
+        onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
+        title={mobileMenuOpen ? $_("header.closeMenu") : $_("header.menu")}
+        aria-label={mobileMenuOpen ? $_("header.closeMenu") : $_("header.openMenu")}
+        aria-expanded={mobileMenuOpen}
+      >
+        {#if mobileMenuOpen}
+          <X class="w-5 h-5" aria-hidden="true" />
+        {:else}
           <Menu class="w-5 h-5" aria-hidden="true" />
-        </button>
-      {/if}
+        {/if}
+      </button>
     </div>
   </div>
 </header>
