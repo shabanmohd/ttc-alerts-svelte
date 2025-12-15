@@ -444,11 +444,11 @@ header.sticky {
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid hsl(var(--border));
   padding-top: 0.5rem;
-  /* Use fallback value of 34px for iPhone home indicator area */
-  padding-bottom: calc(0.5rem + max(env(safe-area-inset-bottom, 0px), 0px));
+  /* Add extra padding-bottom for safe area */
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 34px));
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-start; /* Align items to top so they don't stretch into safe area */
   z-index: 50;
   /* Key fix: use transform to force GPU layer */
   transform: translateZ(0);
@@ -458,23 +458,12 @@ header.sticky {
     background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* iOS PWA safe area fill - extends nav background to cover home indicator area */
-.mobile-bottom-nav::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  /* Use fallback of 34px (typical iPhone home indicator) if env not supported */
-  height: env(safe-area-inset-bottom, 0px);
-  background: inherit;
-  z-index: -1;
-}
+/* Remove the ::after pseudo - nav now includes safe area in its height */
 
 /* Compact mode: reduce padding and slight transparency */
 .mobile-bottom-nav.compact {
   padding-top: 0.25rem;
-  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 34px));
   background: hsl(var(--background) / 0.95);
 }
 
@@ -2234,22 +2223,4 @@ html.reduce-motion .eta-live-indicator svg {
     min-height: 100vh;
     min-height: -webkit-fill-available;
   }
-  
-  /* Fill the bottom safe area with background color */
-  body::after {
-    content: '';
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: env(safe-area-inset-bottom, 34px);
-    background-color: hsl(var(--background));
-    z-index: 49; /* Below nav (z-50) but above content */
-    pointer-events: none;
-  }
-}
-
-/* iOS Safari specific - additional bottom safe area coverage */
-@supports (-webkit-touch-callout: none) {
-  /* Remove the body::before that was here - it conflicts with the above */
 }
