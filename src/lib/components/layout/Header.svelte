@@ -211,17 +211,24 @@
 
       <!-- Mobile Menu Button - toggles between hamburger and X -->
       <button
-        class="sm:hidden flex p-2 rounded-md hover:bg-accent transition-colors"
+        class="sm:hidden flex p-2 rounded-md hover:bg-accent transition-all active:scale-95"
         onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
         title={mobileMenuOpen ? $_("header.closeMenu") : $_("header.menu")}
         aria-label={mobileMenuOpen ? $_("header.closeMenu") : $_("header.openMenu")}
         aria-expanded={mobileMenuOpen}
       >
-        {#if mobileMenuOpen}
-          <X class="w-5 h-5" aria-hidden="true" />
-        {:else}
-          <Menu class="w-5 h-5" aria-hidden="true" />
-        {/if}
+        <span class="relative w-5 h-5">
+          <!-- Hamburger icon - fades out and rotates when menu opens -->
+          <Menu 
+            class="w-5 h-5 absolute inset-0 transition-all duration-200 {mobileMenuOpen ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'}" 
+            aria-hidden="true" 
+          />
+          <!-- X icon - fades in and rotates when menu opens -->
+          <X 
+            class="w-5 h-5 absolute inset-0 transition-all duration-200 {mobileMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'}" 
+            aria-hidden="true" 
+          />
+        </span>
       </button>
     </div>
   </div>
@@ -264,7 +271,7 @@
   >
     <nav class="px-4 py-4 space-y-4">
       <!-- APPEARANCE Section -->
-      <div>
+      <div class="animate-fade-in-up" style="animation-delay: 50ms;">
         <p
           class="px-3 mb-2 text-xs font-semibold uppercase tracking-wider"
           style="color: hsl(var(--muted-foreground));"
@@ -282,14 +289,14 @@
               }
               mobileMenuOpen = false;
             }}
-            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {!isDark
+            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 active:scale-[0.98] {!isDark
               ? 'border-2'
               : 'border border-input hover:bg-accent/50'}"
             style={!isDark ? "border-color: hsl(var(--foreground));" : ""}
           >
             {#if !isDark}
               <span
-                class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+                class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0 animate-scale-in"
                 style="background-color: hsl(var(--foreground));"
               >
                 <Check class="h-3 w-3" style="color: hsl(var(--background));" />
@@ -311,14 +318,14 @@
               }
               mobileMenuOpen = false;
             }}
-            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {isDark
+            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 active:scale-[0.98] {isDark
               ? 'border-2'
               : 'border border-input hover:bg-accent/50'}"
             style={isDark ? "border-color: hsl(var(--foreground));" : ""}
           >
             {#if isDark}
               <span
-                class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+                class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0 animate-scale-in"
                 style="background-color: hsl(var(--foreground));"
               >
                 <Check class="h-3 w-3" style="color: hsl(var(--background));" />
@@ -337,7 +344,7 @@
       <div class="h-px bg-border"></div>
 
       <!-- HELP & INFO Section -->
-      <div>
+      <div class="animate-fade-in-up" style="animation-delay: 100ms;">
         <p
           class="px-3 mb-2 text-xs font-semibold uppercase tracking-wider"
           style="color: hsl(var(--muted-foreground));"
@@ -350,7 +357,7 @@
             mobileMenuOpen = false;
             onOpenDialog?.("how-to-use");
           }}
-          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-colors text-left"
+          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-all text-left active:scale-[0.98]"
           style="color: hsl(var(--foreground));"
           onmouseenter={(e) =>
             (e.currentTarget.style.backgroundColor = "hsl(var(--accent))")}
@@ -366,7 +373,7 @@
             mobileMenuOpen = false;
             onOpenDialog?.("report-bug");
           }}
-          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-colors text-left"
+          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-all text-left active:scale-[0.98]"
           style="color: hsl(var(--foreground));"
           onmouseenter={(e) =>
             (e.currentTarget.style.backgroundColor = "hsl(var(--accent))")}
@@ -382,7 +389,7 @@
             mobileMenuOpen = false;
             onOpenDialog?.("feature-request");
           }}
-          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-colors text-left"
+          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-all text-left active:scale-[0.98]"
           style="color: hsl(var(--foreground));"
           onmouseenter={(e) =>
             (e.currentTarget.style.backgroundColor = "hsl(var(--accent))")}
@@ -399,7 +406,7 @@
             mobileMenuOpen = false;
             onOpenDialog?.("about");
           }}
-          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-colors text-left"
+          class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-all text-left active:scale-[0.98]"
           style="color: hsl(var(--foreground));"
           onmouseenter={(e) =>
             (e.currentTarget.style.backgroundColor = "hsl(var(--accent))")}
