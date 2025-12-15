@@ -269,34 +269,60 @@
           {$_("header.appearance")}
         </p>
 
-        <!-- Theme Toggle -->
-        <button
-          onclick={() => {
-            toggleTheme();
-            mobileMenuOpen = false;
-          }}
-          class="flex items-center justify-between w-full px-3 py-3 rounded-lg transition-colors"
-          style="background-color: {isDark
-            ? 'hsl(240 3.7% 20%)'
-            : 'hsl(240 5.9% 88%)'}; color: hsl(var(--foreground));"
-        >
-          <span class="text-sm font-medium"
-            >{isDark ? $_("header.darkMode") : $_("header.lightMode")}</span
+        <!-- Theme Options - Light and Dark -->
+        <div class="flex flex-col gap-2">
+          <!-- Light Mode Button -->
+          <button
+            onclick={async () => {
+              if (isDark) {
+                await toggleTheme();
+              }
+              mobileMenuOpen = false;
+            }}
+            class="flex items-center justify-between w-full px-3 py-3 rounded-lg transition-colors"
+            style="background-color: {!isDark
+              ? 'hsl(240 5.9% 88%)'
+              : 'transparent'}; color: hsl(var(--foreground)); border: {!isDark ? '2px solid hsl(var(--primary))' : '1px solid hsl(var(--border))'};"
           >
-          {#if isDark}
-            <Moon
-              class="w-5 h-5"
-              style="color: hsl(var(--muted-foreground));"
-              aria-hidden="true"
-            />
-          {:else}
-            <Sun
-              class="w-5 h-5"
-              style="color: hsl(var(--muted-foreground));"
-              aria-hidden="true"
-            />
-          {/if}
-        </button>
+            <span class="flex items-center gap-3">
+              <Sun
+                class="w-5 h-5"
+                style="color: {!isDark ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'};"
+                aria-hidden="true"
+              />
+              <span class="text-sm font-medium">{$_("header.lightMode")}</span>
+            </span>
+            {#if !isDark}
+              <span class="w-2 h-2 rounded-full bg-primary"></span>
+            {/if}
+          </button>
+
+          <!-- Dark Mode Button -->
+          <button
+            onclick={async () => {
+              if (!isDark) {
+                await toggleTheme();
+              }
+              mobileMenuOpen = false;
+            }}
+            class="flex items-center justify-between w-full px-3 py-3 rounded-lg transition-colors"
+            style="background-color: {isDark
+              ? 'hsl(240 3.7% 20%)'
+              : 'transparent'}; color: hsl(var(--foreground)); border: {isDark ? '2px solid hsl(var(--primary))' : '1px solid hsl(var(--border))'};"
+          >
+            <span class="flex items-center gap-3">
+              <Moon
+                class="w-5 h-5"
+                style="color: {isDark ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'};"
+                aria-hidden="true"
+              />
+              <span class="text-sm font-medium">{$_("header.darkMode")}</span>
+            </span>
+            {#if isDark}
+              <span class="w-2 h-2 rounded-full bg-primary"></span>
+            {/if}
+          </button>
+        </div>
       </div>
 
       <div class="h-px bg-border"></div>
