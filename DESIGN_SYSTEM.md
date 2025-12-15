@@ -1683,13 +1683,95 @@ The connection status indicator shows real-time connection state with accessible
 
 #### Mobile Hamburger Menu
 
-The mobile hamburger menu uses animations and explicit styling for consistent appearance.
+The mobile hamburger menu uses animations, scroll lock, and explicit styling for consistent appearance.
+
+**Hamburger/Close Icon Animation:**
+
+```svelte
+<!-- Hamburger icon rotates out, X icon rotates in -->
+<button class="relative w-9 h-9">
+  <span class="absolute inset-0 flex items-center justify-center transition-all duration-200
+    {mobileMenuOpen ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'}">
+    <Menu />
+  </span>
+  <span class="absolute inset-0 flex items-center justify-center transition-all duration-200
+    {mobileMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'}">
+    <X />
+  </span>
+</button>
+```
+
+**Scroll Lock:**
+
+```typescript
+// Lock body scroll when menu is open
+$effect(() => {
+  if (typeof document !== "undefined") {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+  }
+  return () => {
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = "";
+    }
+  };
+});
+```
 
 **Animations:**
 
 - **Backdrop**: `animate-fade-in` (0.2s fade in)
 - **Header bar**: `animate-fade-in` (0.2s fade in)
 - **Menu panel**: `animate-fade-in-down` (0.25s slide down from top)
+- **Menu sections**: Staggered `animate-fade-in-up` with 50ms, 100ms delays
+
+**Staggered Section Animation:**
+
+```svelte
+<!-- Section 1 -->
+<div class="animate-fade-in-up" style="animation-delay: 50ms;">
+  <!-- Appearance section -->
+</div>
+
+<!-- Section 2 -->
+<div class="animate-fade-in-up" style="animation-delay: 100ms;">
+  <!-- Help & Info section -->
+</div>
+```
+
+**Theme Toggle with Checkmark Selection:**
+
+```svelte
+<!-- Light/Dark buttons with checkmark indicator -->
+<button class="flex-1 h-12 px-4 rounded-xl transition-all font-medium
+  inline-flex items-center gap-2 active:scale-[0.98]
+  {isSelected ? 'border-2' : 'border border-input hover:bg-accent/50'}"
+  style={isSelected ? "border-color: hsl(var(--foreground));" : ""}
+>
+  {#if isSelected}
+    <span class="h-5 w-5 rounded-full flex items-center justify-center animate-scale-in"
+      style="background-color: hsl(var(--foreground));">
+      <Check class="h-3 w-3" style="color: hsl(var(--background));" />
+    </span>
+  {:else}
+    <span class="h-5 w-5 rounded-full border-2 border-muted-foreground/30"></span>
+  {/if}
+  <Sun class="w-4 h-4" />
+  <span class="text-sm">Light</span>
+</button>
+```
+
+**Close Button (Inverted Colors):**
+
+```svelte
+<button class="flex items-center justify-center w-9 h-9 rounded-full
+  bg-foreground text-background hover:opacity-80 transition-opacity">
+  <X class="w-5 h-5" />
+</button>
+```
 
 **Styling Pattern:**
 
@@ -1717,20 +1799,21 @@ The mobile hamburger menu uses animations and explicit styling for consistent ap
 </div>
 ```
 
+**Menu Item Press Feedback:**
+
+```svelte
+<!-- All interactive elements get press feedback -->
+<button class="... active:scale-[0.98]">
+  <!-- Content -->
+</button>
+```
+
 **Menu Item Styling:**
 
 - Use explicit inline styles: `style="color: hsl(var(--foreground));"`
 - Hover states: `onmouseenter/onmouseleave` handlers for `backgroundColor`
 - Section headers: `style="color: hsl(var(--muted-foreground));"`
-- Theme toggle button: Dynamic background based on `isDark` variable
-
-```svelte
-<button
-  style="background-color: {isDark ? 'hsl(240 3.7% 20%)' : 'hsl(240 5.9% 88%)'}; color: hsl(var(--foreground));"
->
-  {isDark ? 'Dark Mode' : 'Light Mode'}
-</button>
-```
+- Press feedback: `active:scale-[0.98]` on all buttons
 
 #### Desktop Refresh + Status Group
 

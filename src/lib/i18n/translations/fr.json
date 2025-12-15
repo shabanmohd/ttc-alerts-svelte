@@ -89,6 +89,10 @@
     "featureRequest": "Demande de fonctionnalité",
     "about": "À propos"
   },
+  "emptyStates": {
+    "allClear": "Tout va bien!",
+    "noActiveDisruptions": "Aucune perturbation active sur le TTC pour le moment."
+  },
   "tabs": {
     "allAlerts": "Toutes les alertes",
     "myAlerts": "Mes alertes",

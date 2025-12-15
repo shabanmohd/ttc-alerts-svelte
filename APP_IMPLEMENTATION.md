@@ -546,6 +546,48 @@ For local development, use `localhost` and `http://localhost:5173`.
 - Uses `localPreferences.updatePreference()` for all setting changes
 - Language automatically detects device default (browser language) on first visit
 
+### Dec 21, 2025 - Hamburger Menu UX Enhancements
+
+**Theme Toggle Improvements:**
+
+- ✅ Show both Light and Dark mode options with checkmark for selected
+- ✅ Matches settings page checkbox pattern for consistency
+- ✅ `animate-scale-in` animation on checkmark appearance
+- ✅ Active press feedback with `active:scale-[0.98]` transition
+
+**Close Button & Animation:**
+
+- ✅ Added close (X) button in inverted colors when menu is expanded
+- ✅ Hamburger icon rotation animation (90° rotate, 75% scale) on toggle
+- ✅ Smooth icon transition using `transition-all duration-200`
+
+**Staggered Animations:**
+
+- ✅ Menu backdrop: `animate-fade-in`
+- ✅ Header bar: `animate-fade-in`
+- ✅ Menu panel: `animate-fade-in-down`
+- ✅ Section groups: staggered `animate-fade-in-up` (50ms, 100ms delays)
+
+**Scroll Lock:**
+
+- ✅ Body scroll locked when hamburger menu is open
+- ✅ Uses `$effect` to set/clear `document.body.style.overflow = "hidden"`
+- ✅ Proper cleanup on unmount to prevent stuck scroll state
+
+**i18n Fix:**
+
+- ✅ Added missing `emptyStates` translations (en.json, fr.json)
+- ✅ Fixed raw translation keys showing ("emptyStates.allClear")
+- ✅ Keys: `emptyStates.allClear`, `emptyStates.noActiveDisruptions`
+
+**Files Updated:**
+
+- `src/lib/components/layout/Header.svelte` - Theme UI, close button, animations, scroll lock
+- `src/lib/i18n/en.json` - Added emptyStates translations
+- `src/lib/i18n/fr.json` - Added emptyStates translations (French)
+
+---
+
 ### Dec 21, 2025 - UI Refinements & Production Cleanup
 
 **Demo Mode Removal:**
