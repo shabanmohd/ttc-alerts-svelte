@@ -303,7 +303,10 @@
       : latestAlert
   );
 
-  const earlierAlerts = $derived(thread.alerts.slice(1));
+  // Earlier alerts excludes the displayAlert to avoid showing it twice
+  const earlierAlerts = $derived(
+    thread.alerts.filter((alert) => alert.alert_id !== displayAlert?.alert_id)
+  );
 
   // Get routes for badge display:
   // - Prefer thread routes (accumulated from all alerts in the thread)
