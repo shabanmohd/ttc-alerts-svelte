@@ -185,9 +185,6 @@
   let unsubscribeRealtime: (() => void) | null = null;
   let maintenancePollingInterval: ReturnType<typeof setInterval> | null = null;
 
-  // State for accordion sections (expanded by default)
-  let expandedSections = $state<Set<string>>(new Set());
-
   // Get current tab from URL, default to 'active'
   let currentTab = $derived<AlertsTab>(
     ($page.url.searchParams.get("tab") as AlertsTab) || "active"
@@ -887,104 +884,9 @@
     return [...groupedSubway, ...sortedNonSubway];
   });
 
-  // Derived: Group subway alerts by line for accordion rendering
-  let alertsByLine = $derived(() => {
-    const combined = combinedActiveAlerts();
-    const lineOrder = ["Line 1", "Line 2", "Line 4", "Line 6"];
-    const grouped = new Map<string, ThreadWithAlerts[]>();
-    const nonSubway: ThreadWithAlerts[] = [];
-
-    combined.forEach((thread) => {
-      const line = getSubwayLineFromThread(thread);
-      if (line) {
-        if (!grouped.has(line)) {
-          grouped.set(line, []);
-        }
-        grouped.get(line)!.push(thread);
-      } else {
-        nonSubway.push(thread);
-      }
-    });
-
-    // Return ordered array of line groups plus non-subway alerts
-    const result: {
-      type: "line" | "alerts";
-      lineId?: string;
-      alerts: ThreadWithAlerts[];
-    }[] = [];
-
-    lineOrder.forEach((lineId) => {
-      if (grouped.has(lineId)) {
-        result.push({ type: "line", lineId, alerts: grouped.get(lineId)! });
-      }
-    });
-
-    if (nonSubway.length > 0) {
-      result.push({ type: "alerts", alerts: nonSubway });
-    }
-
-    return result;
-  });
-
-  // Effect: Initialize all subway line sections as expanded by default
-  $effect(() => {
-    const groups = alertsByLine();
-    const linesWithAlerts = new Set<string>();
-
-    groups.forEach((group) => {
-      if (group.type === "line" && group.lineId) {
-        linesWithAlerts.add(group.lineId);
-      }
-    });
-
-    // Expand all sections with alerts if not already tracked
-    if (linesWithAlerts.size > 0) {
-      const newExpanded = new Set(expandedSections);
-      let hasChanges = false;
-
-      linesWithAlerts.forEach((lineId) => {
-        if (!newExpanded.has(lineId) && !expandedSections.has(lineId)) {
-          newExpanded.add(lineId);
-          hasChanges = true;
-        }
-      });
-
-      if (hasChanges) {
-        expandedSections = newExpanded;
-      }
-    }
-  });
-
-  // Helper: check if this is the first alert for a new subway line (for section headers)
-  function isFirstAlertForLine(
-    thread: ThreadWithAlerts,
-    index: number
-  ): boolean {
-    const combined = combinedActiveAlerts();
-    const currentLine = getSubwayLineFromThread(thread);
-    if (!currentLine) return false;
-
-    // Check if previous alert was a different line or non-subway
-    if (index === 0) return true;
-    const prevThread = combined[index - 1];
-    const prevLine = getSubwayLineFromThread(prevThread);
-    return prevLine !== currentLine;
-  }
-
-  // Helper: get line info for section header
+  // Helper: get line info for subway alerts
   function getLineInfo(lineId: string) {
     return SUBWAY_LINES.find((l) => l.id === lineId);
-  }
-
-  // Toggle accordion section
-  function toggleAccordion(lineId: string) {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(lineId)) {
-      newExpanded.delete(lineId);
-    } else {
-      newExpanded.add(lineId);
-    }
-    expandedSections = newExpanded;
   }
 
   function handleOpenDialog(dialog: string) {
@@ -1216,75 +1118,20 @@
           </div>
         {/if}
       {:else}
-        {#each alertsByLine() as group}
-          {#if group.type === "line" && group.lineId}
-            {@const lineId = group.lineId}
-            {@const lineInfo = getLineInfo(lineId)}
-            {@const sectionId = `subway-section-${lineId.replace(" ", "-").toLowerCase()}`}
-            {@const isExpanded = expandedSections.has(lineId)}
+        <!-- All alerts displayed directly without grouping -->
+        {#each combinedActiveAlerts() as thread, i (thread.thread_id)}
+          {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
+          {@const subwayLine = getSubwayLineFromThread(thread)}
+          {@const lineInfo = subwayLine ? getLineInfo(subwayLine) : null}
 
-            <!-- Accordion section for subway line -->
-            <div
-              class="accordion-card"
-              id={sectionId}
-              style="--line-color: {lineInfo?.color || '#666'}"
-            >
-              <button
-                class="accordion-header"
-                style="--line-color: {lineInfo?.color || '#666'}"
-                onclick={() => toggleAccordion(lineId)}
-              >
-                <div class="accordion-top-border"></div>
-                <div class="accordion-header-body">
-                  <div class="accordion-header-left">
-                    <span
-                      class="section-line-badge"
-                      style="background-color: {lineInfo?.color ||
-                        '#666'}; color: {lineInfo?.textColor || '#fff'}"
-                    >
-                      {lineId.replace("Line ", "")}
-                    </span>
-                    <span class="section-line-name">{lineId}</span>
-                  </div>
-                </div>
-              </button>
-              <div class="accordion-content" class:expanded={isExpanded}>
-                <div class="accordion-body">
-                  {#each group.alerts as thread, i (thread.thread_id)}
-                    {@const isNew = $recentlyAddedThreadIds.has(
-                      thread.thread_id
-                    )}
-
-                    <div
-                      class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-                      class:alert-highlighted={isHighlighted}
-                      style={isNew
-                        ? ""
-                        : `animation-delay: ${Math.min(i * 50, 300)}ms`}
-                    >
-                      <AlertCard {thread} />
-                    </div>
-                  {/each}
-                </div>
-              </div>
-            </div>
-          {:else}
-            <!-- Non-subway alerts (no accordion) -->
-            {#each group.alerts as thread, i (thread.thread_id)}
-              {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
-              {@const subwayLine = getSubwayLineFromThread(thread)}
-              {@const lineInfo = subwayLine ? getLineInfo(subwayLine) : null}
-
-              <div
-                class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-                style={isNew
-                  ? ""
-                  : `animation-delay: ${Math.min(i * 50, 300)}ms`}
-              >
-                <AlertCard {thread} lineColor={lineInfo?.color} />
-              </div>
-            {/each}
-          {/if}
+          <div
+            class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
+            style={isNew
+              ? ""
+              : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+          >
+            <AlertCard {thread} lineColor={lineInfo?.color} />
+          </div>
         {/each}
 
         <!-- RSZ Alerts: Show grouped table at bottom when in MINOR category -->
@@ -1640,88 +1487,6 @@
   :global(.dark .status-scheduled-icon),
   :global(.dark) .status-scheduled-text {
     color: hsl(270 70% 75%) !important;
-  }
-
-  /* Accordion Section Headers */
-  .accordion-card {
-    margin: 1rem 0;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    background-color: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s;
-  }
-
-  .accordion-header {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .accordion-header:hover {
-    background-color: hsl(var(--muted) / 0.3);
-  }
-
-  .accordion-top-border {
-    height: 4px;
-    background-color: var(--line-color);
-  }
-
-  .accordion-header-body {
-    display: flex;
-    align-items: center;
-    padding: 0.875rem 1rem;
-  }
-
-  .accordion-header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-  }
-
-  .accordion-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out;
-  }
-
-  .accordion-content.expanded {
-    max-height: 5000px; /* Large enough for multiple alerts */
-    transition: max-height 0.5s ease-in;
-  }
-
-  .accordion-body {
-    padding: 0.75rem 1rem 1rem;
-    border-top: 1px solid hsl(var(--border));
-  }
-
-  .accordion-body > div:not(:first-child) {
-    margin-top: 0.75rem;
-  }
-
-  .section-line-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.75rem;
-    height: 1.75rem;
-    padding: 0 0.375rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    font-weight: 700;
-  }
-
-  .section-line-name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: hsl(var(--foreground));
   }
 
   /* Empty State Styles - Consistent with MyRouteAlerts and MyStops */
