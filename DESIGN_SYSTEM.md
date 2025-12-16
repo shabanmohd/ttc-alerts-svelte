@@ -1597,26 +1597,6 @@ The Alerts page uses collapsible accordion sections to organize subway alerts by
 | Line 4 | `#A12F7D`  | White |
 | Line 6 | `#8B5A2B`  | White |
 
-#### Highlight Animation
-
-When navigating from subway status cards to accordion sections, a focus highlight animation draws attention:
-
-```css
-@keyframes highlight-pulse {
-  0%,
-  100% {
-    background-color: transparent;
-  }
-  50% {
-    background-color: hsl(var(--line-color) / 0.15);
-  }
-}
-
-.accordion-header.highlighted {
-  animation: highlight-pulse 1s ease-in-out 2;
-}
-```
-
 ### Step Indicators (Accordion Headers)
 
 For multi-step wizards/accordions showing completion status. Uses **primary color** to indicate completed steps.

@@ -356,6 +356,63 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 16, 2025 - Subway Status Cards Non-Clickable
+
+**Change:** Made subway status cards in the alerts page header non-interactive.
+
+**Details:**
+
+- ✅ Changed `<button>` elements to `<div>` elements
+- ✅ Removed click handler (previously scrolled to line section)
+- ✅ Removed hover/active CSS effects and cursor pointer
+- ✅ Removed accordion pulse highlight animation (~80 lines CSS)
+- ✅ Removed unused state variables (`highlightedLineId`, `highlightTimeout`)
+
+**Rationale:** Simplify UI - status cards show line status (Normal/Delay/Disruption/Scheduled) without interaction.
+
+**Files Updated:**
+
+- `src/routes/alerts/+page.svelte` - Converted button to div, removed click behavior and related CSS
+
+### Dec 16, 2025 - Hide Resolved Accessibility Alerts
+
+**Change:** Resolved accessibility (elevator/escalator) alerts no longer appear in Resolved tab.
+
+**Details:**
+
+- ✅ `resolvedAlerts` derived now filters out alerts with ACCESSIBILITY severity
+- ✅ "Working again" updates aren't newsworthy like "service resumed" for regular alerts
+
+**Files Updated:**
+
+- `src/routes/alerts/+page.svelte` - Added ACCESSIBILITY severity filter to resolvedAlerts
+
+### Dec 16, 2025 - Fix Duplicate Route Badges for Subway Lines
+
+**Problem:** Subway alerts showed duplicate badges (e.g., "Line 6" and "6" separately).
+
+**Fixes:**
+
+- ✅ poll-alerts v50: Track `subwayLineNumbers` Set to skip redundant routes
+- ✅ AlertCard.svelte: Normalize subway line numbers (1-6) to "Line X" format
+
+**Files Updated:**
+
+- `supabase/functions/poll-alerts/index.ts` - v50 deployed
+- `src/lib/components/alerts/AlertCard.svelte` - SUBWAY_LINE_NUMBERS normalization
+
+### Dec 16, 2025 - Fix Orphan Threading (Sort Posts Oldest-First)
+
+**Problem:** SERVICE_RESUMED alerts orphaned when processed before parent DELAY thread.
+
+**Root Cause:** Bluesky returns posts newest-first, so resolution posts were processed before their parent threads existed.
+
+**Fix:** Sort Bluesky posts by `createdAt` ascending before processing.
+
+**Files Updated:**
+
+- `supabase/functions/poll-alerts/index.ts` - v49 deployed
+
 ### Dec 16, 2025 - RSZ Alerts Priority and Badge Count
 
 **Problem:** RSZ alerts showed at top of lists, and Major tab badge didn't count active scheduled closures.
