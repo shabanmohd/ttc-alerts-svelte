@@ -76,8 +76,8 @@ export function getSeverityCategory(categories: string[], effect?: string, heade
   }
   
   // Check for major disruptions (closures, detours, no service, shuttles)
-  const majorEffects = ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'MODIFIED_SERVICE'];
-  const majorCategories = ['SERVICE_DISRUPTION', 'DISRUPTION', 'CLOSURE', 'DETOUR', 'SHUTTLE'];
+  const majorEffects = ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'MODIFIED_SERVICE', 'SCHEDULED_CLOSURE'];
+  const majorCategories = ['SERVICE_DISRUPTION', 'DISRUPTION', 'CLOSURE', 'SCHEDULED_CLOSURE', 'DETOUR', 'SHUTTLE'];
   
   if (
     majorEffects.some(e => upperEffect.includes(e)) ||

@@ -117,17 +117,17 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Backend (`supabase/`)
 
-| File                                    | Status | Purpose                                                             |
-| --------------------------------------- | ------ | ------------------------------------------------------------------- |
-| `functions/_shared/auth-utils.ts`       | ✅     | CORS + Supabase client factory                                      |
-| `functions/auth-register/index.ts`      | ✅     | User registration + recovery codes (uses Supabase Auth)             |
-| `functions/auth-challenge/index.ts`     | ✅     | Generate WebAuthn challenge                                         |
-| `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                                   |
-| `functions/auth-session/index.ts`       | ✅     | Validate existing session                                           |
-| `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                          |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v48: RSZ exclusive from TTC API)         |
-| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                                         |
-| `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B**           |
+| File                                    | Status | Purpose                                                     |
+| --------------------------------------- | ------ | ----------------------------------------------------------- |
+| `functions/_shared/auth-utils.ts`       | ✅     | CORS + Supabase client factory                              |
+| `functions/auth-register/index.ts`      | ✅     | User registration + recovery codes (uses Supabase Auth)     |
+| `functions/auth-challenge/index.ts`     | ✅     | Generate WebAuthn challenge                                 |
+| `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                           |
+| `functions/auth-session/index.ts`       | ✅     | Validate existing session                                   |
+| `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                  |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v48: RSZ exclusive from TTC API) |
+| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                                 |
+| `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B**   |
 
 ### Database (EXISTING in Supabase)
 
@@ -355,6 +355,39 @@ For local development, use `localhost` and `http://localhost:5173`.
 ---
 
 ## Changelog
+
+### Dec 16, 2025 - Scheduled Maintenance Display in Major Tab
+
+**Problem:** Scheduled closures (nightly subway closures) were not appearing in the Major tab even when currently active.
+
+**Root Causes:**
+1. `SCHEDULED_CLOSURE` category not recognized as MAJOR severity
+2. `getSubwayLineFromThread()` returned full line name (e.g., "Line 1 (Yonge - University)") instead of normalized "Line 1"
+3. Maintenance threads added to all severity tabs instead of just MAJOR
+4. Overnight closures didn't account for the "morning after" the last date
+
+**Fixes:**
+- ✅ Added `SCHEDULED_CLOSURE` to `majorEffects` and `majorCategories` in `getSeverityCategory()`
+- ✅ Fixed `getSubwayLineFromThread()` to extract "Line X" from "Line X (Name)" format
+- ✅ Maintenance threads now only included in `combinedActiveAlerts` when `$selectedSeverityCategory === "MAJOR"`
+- ✅ `isMaintenanceHappeningNow()` updated with proper overnight closure logic:
+  - For nightly closures (start ≥ 10 PM) with no end time, assumes 6 AM service resumption
+  - Extended date range check to include morning after last closure date
+  - Correctly handles Dec 15-18 closure showing until Dec 19 at 6 AM
+
+**Display Times for Nightly Closures (e.g., Dec 15-18, 11:59 PM start):**
+| Period | Shows in Major? |
+|--------|-----------------|
+| Dec 15, 11:59 PM → Dec 16, 6:00 AM | ✅ Yes |
+| Dec 16, 6:01 AM → 11:58 PM | ❌ No |
+| Dec 16, 11:59 PM → Dec 17, 6:00 AM | ✅ Yes |
+| Dec 17-18 (same pattern) | ✅/❌ |
+| Dec 18, 11:59 PM → Dec 19, 6:00 AM | ✅ Yes |
+| Dec 19, 6:01 AM onward | ❌ No |
+
+**Files Updated:**
+- `src/lib/stores/alerts.ts` - Added SCHEDULED_CLOSURE to major categories
+- `src/routes/alerts/+page.svelte` - Fixed line extraction and overnight closure logic
 
 ### Dec 16, 2025 - RSZ Alerts Exclusively from TTC API (poll-alerts v48)
 

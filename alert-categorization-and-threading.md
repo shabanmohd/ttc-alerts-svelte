@@ -858,11 +858,11 @@ The frontend provides two levels of filtering for alerts:
 
 Alerts are categorized into three severity levels based on their effect and type:
 
-| Category          | TTC API Effects                                       | Description                             |
-| ----------------- | ----------------------------------------------------- | --------------------------------------- |
-| **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE | Closures, detours, shuttles, no service |
-| **MINOR**         | SIGNIFICANT_DELAYS, DELAY                             | Delays, reduced speed zones             |
-| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)              | Elevator and escalator outages          |
+| Category          | TTC API Effects                                                       | Description                                     |
+| ----------------- | --------------------------------------------------------------------- | ----------------------------------------------- |
+| **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE | Closures, detours, shuttles, no service, scheduled maintenance |
+| **MINOR**         | SIGNIFICANT_DELAYS, DELAY                                             | Delays, reduced speed zones                     |
+| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)                              | Elevator and escalator outages                  |
 
 **Categorization Logic (`getSeverityCategory()` in alerts.ts):**
 
@@ -886,17 +886,19 @@ export function getSeverityCategory(
     return "ACCESSIBILITY";
   }
 
-  // Check for major disruptions
+  // Check for major disruptions (including scheduled closures)
   const majorEffects = [
     "NO_SERVICE",
     "REDUCED_SERVICE",
     "DETOUR",
     "MODIFIED_SERVICE",
+    "SCHEDULED_CLOSURE",
   ];
   const majorCategories = [
     "SERVICE_DISRUPTION",
     "DISRUPTION",
     "CLOSURE",
+    "SCHEDULED_CLOSURE",
     "DETOUR",
     "SHUTTLE",
   ];

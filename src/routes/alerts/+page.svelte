@@ -361,10 +361,7 @@
     const startDate = parseLocalDate(item.start_date);
     const endDate = parseLocalDate(item.end_date);
 
-    // Set end date to end of day
-    endDate.setHours(23, 59, 59, 999);
-
-    // Check if we're within the date range
+    // Get today's date only (no time)
     const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startDateOnly = new Date(
       startDate.getFullYear(),
@@ -377,35 +374,53 @@
       endDate.getDate()
     );
 
-    if (nowDate < startDateOnly || nowDate > endDateOnly) return false;
-
-    // Check time range if provided
+    // Check time info
     const startTime = parseTime(item.start_time);
-    const endTime = parseTime(item.end_time);
+    let endTime = parseTime(item.end_time);
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+    // For nightly closures with only start time (late night, e.g., 10 PM+), 
+    // assume service resumes at 6 AM (TTC standard)
+    const isNightlyClosure = startTime && startTime.hours >= 22;
+    if (isNightlyClosure && !endTime) {
+      endTime = { hours: 6, minutes: 0 };
+    }
+
+    // For overnight closures, we need to check the "morning after" the last date
+    // e.g., Dec 15-18 closure ends on Dec 19 at 6 AM
+    const endDateExtended = new Date(endDateOnly);
+    if (isNightlyClosure && endTime && endTime.hours < 12) {
+      // Add one day to end date for morning-after check
+      endDateExtended.setDate(endDateExtended.getDate() + 1);
+    }
+
+    // Check if we're within the extended date range
+    if (nowDate < startDateOnly || nowDate > endDateExtended) return false;
+
+    // Special case: we're on the day AFTER the end date (morning after last closure)
+    if (nowDate.getTime() === endDateExtended.getTime() && nowDate > endDateOnly) {
+      // Only active if we're before the end time (e.g., before 6 AM)
+      if (endTime) {
+        const endMinutes = endTime.hours * 60 + endTime.minutes;
+        return nowMinutes <= endMinutes;
+      }
+      return false;
+    }
 
     // If we're on the START date, check if we've passed the start time
     if (nowDate.getTime() === startDateOnly.getTime() && startTime) {
       const startMinutes = startTime.hours * 60 + startTime.minutes;
-      // Haven't reached start time yet
       if (nowMinutes < startMinutes) return false;
     }
 
-    // If we're on the END date and have an end time, check if we're still within
-    if (nowDate.getTime() === endDateOnly.getTime() && endTime) {
-      const endMinutes = endTime.hours * 60 + endTime.minutes;
-      // Past the end time
-      if (nowMinutes > endMinutes) return false;
-    }
-
-    // Handle overnight closures with both times (e.g., 11 PM to 5 AM)
+    // Handle overnight closures (e.g., 11:59 PM to 6 AM)
     if (startTime && endTime) {
       const startMinutes = startTime.hours * 60 + startTime.minutes;
       const endMinutes = endTime.hours * 60 + endTime.minutes;
 
-      // Overnight closure (end time is less than start time)
+      // Overnight closure (end time is less than start time, like 23:59 to 6:00)
       if (endMinutes < startMinutes) {
-        // Active if now >= start OR now <= end
+        // Active if now >= start (late night) OR now <= end (early morning)
         return nowMinutes >= startMinutes || nowMinutes <= endMinutes;
       } else {
         // Same day: active if now is between start and end
@@ -413,7 +428,6 @@
       }
     }
 
-    // If only start time and we've passed the start time check above, it's active
     // If no times specified, assume active during the date range
     return true;
   }
@@ -784,6 +798,11 @@
     for (const route of routes) {
       const normalized = normalizeLineId(route).toLowerCase();
       if (normalized.startsWith("line")) {
+        // Extract just "Line X" from "line x (name)" format
+        const match = normalized.match(/^line\s*(\d)/);
+        if (match) {
+          return `Line ${match[1]}`;
+        }
         return normalized.replace("line ", "Line ");
       }
     }
@@ -797,7 +816,9 @@
       $selectedSeverityCategory === "MINOR"
         ? nonRSZAlerts()
         : filteredActiveAlerts();
-    const maintenance = activeMaintenanceThreads();
+    
+    // Only include maintenance in MAJOR tab (scheduled closures are MAJOR)
+    const maintenance = $selectedSeverityCategory === "MAJOR" ? activeMaintenanceThreads() : [];
     const combined = [...alerts, ...maintenance];
 
     // Separate subway and non-subway alerts
