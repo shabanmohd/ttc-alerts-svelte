@@ -2,6 +2,7 @@
   import { ChevronDown, ExternalLink } from "lucide-svelte";
   import RouteBadge from "./RouteBadge.svelte";
   import StatusBadge from "./StatusBadge.svelte";
+  import AccessibilityBadge from "./AccessibilityBadge.svelte";
   import { cn } from "$lib/utils";
   import { _ } from "svelte-i18n";
   import type { ThreadWithAlerts, Alert } from "$lib/types/database";
@@ -44,6 +45,34 @@
     return routes.some(
       (route) => route.toLowerCase().startsWith("line") || /^[1-6]$/.test(route)
     );
+  }
+
+  /**
+   * Check if this is an accessibility alert (elevator/escalator outages).
+   * Accessibility alerts have category "ACCESSIBILITY" or "ACCESSIBILITY_ISSUE"
+   * and typically have station names as "routes" (e.g., "Dupont", "Davisville").
+   */
+  function isAccessibilityAlert(categories: unknown): boolean {
+    const cats = parseJsonArray(categories);
+    return cats.some(cat => 
+      cat === 'ACCESSIBILITY' || 
+      cat === 'ACCESSIBILITY_ISSUE'
+    );
+  }
+
+  /**
+   * Extract station name from accessibility alert.
+   * Returns the first non-subway-line route (which is the station name).
+   * E.g., ["Dupont"] -> "Dupont", ["Victoria Park"] -> "Victoria Park"
+   */
+  function getStationName(routes: string[]): string | null {
+    if (!routes || routes.length === 0) return null;
+    // Station names are the routes that aren't subway line numbers
+    const station = routes.find(route => 
+      !route.toLowerCase().startsWith('line') && 
+      !/^[1-6]$/.test(route)
+    );
+    return station || routes[0];
   }
 
   /**
@@ -320,6 +349,14 @@
           [];
   });
 
+  // Check if this is an accessibility alert (elevator/escalator outages)
+  const isAccessibility = $derived(isAccessibilityAlert(categories()));
+
+  // Get station name for accessibility alerts (displayed as badge instead of route)
+  const stationName = $derived(
+    isAccessibility ? getStationName(rawRoutes) : null
+  );
+
   const cardId = $derived(`alert-${thread.thread_id}`);
 </script>
 
@@ -334,30 +371,43 @@
   <div class="alert-card-content">
     <!-- Main content: Badge on left, details on right -->
     <div class="flex gap-3">
-      <!-- Route badge(s) on left - fixed width for uniform alignment -->
+      <!-- Badge on left - fixed width for uniform alignment -->
       <div class="w-20 flex flex-col items-center gap-2 flex-shrink-0">
-        {#each displayRoutes.slice(0, 2) as route}
-          <RouteBadge {route} size="lg" class="alert-badge-fixed" />
-        {/each}
-        {#if displayRoutes.length > 2}
-          <span class="text-xs text-muted-foreground"
-            >+{displayRoutes.length - 2}</span
-          >
+        {#if isAccessibility}
+          <!-- Accessibility alerts: Show wheelchair icon badge -->
+          <AccessibilityBadge size="lg" class="alert-badge-fixed" />
+        {:else}
+          <!-- Regular alerts: Show route badge(s) -->
+          {#each displayRoutes.slice(0, 2) as route}
+            <RouteBadge {route} size="lg" class="alert-badge-fixed" />
+          {/each}
+          {#if displayRoutes.length > 2}
+            <span class="text-xs text-muted-foreground"
+              >+{displayRoutes.length - 2}</span
+            >
+          {/if}
         {/if}
       </div>
 
       <!-- Status + Description on right -->
       <div class="flex-1 min-w-0">
         <div class="flex items-center justify-between gap-2 mb-1.5">
-          <!-- Show SERVICE_RESUMED badge ONLY if we have an actual SERVICE_RESUMED alert in the thread -->
-          <!-- This fixes the bug where thread.categories includes SERVICE_RESUMED but no such alert exists -->
-          <StatusBadge
-            category={thread.is_resolved &&
-            categories().includes("SERVICE_RESUMED") &&
-            serviceResumedAlert()
-              ? "SERVICE_RESUMED"
-              : getMainCategory(categories(), rawRoutes)}
-          />
+          {#if isAccessibility && stationName}
+            <!-- Accessibility alerts: Show station name badge (blue) instead of "ACCESSIBILITY" -->
+            <span class="station-badge" role="status" aria-label="Station: {stationName}">
+              {stationName}
+            </span>
+          {:else}
+            <!-- Show SERVICE_RESUMED badge ONLY if we have an actual SERVICE_RESUMED alert in the thread -->
+            <!-- This fixes the bug where thread.categories includes SERVICE_RESUMED but no such alert exists -->
+            <StatusBadge
+              category={thread.is_resolved &&
+              categories().includes("SERVICE_RESUMED") &&
+              serviceResumedAlert()
+                ? "SERVICE_RESUMED"
+                : getMainCategory(categories(), rawRoutes)}
+            />
+          {/if}
           <time
             class="alert-card-timestamp"
             datetime={displayAlert?.created_at || ""}

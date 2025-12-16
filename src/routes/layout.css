@@ -898,6 +898,29 @@ header.sticky {
   color: hsl(270 70% 75%);
 }
 
+/* Station badge - blue for accessibility alerts */
+/* Used to display station name (Dupont, Davisville, etc.) */
+/* Color: Blue hsl(217 91% 60%) matching accessibility tab */
+.station-badge {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  line-height: 1.25rem;
+  background-color: hsl(217 91% 95%);
+  color: hsl(217 91% 40%);
+}
+
+.dark .station-badge {
+  background-color: hsl(217 50% 25% / 0.5);
+  color: hsl(217 91% 75%);
+}
+
 /* ============================================
    ALERT CARDS
    ============================================ */
