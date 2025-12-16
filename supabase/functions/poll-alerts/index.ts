@@ -1,13 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 42 - Fix TTC API thread creation (missing thread_id UUID)
+// VERSION 43 - Fix accessibility thread auto-resolve logic
+// - v43: Separate auto-resolve logic for accessibility vs route-based threads
 // - v42: Generate UUID for thread_id when creating TTC API threads
 // - v41: Process TTC API accessibility array (elevator/escalator outages)
 // - v40: Refined filtering to include SIGNIFICANT_DELAYS even if planned
 // - v39: TTC Live API as secondary data source
 // - v38: Direction mismatch penalty
-const FUNCTION_VERSION = 42;
+const FUNCTION_VERSION = 43;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -422,12 +423,45 @@ serve(async (req) => {
         // Get all unresolved threads from our database
         const { data: unresolvedThreads } = await supabase
           .from('incident_threads')
-          .select('thread_id, title, affected_routes')
+          .select('thread_id, title, affected_routes, categories')
           .eq('is_resolved', false);
         
         if (unresolvedThreads) {
           for (const thread of unresolvedThreads) {
             const threadRoutes = thread.affected_routes || [];
+            const threadCategories = thread.categories || [];
+            
+            // Skip auto-resolve for ACCESSIBILITY threads
+            // These have station names as routes (e.g., "Dupont") not route numbers
+            // and their resolution is handled separately by checking the TTC accessibility API
+            if (threadCategories.includes('ACCESSIBILITY')) {
+              // Check if this accessibility alert is still in the TTC API accessibility array
+              const isAccessibilityStillActive = ttcData.accessibility?.some((accessAlert: any) => {
+                const accessHeader = (accessAlert.headerText || '').toLowerCase();
+                const threadTitle = (thread.title || '').toLowerCase();
+                // Match by station name in the title
+                return threadRoutes.some((route: string) => 
+                  accessHeader.includes(route.toLowerCase()) || 
+                  threadTitle.includes(route.toLowerCase())
+                );
+              }) ?? false;
+              
+              if (!isAccessibilityStillActive) {
+                // Accessibility issue no longer in TTC API - mark as resolved
+                await supabase
+                  .from('incident_threads')
+                  .update({ 
+                    is_resolved: true,
+                    resolved_at: now.toISOString(),
+                    updated_at: now.toISOString()
+                  })
+                  .eq('thread_id', thread.thread_id);
+                
+                ttcApiResolvedCount++;
+                console.log(`TTC API resolved accessibility: ${thread.title}`);
+              }
+              continue; // Skip the normal route-based resolution check
+            }
             
             // Check if ANY of the thread's routes are still active in TTC API
             const isStillActive = threadRoutes.some((route: string) => {
