@@ -8,7 +8,7 @@
     Globe,
     Palette,
     HelpCircle,
-    Bug,
+    Flag,
     Lightbulb,
     Info,
     Home,
@@ -623,7 +623,7 @@
         class="w-full gap-2"
         href="mailto:feedback@ttc-alerts.app"
       >
-        <Bug class="h-4 w-4" />
+        <Flag class="h-4 w-4" />
         {$_("sidebar.reportBug")}
       </Button>
       <Button

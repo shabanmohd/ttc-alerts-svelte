@@ -5,7 +5,7 @@
     Moon,
     Menu,
     HelpCircle,
-    Bug,
+    Flag,
     Lightbulb,
     Info,
     Check,
@@ -403,7 +403,7 @@
           onmouseleave={(e) =>
             (e.currentTarget.style.backgroundColor = "transparent")}
         >
-          <Bug class="w-5 h-5" aria-hidden="true" />
+          <Flag class="w-5 h-5" aria-hidden="true" />
           <span class="text-sm font-medium">{$_("sidebar.reportBug")}</span>
         </button>
 

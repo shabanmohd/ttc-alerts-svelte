@@ -4,7 +4,7 @@
     AlertTriangle,
     Settings,
     HelpCircle,
-    Bug,
+    Flag,
     Lightbulb,
     Info,
     Route,
@@ -89,7 +89,7 @@
         class="sidebar-footer-link"
         title={$_("sidebar.reportBug")}
       >
-        <Bug class="w-4 h-4" />
+        <Flag class="w-4 h-4" />
         <span>{$_("sidebar.reportBug")}</span>
       </button>
       <button
