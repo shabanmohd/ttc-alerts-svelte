@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const FUNCTION_VERSION = 49;
+const FUNCTION_VERSION = 50;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -35,8 +35,17 @@ function categoryToEffect(category: string): string {
 
 function extractRoutes(text: string): string[] {
   const routes: string[] = [];
+  const subwayLineNumbers = new Set<string>(); // Track subway line numbers (1-6) we've found
+  
   const lineMatch = text.match(/Line\s*\d+/gi);
-  if (lineMatch) lineMatch.forEach(m => routes.push(m));
+  if (lineMatch) {
+    lineMatch.forEach(m => {
+      routes.push(m);
+      // Track the line number (e.g., "Line 6" -> "6")
+      const num = m.match(/\d+/);
+      if (num) subwayLineNumbers.add(num[0]);
+    });
+  }
   
   const commaListMatch = text.match(/^(\d{1,3}(?:[A-Z])?(?:\s*,\s*\d{1,3}[A-Z]?)+)/);
   if (commaListMatch) commaListMatch[1].split(/\s*,\s*/).forEach(r => { if (r.trim() && !routes.includes(r.trim())) routes.push(r.trim()); });
@@ -55,11 +64,13 @@ function extractRoutes(text: string): string[] {
   const routeWithNameRegex = /\b(\d{1,3})\s+([A-Z][a-z]+)/g;
   let m;
   while ((m = routeWithNameRegex.exec(text)) !== null) {
+    // Skip if we already have this as a subway line (e.g., "6 Finch" when we have "Line 6")
+    if (subwayLineNumbers.has(m[1])) continue;
     if (!isLikelyAddress(m[0], m.index) && !routes.some(r => r.startsWith(m[1]))) routes.push(m[0]);
   }
   
   const startMatch = text.match(/^(\d{1,3})\s+[A-Z]/);
-  if (startMatch && !routes.some(r => r.startsWith(startMatch[1]))) routes.push(startMatch[1]);
+  if (startMatch && !subwayLineNumbers.has(startMatch[1]) && !routes.some(r => r.startsWith(startMatch[1]))) routes.push(startMatch[1]);
   
   return [...new Set(routes)];
 }
