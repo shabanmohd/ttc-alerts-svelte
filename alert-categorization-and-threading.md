@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 7.0  
-**Date:** December 16, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v39 + Bluesky reply threading + TTC API dual-use)  
+**Version:** 8.0  
+**Date:** December 15, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v46 + Bluesky reply threading + TTC API dual-use + RSZ deduplication)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -12,14 +12,15 @@
 1. [Overview](#overview)
 2. [Architecture](#architecture)
 3. [Alert Sources](#alert-sources)
-4. [Multi-Category System](#multi-category-system)
-5. [Incident Threading](#incident-threading)
-6. [Bluesky Reply Threading](#bluesky-reply-threading)
-7. [Frontend Filtering](#frontend-filtering)
-8. [Database Schema](#database-schema)
-9. [Edge Functions](#edge-functions)
-10. [Testing Strategy](#testing-strategy)
-11. [Monitoring and Tuning](#monitoring-and-tuning)
+4. [Source Prioritization](#source-prioritization)
+5. [Multi-Category System](#multi-category-system)
+6. [Incident Threading](#incident-threading)
+7. [Bluesky Reply Threading](#bluesky-reply-threading)
+8. [Frontend Filtering](#frontend-filtering)
+9. [Database Schema](#database-schema)
+10. [Edge Functions](#edge-functions)
+11. [Testing Strategy](#testing-strategy)
+12. [Monitoring and Tuning](#monitoring-and-tuning)
 
 ---
 
@@ -29,13 +30,14 @@ This document describes the alert categorization and threading system designed t
 
 1. **Bluesky integration** - Primary source from @ttcalerts.bsky.social
 2. **TTC Live API secondary source** - Fills gaps when Bluesky hasn't posted yet (v39)
-3. **Bluesky reply threading** - Priority to reply chain relationships (v31)
-4. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
-5. **Effect-based categorization** - Focus on service impact, not cause
-6. **Incident threading** - Group related updates using reply chains + similarity + route matching
-7. **Frontend filtering** - Mutually exclusive category filters in UI
-8. **Planned alert separation** - Maintenance/scheduled alerts excluded from main feed
-9. **TTC API cross-check** - Official TTC Live API used for resolution verification
+3. **TTC API is authoritative for RSZ alerts** - Skip redundant BlueSky speed reduction posts (v46)
+4. **Bluesky reply threading** - Priority to reply chain relationships (v31)
+5. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
+6. **Effect-based categorization** - Focus on service impact, not cause
+7. **Incident threading** - Group related updates using reply chains + similarity + route matching
+8. **Frontend filtering** - Mutually exclusive category filters in UI
+9. **Planned alert separation** - Maintenance/scheduled alerts excluded from main feed
+10. **TTC API cross-check** - Official TTC Live API used for resolution verification
 
 ---
 
@@ -111,12 +113,39 @@ This document describes the alert categorization and threading system designed t
 
 **GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear on Bluesky)
 
-### Dual-Source Priority Rules (v39)
+### Dual-Source Priority Rules (v46)
 
 1. **Bluesky is always primary** - If a route has an active Bluesky thread, TTC API alerts for that route are skipped
 2. **TTC API fills gaps** - Only creates alerts for routes without Bluesky coverage
 3. **Planned alerts excluded** - TTC API planned/scheduled alerts are never imported (Bluesky handles these)
 4. **Same threading logic** - TTC API alerts create/join threads using same rules as Bluesky
+5. **TTC API is authoritative for RSZ alerts** - BlueSky speed reduction posts are skipped if TTC API already has an active RSZ thread for the same subway line (v46)
+
+### RSZ (Reduced Speed Zone) Deduplication (v46)
+
+**Problem:** Both BlueSky and TTC API can post about subway speed reductions, causing redundant minor alerts.
+
+**Solution:** TTC API provides more accurate RSZ data (exact stop locations, direction), so BlueSky RSZ posts are skipped when TTC API already covers that subway line.
+
+**Strict Keyword Detection for BlueSky RSZ:**
+
+```typescript
+const strictPatterns = [
+  "reduced speed",
+  "slow zone",
+  "speed restriction",
+  "slower speeds",
+  "operating at reduced speed",
+  "trains running slower",
+  "slower service",
+];
+```
+
+**Skip Logic:**
+
+1. Before BlueSky processing, query active TTC API RSZ threads for Lines 1-4
+2. If a BlueSky post matches RSZ keywords AND the subway line already has a TTC API RSZ thread → skip
+3. Response includes `skippedRszAlerts` count for monitoring
 
 ### Key Principles
 
@@ -1155,12 +1184,13 @@ for (const thread of accessibilityThreads) {
 }
 ```
 
-| Thread Type     | Auto-Resolve Criteria                              |
-| --------------- | -------------------------------------------------- |
-| Standard        | Route no longer in TTC API active routes           |
-| Accessibility   | Station no longer in TTC API accessibility alerts  |
+| Thread Type   | Auto-Resolve Criteria                             |
+| ------------- | ------------------------------------------------- |
+| Standard      | Route no longer in TTC API active routes          |
+| Accessibility | Station no longer in TTC API accessibility alerts |
 
 **Why Separate Logic?**
+
 - Standard threads: Routes like "501", "Line 1" match TTC API route IDs
 - Accessibility threads: Station names like "Dupont Station" don't match route IDs
 - Without v43: Accessibility threads never auto-resolved (station ≠ route)
@@ -1182,15 +1212,15 @@ for (const thread of accessibilityThreads) {
 }
 ```
 
-| Field                        | Description                                      |
-| ---------------------------- | ------------------------------------------------ |
-| `newAlerts`                  | New alerts created (Bluesky)                     |
-| `updatedThreads`             | Existing threads updated                         |
+| Field                        | Description                                       |
+| ---------------------------- | ------------------------------------------------- |
+| `newAlerts`                  | New alerts created (Bluesky)                      |
+| `updatedThreads`             | Existing threads updated                          |
 | `ttcApiResolvedCount`        | Standard threads resolved via TTC API cross-check |
-| `accessibilityResolvedCount` | Accessibility threads resolved (v43)             |
-| `ttcApiNewAlerts`            | New alerts from TTC API secondary source         |
-| `ttcApiError`                | Error message if TTC API failed                  |
-| `version`                    | Edge function version                            |
+| `accessibilityResolvedCount` | Accessibility threads resolved (v43)              |
+| `ttcApiNewAlerts`            | New alerts from TTC API secondary source          |
+| `ttcApiError`                | Error message if TTC API failed                   |
+| `version`                    | Edge function version                             |
 
 ### `scrape-maintenance`
 

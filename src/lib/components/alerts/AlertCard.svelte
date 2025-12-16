@@ -54,9 +54,8 @@
    */
   function isAccessibilityAlert(categories: unknown): boolean {
     const cats = parseJsonArray(categories);
-    return cats.some(cat => 
-      cat === 'ACCESSIBILITY' || 
-      cat === 'ACCESSIBILITY_ISSUE'
+    return cats.some(
+      (cat) => cat === "ACCESSIBILITY" || cat === "ACCESSIBILITY_ISSUE"
     );
   }
 
@@ -68,9 +67,9 @@
   function getStationName(routes: string[]): string | null {
     if (!routes || routes.length === 0) return null;
     // Station names are the routes that aren't subway line numbers
-    const station = routes.find(route => 
-      !route.toLowerCase().startsWith('line') && 
-      !/^[1-6]$/.test(route)
+    const station = routes.find(
+      (route) =>
+        !route.toLowerCase().startsWith("line") && !/^[1-6]$/.test(route)
     );
     return station || routes[0];
   }
@@ -394,7 +393,11 @@
         <div class="flex items-center justify-between gap-2 mb-1.5">
           {#if isAccessibility && stationName}
             <!-- Accessibility alerts: Show station name badge (blue) instead of "ACCESSIBILITY" -->
-            <span class="station-badge" role="status" aria-label="Station: {stationName}">
+            <span
+              class="station-badge"
+              role="status"
+              aria-label="Station: {stationName}"
+            >
               {stationName}
             </span>
           {:else}

@@ -104,6 +104,9 @@
     "title": "Service Alerts",
     "noAlerts": "No active alerts",
     "earlierUpdates": "{count, plural, one {# earlier update} other {# earlier updates}}",
+    "reducedSpeedZone": "Reduced Speed Zone",
+    "reducedSpeedZones": "Reduced Speed Zones",
+    "reducedSpeedZonesDesc": "Trains are running slower than usual in these sections due to track work",
     "category": {
       "all": "All",
       "delays": "Delays",

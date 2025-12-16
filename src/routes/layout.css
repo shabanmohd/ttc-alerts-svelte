@@ -2234,7 +2234,8 @@ html.reduce-motion .eta-live-indicator svg {
 
 /* Ensure background color fills safe areas on iOS PWA */
 @media (display-mode: standalone) {
-  html, body {
+  html,
+  body {
     /* Background color will show in safe areas */
     background-color: hsl(var(--background));
   }

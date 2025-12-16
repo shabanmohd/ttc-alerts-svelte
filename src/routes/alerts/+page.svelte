@@ -14,6 +14,7 @@
   import { goto } from "$app/navigation";
   import Header from "$lib/components/layout/Header.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
+  import RSZAlertCard from "$lib/components/alerts/RSZAlertCard.svelte";
   import FilterChips from "$lib/components/alerts/FilterChips.svelte";
   import CategoryFilter from "$lib/components/alerts/CategoryFilter.svelte";
   import ClosuresView from "$lib/components/alerts/ClosuresView.svelte";
@@ -658,6 +659,33 @@
     return resolvedAlerts();
   });
 
+  // Helper: Check if a thread is an RSZ (Reduced Speed Zone) alert
+  function isRSZAlert(thread: ThreadWithAlerts): boolean {
+    const alert = thread.latestAlert;
+    if (!alert) return false;
+
+    // RSZ alerts have effect SIGNIFICANT_DELAYS and raw_data with stopStart/stopEnd
+    const rawData = alert.raw_data as Record<string, unknown> | null;
+    return (
+      alert.effect === "SIGNIFICANT_DELAYS" &&
+      rawData?.source === "ttc-api" &&
+      typeof rawData?.stopStart === "string" &&
+      typeof rawData?.stopEnd === "string"
+    );
+  }
+
+  // Derived: RSZ alerts (filtered out when in MINOR view to display separately)
+  let rszAlerts = $derived(() => {
+    if ($selectedSeverityCategory !== "MINOR") return [];
+    return filteredActiveAlerts().filter(isRSZAlert);
+  });
+
+  // Derived: Non-RSZ alerts (regular alerts minus RSZ when in MINOR view)
+  let nonRSZAlerts = $derived(() => {
+    if ($selectedSeverityCategory !== "MINOR") return filteredActiveAlerts();
+    return filteredActiveAlerts().filter((t) => !isRSZAlert(t));
+  });
+
   // Derived: Currently active scheduled maintenance (happening right now)
   let activeMaintenanceNow = $derived(() => {
     const allMaintenance = [...$maintenanceItems, ...demoMaintenance];
@@ -764,7 +792,11 @@
 
   // Derived: Combined active alerts and maintenance, grouped by subway line with section headers
   let combinedActiveAlerts = $derived(() => {
-    const alerts = filteredActiveAlerts();
+    // Use nonRSZAlerts when in MINOR mode (RSZ alerts render separately)
+    const alerts =
+      $selectedSeverityCategory === "MINOR"
+        ? nonRSZAlerts()
+        : filteredActiveAlerts();
     const maintenance = activeMaintenanceThreads();
     const combined = [...alerts, ...maintenance];
 
@@ -1149,7 +1181,7 @@
             Try again
           </Button>
         </div>
-      {:else if combinedActiveAlerts().length === 0}
+      {:else if combinedActiveAlerts().length === 0 && rszAlerts().length === 0}
         {#if $selectedSeverityCategory !== "ALL" && activeAlerts().length > 0}
           <!-- Category filter is active but no alerts in this category -->
           <div class="empty-state animate-fade-in">
@@ -1190,6 +1222,13 @@
           </div>
         {/if}
       {:else}
+        <!-- RSZ Alerts: Show grouped table when in MINOR category -->
+        {#if $selectedSeverityCategory === "MINOR" && rszAlerts().length > 0}
+          <div class="mb-4 animate-fade-in">
+            <RSZAlertCard threads={rszAlerts()} />
+          </div>
+        {/if}
+
         {#each alertsByLine() as group}
           {#if group.type === "line" && group.lineId}
             {@const lineId = group.lineId}

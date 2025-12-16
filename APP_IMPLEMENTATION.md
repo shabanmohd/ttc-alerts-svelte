@@ -75,6 +75,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | ---------------------------------------------- | ------ | ------------------------------------------------------------- |
 | `components/alerts/AccessibilityBadge.svelte`  | ✅     | Wheelchair icon badge for elevator/escalator alerts 🆕        |
 | `components/alerts/AlertCard.svelte`           | ✅     | Alert cards w/ accessibility badge support, route extraction  |
+| `components/alerts/RSZAlertCard.svelte`        | ✅     | Reduced Speed Zone alerts - grouped table display 🆕          |
 | `components/alerts/BookmarkRouteButton.svelte` | ✅     | Save route button with feedback animation 🆕 **B**            |
 | `components/alerts/CategoryFilter.svelte`      | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA  |
 | `components/alerts/ClosuresView.svelte`        | ✅     | Scheduled tab with closure type badges (nightly/weekend)      |

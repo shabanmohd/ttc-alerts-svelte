@@ -40,7 +40,7 @@
     {
       id: "MAJOR",
       label: "Major",
-      icon: AlertOctagon,  // Octagon stop sign - distinct from AlertTriangle
+      icon: AlertOctagon, // Octagon stop sign - distinct from AlertTriangle
       ariaLabel: "Show major disruptions only",
       colorClass: "category-major",
     },
@@ -137,7 +137,7 @@
 
   /* Category-specific active colors */
   /* WCAG AA requires 4.5:1 contrast ratio for text */
-  
+
   .category-tab.category-major.active {
     color: hsl(0 72% 45%); /* Darker red for light mode contrast */
   }
@@ -148,7 +148,9 @@
   }
 
   .category-tab.category-minor.active {
-    color: hsl(38 85% 35%); /* Much darker amber for WCAG AA on white bg (~6:1) */
+    color: hsl(
+      38 85% 35%
+    ); /* Much darker amber for WCAG AA on white bg (~6:1) */
   }
 
   /* Dark mode: Brighter amber for better contrast */

@@ -177,7 +177,7 @@ export async function fetchAlerts(): Promise<void> {
     // Step 1: Fetch recent alerts (last 24h) to identify active threads
     const { data: recentAlerts, error: alertsError } = await supabase
       .from('alert_cache')
-      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
+      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
       .limit(100);
@@ -188,7 +188,7 @@ export async function fetchAlerts(): Promise<void> {
     // These issues persist much longer than typical service disruptions
     const { data: accessibilityAlerts, error: accessibilityError } = await supabase
       .from('alert_cache')
-      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
+      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
       .eq('effect', 'ACCESSIBILITY_ISSUE')
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
@@ -216,7 +216,7 @@ export async function fetchAlerts(): Promise<void> {
       // Fetch all alerts for the identified threads (up to 30 days to cover accessibility issues)
       const { data: threadAlerts, error: threadAlertsError } = await supabase
         .from('alert_cache')
-        .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
+        .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
         .in('thread_id', threadIds)
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false });
