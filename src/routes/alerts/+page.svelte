@@ -1254,13 +1254,6 @@
           </div>
         {/if}
       {:else}
-        <!-- RSZ Alerts: Show grouped table when in MINOR category -->
-        {#if $selectedSeverityCategory === "MINOR" && rszAlerts().length > 0}
-          <div class="mb-4 animate-fade-in">
-            <RSZAlertCard threads={rszAlerts()} />
-          </div>
-        {/if}
-
         {#each alertsByLine() as group}
           {#if group.type === "line" && group.lineId}
             {@const lineId = group.lineId}
@@ -1333,6 +1326,13 @@
             {/each}
           {/if}
         {/each}
+
+        <!-- RSZ Alerts: Show grouped table at bottom when in MINOR category -->
+        {#if $selectedSeverityCategory === "MINOR" && rszAlerts().length > 0}
+          <div class="mt-4 animate-fade-in">
+            <RSZAlertCard threads={rszAlerts()} />
+          </div>
+        {/if}
       {/if}
     </div>
   {:else if currentTab === "resolved"}

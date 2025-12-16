@@ -29,7 +29,10 @@
     maintenanceItems,
   } from "$lib/stores/alerts";
   import { savedRoutes } from "$lib/stores/savedRoutes";
-  import type { ThreadWithAlerts, PlannedMaintenance } from "$lib/types/database";
+  import type {
+    ThreadWithAlerts,
+    PlannedMaintenance,
+  } from "$lib/types/database";
 
   // Route filter state - which specific route to show (null = all saved routes)
   let selectedRouteFilter = $state<string | null>(null);
@@ -565,7 +568,18 @@
         </div>
       {/each}
 
-      <!-- RSZ Alerts grouped by line -->
+      <!-- Regular Alerts (non-RSZ) -->
+      {#each regularAlerts as thread, i (thread.thread_id)}
+        {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
+        <div
+          class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
+          style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+        >
+          <AlertCard {thread} />
+        </div>
+      {/each}
+
+      <!-- RSZ Alerts grouped by line (lowest priority) -->
       {#if rszAlerts.length > 0}
         {@const line1RSZ = rszAlerts.filter((t) => {
           const routes = t.affected_routes || t.latestAlert?.affected_routes;
@@ -596,17 +610,6 @@
           <RSZAlertCard threads={line2RSZ} />
         {/if}
       {/if}
-
-      <!-- Regular Alerts -->
-      {#each regularAlerts as thread, i (thread.thread_id)}
-        {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
-        <div
-          class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-          style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
-        >
-          <AlertCard {thread} />
-        </div>
-      {/each}
     </div>
   {/if}
 </div>
