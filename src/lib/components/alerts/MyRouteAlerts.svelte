@@ -26,9 +26,10 @@
     isLoading,
     refreshAlerts,
     recentlyAddedThreadIds,
+    maintenanceItems,
   } from "$lib/stores/alerts";
   import { savedRoutes } from "$lib/stores/savedRoutes";
-  import type { ThreadWithAlerts } from "$lib/types/database";
+  import type { ThreadWithAlerts, PlannedMaintenance } from "$lib/types/database";
 
   // Route filter state - which specific route to show (null = all saved routes)
   let selectedRouteFilter = $state<string | null>(null);
@@ -206,6 +207,204 @@
   let rszAlerts = $derived(myAlerts.filter(isRSZAlert));
   let regularAlerts = $derived(myAlerts.filter((t) => !isRSZAlert(t)));
 
+  // ====== Scheduled Maintenance Helpers ======
+
+  // Parse date string as local time
+  function parseLocalDate(dateStr: string): Date {
+    if (!dateStr) return new Date();
+    if (dateStr.length === 10 && dateStr.includes("-")) {
+      return new Date(dateStr + "T00:00:00");
+    }
+    if (!dateStr.includes("Z") && !dateStr.includes("+")) {
+      return new Date(dateStr);
+    }
+    return new Date(dateStr);
+  }
+
+  // Parse time string "HH:MM" to { hours, minutes }
+  function parseTime(
+    timeStr: string | null
+  ): { hours: number; minutes: number } | null {
+    if (!timeStr) return null;
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return null;
+    return { hours: parseInt(match[1], 10), minutes: parseInt(match[2], 10) };
+  }
+
+  // Check if scheduled maintenance is happening right now
+  function isMaintenanceHappeningNow(item: PlannedMaintenance): boolean {
+    const now = new Date();
+    const startDate = parseLocalDate(item.start_date);
+    const endDate = parseLocalDate(item.end_date);
+
+    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startDateOnly = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      startDate.getDate()
+    );
+    const endDateOnly = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate()
+    );
+
+    const startTime = parseTime(item.start_time);
+    let endTime = parseTime(item.end_time);
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+    // For nightly closures (start >= 10 PM) with no end time, assume 6 AM
+    const isNightlyClosure = startTime && startTime.hours >= 22;
+    if (isNightlyClosure && !endTime) {
+      endTime = { hours: 6, minutes: 0 };
+    }
+
+    // Extend end date for overnight closures
+    const endDateExtended = new Date(endDateOnly);
+    if (isNightlyClosure && endTime && endTime.hours < 12) {
+      endDateExtended.setDate(endDateExtended.getDate() + 1);
+    }
+
+    if (nowDate < startDateOnly || nowDate > endDateExtended) return false;
+
+    // Morning after last closure
+    if (
+      nowDate.getTime() === endDateExtended.getTime() &&
+      nowDate > endDateOnly
+    ) {
+      if (endTime) {
+        const endMinutes = endTime.hours * 60 + endTime.minutes;
+        return nowMinutes <= endMinutes;
+      }
+      return false;
+    }
+
+    if (nowDate.getTime() === startDateOnly.getTime() && startTime) {
+      const startMinutes = startTime.hours * 60 + startTime.minutes;
+      if (nowMinutes < startMinutes) return false;
+    }
+
+    // Overnight closure check
+    if (startTime && endTime) {
+      const startMinutes = startTime.hours * 60 + startTime.minutes;
+      const endMinutes = endTime.hours * 60 + endTime.minutes;
+
+      if (startMinutes > endMinutes) {
+        // Overnight: active if after start OR before end
+        return nowMinutes >= startMinutes || nowMinutes <= endMinutes;
+      } else {
+        return nowMinutes >= startMinutes && nowMinutes <= endMinutes;
+      }
+    }
+
+    return true;
+  }
+
+  // Format time for display
+  function formatTimeDisplay(timeStr: string | null): string {
+    if (!timeStr) return "";
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  }
+
+  // Format date for display
+  function formatDateDisplay(dateStr: string): string {
+    if (!dateStr) return "";
+    const date = new Date(dateStr + "T00:00:00");
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+
+  // Convert maintenance to thread-like format for AlertCard
+  function maintenanceToThread(
+    maintenance: PlannedMaintenance
+  ): ThreadWithAlerts {
+    const startTime = maintenance.start_time
+      ? formatTimeDisplay(maintenance.start_time)
+      : "";
+    const endDate = formatDateDisplay(maintenance.end_date);
+
+    const headerText =
+      maintenance.affected_stations || "Scheduled closure in effect";
+
+    let descriptionParts: string[] = [];
+    if (startTime) descriptionParts.push(`Nightly from ${startTime}`);
+    if (endDate) descriptionParts.push(`Until ${endDate}`);
+    const descriptionText =
+      descriptionParts.length > 0 ? descriptionParts.join(" • ") : null;
+
+    return {
+      thread_id: `maintenance-${maintenance.maintenance_id}`,
+      title: `${maintenance.routes.join(", ")} - Scheduled Closure`,
+      categories: ["SCHEDULED_CLOSURE", "SUBWAY"],
+      affected_routes: maintenance.routes,
+      is_resolved: false,
+      resolved_at: null,
+      created_at: maintenance.start_date,
+      updated_at: maintenance.start_date,
+      alerts: [],
+      latestAlert: {
+        alert_id: `maintenance-alert-${maintenance.maintenance_id}`,
+        thread_id: `maintenance-${maintenance.maintenance_id}`,
+        header_text: headerText,
+        description_text: descriptionText,
+        effect: "SCHEDULED_CLOSURE",
+        categories: ["SCHEDULED_CLOSURE", "SUBWAY"],
+        affected_routes: maintenance.routes,
+        is_latest: true,
+        created_at: maintenance.start_date,
+        url: maintenance.url,
+      },
+    } as unknown as ThreadWithAlerts;
+  }
+
+  // Get active maintenance matching saved routes
+  let activeMaintenanceForRoutes = $derived.by<ThreadWithAlerts[]>(() => {
+    if (routeIds.length === 0) return [];
+
+    // Get active maintenance items
+    const activeMaintenance = $maintenanceItems.filter(
+      isMaintenanceHappeningNow
+    );
+
+    // Filter to those matching saved routes
+    const matchingMaintenance = activeMaintenance.filter((item) => {
+      // Check if any maintenance route matches any saved route
+      return item.routes.some((maintRoute) =>
+        routeIds.some((savedRoute) => {
+          const maintLower = maintRoute.toLowerCase();
+          const savedLower = savedRoute.toLowerCase();
+          // Match "Line 1" with "1", "Line 1", etc.
+          return (
+            maintLower === savedLower ||
+            maintLower === `line ${savedLower}` ||
+            maintLower.replace("line ", "") === savedLower
+          );
+        })
+      );
+    });
+
+    // Apply route filter if selected
+    if (selectedRouteFilter) {
+      const filterLower = selectedRouteFilter.toLowerCase();
+      return matchingMaintenance
+        .filter((item) =>
+          item.routes.some((r) => {
+            const rLower = r.toLowerCase();
+            return (
+              rLower === filterLower ||
+              rLower === `line ${filterLower}` ||
+              rLower.replace("line ", "") === filterLower
+            );
+          })
+        )
+        .map(maintenanceToThread);
+    }
+
+    return matchingMaintenance.map(maintenanceToThread);
+  });
+
   function handleAddRoutes() {
     goto("/routes");
   }
@@ -326,7 +525,7 @@
         {$_("myRoutes.useSearchBar")}
       </p>
     </button>
-  {:else if myAlerts.length === 0}
+  {:else if myAlerts.length === 0 && activeMaintenanceForRoutes.length === 0}
     <!-- Empty State: Routes Saved but No Active Alerts -->
     <div class="empty-state success animate-fade-in">
       <div class="empty-state-icon success">
@@ -356,6 +555,16 @@
       role="feed"
       aria-label="Alerts for your saved routes"
     >
+      <!-- Active Scheduled Maintenance (closures happening now) -->
+      {#each activeMaintenanceForRoutes as thread, i (thread.thread_id)}
+        <div
+          class="animate-fade-in-up"
+          style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
+        >
+          <AlertCard {thread} />
+        </div>
+      {/each}
+
       <!-- RSZ Alerts grouped by line -->
       {#if rszAlerts.length > 0}
         {@const line1RSZ = rszAlerts.filter((t) => {
