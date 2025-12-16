@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const FUNCTION_VERSION = 48;
+const FUNCTION_VERSION = 49;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -248,7 +248,10 @@ serve(async (req) => {
     const bskyRes = await fetch(`${BLUESKY_API}?actor=ttcalerts.bsky.social&limit=50`, { headers: { 'Accept': 'application/json' } });
     if (!bskyRes.ok) throw new Error(`Bluesky API error: ${bskyRes.status}`);
     const bskyData = await bskyRes.json();
-    const posts = bskyData.feed || [];
+    // Sort posts by createdAt ascending (oldest first) so DELAY creates thread before SERVICE_RESUMED
+    const posts = (bskyData.feed || []).sort((a: any, b: any) => 
+      new Date(a.post?.record?.createdAt || 0).getTime() - new Date(b.post?.record?.createdAt || 0).getTime()
+    );
     
     let newAlerts = 0, updatedThreads = 0, skippedRszAlerts = 0;
     const { data: existingAlerts } = await supabase.from('alert_cache').select('alert_id, thread_id').gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
