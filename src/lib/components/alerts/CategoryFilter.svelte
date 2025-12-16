@@ -136,8 +136,10 @@
   }
 
   /* Category-specific active colors */
+  /* WCAG AA requires 4.5:1 contrast ratio for text */
+  
   .category-tab.category-major.active {
-    color: hsl(0 72% 51%);
+    color: hsl(0 72% 45%); /* Darker red for light mode contrast */
   }
 
   /* Dark mode: Brighter red for better contrast on dark backgrounds */
@@ -146,7 +148,7 @@
   }
 
   .category-tab.category-minor.active {
-    color: hsl(38 92% 50%);
+    color: hsl(38 85% 35%); /* Much darker amber for WCAG AA on white bg (~6:1) */
   }
 
   /* Dark mode: Brighter amber for better contrast */
@@ -155,10 +157,10 @@
   }
 
   .category-tab.category-accessibility.active {
-    color: hsl(217 91% 60%);
+    color: hsl(217 85% 42%); /* Darker blue for WCAG AA on white bg (~5:1) */
   }
 
-  /* Dark mode: Slightly brighter blue for consistency */
+  /* Dark mode: Brighter blue for better contrast */
   :global(.dark) .category-tab.category-accessibility.active {
     color: hsl(217 95% 70%);
   }
@@ -175,7 +177,7 @@
   }
 
   .category-tab.category-major.active::after {
-    background: hsl(0 72% 51%);
+    background: hsl(0 72% 45%);
   }
 
   :global(.dark) .category-tab.category-major.active::after {
@@ -183,7 +185,7 @@
   }
 
   .category-tab.category-minor.active::after {
-    background: hsl(38 92% 50%);
+    background: hsl(38 85% 35%);
   }
 
   :global(.dark) .category-tab.category-minor.active::after {
@@ -191,7 +193,7 @@
   }
 
   .category-tab.category-accessibility.active::after {
-    background: hsl(217 91% 60%);
+    background: hsl(217 85% 42%);
   }
 
   :global(.dark) .category-tab.category-accessibility.active::after {
@@ -229,8 +231,8 @@
   }
 
   .category-tab.category-major.active .category-count {
-    background-color: hsl(0 72% 51% / 0.15);
-    color: hsl(0 72% 51%);
+    background-color: hsl(0 72% 45% / 0.15);
+    color: hsl(0 72% 45%);
   }
 
   :global(.dark) .category-tab.category-major.active .category-count {
@@ -239,8 +241,8 @@
   }
 
   .category-tab.category-minor.active .category-count {
-    background-color: hsl(38 92% 50% / 0.15);
-    color: hsl(38 60% 40%);
+    background-color: hsl(38 85% 35% / 0.15);
+    color: hsl(38 85% 35%);
   }
 
   :global(.dark) .category-tab.category-minor.active .category-count {
@@ -249,8 +251,8 @@
   }
 
   .category-tab.category-accessibility.active .category-count {
-    background-color: hsl(217 91% 60% / 0.15);
-    color: hsl(217 91% 60%);
+    background-color: hsl(217 85% 42% / 0.15);
+    color: hsl(217 85% 42%);
   }
 
   :global(.dark) .category-tab.category-accessibility.active .category-count {
