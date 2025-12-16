@@ -611,41 +611,45 @@
   let filteredActiveAlerts = $derived(() => {
     const active = activeAlerts();
     const category = $selectedSeverityCategory;
-    
+
     // If ALL is selected, return all active alerts
-    if (category === 'ALL') {
+    if (category === "ALL") {
       return active;
     }
-    
+
     // Filter by severity category
     return active.filter((thread) => {
       const categories = Array.isArray(thread.latestAlert?.categories)
         ? thread.latestAlert.categories
         : [];
-      const effect = thread.latestAlert?.effect || '';
-      const headerText = thread.latestAlert?.header_text || '';
-      
-      const threadSeverity = getSeverityCategory(categories, effect, headerText);
+      const effect = thread.latestAlert?.effect || "";
+      const headerText = thread.latestAlert?.header_text || "";
+
+      const threadSeverity = getSeverityCategory(
+        categories,
+        effect,
+        headerText
+      );
       return threadSeverity === category;
     });
   });
-  
+
   // Derived: Count of alerts per severity category
   let severityCounts = $derived(() => {
     const active = activeAlerts();
     const counts = { MAJOR: 0, MINOR: 0, ACCESSIBILITY: 0, ALL: active.length };
-    
+
     for (const thread of active) {
       const categories = Array.isArray(thread.latestAlert?.categories)
         ? thread.latestAlert.categories
         : [];
-      const effect = thread.latestAlert?.effect || '';
-      const headerText = thread.latestAlert?.header_text || '';
-      
+      const effect = thread.latestAlert?.effect || "";
+      const headerText = thread.latestAlert?.header_text || "";
+
       const severity = getSeverityCategory(categories, effect, headerText);
       counts[severity]++;
     }
-    
+
     return counts;
   });
 
@@ -968,7 +972,7 @@
     }
     goto(url.toString(), { replaceState: true, noScroll: true });
   }
-  
+
   function handleSeverityCategorySelect(category: SeverityCategory) {
     selectedSeverityCategory.set(category);
   }
@@ -982,9 +986,7 @@
   />
 </svelte:head>
 
-<Header
-  onOpenDialog={handleOpenDialog}
-/>
+<Header onOpenDialog={handleOpenDialog} />
 
 <main class="content-area">
   <!-- Active/Resolved/Scheduled Tabs -->
@@ -1106,8 +1108,8 @@
     </div>
 
     <!-- Severity Category Filter -->
-    <CategoryFilter 
-      selected={$selectedSeverityCategory} 
+    <CategoryFilter
+      selected={$selectedSeverityCategory}
       counts={severityCounts()}
       onSelect={handleSeverityCategorySelect}
     />
@@ -1148,15 +1150,15 @@
           </Button>
         </div>
       {:else if combinedActiveAlerts().length === 0}
-        {#if $selectedSeverityCategory !== 'ALL' && activeAlerts().length > 0}
+        {#if $selectedSeverityCategory !== "ALL" && activeAlerts().length > 0}
           <!-- Category filter is active but no alerts in this category -->
           <div class="empty-state animate-fade-in">
             <div class="empty-state-icon">
-              {#if $selectedSeverityCategory === 'MAJOR'}
+              {#if $selectedSeverityCategory === "MAJOR"}
                 <AlertTriangle class="h-8 w-8" />
-              {:else if $selectedSeverityCategory === 'MINOR'}
+              {:else if $selectedSeverityCategory === "MINOR"}
                 <Clock class="h-8 w-8" />
-              {:else if $selectedSeverityCategory === 'ACCESSIBILITY'}
+              {:else if $selectedSeverityCategory === "ACCESSIBILITY"}
                 <Accessibility class="h-8 w-8" />
               {:else}
                 <SearchX class="h-8 w-8" />
@@ -1166,21 +1168,14 @@
               No {$selectedSeverityCategory.toLowerCase()} alerts
             </h3>
             <p class="empty-state-description">
-              {#if $selectedSeverityCategory === 'MAJOR'}
+              {#if $selectedSeverityCategory === "MAJOR"}
                 No major disruptions at this time.
-              {:else if $selectedSeverityCategory === 'MINOR'}
+              {:else if $selectedSeverityCategory === "MINOR"}
                 No minor delays at this time.
-              {:else if $selectedSeverityCategory === 'ACCESSIBILITY'}
+              {:else if $selectedSeverityCategory === "ACCESSIBILITY"}
                 No elevator or escalator outages at this time.
               {/if}
             </p>
-            <Button 
-              variant="outline"
-              onclick={() => selectedSeverityCategory.set('ALL')}
-              class="mt-4"
-            >
-              View all alerts ({activeAlerts().length})
-            </Button>
           </div>
         {:else}
           <!-- No active alerts at all -->
@@ -1189,7 +1184,9 @@
               <CheckCircle class="h-8 w-8" />
             </div>
             <h3 class="empty-state-title">{$_("emptyStates.allClear")}</h3>
-            <p class="empty-state-description">{$_("emptyStates.noActiveDisruptions")}</p>
+            <p class="empty-state-description">
+              {$_("emptyStates.noActiveDisruptions")}
+            </p>
           </div>
         {/if}
       {:else}
@@ -1806,7 +1803,7 @@
     font-weight: 600;
     color: hsl(var(--foreground));
   }
-  
+
   /* Empty State Styles - Consistent with MyRouteAlerts and MyStops */
   .empty-state {
     display: flex;
@@ -1820,7 +1817,7 @@
     border-radius: var(--radius);
     border: 1px dashed hsl(var(--border));
   }
-  
+
   .empty-state.success {
     border-style: solid;
     border-color: hsl(142 76% 36% / 0.2);
