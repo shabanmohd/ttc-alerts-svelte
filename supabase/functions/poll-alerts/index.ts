@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const FUNCTION_VERSION = 47;
+const FUNCTION_VERSION = 48;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -105,20 +105,23 @@ function extractLocationKeywords(text: string): Set<string> {
 }
 
 // Strict RSZ (Reduced Speed Zone) detection for BlueSky posts
-// TTC API is authoritative for RSZ alerts - skip redundant BlueSky posts
+// TTC API is authoritative for RSZ alerts - ALL BlueSky RSZ posts are filtered out
 function isSpeedReductionPost(text: string): boolean {
   const lower = text.toLowerCase();
-  // Strict keyword matching - must contain exact phrases
-  const strictPatterns = [
+  // Detect any mention of slow/reduced speed - we filter ALL of these from BlueSky
+  const patterns = [
+    'slower than usual',   // Main RSZ phrase from TTC
     'reduced speed',
     'slow zone',
     'speed restriction',
     'slower speeds',
     'operating at reduced speed',
     'trains running slower',
-    'slower service'
+    'slower service',
+    'move slower',         // "trains will move slower"
+    'running slower'
   ];
-  return strictPatterns.some(pattern => lower.includes(pattern));
+  return patterns.some(pattern => lower.includes(pattern));
 }
 
 function jaccardSimilarity(t1: string, t2: string): number {
@@ -150,6 +153,10 @@ serve(async (req) => {
     const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
     const now = new Date();
     let ttcApiResolvedCount = 0, ttcApiError: string | null = null, ttcApiAlerts: any[] = [];
+    let rszDeletedCount = 0;
+    
+    // Track active RSZ alerts from TTC API for cleanup
+    const activeRszAlertIds = new Set<string>();
     
     // Fetch TTC Live API
     try {
@@ -162,7 +169,16 @@ serve(async (req) => {
           for (const a of ttcData.routes) {
             if (a.route) { activeRoutes.add(a.route.toString()); if (/^[1-4]$/.test(a.route.toString())) activeRoutes.add(`Line ${a.route}`); }
             const isPlanned = a.alertType === 'Planned' && ['NO_SERVICE', 'REDUCED_SERVICE'].includes(a.effect);
-            if (!isPlanned && ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'SIGNIFICANT_DELAYS', 'ACCESSIBILITY_ISSUE'].includes(a.effect) && a.route && a.headerText) ttcApiAlerts.push(a);
+            if (!isPlanned && ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'SIGNIFICANT_DELAYS', 'ACCESSIBILITY_ISSUE'].includes(a.effect) && a.route && a.headerText) {
+              ttcApiAlerts.push(a);
+              // Track active RSZ alert IDs
+              if (a.effect === 'SIGNIFICANT_DELAYS' && a.stopStart && a.stopEnd) {
+                const primaryRoute = a.route?.toString().split(',')[0]?.trim() || '';
+                const dir = a.direction ? `-${a.direction.replace(/\s+/g, '')}` : '';
+                const rszId = `ttc-RSZ-${primaryRoute}-${a.stopStart}-${a.stopEnd}${dir}`.replace(/\s+/g, '-');
+                activeRszAlertIds.add(rszId);
+              }
+            }
           }
         }
         if (ttcData.siteWideCustom?.length) {
@@ -174,10 +190,35 @@ serve(async (req) => {
           for (const a of ttcData.accessibility) { if (a.effect === 'ACCESSIBILITY_ISSUE' && a.headerText) ttcApiAlerts.push(a); }
         }
         
-        // Auto-resolve threads not in TTC API
+        // DELETE stale RSZ alerts not in TTC API (instead of marking resolved)
+        // RSZ alerts should vanish when resolved, not appear in Resolved tab
+        const { data: existingRszAlerts } = await supabase.from('alert_cache').select('alert_id, thread_id').like('alert_id', 'ttc-RSZ-%');
+        if (existingRszAlerts) {
+          for (const rszAlert of existingRszAlerts) {
+            if (!activeRszAlertIds.has(rszAlert.alert_id)) {
+              // Delete the RSZ alert
+              await supabase.from('alert_cache').delete().eq('alert_id', rszAlert.alert_id);
+              rszDeletedCount++;
+              
+              // If thread has no more alerts, delete the thread too
+              if (rszAlert.thread_id) {
+                const { count } = await supabase.from('alert_cache').select('alert_id', { count: 'exact', head: true }).eq('thread_id', rszAlert.thread_id);
+                if (count === 0) {
+                  await supabase.from('incident_threads').delete().eq('thread_id', rszAlert.thread_id);
+                }
+              }
+            }
+          }
+        }
+        
+        // Auto-resolve NON-RSZ threads not in TTC API
         const { data: unresolvedThreads } = await supabase.from('incident_threads').select('thread_id, title, affected_routes, categories').eq('is_resolved', false);
         if (unresolvedThreads) {
           for (const thread of unresolvedThreads) {
+            // Skip RSZ threads - they are handled by deletion above
+            const isRszThread = (thread.title || '').toLowerCase().includes('slower than usual');
+            if (isRszThread) continue;
+            
             const threadRoutes = thread.affected_routes || [];
             if ((thread.categories || []).includes('ACCESSIBILITY')) {
               const stillActive = ttcData.accessibility?.some((acc: any) => threadRoutes.some((r: string) => (acc.headerText || '').toLowerCase().includes(r.toLowerCase()))) ?? false;
@@ -215,31 +256,6 @@ serve(async (req) => {
     const alertToThreadMap = new Map<string, string>();
     existingAlerts?.forEach(a => { if (a.thread_id) alertToThreadMap.set(a.alert_id, a.thread_id); });
 
-    // Query active TTC API RSZ threads for subway lines (Lines 1-4)
-    // TTC API is authoritative for RSZ alerts - we skip redundant BlueSky posts
-    const { data: activeRszThreads } = await supabase
-      .from('incident_threads')
-      .select('thread_id, affected_routes, alert_cache!inner(alert_id, raw_data)')
-      .eq('is_resolved', false)
-      .or('affected_routes.cs.["Line 1"],affected_routes.cs.["Line 2"],affected_routes.cs.["Line 3"],affected_routes.cs.["Line 4"]');
-    
-    const ttcApiRszRoutes = new Set<string>();
-    for (const thread of activeRszThreads || []) {
-      const alerts = thread.alert_cache || [];
-      const hasTtcApiRsz = alerts.some((a: any) => {
-        const rd = a.raw_data || {};
-        return rd.source === 'ttc-api' && (a.alert_id?.startsWith('ttc-RSZ-') || rd.stopStart);
-      });
-      if (hasTtcApiRsz) {
-        for (const route of thread.affected_routes || []) {
-          ttcApiRszRoutes.add(route);
-          // Also add base route number for matching
-          const lineMatch = route.match(/Line\s*(\d+)/i);
-          if (lineMatch) ttcApiRszRoutes.add(lineMatch[1]);
-        }
-      }
-    }
-
     for (const item of posts) {
       const post = item.post;
       if (!post?.record?.text) continue;
@@ -254,23 +270,11 @@ serve(async (req) => {
       const routes = extractRoutes(text);
       const replyInfo = extractReplyInfo(post.record);
       
-      // Skip redundant BlueSky RSZ posts if TTC API already covers the subway line
-      // TTC API provides more accurate RSZ data (exact stop locations, direction)
-      if (isSpeedReductionPost(text) && routes.length > 0) {
-        const subwayRoutes = routes.filter(r => /Line\s*[1-4]/i.test(r) || /^[1-4]$/.test(r));
-        if (subwayRoutes.length > 0) {
-          const hasActiveRsz = subwayRoutes.some(r => {
-            if (ttcApiRszRoutes.has(r)) return true;
-            const lineMatch = r.match(/Line\s*(\d+)/i);
-            if (lineMatch && ttcApiRszRoutes.has(`Line ${lineMatch[1]}`)) return true;
-            if (/^[1-4]$/.test(r) && ttcApiRszRoutes.has(`Line ${r}`)) return true;
-            return false;
-          });
-          if (hasActiveRsz) {
-            skippedRszAlerts++;
-            continue; // Skip this BlueSky post - TTC API is authoritative for RSZ
-          }
-        }
+      // ALWAYS skip BlueSky RSZ posts - TTC API is the sole authoritative source for RSZ
+      // TTC API provides accurate RSZ data (exact stops, direction) and auto-removes when resolved
+      if (isSpeedReductionPost(text)) {
+        skippedRszAlerts++;
+        continue; // Skip ALL BlueSky RSZ posts regardless of route
       }
       
       const alert = {
@@ -486,7 +490,7 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, newAlerts, updatedThreads, ttcApiResolvedCount, ttcApiNewAlerts, skippedRszAlerts, ttcApiError, version: FUNCTION_VERSION, timestamp: new Date().toISOString() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true, newAlerts, updatedThreads, ttcApiResolvedCount, ttcApiNewAlerts, skippedRszAlerts, rszDeletedCount, ttcApiError, version: FUNCTION_VERSION, timestamp: new Date().toISOString() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message, version: FUNCTION_VERSION }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
