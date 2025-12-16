@@ -361,8 +361,8 @@
     width: 4rem;
     height: 4rem;
     border-radius: 50%;
-    background-color: hsl(var(--primary) / 0.1);
-    color: hsl(var(--primary));
+    background-color: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
     margin-bottom: 1rem;
   }
 
