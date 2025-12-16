@@ -2169,11 +2169,12 @@ html.reduce-motion .eta-live-indicator svg {
   font-size: calc(0.9375rem * var(--text-scale, 1)) !important;
 }
 
-/* Toast description */
+/* Toast description - maintain high contrast */
 [data-sonner-toast] [data-description] {
   font-weight: 400 !important;
   font-size: calc(0.8125rem * var(--text-scale, 1)) !important;
-  opacity: 0.8;
+  opacity: 0.9;
+  color: inherit !important;
 }
 
 /* Success toast - dark green bg in both modes */

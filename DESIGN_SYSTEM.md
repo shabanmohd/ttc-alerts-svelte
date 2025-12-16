@@ -413,6 +413,46 @@ Three-tab severity filter (ALL tab removed). WCAG AA compliant colors.
 - Minor: `Clock`
 - Accessibility: `Accessibility` (wheelchair)
 
+### Toast Notifications (Sonner)
+
+Toast notifications use svelte-sonner with dark solid backgrounds for high contrast.
+
+**Configuration** (`src/lib/components/ui/sonner/sonner.svelte`):
+
+```svelte
+<Sonner
+  position="bottom-center"
+  duration={3000}
+  richColors={false}
+  closeButton={false}
+/>
+```
+
+**Color Scheme (WCAG AA Compliant - White text on dark backgrounds):**
+
+| Toast Type  | Light Mode Background | Dark Mode Background | Text Color |
+| ----------- | --------------------- | -------------------- | ---------- |
+| **Success** | `green-700`           | `green-800`          | White      |
+| **Info**    | `blue-700`            | `blue-800`           | White      |
+| **Warning** | `amber-600`           | `amber-700`          | White      |
+| **Error**   | `red-700`             | `red-800`            | White      |
+
+**Key Classes:**
+
+- Title: `text-foreground font-medium`
+- Description: `text-foreground/90 text-sm` (90% opacity for slight hierarchy)
+
+**Mobile Positioning:**
+Toasts appear above the mobile bottom nav:
+
+```css
+@media (max-width: 767px) {
+  [data-sonner-toaster] {
+    bottom: calc(64px + 16px + env(safe-area-inset-bottom)) !important;
+  }
+}
+```
+
 ### Direction Badges
 
 Direction badges indicate the travel direction of a stop (extracted from GTFS trip headsigns). Used in StopSearch dropdown and ETACard headers.
@@ -861,6 +901,22 @@ The Subway Status Cards display the current service status for each subway line 
 /* Card container */
 /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -889,6 +945,22 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
