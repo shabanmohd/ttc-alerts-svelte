@@ -1,14 +1,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 41 - TTC API accessibility alerts support
-// - Adds processing of TTC API accessibility array (elevator/escalator outages)
-// - Fixes comma-separated routes parsing for accessibility alerts
-// - Accessibility alerts are imported regardless of Bluesky coverage (different type)
+// VERSION 42 - Fix TTC API thread creation (missing thread_id UUID)
+// - v42: Generate UUID for thread_id when creating TTC API threads
+// - v41: Process TTC API accessibility array (elevator/escalator outages)
 // - v40: Refined filtering to include SIGNIFICANT_DELAYS even if planned
 // - v39: TTC Live API as secondary data source
 // - v38: Direction mismatch penalty
-const FUNCTION_VERSION = 41;
+const FUNCTION_VERSION = 42;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -1176,9 +1175,13 @@ serve(async (req) => {
           console.log(`TTC API: Alert ${ttcAlertId} joined existing thread ${threadId}`);
         } else {
           // Create new thread
-          const { data: newThread } = await supabase
+          // Generate UUID for thread_id (table has NOT NULL constraint with no default)
+          const newThreadId = crypto.randomUUID();
+          
+          const { data: newThread, error: threadError } = await supabase
             .from('incident_threads')
             .insert({
+              thread_id: newThreadId,
               title: headerText.substring(0, 200),
               categories: [category],
               affected_routes: routes,
@@ -1187,7 +1190,9 @@ serve(async (req) => {
             .select()
             .single();
           
-          if (newThread) {
+          if (threadError) {
+            console.error(`TTC API: Failed to create thread for ${ttcAlertId}:`, threadError);
+          } else if (newThread) {
             threadId = newThread.thread_id;
             
             // Link alert to new thread
