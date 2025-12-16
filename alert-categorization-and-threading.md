@@ -99,9 +99,10 @@ Bluesky API returns posts newest-first by default. This caused threading issues 
 
 ```typescript
 // Sort posts oldest-first so DELAY creates thread before SERVICE_RESUMED
-const posts = (bskyData.feed || []).sort((a: any, b: any) => 
-  new Date(a.post?.record?.createdAt || 0).getTime() - 
-  new Date(b.post?.record?.createdAt || 0).getTime()
+const posts = (bskyData.feed || []).sort(
+  (a: any, b: any) =>
+    new Date(a.post?.record?.createdAt || 0).getTime() -
+    new Date(b.post?.record?.createdAt || 0).getTime()
 );
 ```
 
@@ -307,11 +308,11 @@ Routes are extracted from alert text using regex patterns:
 function extractRoutes(text: string): string[] {
   const routes: string[] = [];
   const subwayLineNumbers = new Set<string>(); // Track subway line numbers (1-6) we've found
-  
+
   // Match subway lines: Line 1, Line 2, Line 4, Line 6
   const lineMatch = text.match(/Line\s*\d+/gi);
   if (lineMatch) {
-    lineMatch.forEach(m => {
+    lineMatch.forEach((m) => {
       routes.push(m);
       // Track the line number (e.g., "Line 6" -> "6")
       const num = m.match(/\d+/);
@@ -331,12 +332,16 @@ function extractRoutes(text: string): string[] {
   let m;
   while ((m = routeWithNameRegex.exec(text)) !== null) {
     if (subwayLineNumbers.has(m[1])) continue; // Skip "6 Finch" if "Line 6" exists
-    if (!routes.some(r => r.startsWith(m[1]))) routes.push(m[0]);
+    if (!routes.some((r) => r.startsWith(m[1]))) routes.push(m[0]);
   }
 
   // Match standalone route numbers at start of text
   const startMatch = text.match(/^(\d{1,3})\s+[A-Z]/);
-  if (startMatch && !subwayLineNumbers.has(startMatch[1]) && !routes.some(r => r.startsWith(startMatch[1]))) {
+  if (
+    startMatch &&
+    !subwayLineNumbers.has(startMatch[1]) &&
+    !routes.some((r) => r.startsWith(startMatch[1]))
+  ) {
     routes.push(startMatch[1]);
   }
 
@@ -357,10 +362,10 @@ function extractRoutes(text: string): string[] {
 
 When text contains "Line X" (subway lines 1-6), subsequent patterns like "X Name" are skipped to prevent duplicate badges:
 
-| Input Text | Before v50 | After v50 |
-|------------|------------|-----------|
-| "Line 6 Finch: Delay" | `["Line 6", "6 Finch"]` | `["Line 6"]` |
-| "Line 2: No service at Warden" | `["Line 2", "2 No"]` | `["Line 2"]` |
+| Input Text                     | Before v50              | After v50    |
+| ------------------------------ | ----------------------- | ------------ |
+| "Line 6 Finch: Delay"          | `["Line 6", "6 Finch"]` | `["Line 6"]` |
+| "Line 2: No service at Warden" | `["Line 2", "2 No"]`    | `["Line 2"]` |
 
 ---
 

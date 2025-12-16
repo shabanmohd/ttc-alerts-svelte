@@ -233,7 +233,7 @@
   function getDisplayRoutes(routes: string[]): string[] {
     // Group routes by their base number
     const routesByBase = new Map<string, string[]>();
-    
+
     // Subway line numbers (1-6) should be normalized to "Line X"
     const SUBWAY_LINE_NUMBERS = new Set(["1", "2", "3", "4", "5", "6"]);
 
@@ -252,7 +252,7 @@
       const match = route.match(/^(\d+)/);
       if (match) {
         const baseNum = match[1];
-        
+
         // If base number is a subway line (1-6), normalize to "Line X"
         if (SUBWAY_LINE_NUMBERS.has(baseNum)) {
           const normalizedLine = `Line ${baseNum}`;
@@ -262,7 +262,7 @@
           routesByBase.get(normalizedLine)!.push(route);
           continue;
         }
-        
+
         if (!routesByBase.has(baseNum)) {
           routesByBase.set(baseNum, []);
         }

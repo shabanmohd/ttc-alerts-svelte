@@ -125,7 +125,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                           |
 | `functions/auth-session/index.ts`       | ✅     | Validate existing session                                   |
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                  |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v50: subway route deduplication)  |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v50: subway route deduplication) |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                                 |
 | `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B**   |
 
@@ -448,9 +448,10 @@ For local development, use `localhost` and `http://localhost:5173`.
 **Solution (v49):** Sort Bluesky posts by `createdAt` ascending (oldest-first) before processing.
 
 ```typescript
-const posts = (bskyData.feed || []).sort((a: any, b: any) => 
-  new Date(a.post?.record?.createdAt || 0).getTime() - 
-  new Date(b.post?.record?.createdAt || 0).getTime()
+const posts = (bskyData.feed || []).sort(
+  (a: any, b: any) =>
+    new Date(a.post?.record?.createdAt || 0).getTime() -
+    new Date(b.post?.record?.createdAt || 0).getTime()
 );
 ```
 

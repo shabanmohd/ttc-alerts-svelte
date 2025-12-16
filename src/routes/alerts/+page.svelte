@@ -185,10 +185,6 @@
   let unsubscribeRealtime: (() => void) | null = null;
   let maintenancePollingInterval: ReturnType<typeof setInterval> | null = null;
 
-  // State for subway status card click-to-scroll highlighting
-  let highlightedLineId = $state<string | null>(null);
-  let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
-
   // State for accordion sections (expanded by default)
   let expandedSections = $state<Set<string>>(new Set());
 
@@ -621,16 +617,16 @@
     return allThreads()
       .filter((thread) => {
         if (!isResolved(thread)) return false;
-        
+
         // Exclude accessibility alerts from resolved tab
         const categories = Array.isArray(thread.latestAlert?.categories)
           ? thread.latestAlert.categories
           : [];
         const effect = thread.latestAlert?.effect || "";
         const headerText = thread.latestAlert?.header_text || "";
-        
+
         const severity = getSeverityCategory(categories, effect, headerText);
-        return severity !== 'ACCESSIBILITY';
+        return severity !== "ACCESSIBILITY";
       })
       .sort(
         (a, b) =>
@@ -991,48 +987,6 @@
     expandedSections = newExpanded;
   }
 
-  // Click handler for subway status cards - scroll to line section and highlight
-  function handleStatusCardClick(lineId: string) {
-    const lineAlerts = getAllAlertsForLine(lineId);
-    const activeMaint = getActiveMaintenanceForLine(lineId);
-
-    if (lineAlerts.length === 0 && !activeMaint) return; // No alerts to scroll to
-
-    // Clear any existing highlight timeout
-    if (highlightTimeout) {
-      clearTimeout(highlightTimeout);
-    }
-
-    // Set highlighted line (immediately switches if different line)
-    highlightedLineId = lineId;
-
-    // Expand the section if it's collapsed
-    if (!expandedSections.has(lineId)) {
-      expandedSections = new Set([...expandedSections, lineId]);
-    }
-
-    // Scroll to the line section with offset for sticky header
-    const sectionElement = document.getElementById(
-      `subway-section-${lineId.replace(" ", "-").toLowerCase()}`
-    );
-    if (sectionElement) {
-      const headerHeight = 56; // 3.5rem = 56px (header height)
-      const elementPosition =
-        sectionElement.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - headerHeight - 16; // Extra 16px padding
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
-    }
-
-    // Clear highlight after 2.5 seconds
-    highlightTimeout = setTimeout(() => {
-      highlightedLineId = null;
-    }, 2500);
-  }
-
   function handleOpenDialog(dialog: string) {
     activeDialog = dialog;
   }
@@ -1120,23 +1074,17 @@
       aria-label="Subway line status"
     >
       {#each subwayStatuses() as line (line.id)}
-        <button
-          type="button"
+        <div
           class="subway-status-card"
           class:status-ok={line.status === "ok"}
           class:status-delay={line.status === "delay"}
           class:status-disruption={line.status === "disruption"}
           class:status-scheduled={line.status === "scheduled"}
-          class:clickable={line.status !== "ok"}
           style="--line-color: {line.color}"
-          onclick={() => handleStatusCardClick(line.id)}
-          disabled={line.status === "ok"}
+          role="status"
           aria-label="{line.name}: {line.status === 'ok'
             ? $_('status.normalService')
-            : `${line.alertCount} issue${line.alertCount > 1 ? 's' : ''}: ${line.uniqueTypes.map((t) => getStatusTypeName(t)).join(', ')}`}. {line.status !==
-          'ok'
-            ? 'Click to view alerts.'
-            : ''}"
+            : `${line.alertCount} issue${line.alertCount > 1 ? 's' : ''}: ${line.uniqueTypes.map((t) => getStatusTypeName(t)).join(', ')}`}"
         >
           <div class="subway-status-header">
             <span
@@ -1181,7 +1129,7 @@
               </div>
             {/if}
           </div>
-        </button>
+        </div>
       {/each}
     </div>
 
@@ -1274,12 +1222,10 @@
             {@const lineInfo = getLineInfo(lineId)}
             {@const sectionId = `subway-section-${lineId.replace(" ", "-").toLowerCase()}`}
             {@const isExpanded = expandedSections.has(lineId)}
-            {@const isHighlighted = highlightedLineId === lineId}
 
             <!-- Accordion section for subway line -->
             <div
               class="accordion-card"
-              class:highlighted={isHighlighted}
               id={sectionId}
               style="--line-color: {lineInfo?.color || '#666'}"
             >
@@ -1558,37 +1504,7 @@
     border-radius: var(--radius);
     background-color: hsl(var(--card));
     border: 1px solid hsl(var(--border));
-    transition: all 0.15s ease;
     text-align: left;
-    cursor: default;
-  }
-
-  /* Clickable state for cards with alerts */
-  .subway-status-card.clickable {
-    cursor: pointer;
-  }
-
-  .subway-status-card.clickable:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px hsl(var(--foreground) / 0.1);
-  }
-
-  .subway-status-card.clickable:active {
-    transform: translateY(0);
-  }
-
-  .subway-status-card:focus-visible {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
-  }
-
-  .subway-status-card:disabled {
-    cursor: default;
-  }
-
-  .subway-status-card:disabled:hover {
-    transform: none;
-    box-shadow: none;
   }
 
   .subway-status-card.status-ok {
@@ -1735,87 +1651,6 @@
     border: 1px solid hsl(var(--border));
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: box-shadow 0.2s;
-  }
-
-  .accordion-card.highlighted {
-    animation: accordionPulse 2s ease-in-out;
-  }
-
-  @keyframes accordionPulse {
-    0% {
-      background-color: hsl(var(--card));
-    }
-    15% {
-      background-color: color-mix(
-        in srgb,
-        var(--line-color) 15%,
-        hsl(var(--card))
-      );
-    }
-    30% {
-      background-color: hsl(var(--card));
-    }
-    45% {
-      background-color: color-mix(
-        in srgb,
-        var(--line-color) 15%,
-        hsl(var(--card))
-      );
-    }
-    60% {
-      background-color: hsl(var(--card));
-    }
-    75% {
-      background-color: color-mix(
-        in srgb,
-        var(--line-color) 10%,
-        hsl(var(--card))
-      );
-    }
-    100% {
-      background-color: hsl(var(--card));
-    }
-  }
-
-  /* Dark mode adjustment for pulse visibility */
-  :global(.dark) .accordion-card.highlighted {
-    animation: accordionPulseDark 2s ease-in-out;
-  }
-
-  @keyframes accordionPulseDark {
-    0% {
-      background-color: hsl(var(--card));
-    }
-    15% {
-      background-color: color-mix(
-        in srgb,
-        var(--line-color) 25%,
-        hsl(var(--card))
-      );
-    }
-    30% {
-      background-color: hsl(var(--card));
-    }
-    45% {
-      background-color: color-mix(
-        in srgb,
-        var(--line-color) 25%,
-        hsl(var(--card))
-      );
-    }
-    60% {
-      background-color: hsl(var(--card));
-    }
-    75% {
-      background-color: color-mix(
-        in srgb,
-        var(--line-color) 18%,
-        hsl(var(--card))
-      );
-    }
-    100% {
-      background-color: hsl(var(--card));
-    }
   }
 
   .accordion-header {
