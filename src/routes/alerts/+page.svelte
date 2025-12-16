@@ -379,7 +379,7 @@
     let endTime = parseTime(item.end_time);
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-    // For nightly closures with only start time (late night, e.g., 10 PM+), 
+    // For nightly closures with only start time (late night, e.g., 10 PM+),
     // assume service resumes at 6 AM (TTC standard)
     const isNightlyClosure = startTime && startTime.hours >= 22;
     if (isNightlyClosure && !endTime) {
@@ -398,7 +398,10 @@
     if (nowDate < startDateOnly || nowDate > endDateExtended) return false;
 
     // Special case: we're on the day AFTER the end date (morning after last closure)
-    if (nowDate.getTime() === endDateExtended.getTime() && nowDate > endDateOnly) {
+    if (
+      nowDate.getTime() === endDateExtended.getTime() &&
+      nowDate > endDateOnly
+    ) {
       // Only active if we're before the end time (e.g., before 6 AM)
       if (endTime) {
         const endMinutes = endTime.hours * 60 + endTime.minutes;
@@ -649,10 +652,23 @@
     });
   });
 
-  // Derived: Count of alerts per severity category
+  // Derived: Currently active scheduled maintenance (happening right now)
+  // Moved up so severityCounts can include it
+  let activeMaintenanceNow = $derived(() => {
+    const allMaintenance = [...$maintenanceItems, ...demoMaintenance];
+    return allMaintenance.filter((item) => isMaintenanceHappeningNow(item));
+  });
+
+  // Derived: Count of alerts per severity category (includes active maintenance)
   let severityCounts = $derived(() => {
     const active = activeAlerts();
-    const counts = { MAJOR: 0, MINOR: 0, ACCESSIBILITY: 0, ALL: active.length };
+    const maintenanceCount = activeMaintenanceNow().length;
+    const counts = {
+      MAJOR: maintenanceCount, // Start with maintenance count
+      MINOR: 0,
+      ACCESSIBILITY: 0,
+      ALL: active.length + maintenanceCount,
+    };
 
     for (const thread of active) {
       const categories = Array.isArray(thread.latestAlert?.categories)
@@ -698,12 +714,6 @@
   let nonRSZAlerts = $derived(() => {
     if ($selectedSeverityCategory !== "MINOR") return filteredActiveAlerts();
     return filteredActiveAlerts().filter((t) => !isRSZAlert(t));
-  });
-
-  // Derived: Currently active scheduled maintenance (happening right now)
-  let activeMaintenanceNow = $derived(() => {
-    const allMaintenance = [...$maintenanceItems, ...demoMaintenance];
-    return allMaintenance.filter((item) => isMaintenanceHappeningNow(item));
   });
 
   // Derived: Count of unique scheduled closures (only real maintenance items, not demo)
@@ -816,9 +826,10 @@
       $selectedSeverityCategory === "MINOR"
         ? nonRSZAlerts()
         : filteredActiveAlerts();
-    
+
     // Only include maintenance in MAJOR tab (scheduled closures are MAJOR)
-    const maintenance = $selectedSeverityCategory === "MAJOR" ? activeMaintenanceThreads() : [];
+    const maintenance =
+      $selectedSeverityCategory === "MAJOR" ? activeMaintenanceThreads() : [];
     const combined = [...alerts, ...maintenance];
 
     // Separate subway and non-subway alerts
