@@ -94,7 +94,7 @@ This document describes the alert categorization and threading system designed t
 
 - **Endpoint:** `https://alerts.ttc.ca/api/alerts/live-alerts`
 - **Purpose:** Fill gaps when @ttcalerts hasn't posted yet
-- **Filtering:** 
+- **Filtering:**
   - ✅ Include: `alertType !== "Planned"` (real-time incidents only)
   - ✅ Include: Effects `NO_SERVICE`, `REDUCED_SERVICE`, `DETOUR`, `SIGNIFICANT_DELAYS`, `ACCESSIBILITY_ISSUE`
   - ❌ Exclude: `alertType === "Planned"` (scheduled closures, maintenance)
@@ -177,7 +177,13 @@ const ALERT_CATEGORIES = {
     priority: 5,
   },
   ACCESSIBILITY: {
-    keywords: ["elevator", "escalator", "accessible", "wheelchair", "out of service"],
+    keywords: [
+      "elevator",
+      "escalator",
+      "accessible",
+      "wheelchair",
+      "out of service",
+    ],
     priority: 6,
   },
 };
@@ -814,70 +820,82 @@ The frontend provides two levels of filtering for alerts:
 
 Alerts are categorized into three severity levels based on their effect and type:
 
-| Category        | TTC API Effects                                   | Description                           |
-| --------------- | ------------------------------------------------- | ------------------------------------- |
-| **MAJOR**       | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE | Closures, detours, shuttles, no service |
-| **MINOR**       | SIGNIFICANT_DELAYS, DELAY                         | Delays, reduced speed zones           |
-| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)       | Elevator and escalator outages        |
+| Category          | TTC API Effects                                       | Description                             |
+| ----------------- | ----------------------------------------------------- | --------------------------------------- |
+| **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE | Closures, detours, shuttles, no service |
+| **MINOR**         | SIGNIFICANT_DELAYS, DELAY                             | Delays, reduced speed zones             |
+| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)              | Elevator and escalator outages          |
 
 **Categorization Logic (`getSeverityCategory()` in alerts.ts):**
 
 ```typescript
 export function getSeverityCategory(
-  categories: string[], 
-  effect?: string, 
+  categories: string[],
+  effect?: string,
   headerText?: string
 ): SeverityCategory {
-  const upperCategories = categories.map(c => c.toUpperCase());
-  const upperEffect = (effect || '').toUpperCase();
-  const lowerHeader = (headerText || '').toLowerCase();
-  
+  const upperCategories = categories.map((c) => c.toUpperCase());
+  const upperEffect = (effect || "").toUpperCase();
+  const lowerHeader = (headerText || "").toLowerCase();
+
   // Check for accessibility alerts first (elevator/escalator)
   if (
-    upperCategories.includes('ACCESSIBILITY_ISSUE') ||
-    upperEffect.includes('ACCESSIBILITY') ||
-    lowerHeader.includes('elevator') ||
-    lowerHeader.includes('escalator')
+    upperCategories.includes("ACCESSIBILITY_ISSUE") ||
+    upperEffect.includes("ACCESSIBILITY") ||
+    lowerHeader.includes("elevator") ||
+    lowerHeader.includes("escalator")
   ) {
-    return 'ACCESSIBILITY';
+    return "ACCESSIBILITY";
   }
-  
+
   // Check for major disruptions
-  const majorEffects = ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'MODIFIED_SERVICE'];
-  const majorCategories = ['SERVICE_DISRUPTION', 'DISRUPTION', 'CLOSURE', 'DETOUR', 'SHUTTLE'];
-  
+  const majorEffects = [
+    "NO_SERVICE",
+    "REDUCED_SERVICE",
+    "DETOUR",
+    "MODIFIED_SERVICE",
+  ];
+  const majorCategories = [
+    "SERVICE_DISRUPTION",
+    "DISRUPTION",
+    "CLOSURE",
+    "DETOUR",
+    "SHUTTLE",
+  ];
+
   if (
-    majorEffects.some(e => upperEffect.includes(e)) ||
-    majorCategories.some(c => upperCategories.includes(c)) ||
-    lowerHeader.includes('closed') ||
-    lowerHeader.includes('shuttle') ||
-    lowerHeader.includes('no service')
+    majorEffects.some((e) => upperEffect.includes(e)) ||
+    majorCategories.some((c) => upperCategories.includes(c)) ||
+    lowerHeader.includes("closed") ||
+    lowerHeader.includes("shuttle") ||
+    lowerHeader.includes("no service")
   ) {
-    return 'MAJOR';
+    return "MAJOR";
   }
-  
+
   // Check for minor delays
-  const minorEffects = ['SIGNIFICANT_DELAYS', 'DELAY', 'SLOW'];
-  const minorCategories = ['DELAY', 'SLOW_ZONE'];
-  
+  const minorEffects = ["SIGNIFICANT_DELAYS", "DELAY", "SLOW"];
+  const minorCategories = ["DELAY", "SLOW_ZONE"];
+
   if (
-    minorEffects.some(e => upperEffect.includes(e)) ||
-    minorCategories.some(c => upperCategories.includes(c)) ||
-    lowerHeader.includes('delay') ||
-    lowerHeader.includes('slow')
+    minorEffects.some((e) => upperEffect.includes(e)) ||
+    minorCategories.some((c) => upperCategories.includes(c)) ||
+    lowerHeader.includes("delay") ||
+    lowerHeader.includes("slow")
   ) {
-    return 'MINOR';
+    return "MINOR";
   }
-  
-  return 'MAJOR'; // Default to MAJOR for unknown
+
+  return "MAJOR"; // Default to MAJOR for unknown
 }
 ```
 
 **Default Selection:** MAJOR is selected by default when loading the alerts page.
 
 **Icons:**
+
 - Major: ⚠️ AlertTriangle (Lucide)
-- Minor: 🕐 Clock (Lucide)  
+- Minor: 🕐 Clock (Lucide)
 - Accessibility: ♿ Accessibility (Lucide) - **NOT emoji**
 - All: 📋 List (Lucide)
 
@@ -1024,7 +1042,7 @@ CREATE TABLE planned_maintenance (
 
 **Trigger:** Cron schedule (every 30 seconds)  
 **Purpose:** Fetch, categorize, thread alerts from Bluesky + TTC Live API secondary source + cross-check resolution
-**Version:** v39 (December 16, 2025)
+**Version:** v43 (January 2025)
 
 **Flow:**
 
@@ -1039,6 +1057,7 @@ CREATE TABLE planned_maintenance (
    - Falls back gracefully if TTC API is unavailable
 
 2. **Bluesky Processing (Primary Source)**
+
    - Fetch latest posts from @ttcalerts.bsky.social
    - For each post:
      - Extract text and routes (including letter suffix variants)
@@ -1049,6 +1068,7 @@ CREATE TABLE planned_maintenance (
      - **Track routes covered** by Bluesky for deduplication (v39)
 
 3. **TTC Live API Processing (Secondary Source, v39)**
+
    - Process saved non-planned TTC alerts
    - For each TTC alert:
      - Skip if route already has active Bluesky thread (deduplication)
@@ -1060,25 +1080,93 @@ CREATE TABLE planned_maintenance (
 
 **TTC Live API Dual-Use (v39):**
 
-| Use Case           | Description                                         |
-| ------------------ | --------------------------------------------------- |
-| Cross-check        | Resolve threads when routes no longer in TTC API    |
-| Secondary source   | Create alerts for routes not covered by Bluesky     |
-| Filtering          | Exclude `alertType: "Planned"` (scheduled closures) |
-| Deduplication      | Bluesky threads take priority over TTC API          |
-| Alert ID format    | `ttc-{route}-{effect}-{id}` (e.g., `ttc-1-SIGNIFICANT_DELAYS-54744`) |
+| Use Case         | Description                                                          |
+| ---------------- | -------------------------------------------------------------------- |
+| Cross-check      | Resolve threads when routes no longer in TTC API                     |
+| Secondary source | Create alerts for routes not covered by Bluesky                      |
+| Filtering        | Exclude `alertType: "Planned"` (scheduled closures)                  |
+| Deduplication    | Bluesky threads take priority over TTC API                           |
+| Alert ID format  | `ttc-{route}-{effect}-{id}` (e.g., `ttc-1-SIGNIFICANT_DELAYS-54744`) |
 
 **TTC Alert Type Mapping (v39):**
 
-| TTC API `effect`       | Internal Category     |
-| ---------------------- | --------------------- |
-| `NO_SERVICE`           | `SERVICE_DISRUPTION`  |
-| `REDUCED_SERVICE`      | `SERVICE_DISRUPTION`  |
-| `DETOUR`               | `DIVERSION`           |
-| `SIGNIFICANT_DELAYS`   | `DELAY`               |
-| `ACCESSIBILITY_ISSUE`  | `ACCESSIBILITY`       |
+| TTC API `effect`      | Internal Category    |
+| --------------------- | -------------------- |
+| `NO_SERVICE`          | `SERVICE_DISRUPTION` |
+| `REDUCED_SERVICE`     | `SERVICE_DISRUPTION` |
+| `DETOUR`              | `DIVERSION`          |
+| `SIGNIFICANT_DELAYS`  | `DELAY`              |
+| `ACCESSIBILITY_ISSUE` | `ACCESSIBILITY`      |
 
-**Response Fields (v39):**
+**Accessibility Thread Auto-Resolve (v43):**
+
+Accessibility alerts (elevator/escalator outages) use **station names** instead of route numbers. This requires separate auto-resolve logic:
+
+```typescript
+// Separate auto-resolve for accessibility threads
+// These use station names, not route numbers
+const accessibilityThreads = unresolvedThreads.filter((t) => {
+  const routes = t.affected_routes || [];
+  // Accessibility threads typically have station names like "Dupont Station"
+  // Not route numbers like "501" or "Line 1"
+  return routes.some(
+    (r) =>
+      r.toLowerCase().includes("station") ||
+      r.toLowerCase().includes("elevator") ||
+      r.toLowerCase().includes("escalator")
+  );
+});
+
+// Standard threads (routes like "501", "Line 1", etc.)
+const standardThreads = unresolvedThreads.filter(
+  (t) => !accessibilityThreads.includes(t)
+);
+
+// Auto-resolve standard threads based on TTC API active routes
+for (const thread of standardThreads) {
+  const threadRoutes = thread.affected_routes || [];
+  const hasActiveRoute = threadRoutes.some((r) =>
+    ttcActiveRoutes.includes(normalizeRoute(r))
+  );
+  if (!hasActiveRoute) {
+    // Route no longer in TTC API - resolve thread
+    await resolveThread(thread.thread_id);
+  }
+}
+
+// Accessibility threads resolve based on TTC API accessibility alerts
+const ttcAccessibilityStations = ttcAlerts
+  .filter((a) => a.effect === "ACCESSIBILITY_ISSUE")
+  .map((a) => a.routeAffected); // Station names like "Dupont Station"
+
+for (const thread of accessibilityThreads) {
+  const threadStations = thread.affected_routes || [];
+  const hasActiveStation = threadStations.some((s) =>
+    ttcAccessibilityStations.some(
+      (active) =>
+        active.toLowerCase().includes(s.toLowerCase()) ||
+        s.toLowerCase().includes(active.toLowerCase())
+    )
+  );
+  if (!hasActiveStation) {
+    // Station no longer has accessibility issue - resolve thread
+    await resolveThread(thread.thread_id);
+  }
+}
+```
+
+| Thread Type     | Auto-Resolve Criteria                              |
+| --------------- | -------------------------------------------------- |
+| Standard        | Route no longer in TTC API active routes           |
+| Accessibility   | Station no longer in TTC API accessibility alerts  |
+
+**Why Separate Logic?**
+- Standard threads: Routes like "501", "Line 1" match TTC API route IDs
+- Accessibility threads: Station names like "Dupont Station" don't match route IDs
+- Without v43: Accessibility threads never auto-resolved (station ≠ route)
+- With v43: Accessibility threads resolve when station outage cleared in TTC API
+
+**Response Fields (v43):**
 
 ```json
 {
@@ -1086,21 +1174,23 @@ CREATE TABLE planned_maintenance (
   "newAlerts": 3,
   "updatedThreads": 1,
   "ttcApiResolvedCount": 0,
+  "accessibilityResolvedCount": 0,
   "ttcApiNewAlerts": 0,
   "ttcApiError": null,
-  "version": 39,
+  "version": 43,
   "timestamp": "2025-12-16T01:02:50.350Z"
 }
 ```
 
-| Field               | Description                                              |
-| ------------------- | -------------------------------------------------------- |
-| `newAlerts`         | New alerts created (Bluesky)                             |
-| `updatedThreads`    | Existing threads updated                                 |
-| `ttcApiResolvedCount` | Threads resolved via TTC API cross-check               |
-| `ttcApiNewAlerts`   | New alerts from TTC API secondary source (v39)           |
-| `ttcApiError`       | Error message if TTC API failed                          |
-| `version`           | Edge function version                                    |
+| Field                        | Description                                      |
+| ---------------------------- | ------------------------------------------------ |
+| `newAlerts`                  | New alerts created (Bluesky)                     |
+| `updatedThreads`             | Existing threads updated                         |
+| `ttcApiResolvedCount`        | Standard threads resolved via TTC API cross-check |
+| `accessibilityResolvedCount` | Accessibility threads resolved (v43)             |
+| `ttcApiNewAlerts`            | New alerts from TTC API secondary source         |
+| `ttcApiError`                | Error message if TTC API failed                  |
+| `version`                    | Edge function version                            |
 
 ### `scrape-maintenance`
 
@@ -1234,19 +1324,20 @@ ALTER TABLE alert_cache
 
 This system provides:
 
-✅ **Dual data sources** - Bluesky primary + TTC Live API secondary (v39)
+✅ **Dual data sources** - Bluesky primary + TTC Live API secondary (v39+)
 ✅ **Keyword-based categorization** - 7 categories with priority ordering (incl. ACCESSIBILITY)
 ✅ **Bluesky reply threading** - Native thread chains take priority (v31)
 ✅ **Incident threading** - Jaccard similarity + exact route number matching  
 ✅ **Cross-route prevention** - Route 46 cannot match with 996, 39 cannot match with 939  
 ✅ **Smart SERVICE_RESUMED** - Lower threshold (10%) for different vocabulary  
-✅ **Auto-resolve** - SERVICE_RESUMED closes threads + TTC API cross-check  
+✅ **Auto-resolve** - SERVICE_RESUMED closes threads + TTC API cross-check + separate accessibility logic (v43)
 ✅ **Mutually exclusive filters** - One category filter at a time  
 ✅ **Planned alert separation** - TTC API planned alerts excluded from import
 ✅ **Deduplication** - Bluesky routes prioritized, TTC API fills gaps only
 ✅ **Realtime updates** - Supabase subscriptions push changes  
 ✅ **Observable** - Thread state visible in UI  
 ✅ **Database validation** - Trigger prevents route mismatches
+✅ **Accessibility threads** - Station-based matching and separate auto-resolve (v43)
 
 **Architecture:**
 

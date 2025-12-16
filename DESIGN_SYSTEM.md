@@ -337,6 +337,40 @@ border-color: hsl(var(--border));
 - `.route-limited` - White + red border
 - `.route-community` - White + gray border
 
+### Accessibility Badge
+
+Used for elevator/escalator outage alerts. Displays a wheelchair icon instead of a route number.
+
+```svelte
+<AccessibilityBadge size="lg" />
+```
+
+**Styling:**
+- Background: `hsl(217 91% 50%)` - TTC accessibility blue
+- Icon: White wheelchair symbol
+- Size variants: `sm`, `default`, `lg`
+
+### Station Badge
+
+Used alongside AccessibilityBadge to show the station name (e.g., "DUPONT", "DAVISVILLE").
+
+```svelte
+<span class="station-badge">Dupont</span>
+```
+
+**CSS:**
+```css
+.station-badge {
+  background-color: hsl(217 91% 95%);  /* Light blue bg */
+  color: hsl(217 91% 40%);              /* Dark blue text */
+}
+
+.dark .station-badge {
+  background-color: hsl(217 50% 25% / 0.5);
+  color: hsl(217 91% 75%);
+}
+```
+
 ### Status Badges
 
 ```svelte
@@ -354,6 +388,27 @@ border-color: hsl(var(--border));
 - `.status-badge-delay` - Amber
 - `.status-badge-detour` - Orange
 - `.status-badge-planned` - Blue
+
+### Category Filter Tabs
+
+Three-tab severity filter (ALL tab removed). WCAG AA compliant colors.
+
+```svelte
+<CategoryFilter selected="MAJOR" onSelect={handleSelect} counts={counts} />
+```
+
+**Color Tokens (Light/Dark Mode):**
+
+| Category        | Light Mode (4.5:1+ contrast) | Dark Mode                 |
+| --------------- | ---------------------------- | ------------------------- |
+| **Major**       | `hsl(0 72% 45%)`             | `hsl(0 85% 65%)`          |
+| **Minor**       | `hsl(38 85% 35%)`            | `hsl(38 95% 60%)`         |
+| **Accessibility** | `hsl(217 85% 42%)`         | `hsl(217 95% 70%)`        |
+
+**Icons:**
+- Major: `AlertOctagon` (stop sign shape)
+- Minor: `Clock`
+- Accessibility: `Accessibility` (wheelchair)
 
 ### Direction Badges
 
@@ -564,14 +619,14 @@ Empty states are displayed when content is not available or when filters produce
 
 #### CSS Classes & Styling
 
-| Class                    | Purpose          | Key Properties                                         |
-| ------------------------ | ---------------- | ------------------------------------------------------ |
-| `.empty-state`           | Container        | `flex flex-col; padding: 3rem 1.5rem; dashed border`   |
-| `.empty-state.success`   | Success variant  | `solid border; green tint background`                  |
-| `.empty-state-icon`      | Icon circle      | `4rem circle; muted background; centered`              |
-| `.empty-state-icon.success` | Success icon  | `green/10 background; green color`                     |
-| `.empty-state-title`     | Title text       | `1.125rem; font-weight: 600`                           |
-| `.empty-state-description` | Description    | `0.875rem; muted color; max-width: 280px`              |
+| Class                       | Purpose         | Key Properties                                       |
+| --------------------------- | --------------- | ---------------------------------------------------- |
+| `.empty-state`              | Container       | `flex flex-col; padding: 3rem 1.5rem; dashed border` |
+| `.empty-state.success`      | Success variant | `solid border; green tint background`                |
+| `.empty-state-icon`         | Icon circle     | `4rem circle; muted background; centered`            |
+| `.empty-state-icon.success` | Success icon    | `green/10 background; green color`                   |
+| `.empty-state-title`        | Title text      | `1.125rem; font-weight: 600`                         |
+| `.empty-state-description`  | Description     | `0.875rem; muted color; max-width: 280px`            |
 
 #### Component Structure (Svelte)
 
@@ -604,15 +659,15 @@ Empty states are displayed when content is not available or when filters produce
 
 #### Usage Examples
 
-| Context                | Icon            | Title                  | Variant   |
-| ---------------------- | --------------- | ---------------------- | --------- |
-| No saved stops         | `MapPin`        | "Add your first stop"  | Default   |
-| No saved routes        | `MapPinned`     | "No routes saved"      | Default   |
-| No alerts (all clear)  | `CheckCircle`   | "All Clear!"           | Success   |
-| No major alerts        | `AlertTriangle` | "No major alerts"      | Default   |
-| No minor alerts        | `Clock`         | "No minor alerts"      | Default   |
-| No accessibility alerts| `Accessibility` | "No accessibility alerts" | Default |
-| Search no results      | `SearchX`       | "No results found"     | Default   |
+| Context                 | Icon            | Title                     | Variant |
+| ----------------------- | --------------- | ------------------------- | ------- |
+| No saved stops          | `MapPin`        | "Add your first stop"     | Default |
+| No saved routes         | `MapPinned`     | "No routes saved"         | Default |
+| No alerts (all clear)   | `CheckCircle`   | "All Clear!"              | Success |
+| No major alerts         | `AlertTriangle` | "No major alerts"         | Default |
+| No minor alerts         | `Clock`         | "No minor alerts"         | Default |
+| No accessibility alerts | `Accessibility` | "No accessibility alerts" | Default |
+| Search no results       | `SearchX`       | "No results found"        | Default |
 
 ### ETA Cards (Swipeable Direction Carousel)
 
@@ -736,6 +791,8 @@ The Subway Status Cards display the current service status for each subway line 
 ```css
 .subway-status-card                    /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -764,6 +821,8 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 .closure-type-badge.nightly  /* Blue nightly closure */
 .closure-type-badge.weekend; /* Amber weekend closure */

@@ -73,9 +73,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | File                                           | Status | Purpose                                                       |
 | ---------------------------------------------- | ------ | ------------------------------------------------------------- |
-| `components/alerts/AlertCard.svelte`           | ✅     | Alert cards w/ route extraction, subway DETOUR validation     |
+| `components/alerts/AccessibilityBadge.svelte`  | ✅     | Wheelchair icon badge for elevator/escalator alerts 🆕        |
+| `components/alerts/AlertCard.svelte`           | ✅     | Alert cards w/ accessibility badge support, route extraction  |
 | `components/alerts/BookmarkRouteButton.svelte` | ✅     | Save route button with feedback animation 🆕 **B**            |
-| `components/alerts/CategoryFilter.svelte`      | ✅     | Severity category tabs (Major/Minor/Accessibility/All) 🆕     |
+| `components/alerts/CategoryFilter.svelte`      | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA  |
 | `components/alerts/ClosuresView.svelte`        | ✅     | Scheduled tab with closure type badges (nightly/weekend)      |
 | `components/alerts/FilterChips.svelte`         | ✅     | Category filter buttons                                       |
 | `components/alerts/MaintenanceWidget.svelte`   | ✅     | Scheduled maintenance display                                 |
@@ -90,7 +91,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/layout/MobileBottomNav.svelte`     | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom         |
 | `components/ui/*`                              | ✅     | shadcn-svelte base components                                 |
 | `services/webauthn.ts`                         | ✅     | WebAuthn browser API wrapper                                  |
-| `stores/alerts.ts`                             | ✅     | Alerts state + date validation filter                         |
+| `stores/alerts.ts`                             | ✅     | Alerts state + 30-day accessibility query window              |
 | `stores/auth.ts`                               | ✅     | Custom WebAuthn auth store                                    |
 | `stores/preferences.ts`                        | ✅     | User preferences state                                        |
 | `types/auth.ts`                                | ✅     | Auth TypeScript types                                         |
