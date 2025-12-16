@@ -542,6 +542,78 @@ All settings cards follow a consistent header structure:
 </button>
 ```
 
+### Empty States
+
+Empty states are displayed when content is not available or when filters produce no results. They follow a consistent pattern across the app.
+
+#### Layout Structure
+
+```
+┌─────────────────────────────────────────────────────┐
+│        ┌─────────┐                                  │
+│        │  Icon   │    (4rem circle, centered)       │
+│        └─────────┘                                  │
+│                                                     │
+│           Title                                     │
+│        Description text                             │
+│        (max-width: 280px)                           │
+│                                                     │
+│         [Action Button] (optional)                  │
+└─────────────────────────────────────────────────────┘
+```
+
+#### CSS Classes & Styling
+
+| Class                    | Purpose          | Key Properties                                         |
+| ------------------------ | ---------------- | ------------------------------------------------------ |
+| `.empty-state`           | Container        | `flex flex-col; padding: 3rem 1.5rem; dashed border`   |
+| `.empty-state.success`   | Success variant  | `solid border; green tint background`                  |
+| `.empty-state-icon`      | Icon circle      | `4rem circle; muted background; centered`              |
+| `.empty-state-icon.success` | Success icon  | `green/10 background; green color`                     |
+| `.empty-state-title`     | Title text       | `1.125rem; font-weight: 600`                           |
+| `.empty-state-description` | Description    | `0.875rem; muted color; max-width: 280px`              |
+
+#### Component Structure (Svelte)
+
+```svelte
+<!-- Standard empty state -->
+<div class="empty-state">
+  <div class="empty-state-icon">
+    <Icon class="h-8 w-8" />
+  </div>
+  <h3 class="empty-state-title">Title</h3>
+  <p class="empty-state-description">
+    Description text here.
+  </p>
+  <Button variant="outline" class="mt-4">
+    Action
+  </Button>
+</div>
+
+<!-- Success empty state (e.g., "All clear") -->
+<div class="empty-state success">
+  <div class="empty-state-icon success">
+    <CheckCircle class="h-8 w-8" />
+  </div>
+  <h3 class="empty-state-title">All Clear!</h3>
+  <p class="empty-state-description">
+    No active disruptions on your saved routes.
+  </p>
+</div>
+```
+
+#### Usage Examples
+
+| Context                | Icon            | Title                  | Variant   |
+| ---------------------- | --------------- | ---------------------- | --------- |
+| No saved stops         | `MapPin`        | "Add your first stop"  | Default   |
+| No saved routes        | `MapPinned`     | "No routes saved"      | Default   |
+| No alerts (all clear)  | `CheckCircle`   | "All Clear!"           | Success   |
+| No major alerts        | `AlertTriangle` | "No major alerts"      | Default   |
+| No minor alerts        | `Clock`         | "No minor alerts"      | Default   |
+| No accessibility alerts| `Accessibility` | "No accessibility alerts" | Default |
+| Search no results      | `SearchX`       | "No results found"     | Default   |
+
 ### ETA Cards (Swipeable Direction Carousel)
 
 The ETA Cards display real-time arrival predictions for bookmarked stops. Each card features a **horizontal swipeable carousel** of direction slides with pagination dots.

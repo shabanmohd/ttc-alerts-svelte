@@ -7,6 +7,8 @@
     Calendar,
     AlertTriangle,
     AlertCircle,
+    Accessibility,
+    Clock,
   } from "lucide-svelte";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
@@ -1146,16 +1148,24 @@
           </Button>
         </div>
       {:else if combinedActiveAlerts().length === 0}
-        <div class="text-center py-12 text-muted-foreground">
-          {#if $selectedSeverityCategory !== 'ALL' && activeAlerts().length > 0}
-            <!-- Category filter is active but no alerts in this category -->
-            <SearchX
-              class="h-12 w-12 mx-auto mb-4 opacity-50"
-            />
-            <p class="text-lg mb-2 font-medium">
+        {#if $selectedSeverityCategory !== 'ALL' && activeAlerts().length > 0}
+          <!-- Category filter is active but no alerts in this category -->
+          <div class="empty-state animate-fade-in">
+            <div class="empty-state-icon">
+              {#if $selectedSeverityCategory === 'MAJOR'}
+                <AlertTriangle class="h-8 w-8" />
+              {:else if $selectedSeverityCategory === 'MINOR'}
+                <Clock class="h-8 w-8" />
+              {:else if $selectedSeverityCategory === 'ACCESSIBILITY'}
+                <Accessibility class="h-8 w-8" />
+              {:else}
+                <SearchX class="h-8 w-8" />
+              {/if}
+            </div>
+            <h3 class="empty-state-title">
               No {$selectedSeverityCategory.toLowerCase()} alerts
-            </p>
-            <p class="text-sm">
+            </h3>
+            <p class="empty-state-description">
               {#if $selectedSeverityCategory === 'MAJOR'}
                 No major disruptions at this time.
               {:else if $selectedSeverityCategory === 'MINOR'}
@@ -1165,21 +1175,23 @@
               {/if}
             </p>
             <Button 
-              variant="link" 
+              variant="outline"
               onclick={() => selectedSeverityCategory.set('ALL')}
-              class="mt-2"
+              class="mt-4"
             >
               View all alerts ({activeAlerts().length})
             </Button>
-          {:else}
-            <!-- No active alerts at all -->
-            <CheckCircle
-              class="h-12 w-12 mx-auto mb-4 opacity-50 text-green-500"
-            />
-            <p class="text-lg mb-2 font-medium">{$_("emptyStates.allClear")}</p>
-            <p class="text-sm">{$_("emptyStates.noActiveDisruptions")}</p>
-          {/if}
-        </div>
+          </div>
+        {:else}
+          <!-- No active alerts at all -->
+          <div class="empty-state success animate-fade-in">
+            <div class="empty-state-icon success">
+              <CheckCircle class="h-8 w-8" />
+            </div>
+            <h3 class="empty-state-title">{$_("emptyStates.allClear")}</h3>
+            <p class="empty-state-description">{$_("emptyStates.noActiveDisruptions")}</p>
+          </div>
+        {/if}
       {:else}
         {#each alertsByLine() as group}
           {#if group.type === "line" && group.lineId}
@@ -1793,5 +1805,56 @@
     font-size: 1rem;
     font-weight: 600;
     color: hsl(var(--foreground));
+  }
+  
+  /* Empty State Styles - Consistent with MyRouteAlerts and MyStops */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    padding: 3rem 1.5rem;
+    background-color: hsl(var(--muted) / 0.3);
+    border-radius: var(--radius);
+    border: 1px dashed hsl(var(--border));
+  }
+  
+  .empty-state.success {
+    border-style: solid;
+    border-color: hsl(142 76% 36% / 0.2);
+    background-color: hsl(142 76% 36% / 0.05);
+  }
+
+  .empty-state-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-color: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 1rem;
+  }
+
+  .empty-state-icon.success {
+    background-color: hsl(142 76% 36% / 0.1);
+    color: hsl(142 76% 36%);
+  }
+
+  .empty-state-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-state-description {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    max-width: 280px;
+    line-height: 1.5;
   }
 </style>
