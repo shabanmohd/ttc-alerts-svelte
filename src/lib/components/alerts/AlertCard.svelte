@@ -255,6 +255,26 @@
   }
 
   const latestAlert = $derived(thread.latestAlert);
+
+  // For resolved threads with SERVICE_RESUMED, find the SERVICE_RESUMED alert to display its message
+  const serviceResumedAlert = $derived(() => {
+    if (!thread.is_resolved) return null;
+    // Find an alert that has SERVICE_RESUMED in its categories
+    return (
+      thread.alerts.find((alert) => {
+        const cats = parseJsonArray(alert.categories);
+        return cats.includes("SERVICE_RESUMED");
+      }) || null
+    );
+  });
+
+  // For display: use SERVICE_RESUMED alert if this is a resolved thread, otherwise latest
+  const displayAlert = $derived(
+    thread.is_resolved && serviceResumedAlert()
+      ? serviceResumedAlert()
+      : latestAlert
+  );
+
   const earlierAlerts = $derived(thread.alerts.slice(1));
 
   // Get routes for badge display:
@@ -274,17 +294,31 @@
     )
   );
 
-  // For resolved threads, prefer thread.categories (which includes SERVICE_RESUMED)
-  // For active threads, prefer latestAlert.categories (most recent status)
-  const categories = $derived(
-    thread.is_resolved
+  // For resolved threads with actual SERVICE_RESUMED alert, use thread.categories
+  // Otherwise, use the displayAlert's categories to avoid showing SERVICE_RESUMED incorrectly
+  const categories = $derived(() => {
+    // If this is a resolved thread claiming SERVICE_RESUMED but has no such alert,
+    // use the displayAlert's categories instead
+    if (
+      thread.is_resolved &&
+      parseJsonArray(thread.categories).includes("SERVICE_RESUMED")
+    ) {
+      const hasActualServiceResumedAlert = serviceResumedAlert();
+      if (!hasActualServiceResumedAlert) {
+        // Fall back to the display alert's categories (the detour alert)
+        return parseJsonArray(displayAlert?.categories) || [];
+      }
+    }
+
+    // Default behavior
+    return thread.is_resolved
       ? parseJsonArray(thread.categories) ||
           parseJsonArray(latestAlert?.categories) ||
           []
       : parseJsonArray(latestAlert?.categories) ||
           parseJsonArray(thread.categories) ||
-          []
-  );
+          [];
+  });
 
   const cardId = $derived(`alert-${thread.thread_id}`);
 </script>
@@ -315,34 +349,36 @@
       <!-- Status + Description on right -->
       <div class="flex-1 min-w-0">
         <div class="flex items-center justify-between gap-2 mb-1.5">
-          <!-- Show SERVICE_RESUMED badge for resolved threads if they have that category -->
+          <!-- Show SERVICE_RESUMED badge ONLY if we have an actual SERVICE_RESUMED alert in the thread -->
+          <!-- This fixes the bug where thread.categories includes SERVICE_RESUMED but no such alert exists -->
           <StatusBadge
             category={thread.is_resolved &&
-            parseJsonArray(categories).includes("SERVICE_RESUMED")
+            categories().includes("SERVICE_RESUMED") &&
+            serviceResumedAlert()
               ? "SERVICE_RESUMED"
-              : getMainCategory(categories, rawRoutes)}
+              : getMainCategory(categories(), rawRoutes)}
           />
           <time
             class="alert-card-timestamp"
-            datetime={latestAlert?.created_at || ""}
+            datetime={displayAlert?.created_at || ""}
           >
-            {formatTimestamp(latestAlert?.created_at || "")}
+            {formatTimestamp(displayAlert?.created_at || "")}
           </time>
         </div>
 
-        {#if getMainCategory(categories, rawRoutes) === "SCHEDULED_CLOSURE"}
+        {#if getMainCategory(categories(), rawRoutes) === "SCHEDULED_CLOSURE"}
           <!-- Scheduled Closure: Visual hierarchy with header + description -->
           <p class="text-sm font-medium leading-snug" id="{cardId}-title">
-            {latestAlert?.header_text || ""}
+            {displayAlert?.header_text || ""}
           </p>
-          {#if latestAlert?.description_text}
+          {#if displayAlert?.description_text}
             <p class="text-sm text-muted-foreground leading-relaxed mt-1">
-              {latestAlert.description_text}
+              {displayAlert.description_text}
             </p>
           {/if}
-          {#if (latestAlert as { url?: string })?.url}
+          {#if (displayAlert as { url?: string })?.url}
             <a
-              href={(latestAlert as { url?: string }).url}
+              href={(displayAlert as { url?: string }).url}
               target="_blank"
               rel="noopener noreferrer"
               class="text-xs text-primary hover:underline mt-1.5 inline-flex items-center gap-1"
@@ -353,7 +389,7 @@
         {:else}
           <!-- Regular alerts: description OR header -->
           <p class="text-sm leading-relaxed" id="{cardId}-title">
-            {latestAlert?.description_text || latestAlert?.header_text || ""}
+            {displayAlert?.description_text || displayAlert?.header_text || ""}
           </p>
         {/if}
       </div>

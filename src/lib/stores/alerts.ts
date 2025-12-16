@@ -17,6 +17,10 @@ export const recentlyAddedThreadIds = writable<Set<string>>(new Set());
 export const activeFilters = writable<Set<string>>(new Set(['ALL']));
 export const currentTab = writable<'all' | 'my'>('all');
 
+// Severity category filter (MAJOR, MINOR, ACCESSIBILITY, ALL)
+export type SeverityCategory = 'MAJOR' | 'MINOR' | 'ACCESSIBILITY' | 'ALL';
+export const selectedSeverityCategory = writable<SeverityCategory>('MAJOR');
+
 // Realtime connection state
 export const isConnected = writable(false);
 export const connectionError = writable<string | null>(null);
@@ -46,6 +50,63 @@ function extractCategories(data: unknown): string[] {
 function extractRoutes(data: unknown): string[] {
   if (Array.isArray(data)) return data as string[];
   return [];
+}
+
+/**
+ * Determine the severity category of an alert/thread based on its categories and effect.
+ * Maps TTC API effects to our simplified categories:
+ * - MAJOR: NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SERVICE_DISRUPTION
+ * - MINOR: SIGNIFICANT_DELAYS, DELAY, SLOW_ZONE
+ * - ACCESSIBILITY: ACCESSIBILITY_ISSUE, elevator/escalator keywords
+ */
+export function getSeverityCategory(categories: string[], effect?: string, headerText?: string): SeverityCategory {
+  const upperCategories = categories.map(c => c.toUpperCase());
+  const upperEffect = (effect || '').toUpperCase();
+  const lowerHeader = (headerText || '').toLowerCase();
+  
+  // Check for accessibility alerts first (elevator/escalator)
+  if (
+    upperCategories.includes('ACCESSIBILITY_ISSUE') ||
+    upperEffect.includes('ACCESSIBILITY') ||
+    lowerHeader.includes('elevator') ||
+    lowerHeader.includes('escalator')
+  ) {
+    return 'ACCESSIBILITY';
+  }
+  
+  // Check for major disruptions (closures, detours, no service, shuttles)
+  const majorEffects = ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'MODIFIED_SERVICE'];
+  const majorCategories = ['SERVICE_DISRUPTION', 'DISRUPTION', 'CLOSURE', 'DETOUR', 'SHUTTLE'];
+  
+  if (
+    majorEffects.some(e => upperEffect.includes(e)) ||
+    majorCategories.some(c => upperCategories.includes(c)) ||
+    lowerHeader.includes('closed') ||
+    lowerHeader.includes('shuttle') ||
+    lowerHeader.includes('no service') ||
+    lowerHeader.includes('suspended') ||
+    lowerHeader.includes('diverting') ||
+    lowerHeader.includes('detour')
+  ) {
+    return 'MAJOR';
+  }
+  
+  // Check for minor delays (delays, slow zones, reduced speed)
+  const minorEffects = ['SIGNIFICANT_DELAYS', 'DELAY', 'SLOW'];
+  const minorCategories = ['DELAY', 'SLOW_ZONE'];
+  
+  if (
+    minorEffects.some(e => upperEffect.includes(e)) ||
+    minorCategories.some(c => upperCategories.includes(c)) ||
+    lowerHeader.includes('delay') ||
+    lowerHeader.includes('slow') ||
+    lowerHeader.includes('reduced speed')
+  ) {
+    return 'MINOR';
+  }
+  
+  // Default to MAJOR for unknown (better safe than sorry)
+  return 'MAJOR';
 }
 
 // Derived: threads with their alerts grouped
@@ -112,8 +173,8 @@ export async function fetchAlerts(): Promise<void> {
   error.set(null);
   
   try {
-    // Fetch alerts - select only needed columns to reduce egress
-    const { data: alertsData, error: alertsError } = await supabase
+    // Step 1: Fetch recent alerts (last 24h) to identify active threads
+    const { data: recentAlerts, error: alertsError } = await supabase
       .from('alert_cache')
       .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
@@ -122,10 +183,30 @@ export async function fetchAlerts(): Promise<void> {
     
     if (alertsError) throw alertsError;
     
-    // Get unique thread IDs from alerts
-    const threadIds = [...new Set((alertsData || []).map(a => a.thread_id).filter(Boolean))];
+    // Get unique thread IDs from recent alerts
+    const threadIds = [...new Set((recentAlerts || []).map(a => a.thread_id).filter(Boolean))];
     
-    // Fetch threads - select only needed columns to reduce egress
+    // Step 2: Fetch ALL alerts from these active threads (not just last 24h)
+    // This ensures we get the full thread history for display
+    let allAlertsData = recentAlerts || [];
+    
+    if (threadIds.length > 0) {
+      // Fetch all alerts for the identified threads (up to 7 days to cover weekend closures)
+      const { data: threadAlerts, error: threadAlertsError } = await supabase
+        .from('alert_cache')
+        .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
+        .in('thread_id', threadIds)
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false });
+      
+      if (threadAlertsError) throw threadAlertsError;
+      
+      // Merge: use thread alerts as base, which includes all alerts for those threads
+      // This replaces the recent-only alerts with the full thread history
+      allAlertsData = threadAlerts || [];
+    }
+    
+    // Step 3: Fetch threads - select only needed columns to reduce egress
     let threadsData: Thread[] = [];
     if (threadIds.length > 0) {
       const { data, error: threadsError } = await supabase
@@ -138,7 +219,7 @@ export async function fetchAlerts(): Promise<void> {
     }
     
     threads.set(threadsData);
-    alerts.set(alertsData || []);
+    alerts.set(allAlertsData);
     lastUpdated.set(new Date());
     
   } catch (e) {

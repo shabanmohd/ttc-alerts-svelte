@@ -13,6 +13,7 @@
   import Header from "$lib/components/layout/Header.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
   import FilterChips from "$lib/components/alerts/FilterChips.svelte";
+  import CategoryFilter from "$lib/components/alerts/CategoryFilter.svelte";
   import ClosuresView from "$lib/components/alerts/ClosuresView.svelte";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { Button } from "$lib/components/ui/button";
@@ -27,6 +28,9 @@
     fetchMaintenance,
     recentlyAddedThreadIds,
     maintenanceItems,
+    selectedSeverityCategory,
+    getSeverityCategory,
+    type SeverityCategory,
   } from "$lib/stores/alerts";
   import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import { isVisible } from "$lib/stores/visibility";
@@ -601,19 +605,46 @@
       );
   });
 
-  // Derived: Filtered active alerts based on category filters
+  // Derived: Filtered active alerts based on severity category (MAJOR/MINOR/ACCESSIBILITY/ALL)
   let filteredActiveAlerts = $derived(() => {
     const active = activeAlerts();
-    if ($activeFilters.has("ALL") || $activeFilters.size === 0) {
+    const category = $selectedSeverityCategory;
+    
+    // If ALL is selected, return all active alerts
+    if (category === 'ALL') {
       return active;
     }
-
+    
+    // Filter by severity category
     return active.filter((thread) => {
       const categories = Array.isArray(thread.latestAlert?.categories)
         ? thread.latestAlert.categories
         : [];
-      return categories.some((cat) => $activeFilters.has(cat));
+      const effect = thread.latestAlert?.effect || '';
+      const headerText = thread.latestAlert?.header_text || '';
+      
+      const threadSeverity = getSeverityCategory(categories, effect, headerText);
+      return threadSeverity === category;
     });
+  });
+  
+  // Derived: Count of alerts per severity category
+  let severityCounts = $derived(() => {
+    const active = activeAlerts();
+    const counts = { MAJOR: 0, MINOR: 0, ACCESSIBILITY: 0, ALL: active.length };
+    
+    for (const thread of active) {
+      const categories = Array.isArray(thread.latestAlert?.categories)
+        ? thread.latestAlert.categories
+        : [];
+      const effect = thread.latestAlert?.effect || '';
+      const headerText = thread.latestAlert?.header_text || '';
+      
+      const severity = getSeverityCategory(categories, effect, headerText);
+      counts[severity]++;
+    }
+    
+    return counts;
   });
 
   // Derived: Resolved alerts for display (no filtering - all resolved alerts shown)
@@ -935,6 +966,10 @@
     }
     goto(url.toString(), { replaceState: true, noScroll: true });
   }
+  
+  function handleSeverityCategorySelect(category: SeverityCategory) {
+    selectedSeverityCategory.set(category);
+  }
 </script>
 
 <svelte:head>
@@ -946,10 +981,7 @@
 </svelte:head>
 
 <Header
-  isAuthenticated={$isAuthenticated}
-  username={$userName || ""}
   onOpenDialog={handleOpenDialog}
-  onSignOut={handleSignOut}
 />
 
 <main class="content-area">
@@ -1071,6 +1103,13 @@
       {/each}
     </div>
 
+    <!-- Severity Category Filter -->
+    <CategoryFilter 
+      selected={$selectedSeverityCategory} 
+      counts={severityCounts()}
+      onSelect={handleSeverityCategorySelect}
+    />
+
     <!-- Alert Cards -->
     <div
       class="space-y-3"
@@ -1108,11 +1147,38 @@
         </div>
       {:else if combinedActiveAlerts().length === 0}
         <div class="text-center py-12 text-muted-foreground">
-          <CheckCircle
-            class="h-12 w-12 mx-auto mb-4 opacity-50 text-green-500"
-          />
-          <p class="text-lg mb-2 font-medium">{$_("emptyStates.allClear")}</p>
-          <p class="text-sm">{$_("emptyStates.noActiveDisruptions")}</p>
+          {#if $selectedSeverityCategory !== 'ALL' && activeAlerts().length > 0}
+            <!-- Category filter is active but no alerts in this category -->
+            <SearchX
+              class="h-12 w-12 mx-auto mb-4 opacity-50"
+            />
+            <p class="text-lg mb-2 font-medium">
+              No {$selectedSeverityCategory.toLowerCase()} alerts
+            </p>
+            <p class="text-sm">
+              {#if $selectedSeverityCategory === 'MAJOR'}
+                No major disruptions at this time.
+              {:else if $selectedSeverityCategory === 'MINOR'}
+                No minor delays at this time.
+              {:else if $selectedSeverityCategory === 'ACCESSIBILITY'}
+                No elevator or escalator outages at this time.
+              {/if}
+            </p>
+            <Button 
+              variant="link" 
+              onclick={() => selectedSeverityCategory.set('ALL')}
+              class="mt-2"
+            >
+              View all alerts ({activeAlerts().length})
+            </Button>
+          {:else}
+            <!-- No active alerts at all -->
+            <CheckCircle
+              class="h-12 w-12 mx-auto mb-4 opacity-50 text-green-500"
+            />
+            <p class="text-lg mb-2 font-medium">{$_("emptyStates.allClear")}</p>
+            <p class="text-sm">{$_("emptyStates.noActiveDisruptions")}</p>
+          {/if}
         </div>
       {:else}
         {#each alertsByLine() as group}

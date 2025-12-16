@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 5.6  
-**Date:** December 12, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v27 + TTC API cross-check + pg_cron automation)  
+**Version:** 6.0  
+**Date:** December 15, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v31 + Bluesky reply threading + TTC API cross-check)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -14,11 +14,12 @@
 3. [Alert Sources](#alert-sources)
 4. [Multi-Category System](#multi-category-system)
 5. [Incident Threading](#incident-threading)
-6. [Frontend Filtering](#frontend-filtering)
-7. [Database Schema](#database-schema)
-8. [Edge Functions](#edge-functions)
-9. [Testing Strategy](#testing-strategy)
-10. [Monitoring and Tuning](#monitoring-and-tuning)
+6. [Bluesky Reply Threading](#bluesky-reply-threading)
+7. [Frontend Filtering](#frontend-filtering)
+8. [Database Schema](#database-schema)
+9. [Edge Functions](#edge-functions)
+10. [Testing Strategy](#testing-strategy)
+11. [Monitoring and Tuning](#monitoring-and-tuning)
 
 ---
 
@@ -27,12 +28,13 @@
 This document describes the alert categorization and threading system designed to:
 
 1. **Bluesky integration** - Primary source from @ttcalerts.bsky.social
-2. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
-3. **Effect-based categorization** - Focus on service impact, not cause
-4. **Incident threading** - Group related updates using Jaccard similarity + route matching
-5. **Frontend filtering** - Mutually exclusive category filters in UI
-6. **Planned alert separation** - Maintenance alerts excluded from main feed
-7. **TTC API cross-check** - Official TTC Live API used for resolution verification
+2. **Bluesky reply threading** - Priority to reply chain relationships (v31)
+3. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
+4. **Effect-based categorization** - Focus on service impact, not cause
+5. **Incident threading** - Group related updates using reply chains + similarity + route matching
+6. **Frontend filtering** - Mutually exclusive category filters in UI
+7. **Planned alert separation** - Maintenance alerts excluded from main feed
+8. **TTC API cross-check** - Official TTC Live API used for resolution verification
 
 ---
 
@@ -40,7 +42,7 @@ This document describes the alert categorization and threading system designed t
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  Bluesky API    │────▶│  poll-alerts (v27)   │────▶│  Supabase DB    │
+│  Bluesky API    │────▶│  poll-alerts (v31)   │────▶│  Supabase DB    │
 │  @ttcalerts     │     │  (Edge Function)     │     │  alert_cache    │
 └─────────────────┘     └──────────────────────┘     │  incident_      │
         │                        │                    │  threads        │
@@ -78,6 +80,7 @@ This document describes the alert categorization and threading system designed t
 - **Endpoint:** `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
 - **Polling:** Edge function fetches last 50 posts per invocation
 - **Deduplication:** Uses `alert_id` (generated from bluesky URI post_id as `bsky-{post_id}`)
+- **Reply Threading:** Extracts `reply.parent.uri` for thread chain detection (v31)
 - **Status:** ✅ Enabled (primary and only source)
 
 **TTC Live API (Cross-Check):**
@@ -91,6 +94,7 @@ This document describes the alert categorization and threading system designed t
 
 ### Key Principles
 
+- **Reply chain priority** - Bluesky reply relationships take precedence over similarity matching
 - **Effect > Cause** - "No service" matters more than "due to security incident"
 - **Non-exclusive categories** - Alert can be `SERVICE_DISRUPTION` + `SUBWAY`
 - **Route family threading** - 37, 37A, 37B treated as same route family (via base number)
@@ -126,6 +130,7 @@ const ALERT_CATEGORIES = {
       "restored",
       "back to normal",
       "now stopping",
+      "service has resumed",
     ],
     priority: 2,
   },
@@ -611,15 +616,241 @@ Similarity: 8/9 = 0.89 → MATCH (≥ 0.8)
 
 ---
 
+## Bluesky Reply Threading (v31)
+
+### Overview
+
+**Implemented in:** `supabase/functions/poll-alerts/index.ts` (v31)
+
+Bluesky posts can be replies to previous posts. The TTC alerts account often posts updates as replies to their original alert. This creates a natural thread chain that we can leverage for better alert grouping.
+
+### Priority Order
+
+Threading now follows this priority:
+
+1. **Bluesky Reply Chain** - If alert is a reply to an existing alert, use parent's thread
+2. **Similarity Matching** - Fall back to route + text similarity matching
+3. **New Thread** - Create new thread if no match found
+
+### Reply Info Extraction
+
+```typescript
+interface BlueskyReplyInfo {
+  parentUri: string | null; // Full URI of parent post
+  parentPostId: string | null; // Extracted alert_id (bsky-{post_id})
+  rootUri: string | null; // Full URI of thread root
+}
+
+function extractReplyInfo(record: any): BlueskyReplyInfo {
+  const reply = record?.reply;
+  if (!reply) {
+    return { parentUri: null, parentPostId: null, rootUri: null };
+  }
+
+  const parentUri = reply.parent?.uri || null;
+  const rootUri = reply.root?.uri || null;
+
+  // Extract post_id from parent URI: at://did:plc:xxx/app.bsky.feed.post/{post_id}
+  let parentPostId: string | null = null;
+  if (parentUri) {
+    const match = parentUri.match(/\/app\.bsky\.feed\.post\/([^/]+)$/);
+    if (match) {
+      parentPostId = `bsky-${match[1]}`;
+    }
+  }
+
+  return { parentUri, parentPostId, rootUri };
+}
+```
+
+### Reply-Based Threading Rules
+
+| Rule                                           | Behavior                                             |
+| ---------------------------------------------- | ---------------------------------------------------- |
+| **Reply to active thread**                     | Always add to parent's thread, even if routes differ |
+| **Reply to resolved thread + SERVICE_RESUMED** | Add to parent's thread (keeps it resolved)           |
+| **Reply to resolved thread + other category**  | Create new thread (don't reopen old incidents)       |
+| **No reply data**                              | Fall back to similarity-based matching               |
+
+### Route Mismatch Handling
+
+When a reply mentions different routes than its parent thread:
+
+```typescript
+// Per Rule B: Add to parent thread even if routes differ
+if (!hasRouteOverlap && routes.length > 0) {
+  console.log(
+    `Reply chain: ${alertId} -> thread ${parentThreadId} ` +
+      `(routes differ: alert=${routes.join(",")} thread=${threadRoutes.join(
+        ","
+      )} ` +
+      `- adding anyway per rule B)`
+  );
+}
+// Routes are merged, preserving both thread's and alert's routes
+const mergedRoutes = [...new Set([...existingRoutes, ...routes])];
+```
+
+**Rationale:** TTC often posts follow-up updates as replies even when service extends to additional routes. The reply relationship is strong evidence of continuity.
+
+### Resolved Thread Handling
+
+When an alert replies to an already-resolved thread:
+
+```typescript
+if (parentThread.is_resolved) {
+  if (category === "SERVICE_RESUMED") {
+    // SERVICE_RESUMED matching resolved thread - keep it resolved
+    matchedThread = parentThread;
+    console.log(`Reply chain: SERVICE_RESUMED added to resolved thread`);
+  } else {
+    // Non-SERVICE_RESUMED alert replying to resolved thread
+    // Create new thread instead of reopening old incident
+    console.log(`Reply chain: category=${category}, creating new thread`);
+    matchedThread = null; // Force new thread creation
+  }
+}
+```
+
+**Rationale:** If an incident was resolved but TTC posts a new update (not SERVICE_RESUMED), it's likely a new incident on the same route, not a continuation.
+
+### In-Memory Thread Map
+
+To support reply chain threading within the same polling batch:
+
+```typescript
+// Build alert_id -> thread_id map for reply chain threading
+const alertToThreadMap = new Map<string, string>();
+existingAlerts?.forEach((a) => {
+  if (a.thread_id) {
+    alertToThreadMap.set(a.alert_id, a.thread_id);
+  }
+});
+
+// Update map when new alerts are processed
+alertToThreadMap.set(alertId, matchedThread.thread_id);
+```
+
+This ensures that if Alert B replies to Alert A, and both arrive in the same 50-post batch, Alert B can still find Alert A's thread.
+
+### Example Scenarios
+
+**Scenario 1: Normal Reply Chain**
+
+```
+Post 1: "501 Queen: No service due to collision at Queen/Spadina"
+  └─ Post 2 (reply): "501 Queen: Service resuming shortly"
+     └─ Post 3 (reply): "501 Queen: Regular service has resumed"
+
+Result: All 3 posts in same thread, thread marked resolved by Post 3
+```
+
+**Scenario 2: Route Addition via Reply**
+
+```
+Post 1: "Line 2: No service Kennedy to Main"
+  └─ Post 2 (reply): "Line 2, Line 4: Shuttle buses running"
+
+Result: Both posts in same thread, routes merged to [Line 2, Line 4]
+```
+
+**Scenario 3: Reply to Resolved Thread**
+
+```
+Post 1: "510 Spadina: Diversion via Bay"
+Post 2: "510 Spadina: Regular service has resumed"  [thread resolved]
+  └─ Post 3 (reply to Post 1): "510 Spadina: Diversion due to new incident"
+
+Result: Post 3 creates NEW thread (category != SERVICE_RESUMED)
+```
+
+---
+
 ## Frontend Filtering
 
 ### Overview
 
-**Implemented in:** `src/lib/stores/alerts.ts`
+**Implemented in:** `src/lib/stores/alerts.ts` and `src/lib/components/alerts/CategoryFilter.svelte`
 
-The frontend provides filtering capabilities for categorized alerts:
+The frontend provides two levels of filtering for alerts:
 
-### Filter State
+1. **Severity Category Filter** (New) - MAJOR, MINOR, ACCESSIBILITY, ALL
+2. **Route/Type Filter** - By specific route or alert type
+
+### Severity Category System
+
+**Component:** `CategoryFilter.svelte`
+
+Alerts are categorized into three severity levels based on their effect and type:
+
+| Category        | TTC API Effects                                   | Description                           |
+| --------------- | ------------------------------------------------- | ------------------------------------- |
+| **MAJOR**       | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE | Closures, detours, shuttles, no service |
+| **MINOR**       | SIGNIFICANT_DELAYS, DELAY                         | Delays, reduced speed zones           |
+| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)       | Elevator and escalator outages        |
+
+**Categorization Logic (`getSeverityCategory()` in alerts.ts):**
+
+```typescript
+export function getSeverityCategory(
+  categories: string[], 
+  effect?: string, 
+  headerText?: string
+): SeverityCategory {
+  const upperCategories = categories.map(c => c.toUpperCase());
+  const upperEffect = (effect || '').toUpperCase();
+  const lowerHeader = (headerText || '').toLowerCase();
+  
+  // Check for accessibility alerts first (elevator/escalator)
+  if (
+    upperCategories.includes('ACCESSIBILITY_ISSUE') ||
+    upperEffect.includes('ACCESSIBILITY') ||
+    lowerHeader.includes('elevator') ||
+    lowerHeader.includes('escalator')
+  ) {
+    return 'ACCESSIBILITY';
+  }
+  
+  // Check for major disruptions
+  const majorEffects = ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'MODIFIED_SERVICE'];
+  const majorCategories = ['SERVICE_DISRUPTION', 'DISRUPTION', 'CLOSURE', 'DETOUR', 'SHUTTLE'];
+  
+  if (
+    majorEffects.some(e => upperEffect.includes(e)) ||
+    majorCategories.some(c => upperCategories.includes(c)) ||
+    lowerHeader.includes('closed') ||
+    lowerHeader.includes('shuttle') ||
+    lowerHeader.includes('no service')
+  ) {
+    return 'MAJOR';
+  }
+  
+  // Check for minor delays
+  const minorEffects = ['SIGNIFICANT_DELAYS', 'DELAY', 'SLOW'];
+  const minorCategories = ['DELAY', 'SLOW_ZONE'];
+  
+  if (
+    minorEffects.some(e => upperEffect.includes(e)) ||
+    minorCategories.some(c => upperCategories.includes(c)) ||
+    lowerHeader.includes('delay') ||
+    lowerHeader.includes('slow')
+  ) {
+    return 'MINOR';
+  }
+  
+  return 'MAJOR'; // Default to MAJOR for unknown
+}
+```
+
+**Default Selection:** MAJOR is selected by default when loading the alerts page.
+
+**Icons:**
+- Major: ⚠️ AlertTriangle (Lucide)
+- Minor: 🕐 Clock (Lucide)  
+- Accessibility: ♿ Accessibility (Lucide) - **NOT emoji**
+- All: 📋 List (Lucide)
+
+### Route/Type Filter State
 
 ```typescript
 // Mutually exclusive filters (only one active at a time)

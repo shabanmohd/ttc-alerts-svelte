@@ -75,6 +75,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | ---------------------------------------------- | ------ | ------------------------------------------------------------- |
 | `components/alerts/AlertCard.svelte`           | ✅     | Alert cards w/ route extraction, subway DETOUR validation     |
 | `components/alerts/BookmarkRouteButton.svelte` | ✅     | Save route button with feedback animation 🆕 **B**            |
+| `components/alerts/CategoryFilter.svelte`      | ✅     | Severity category tabs (Major/Minor/Accessibility/All) 🆕     |
 | `components/alerts/ClosuresView.svelte`        | ✅     | Scheduled tab with closure type badges (nightly/weekend)      |
 | `components/alerts/FilterChips.svelte`         | ✅     | Category filter buttons                                       |
 | `components/alerts/MaintenanceWidget.svelte`   | ✅     | Scheduled maintenance display                                 |

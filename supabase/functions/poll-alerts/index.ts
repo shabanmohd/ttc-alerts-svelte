@@ -1,8 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 30 - Fixed SERVICE_RESUMED matching: require location overlap not just route
-const FUNCTION_VERSION = 30;
+// VERSION 38 - Direction mismatch penalty
+// - Added direction penalty (-0.5) for northbound vs southbound mismatches
+// - Keeps separate threads for different directions on same route
+// - v37: Planned maintenance threading for SERVICE_RESUMED
+// - v36: Bluesky reply chain threading
+// - v35: Station mismatch penalty
+// - v34: Address extraction bug fix
+const FUNCTION_VERSION = 38;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,7 +26,7 @@ const ALERT_CATEGORIES = {
     priority: 1
   },
   SERVICE_RESUMED: {
-    keywords: ['regular service', 'resumed', 'restored', 'back to normal', 'now stopping'],
+    keywords: ['regular service', 'resumed', 'restored', 'back to normal', 'now stopping', 'service has resumed'],
     priority: 2
   },
   DELAY: {
@@ -40,6 +46,34 @@ const ALERT_CATEGORIES = {
     priority: 5
   }
 };
+
+// Extract Bluesky reply parent info from post record
+interface BlueskyReplyInfo {
+  parentUri: string | null;
+  parentPostId: string | null;
+  rootUri: string | null;
+}
+
+function extractReplyInfo(record: any): BlueskyReplyInfo {
+  const reply = record?.reply;
+  if (!reply) {
+    return { parentUri: null, parentPostId: null, rootUri: null };
+  }
+  
+  const parentUri = reply.parent?.uri || null;
+  const rootUri = reply.root?.uri || null;
+  
+  // Extract post_id from parent URI: at://did:plc:xxx/app.bsky.feed.post/{post_id}
+  let parentPostId: string | null = null;
+  if (parentUri) {
+    const match = parentUri.match(/\/app\.bsky\.feed\.post\/([^/]+)$/);
+    if (match) {
+      parentPostId = `bsky-${match[1]}`;
+    }
+  }
+  
+  return { parentUri, parentPostId, rootUri };
+}
 
 // Map category to effect (for subway status display: Delay vs Disruption)
 function categoryToEffect(category: string): string {
@@ -97,17 +131,49 @@ function extractRoutes(text: string): string[] {
     });
   }
   
+  // Helper: Check if a match is likely an address (not a route)
+  // Addresses have patterns like "123 Yonge Ave", "456 Queen St", "789 King Blvd"
+  // Routes are at the START or have specific TTC route names
+  const isLikelyAddress = (match: string, matchIndex: number): boolean => {
+    // If it's at the very start of the text, it's likely a route
+    if (matchIndex === 0) return false;
+    
+    // Check if followed by street suffix (Ave, St, Blvd, Rd, Dr, etc.)
+    const afterMatch = text.slice(matchIndex + match.length);
+    if (/^\s+(Ave|St|Blvd|Rd|Dr|Cres|Way|Pkwy|Pl|Ct|Ln|Ter|Circle|Gate)\.?\b/i.test(afterMatch)) {
+      return true;
+    }
+    
+    // Check if preceded by "to", "at", "near", "from" (address context)
+    const beforeMatch = text.slice(0, matchIndex);
+    if (/\b(to|at|near|from|between)\s*$/i.test(beforeMatch)) {
+      return true;
+    }
+    
+    return false;
+  };
+  
   // Match numbered routes with optional name: "306 Carlton", "504 King", etc.
   // But DON'T match if already captured in comma list
-  const routeWithNameMatch = text.match(/\b(\d{1,3})\s+([A-Z][a-z]+)/g);
-  if (routeWithNameMatch) {
-    routeWithNameMatch.forEach(m => {
-      // Extract just the number part
-      const numMatch = m.match(/^(\d{1,3})/);
-      if (numMatch && !routes.some(r => r.startsWith(numMatch[1]))) {
-        routes.push(m); // Keep "306 Carlton" format
-      }
-    });
+  // FILTER OUT addresses like "106 Lansdowne Ave"
+  const routeWithNameRegex = /\b(\d{1,3})\s+([A-Z][a-z]+)/g;
+  let routeWithNameMatch;
+  while ((routeWithNameMatch = routeWithNameRegex.exec(text)) !== null) {
+    const fullMatch = routeWithNameMatch[0];
+    const numPart = routeWithNameMatch[1];
+    const matchIndex = routeWithNameMatch.index;
+    
+    // Skip if this looks like an address
+    if (isLikelyAddress(fullMatch, matchIndex)) {
+      continue;
+    }
+    
+    // Skip if we already have this route number
+    if (routes.some(r => r.startsWith(numPart))) {
+      continue;
+    }
+    
+    routes.push(fullMatch); // Keep "306 Carlton" format
   }
   
   // Match standalone route numbers at start of text: "510 Spadina" where 510 is the route
@@ -174,6 +240,32 @@ function extractLocationKeywords(text: string): Set<string> {
   return keywords;
 }
 
+// Extract station names specifically (for subway alerts)
+function extractStationName(text: string): string | null {
+  const lowerText = text.toLowerCase();
+  // Match patterns like "at Jane station", "at St George station", "from Osgoode station"
+  const stationMatch = lowerText.match(/(?:at|from|to|between|near)\s+([a-z]+(?:\s+[a-z]+)?)\s+station/i);
+  if (stationMatch) {
+    return stationMatch[1].toLowerCase();
+  }
+  // Also match "X station" at end or standalone
+  const endMatch = lowerText.match(/([a-z]+(?:\s+[a-z]+)?)\s+station/i);
+  if (endMatch) {
+    return endMatch[1].toLowerCase();
+  }
+  return null;
+}
+
+// Extract direction from alert text (northbound, southbound, eastbound, westbound)
+function extractDirection(text: string): string | null {
+  const lowerText = text.toLowerCase();
+  if (lowerText.includes('northbound')) return 'northbound';
+  if (lowerText.includes('southbound')) return 'southbound';
+  if (lowerText.includes('eastbound')) return 'eastbound';
+  if (lowerText.includes('westbound')) return 'westbound';
+  return null;
+}
+
 // Extract incident cause for matching
 function extractCause(text: string): string | null {
   const lowerText = text.toLowerCase();
@@ -194,6 +286,7 @@ function jaccardSimilarity(text1: string, text2: string): number {
 }
 
 // Enhanced similarity that considers location and cause
+// CRITICAL: Adds PENALTY for different stations to prevent grouping different incidents
 function enhancedSimilarity(text1: string, text2: string): number {
   // Base Jaccard similarity
   const jaccard = jaccardSimilarity(text1, text2);
@@ -209,7 +302,29 @@ function enhancedSimilarity(text1: string, text2: string): number {
   const cause2 = extractCause(text2);
   const causeBonus = (cause1 && cause1 === cause2) ? 0.15 : 0;
   
-  return Math.min(1, jaccard + locationBonus + causeBonus);
+  // STATION MISMATCH PENALTY: If both texts mention stations but they're DIFFERENT,
+  // this is likely a different incident on the same line (e.g., Jane vs St George)
+  const station1 = extractStationName(text1);
+  const station2 = extractStationName(text2);
+  let stationPenalty = 0;
+  if (station1 && station2 && station1 !== station2) {
+    // Both mention different stations - strong penalty to prevent grouping
+    stationPenalty = -0.4;
+    console.log(`Station mismatch penalty: "${station1}" ≠ "${station2}", penalty=${stationPenalty}`);
+  }
+  
+  // DIRECTION MISMATCH PENALTY: If both texts mention directions but they're DIFFERENT,
+  // treat them as separate incidents (e.g., northbound vs southbound)
+  const dir1 = extractDirection(text1);
+  const dir2 = extractDirection(text2);
+  let directionPenalty = 0;
+  if (dir1 && dir2 && dir1 !== dir2) {
+    // Both mention different directions - strong penalty to keep them separate
+    directionPenalty = -0.5;
+    console.log(`Direction mismatch penalty: "${dir1}" ≠ "${dir2}", penalty=${directionPenalty}`);
+  }
+  
+  return Math.max(0, Math.min(1, jaccard + locationBonus + causeBonus + stationPenalty + directionPenalty));
 }
 
 serve(async (req) => {
@@ -350,10 +465,18 @@ serve(async (req) => {
     // and is derived from the bluesky post ID
     const { data: existingAlerts } = await supabase
       .from('alert_cache')
-      .select('alert_id')
+      .select('alert_id, thread_id')
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
     const existingAlertIds = new Set(existingAlerts?.map(a => a.alert_id) || []);
+    
+    // Build alert_id -> thread_id map for reply chain threading
+    const alertToThreadMap = new Map<string, string>();
+    existingAlerts?.forEach(a => {
+      if (a.thread_id) {
+        alertToThreadMap.set(a.alert_id, a.thread_id);
+      }
+    });
 
     // NOTE: We now fetch candidate threads INSIDE the loop to catch newly created threads
     // This fixes the bug where SERVICE_RESUMED wouldn't find threads created in the same batch
@@ -380,6 +503,14 @@ serve(async (req) => {
       const { category, priority } = categorizeAlert(text);
       const routes = extractRoutes(text);
       
+      // Extract Bluesky reply info for thread chaining
+      const replyInfo = extractReplyInfo(post.record);
+      
+      // Log reply info for debugging
+      if (replyInfo.parentPostId) {
+        console.log(`[REPLY CHAIN] Alert ${alertId} is a reply to ${replyInfo.parentPostId}`);
+      }
+      
       // Create alert record matching alert_cache schema
       // CRITICAL: alert_id is required (NOT NULL) - must be generated from bluesky URI
       // NOTE: JSONB columns need arrays passed directly, not stringified
@@ -393,7 +524,13 @@ serve(async (req) => {
         affected_routes: JSON.parse(JSON.stringify(routes)), // Force clean array
         created_at: post.record.createdAt,
         is_latest: true,
-        effect: categoryToEffect(category)
+        effect: categoryToEffect(category),
+        // Store reply info for debugging and verification
+        raw_data: {
+          replyParentPostId: replyInfo.parentPostId,
+          replyRootPostId: replyInfo.rootUri ? `bsky-${replyInfo.rootUri.split('/').pop()}` : null,
+          replyParentUri: replyInfo.parentUri
+        }
       };
 
       // Insert alert
@@ -409,6 +546,10 @@ serve(async (req) => {
       }
 
       newAlerts++;
+      
+      // Add new alert to the map for subsequent reply chain lookups
+      // (in case later alerts in this batch reply to this one)
+      existingAlertIds.add(alertId);
 
       // FRESH QUERY: Get candidate threads for matching
       // This is INSIDE the loop to catch threads created by earlier alerts in the same batch
@@ -419,14 +560,133 @@ serve(async (req) => {
         .gte('updated_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
         .order('updated_at', { ascending: false });
 
+      // ADDITIONAL QUERY: Get planned maintenance threads with extended time window (5 days)
+      // Planned closures (weekends, track work) may have SERVICE_RESUMED posted days later
+      let plannedMaintenanceThreads: any[] = [];
+      if (category === 'SERVICE_RESUMED') {
+        const { data: plannedThreads } = await supabase
+          .from('incident_threads')
+          .select('*')
+          .gte('created_at', new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString())
+          .or('categories.cs.["PLANNED_CLOSURE"],categories.cs.["PLANNED_SERVICE_DISRUPTION"]')
+          .order('created_at', { ascending: false });
+        
+        plannedMaintenanceThreads = plannedThreads || [];
+        if (plannedMaintenanceThreads.length > 0) {
+          console.log(`[PLANNED MAINTENANCE] Found ${plannedMaintenanceThreads.length} planned maintenance threads in last 5 days for SERVICE_RESUMED matching`);
+        }
+      }
+
       // Thread matching - find best matching thread
       let matchedThread = null;
       let bestSimilarity = 0;
+      let matchedViaReply = false;  // Track if we matched via reply chain
+      
+      // === PRIORITY 1: BLUESKY REPLY CHAIN THREADING ===
+      // If this alert is a reply to an existing alert, check if parent has a thread
+      if (replyInfo.parentPostId) {
+        console.log(`[REPLY CHAIN LOOKUP] Searching for parent ${replyInfo.parentPostId}...`);
+        
+        // First check our in-memory map (includes alerts from this batch)
+        let parentThreadId = alertToThreadMap.get(replyInfo.parentPostId);
+        
+        if (parentThreadId) {
+          console.log(`[REPLY CHAIN] Found parent in memory map: ${parentThreadId}`);
+        }
+        
+        // If not in memory, query database for older alerts
+        if (!parentThreadId) {
+          const { data: parentAlert } = await supabase
+            .from('alert_cache')
+            .select('thread_id')
+            .eq('alert_id', replyInfo.parentPostId)
+            .single();
+          
+          if (parentAlert?.thread_id) {
+            parentThreadId = parentAlert.thread_id;
+            console.log(`[REPLY CHAIN] Found parent in database: ${parentThreadId}`);
+          } else {
+            console.log(`[REPLY CHAIN] Parent ${replyInfo.parentPostId} not found in database`);
+          }
+        }
+        
+        if (parentThreadId) {
+          // Found parent's thread - get thread details
+          const { data: parentThread } = await supabase
+            .from('incident_threads')
+            .select('*')
+            .eq('thread_id', parentThreadId)
+            .single();
+          
+          if (parentThread) {
+            // RULE: Check if thread is resolved and handle based on category
+            if (parentThread.is_resolved) {
+              // SERVICE_RESUMED can match resolved threads (and keep them resolved)
+              // Other categories can REOPEN resolved threads via reply chain
+              if (category === 'SERVICE_RESUMED') {
+                // SERVICE_RESUMED matching resolved thread - keep it resolved
+                matchedThread = parentThread;
+                matchedViaReply = true;
+                console.log(`Reply chain: ${alertId} -> resolved thread ${parentThreadId} (SERVICE_RESUMED)`);
+              } else {
+                // Non-SERVICE_RESUMED alert replying to resolved thread
+                // Per user rule: create new thread instead
+                console.log(`Reply chain: ${alertId} -> resolved thread ${parentThreadId} but category=${category}, creating new thread`);
+                // matchedThread stays null, will create new thread
+              }
+            } else {
+              // Thread is still active - always match via reply chain
+              // Per user rule B: Add to parent thread even if routes mismatch
+              matchedThread = parentThread;
+              matchedViaReply = true;
+              
+              const alertBaseRoutes = routes.map(extractRouteNumber);
+              const threadRoutes = Array.isArray(parentThread.affected_routes) ? parentThread.affected_routes : [];
+              const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
+              const hasRouteOverlap = alertBaseRoutes.some(base => threadBaseRoutes.includes(base));
+              
+              if (!hasRouteOverlap && routes.length > 0) {
+                console.log(`Reply chain: ${alertId} -> thread ${parentThreadId} (routes differ: alert=${routes.join(',')} thread=${threadRoutes.join(',')} - adding anyway per rule B)`);
+              } else {
+                console.log(`Reply chain: ${alertId} -> thread ${parentThreadId} (routes match)`);
+              }
+            }
+          }
+        }
+      }
 
+      // === PRIORITY 2: PLANNED MAINTENANCE THREADING ===
+      // For SERVICE_RESUMED alerts, check planned maintenance threads first (extended 5-day window)
+      // This handles weekend closures, track work, etc. where SERVICE_RESUMED may come days later
+      if (!matchedThread && category === 'SERVICE_RESUMED' && routes.length > 0 && plannedMaintenanceThreads.length > 0) {
+        const alertBaseRoutes = routes.map(extractRouteNumber);
+        
+        for (const thread of plannedMaintenanceThreads) {
+          const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+          if (threadRoutes.length === 0) continue;
+          
+          const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
+          const allAlertRoutesMatchThread = alertBaseRoutes.every(alertBase => 
+            threadBaseRoutes.includes(alertBase)
+          );
+          
+          if (allAlertRoutesMatchThread) {
+            const similarity = enhancedSimilarity(text, thread.title || '');
+            if (similarity > bestSimilarity) {
+              bestSimilarity = similarity;
+              matchedThread = thread;
+              console.log(`[PLANNED MAINTENANCE] SERVICE_RESUMED matched to planned closure thread ${thread.thread_id}, routes=${JSON.stringify(threadRoutes)}, similarity=${similarity.toFixed(2)}`);
+            }
+          }
+        }
+      }
+
+      // === PRIORITY 3: SIMILARITY-BASED THREADING ===
+      // Only if no match via reply chain
       // CRITICAL: Only attempt thread matching if alert has extracted routes
       // Alerts without routes should NEVER match existing threads
       // This prevents false positives where vague alerts get grouped incorrectly
-      if (routes.length > 0) {
+      if (!matchedThread && routes.length > 0) {
         // Extract base route numbers for family matching
         const alertBaseRoutes = routes.map(extractRouteNumber);
         
@@ -463,12 +723,22 @@ serve(async (req) => {
           // Use enhanced similarity that considers location and cause
           const similarity = enhancedSimilarity(text, threadTitle);
           
-          // SERVICE_RESUMED: Can match RESOLVED threads with same route
-          // Use very low threshold since vocabulary differs completely
+          // SERVICE_RESUMED: Can match RESOLVED or UNRESOLVED threads with same route
+          // Route match is the PRIMARY criterion - if routes match, we match!
+          // Similarity is secondary - only used to choose between multiple route matches
           if (category === 'SERVICE_RESUMED') {
-            if (similarity >= 0.1 && similarity > bestSimilarity) {
-              bestSimilarity = similarity;
+            // If routes match, this is likely the right thread
+            // Priority: 1) Unresolved thread with same route (incident still active)
+            //           2) Most recently resolved thread with same route
+            const isUnresolved = !thread.is_resolved;
+            const effectiveSimilarity = isUnresolved 
+              ? similarity + 0.5  // Boost unresolved threads significantly
+              : similarity;
+            
+            if (effectiveSimilarity > bestSimilarity) {
+              bestSimilarity = effectiveSimilarity;
               matchedThread = thread;
+              console.log(`SERVICE_RESUMED match candidate: Thread ${thread.thread_id}, routes=${JSON.stringify(threadRoutes)}, resolved=${thread.is_resolved}, similarity=${similarity.toFixed(2)}, effective=${effectiveSimilarity.toFixed(2)}`);
             }
             continue; // Keep looking for better match
           }
@@ -494,20 +764,25 @@ serve(async (req) => {
 
       if (matchedThread) {
         // VALIDATION: Double-check route overlap before assigning
-        // This catches any edge cases where similarity matching bypassed route checks
-        const alertBaseRoutes = routes.map(extractRouteNumber);
-        const threadRoutes = Array.isArray(matchedThread.affected_routes) ? matchedThread.affected_routes : [];
-        const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
-        const hasValidRouteOverlap = alertBaseRoutes.some(base => threadBaseRoutes.includes(base));
-        
-        if (!hasValidRouteOverlap && routes.length > 0 && threadRoutes.length > 0) {
-          // Route mismatch detected! Log warning and create new thread instead
-          console.warn(`Route mismatch: Alert routes ${JSON.stringify(routes)} don't match thread routes ${JSON.stringify(threadRoutes)}. Creating new thread.`);
-          matchedThread = null; // Force new thread creation
+        // SKIP validation if matched via reply chain (rule B: add to parent anyway)
+        if (!matchedViaReply) {
+          const alertBaseRoutes = routes.map(extractRouteNumber);
+          const threadRoutes = Array.isArray(matchedThread.affected_routes) ? matchedThread.affected_routes : [];
+          const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
+          const hasValidRouteOverlap = alertBaseRoutes.some(base => threadBaseRoutes.includes(base));
+          
+          if (!hasValidRouteOverlap && routes.length > 0 && threadRoutes.length > 0) {
+            // Route mismatch detected! Log warning and create new thread instead
+            console.warn(`Route mismatch: Alert routes ${JSON.stringify(routes)} don't match thread routes ${JSON.stringify(threadRoutes)}. Creating new thread.`);
+            matchedThread = null; // Force new thread creation
+          }
         }
       }
       
       if (matchedThread) {
+        // Update alertToThreadMap for subsequent reply chain lookups
+        alertToThreadMap.set(alertId, matchedThread.thread_id);
+        
         // Mark old alerts in this thread as not latest
         await supabase
           .from('alert_cache')
@@ -563,6 +838,11 @@ serve(async (req) => {
         // This prevents race conditions by using database-level advisory locks
         const headerTitle = text.split('\n')[0].substring(0, 200);
         
+        // Log when SERVICE_RESUMED doesn't find a parent thread (this shouldn't happen often)
+        if (category === 'SERVICE_RESUMED') {
+          console.log(`SERVICE_RESUMED creating new thread for routes ${JSON.stringify(routes)} - no matching parent found. Text: "${text.substring(0, 100)}..."`);
+        }
+        
         // Use the database's find_or_create_thread function for atomic operation
         // This handles race conditions properly using advisory locks per route
         const { data: threadResult, error: threadError } = await supabase
@@ -606,6 +886,9 @@ serve(async (req) => {
                   .update({ thread_id: recentThread.thread_id })
                   .eq('alert_id', newAlert.alert_id);
                 
+                // Update alertToThreadMap for subsequent reply chain lookups
+                alertToThreadMap.set(alertId, recentThread.thread_id);
+                
                 // Merge routes
                 const mergedRoutes = [...new Set([...recentRoutes, ...routes])];
                 await supabase
@@ -644,6 +927,9 @@ serve(async (req) => {
                 .from('alert_cache')
                 .update({ thread_id: newThread.thread_id })
                 .eq('alert_id', newAlert.alert_id);
+              
+              // Update alertToThreadMap for subsequent reply chain lookups
+              alertToThreadMap.set(alertId, newThread.thread_id);
             }
           }
         } else if (threadResult && threadResult.length > 0) {
@@ -657,6 +943,9 @@ serve(async (req) => {
             .from('alert_cache')
             .update({ thread_id: threadId })
             .eq('alert_id', newAlert.alert_id);
+          
+          // Update alertToThreadMap for subsequent reply chain lookups
+          alertToThreadMap.set(alertId, threadId);
           
           if (!isNewThread) {
             // Existing thread - merge routes and update
