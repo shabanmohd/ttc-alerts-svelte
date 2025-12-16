@@ -1,14 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 39 - TTC Live API as secondary data source
-// - Integrates TTC Live API alerts as secondary source (Bluesky prioritized)
-// - Excludes planned/scheduled alerts from TTC API (alertType: "Planned")
-// - Creates threads for TTC API alerts not covered by Bluesky
+// VERSION 41 - TTC API accessibility alerts support
+// - Adds processing of TTC API accessibility array (elevator/escalator outages)
+// - Fixes comma-separated routes parsing for accessibility alerts
+// - Accessibility alerts are imported regardless of Bluesky coverage (different type)
+// - v40: Refined filtering to include SIGNIFICANT_DELAYS even if planned
+// - v39: TTC Live API as secondary data source
 // - v38: Direction mismatch penalty
-// - v37: Planned maintenance threading for SERVICE_RESUMED
-// - v36: Bluesky reply chain threading
-const FUNCTION_VERSION = 39;
+const FUNCTION_VERSION = 41;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -377,13 +377,15 @@ serve(async (req) => {
               }
             }
             
-            // === SAVE NON-PLANNED ALERTS FOR SECONDARY DATA SOURCE ===
-            // Exclude alertType: "Planned" - we only want real-time unplanned incidents
-            // Include: NO_SERVICE, REDUCED_SERVICE, DETOUR, SIGNIFICANT_DELAYS, ACCESSIBILITY_ISSUE
-            const isPlanned = alert.alertType === 'Planned';
+            // === SAVE ALERTS FOR SECONDARY DATA SOURCE ===
+            // Exclude planned closures (REDUCED_SERVICE, NO_SERVICE with alertType: "Planned")
+            // Include: SIGNIFICANT_DELAYS even if planned (these are real-time slow zones)
+            // Include: DETOUR, ACCESSIBILITY_ISSUE (always non-planned in practice)
+            const isPlannedClosure = alert.alertType === 'Planned' && 
+              ['NO_SERVICE', 'REDUCED_SERVICE'].includes(alert.effect);
             const hasRelevantEffect = ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'SIGNIFICANT_DELAYS', 'ACCESSIBILITY_ISSUE'].includes(alert.effect);
             
-            if (!isPlanned && hasRelevantEffect && alert.route && alert.headerText) {
+            if (!isPlannedClosure && hasRelevantEffect && alert.route && alert.headerText) {
               ttcApiAlerts.push(alert);
             }
           }
@@ -403,8 +405,20 @@ serve(async (req) => {
           }
         }
         
+        // Process accessibility array (elevator/escalator outages)
+        // These are ALWAYS active issues and should be imported
+        if (ttcData.accessibility && Array.isArray(ttcData.accessibility)) {
+          for (const alert of ttcData.accessibility) {
+            if (alert.effect === 'ACCESSIBILITY_ISSUE' && alert.headerText) {
+              // These alerts have route like "1,19,26,127" - use first route for primary matching
+              // but store all for display
+              ttcApiAlerts.push(alert);
+            }
+          }
+        }
+        
         console.log(`TTC API shows ${activeRoutes.size} routes with active alerts: ${[...activeRoutes].join(', ')}`);
-        console.log(`TTC API has ${ttcApiAlerts.length} non-planned alerts available as secondary source`);
+        console.log(`TTC API has ${ttcApiAlerts.length} alerts available as secondary source (${ttcData.accessibility?.length || 0} accessibility)`);
         
         // Get all unresolved threads from our database
         const { data: unresolvedThreads } = await supabase
@@ -1022,19 +1036,28 @@ serve(async (req) => {
       
       // Process each TTC API alert
       for (const ttcAlert of ttcApiAlerts) {
-        const routeStr = ttcAlert.route.toString();
-        const routeBase = extractRouteNumber(routeStr);
+        const routeStr = ttcAlert.route?.toString() || '';
         
-        // Skip if this route already has a Bluesky thread
-        // Bluesky is prioritized as primary source
-        if (blueskyActiveRoutes.has(routeStr) || blueskyActiveRoutes.has(routeBase)) {
-          console.log(`TTC API: Skipping route ${routeStr} - already covered by Bluesky`);
+        // Handle comma-separated routes (common in accessibility alerts like "1,19,26,127")
+        // Use the first route for primary matching
+        const routeParts = routeStr.split(',').map((r: string) => r.trim()).filter(Boolean);
+        const primaryRoute = routeParts[0] || routeStr;
+        const routeBase = extractRouteNumber(primaryRoute);
+        
+        // For accessibility alerts, don't skip based on Bluesky coverage
+        // These are elevator/escalator issues that are separate from service alerts
+        const isAccessibilityAlert = ttcAlert.effect === 'ACCESSIBILITY_ISSUE';
+        
+        // Skip if this route already has a Bluesky thread (unless it's accessibility)
+        // Bluesky is prioritized as primary source for service alerts
+        if (!isAccessibilityAlert && (blueskyActiveRoutes.has(primaryRoute) || blueskyActiveRoutes.has(routeBase))) {
+          console.log(`TTC API: Skipping route ${primaryRoute} - already covered by Bluesky`);
           continue;
         }
         
         // Generate unique alert_id for TTC API alerts
-        // Format: ttc-{route}-{effect}-{id}
-        const ttcAlertId = `ttc-${routeStr}-${ttcAlert.effect}-${ttcAlert.id}`;
+        // Format: ttc-{effect}-{id}  (simplified to avoid issues with comma routes)
+        const ttcAlertId = `ttc-${ttcAlert.effect}-${ttcAlert.id}`;
         
         // Check if we already have this TTC API alert
         if (existingAlertIds.has(ttcAlertId)) {
@@ -1064,15 +1087,32 @@ serve(async (req) => {
         
         // Format routes array
         const routes: string[] = [];
-        if (/^[1-4]$/.test(routeStr)) {
+        
+        // Handle accessibility alerts with multiple comma-separated routes
+        if (isAccessibilityAlert && routeParts.length > 0) {
+          // For accessibility, use the station name from headerText instead of route numbers
+          // The headerText is like "Dupont: Elevator out of service..."
+          const stationMatch = ttcAlert.headerText?.match(/^([^:]+):/);
+          if (stationMatch) {
+            routes.push(stationMatch[1].trim());
+          } else {
+            // Fallback: include first subway line if present
+            for (const r of routeParts) {
+              if (/^[1-4]$/.test(r)) {
+                routes.push(`Line ${r}`);
+                break;
+              }
+            }
+          }
+        } else if (/^[1-4]$/.test(primaryRoute)) {
           // Subway line - add both formats
-          routes.push(`Line ${routeStr}`);
+          routes.push(`Line ${primaryRoute}`);
         } else {
-          routes.push(routeStr);
+          routes.push(primaryRoute);
         }
         
         // Create header text from TTC API data
-        const headerText = ttcAlert.headerText || ttcAlert.title || `Route ${routeStr} service alert`;
+        const headerText = ttcAlert.headerText || ttcAlert.title || `Route ${primaryRoute} service alert`;
         const descriptionText = ttcAlert.customHeaderText || ttcAlert.headerText || headerText;
         
         // Create alert record
