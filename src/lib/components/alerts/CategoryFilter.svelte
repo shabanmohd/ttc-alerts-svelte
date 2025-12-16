@@ -1,79 +1,77 @@
 <script lang="ts">
-  import { cn } from '$lib/utils';
-  import { Accessibility, AlertTriangle, Clock, List } from 'lucide-svelte';
-  
+  import { cn } from "$lib/utils";
+  import { Accessibility, AlertOctagon, Clock } from "lucide-svelte";
+
   /**
    * Severity category filter for alerts.
    * Categories based on TTC Live API effects:
    * - MAJOR: Disruptions, closures, detours, shuttles (NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE)
    * - MINOR: Delays, reduced speed zones (SIGNIFICANT_DELAYS, DELAY)
    * - ACCESSIBILITY: Elevator/escalator outages (ACCESSIBILITY_ISSUE)
-   * - ALL: Show all alerts
    */
-  
-  type Category = 'MAJOR' | 'MINOR' | 'ACCESSIBILITY' | 'ALL';
-  
+
+  type Category = "MAJOR" | "MINOR" | "ACCESSIBILITY";
+
   interface CategoryConfig {
     id: Category;
     label: string;
-    icon: typeof AlertTriangle;
+    icon: typeof AlertOctagon;
     ariaLabel: string;
     colorClass: string;
   }
-  
-  let { 
-    selected = 'MAJOR',
+
+  let {
+    selected = "MAJOR",
     counts = { MAJOR: 0, MINOR: 0, ACCESSIBILITY: 0, ALL: 0 },
-    onSelect
-  }: { 
-    selected: Category;
-    counts?: { MAJOR: number; MINOR: number; ACCESSIBILITY: number; ALL: number };
+    onSelect,
+  }: {
+    selected: Category | "ALL";
+    counts?: {
+      MAJOR: number;
+      MINOR: number;
+      ACCESSIBILITY: number;
+      ALL: number;
+    };
     onSelect: (category: Category) => void;
   } = $props();
-  
+
+  // Note: "ALL" tab removed per user request - only show MAJOR, MINOR, ACCESSIBILITY
   const categories: CategoryConfig[] = [
-    { 
-      id: 'MAJOR', 
-      label: 'Major', 
-      icon: AlertTriangle,
-      ariaLabel: 'Show major disruptions only',
-      colorClass: 'category-major'
+    {
+      id: "MAJOR",
+      label: "Major",
+      icon: AlertOctagon,  // Octagon stop sign - distinct from AlertTriangle
+      ariaLabel: "Show major disruptions only",
+      colorClass: "category-major",
     },
-    { 
-      id: 'MINOR', 
-      label: 'Minor', 
+    {
+      id: "MINOR",
+      label: "Minor",
       icon: Clock,
-      ariaLabel: 'Show minor delays only',
-      colorClass: 'category-minor'
+      ariaLabel: "Show minor delays only",
+      colorClass: "category-minor",
     },
-    { 
-      id: 'ACCESSIBILITY', 
-      label: 'Accessibility', 
+    {
+      id: "ACCESSIBILITY",
+      label: "Accessibility",
       icon: Accessibility,
-      ariaLabel: 'Show accessibility alerts only',
-      colorClass: 'category-accessibility'
+      ariaLabel: "Show accessibility alerts only",
+      colorClass: "category-accessibility",
     },
-    { 
-      id: 'ALL', 
-      label: 'All', 
-      icon: List,
-      ariaLabel: 'Show all alerts',
-      colorClass: 'category-all'
-    }
   ];
-  
+
   function handleSelect(category: Category) {
     onSelect(category);
   }
-  
+
   function getCount(id: Category): number {
     return counts[id] || 0;
   }
 </script>
 
-<div 
-  class="category-filter-container" 
-  role="tablist" 
+<div
+  class="category-filter-container"
+  role="tablist"
   aria-label="Filter alerts by severity"
 >
   {#each categories as category}
@@ -81,11 +79,7 @@
     {@const Icon = category.icon}
     {@const count = getCount(category.id)}
     <button
-      class={cn(
-        'category-tab',
-        category.colorClass,
-        isActive && 'active'
-      )}
+      class={cn("category-tab", category.colorClass, isActive && "active")}
       role="tab"
       aria-selected={isActive}
       aria-label={`${category.ariaLabel} (${count} alerts)`}
@@ -140,22 +134,33 @@
     background-color: hsl(var(--background));
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
   }
-  
+
   /* Category-specific active colors */
   .category-tab.category-major.active {
     color: hsl(0 72% 51%);
   }
-  
+
+  /* Dark mode: Brighter red for better contrast on dark backgrounds */
+  :global(.dark) .category-tab.category-major.active {
+    color: hsl(0 85% 65%);
+  }
+
   .category-tab.category-minor.active {
     color: hsl(38 92% 50%);
   }
-  
+
+  /* Dark mode: Brighter amber for better contrast */
+  :global(.dark) .category-tab.category-minor.active {
+    color: hsl(38 95% 60%);
+  }
+
   .category-tab.category-accessibility.active {
     color: hsl(217 91% 60%);
   }
-  
-  .category-tab.category-all.active {
-    color: hsl(var(--foreground));
+
+  /* Dark mode: Slightly brighter blue for consistency */
+  :global(.dark) .category-tab.category-accessibility.active {
+    color: hsl(217 95% 70%);
   }
 
   .category-tab.active::after {
@@ -168,21 +173,29 @@
     height: 2px;
     border-radius: 1px;
   }
-  
+
   .category-tab.category-major.active::after {
     background: hsl(0 72% 51%);
   }
-  
+
+  :global(.dark) .category-tab.category-major.active::after {
+    background: hsl(0 85% 65%);
+  }
+
   .category-tab.category-minor.active::after {
     background: hsl(38 92% 50%);
   }
-  
+
+  :global(.dark) .category-tab.category-minor.active::after {
+    background: hsl(38 95% 60%);
+  }
+
   .category-tab.category-accessibility.active::after {
     background: hsl(217 91% 60%);
   }
-  
-  .category-tab.category-all.active::after {
-    background: hsl(var(--primary));
+
+  :global(.dark) .category-tab.category-accessibility.active::after {
+    background: hsl(217 95% 70%);
   }
 
   .category-icon {
@@ -195,7 +208,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
+
   .category-count {
     display: inline-flex;
     align-items: center;
@@ -209,25 +222,40 @@
     background-color: hsl(var(--muted-foreground) / 0.2);
     color: hsl(var(--muted-foreground));
   }
-  
+
   .category-tab.active .category-count {
     background-color: hsl(var(--muted));
     color: hsl(var(--foreground));
   }
-  
+
   .category-tab.category-major.active .category-count {
     background-color: hsl(0 72% 51% / 0.15);
     color: hsl(0 72% 51%);
   }
-  
+
+  :global(.dark) .category-tab.category-major.active .category-count {
+    background-color: hsl(0 85% 65% / 0.2);
+    color: hsl(0 85% 65%);
+  }
+
   .category-tab.category-minor.active .category-count {
     background-color: hsl(38 92% 50% / 0.15);
     color: hsl(38 60% 40%);
   }
-  
+
+  :global(.dark) .category-tab.category-minor.active .category-count {
+    background-color: hsl(38 95% 60% / 0.2);
+    color: hsl(38 95% 60%);
+  }
+
   .category-tab.category-accessibility.active .category-count {
     background-color: hsl(217 91% 60% / 0.15);
     color: hsl(217 91% 60%);
+  }
+
+  :global(.dark) .category-tab.category-accessibility.active .category-count {
+    background-color: hsl(217 95% 70% / 0.2);
+    color: hsl(217 95% 70%);
   }
 
   /* Responsive */
@@ -237,12 +265,12 @@
       gap: 0.25rem;
       font-size: 0.6875rem;
     }
-    
+
     .category-icon {
       width: 0.75rem;
       height: 0.75rem;
     }
-    
+
     .category-count {
       min-width: 1rem;
       height: 1rem;
@@ -250,13 +278,13 @@
       padding: 0 0.1875rem;
     }
   }
-  
+
   /* Extra small screens: icons only */
   @media (max-width: 320px) {
     .category-label {
       display: none;
     }
-    
+
     .category-tab {
       padding: 0.625rem 0.5rem;
     }
