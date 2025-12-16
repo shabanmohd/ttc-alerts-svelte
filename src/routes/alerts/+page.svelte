@@ -1126,9 +1126,7 @@
 
           <div
             class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-            style={isNew
-              ? ""
-              : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+            style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
           >
             <AlertCard {thread} lineColor={lineInfo?.color} />
           </div>

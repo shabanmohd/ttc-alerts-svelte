@@ -7,7 +7,7 @@
     X,
     Pencil,
     RefreshCw,
-    MapPinned,
+    Route,
     Trash2,
   } from "lucide-svelte";
   import { goto } from "$app/navigation";
@@ -521,7 +521,7 @@
       onclick={() => routeSearchRef?.focus()}
     >
       <div class="empty-state-icon">
-        <MapPinned class="h-8 w-8" />
+        <Route class="h-8 w-8" />
       </div>
       <h3 class="empty-state-title">{$_("myRoutes.noRoutesSaved")}</h3>
       <p class="empty-state-description">

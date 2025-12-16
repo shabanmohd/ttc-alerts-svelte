@@ -15,7 +15,7 @@
   </div>
   <h3 class="empty-state-title">Add your first stop</h3>
   <p class="empty-state-description">
-    Save your regular stops to see live arrival times. Know exactly when your bus or streetcar is coming.
+    Save your regular stops to see live arrival times for buses, streetcars, and subways.
   </p>
   <Button onclick={onAddStop} class="mt-4">
     <Plus class="h-4 w-4 mr-2" />
