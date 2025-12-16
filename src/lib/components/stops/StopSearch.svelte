@@ -200,8 +200,8 @@
 
   function handleBlur(event: FocusEvent) {
     // Don't hide if clicking on results
-    const relatedTarget = event.relatedTarget as HTMLElement;
-    if (relatedTarget?.closest("[data-stop-results]")) {
+    const relatedTarget = event.relatedTarget;
+    if (relatedTarget instanceof Element && relatedTarget.closest("[data-stop-results]")) {
       return;
     }
     // Delay hiding to allow click events
