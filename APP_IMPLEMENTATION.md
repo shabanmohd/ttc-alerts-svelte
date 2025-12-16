@@ -356,6 +356,55 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 16, 2025 - Remove Subway Line Accordion Grouping
+
+**Change:** Removed accordion-style grouping wrapper for subway line alerts.
+
+**Details:**
+
+- ✅ All alerts now display directly without "Line X" accordion wrapper
+- ✅ Removed `alertsByLine` derived store and related grouping logic
+- ✅ Removed `expandedSections` state and `toggleAccordion` function
+- ✅ Removed ~80 lines of accordion CSS styles
+- ✅ Kept `getSubwayLineFromThread` helper for lineColor prop on AlertCards
+
+**Rationale:** Simplify UI - alerts are displayed flat with subway line colors preserved via `lineColor` prop.
+
+**Files Updated:**
+
+- `src/routes/alerts/+page.svelte` - Removed accordion code, render alerts directly
+
+### Dec 16, 2025 - Toast Notification Improvements
+
+**Change:** Enhanced toast notifications for better contrast, consistency, and accessibility.
+
+**Details:**
+
+- ✅ Changed toast backgrounds from transparent to solid colors for WCAG AA contrast
+- ✅ Standardized "removed" actions from info→success toasts across app
+- ✅ Added distinct colors per toast type: green (success), blue (info), amber (warning), red (error)
+- ✅ Added icon styling (20x20px, inherits color) for visual consistency
+- ✅ Added i18n translations for toast descriptions (3 new keys)
+
+**Color System:**
+| Type | Background | Usage |
+|---------|---------------------|----------------------------|
+| Success | Green (142 72% 29%) | Actions completed, removes |
+| Info | Blue (217 91% 40%) | Neutral information |
+| Warning | Amber (38 92% 40%) | Caution states |
+| Error | Red (0 84% 45%) | Errors, failures |
+
+**Files Updated:**
+
+- `src/lib/components/ui/sonner/sonner.svelte` - Solid background colors
+- `src/routes/layout.css` - Toast CSS with distinct colors and icon styling
+- `src/lib/i18n/translations/en.json` - Added toast description translations
+- `src/routes/settings/+page.svelte` - Use i18n for toast descriptions
+- `src/lib/components/alerts/BookmarkRouteButton.svelte` - info→success
+- `src/lib/components/stops/BookmarkStopButton.svelte` - info→success
+- `src/lib/components/stops/RouteStopItem.svelte` - info→success
+- `DESIGN_SYSTEM.md` - Added Toast Notifications section
+
 ### Dec 16, 2025 - Subway Status Cards Non-Clickable
 
 **Change:** Made subway status cards in the alerts page header non-interactive.
