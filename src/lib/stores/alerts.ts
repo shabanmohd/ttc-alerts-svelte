@@ -67,6 +67,7 @@ export function getSeverityCategory(categories: string[], effect?: string, heade
   // Check for accessibility alerts first (elevator/escalator)
   if (
     upperCategories.includes('ACCESSIBILITY_ISSUE') ||
+    upperCategories.includes('ACCESSIBILITY') ||
     upperEffect.includes('ACCESSIBILITY') ||
     lowerHeader.includes('elevator') ||
     lowerHeader.includes('escalator')
@@ -183,20 +184,41 @@ export async function fetchAlerts(): Promise<void> {
     
     if (alertsError) throw alertsError;
     
-    // Get unique thread IDs from recent alerts
-    const threadIds = [...new Set((recentAlerts || []).map(a => a.thread_id).filter(Boolean))];
+    // Step 1b: Also fetch accessibility alerts (elevator/escalator) with extended 30-day window
+    // These issues persist much longer than typical service disruptions
+    const { data: accessibilityAlerts, error: accessibilityError } = await supabase
+      .from('alert_cache')
+      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
+      .eq('effect', 'ACCESSIBILITY_ISSUE')
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(50);
+    
+    if (accessibilityError) throw accessibilityError;
+    
+    // Merge recent alerts with accessibility alerts (deduplicate by alert_id)
+    const allRecentAlerts = recentAlerts || [];
+    const allAccessibilityAlerts = accessibilityAlerts || [];
+    const existingIds = new Set(allRecentAlerts.map(a => a.alert_id));
+    const mergedAlerts = [
+      ...allRecentAlerts,
+      ...allAccessibilityAlerts.filter(a => !existingIds.has(a.alert_id))
+    ];
+    
+    // Get unique thread IDs from all alerts (recent + accessibility)
+    const threadIds = [...new Set(mergedAlerts.map(a => a.thread_id).filter(Boolean))];
     
     // Step 2: Fetch ALL alerts from these active threads (not just last 24h)
     // This ensures we get the full thread history for display
-    let allAlertsData = recentAlerts || [];
+    let allAlertsData = mergedAlerts;
     
     if (threadIds.length > 0) {
-      // Fetch all alerts for the identified threads (up to 7 days to cover weekend closures)
+      // Fetch all alerts for the identified threads (up to 30 days to cover accessibility issues)
       const { data: threadAlerts, error: threadAlertsError } = await supabase
         .from('alert_cache')
         .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
         .in('thread_id', threadIds)
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false });
       
       if (threadAlertsError) throw threadAlertsError;
