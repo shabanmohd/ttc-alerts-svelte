@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 6.0  
-**Date:** December 15, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v31 + Bluesky reply threading + TTC API cross-check)  
+**Version:** 7.0  
+**Date:** December 16, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v39 + Bluesky reply threading + TTC API dual-use)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -28,13 +28,14 @@
 This document describes the alert categorization and threading system designed to:
 
 1. **Bluesky integration** - Primary source from @ttcalerts.bsky.social
-2. **Bluesky reply threading** - Priority to reply chain relationships (v31)
-3. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
-4. **Effect-based categorization** - Focus on service impact, not cause
-5. **Incident threading** - Group related updates using reply chains + similarity + route matching
-6. **Frontend filtering** - Mutually exclusive category filters in UI
-7. **Planned alert separation** - Maintenance alerts excluded from main feed
-8. **TTC API cross-check** - Official TTC Live API used for resolution verification
+2. **TTC Live API secondary source** - Fills gaps when Bluesky hasn't posted yet (v39)
+3. **Bluesky reply threading** - Priority to reply chain relationships (v31)
+4. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
+5. **Effect-based categorization** - Focus on service impact, not cause
+6. **Incident threading** - Group related updates using reply chains + similarity + route matching
+7. **Frontend filtering** - Mutually exclusive category filters in UI
+8. **Planned alert separation** - Maintenance/scheduled alerts excluded from main feed
+9. **TTC API cross-check** - Official TTC Live API used for resolution verification
 
 ---
 
@@ -42,21 +43,26 @@ This document describes the alert categorization and threading system designed t
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  Bluesky API    │────▶│  poll-alerts (v31)   │────▶│  Supabase DB    │
+│  Bluesky API    │────▶│  poll-alerts (v39)   │────▶│  Supabase DB    │
 │  @ttcalerts     │     │  (Edge Function)     │     │  alert_cache    │
-└─────────────────┘     └──────────────────────┘     │  incident_      │
-        │                        │                    │  threads        │
-        │                        ▼                    └────────┬────────┘
-        │               ┌──────────────────────┐               │
-        │               │  TTC Live API        │               │
-        │               │  (Cross-check)       │               │
-        │               └──────────────────────┘               │
-        │                                                      │
-        │               ┌──────────────────────┐               │
-        └──────────────▶│  Svelte Frontend     │◀──────────────┘
-                        │  alerts.ts store     │
-                        │  + Realtime sub      │
-                        └──────────────────────┘
+│  (PRIMARY)      │     └──────────────────────┘     │  incident_      │
+└─────────────────┘              │   │               │  threads        │
+                                 │   │               └────────┬────────┘
+┌─────────────────┐              │   │                        │
+│  TTC Live API   │──────────────┘   │                        │
+│  alerts.ttc.ca  │     (SECONDARY)  │                        │
+│  (non-planned)  │                  │                        │
+└─────────────────┘                  ▼                        │
+                            ┌──────────────────┐              │
+                            │  Cross-Check &   │              │
+                            │  Resolution      │              │
+                            └──────────────────┘              │
+                                                              │
+                            ┌──────────────────────┐          │
+                            │  Svelte Frontend     │◀─────────┘
+                            │  alerts.ts store     │
+                            │  + Realtime sub      │
+                            └──────────────────────┘
 ```
 
 **Stack:**
@@ -64,7 +70,8 @@ This document describes the alert categorization and threading system designed t
 - **Frontend:** Svelte 5 + TypeScript + Tailwind + shadcn-svelte
 - **Backend:** Supabase (PostgreSQL + Edge Functions + Realtime)
 - **Hosting:** Cloudflare Pages
-- **Data Source:** Bluesky AT Protocol (public API)
+- **Primary Data Source:** Bluesky AT Protocol (public API)
+- **Secondary Data Source:** TTC Live API (v39+)
 - **Verification:** TTC Live API (alerts.ttc.ca)
 
 ---
@@ -81,16 +88,35 @@ This document describes the alert categorization and threading system designed t
 - **Polling:** Edge function fetches last 50 posts per invocation
 - **Deduplication:** Uses `alert_id` (generated from bluesky URI post_id as `bsky-{post_id}`)
 - **Reply Threading:** Extracts `reply.parent.uri` for thread chain detection (v31)
-- **Status:** ✅ Enabled (primary and only source)
+- **Status:** ✅ Enabled (primary source, always prioritized)
+
+**Secondary Source: TTC Live API (v39+)**
+
+- **Endpoint:** `https://alerts.ttc.ca/api/alerts/live-alerts`
+- **Purpose:** Fill gaps when @ttcalerts hasn't posted yet
+- **Filtering:** 
+  - ✅ Include: `alertType !== "Planned"` (real-time incidents only)
+  - ✅ Include: Effects `NO_SERVICE`, `REDUCED_SERVICE`, `DETOUR`, `SIGNIFICANT_DELAYS`, `ACCESSIBILITY_ISSUE`
+  - ❌ Exclude: `alertType === "Planned"` (scheduled closures, maintenance)
+- **Deduplication:** Only creates alerts for routes NOT already covered by Bluesky
+- **Alert ID Format:** `ttc-{route}-{effect}-{id}` (e.g., `ttc-1-SIGNIFICANT_DELAYS-54744`)
+- **Status:** ✅ Enabled (v39+)
 
 **TTC Live API (Cross-Check):**
 
 - **Endpoint:** `https://alerts.ttc.ca/api/alerts/live-alerts`
-- **Purpose:** Verify alert resolution status (not for ingestion)
+- **Purpose:** Verify alert resolution status
 - **Usage:** If a route is no longer in TTC API, thread is marked resolved
 - **Status:** ✅ Enabled (v26+)
 
 **GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear on Bluesky)
+
+### Dual-Source Priority Rules (v39)
+
+1. **Bluesky is always primary** - If a route has an active Bluesky thread, TTC API alerts for that route are skipped
+2. **TTC API fills gaps** - Only creates alerts for routes without Bluesky coverage
+3. **Planned alerts excluded** - TTC API planned/scheduled alerts are never imported (Bluesky handles these)
+4. **Same threading logic** - TTC API alerts create/join threads using same rules as Bluesky
 
 ### Key Principles
 
@@ -150,6 +176,10 @@ const ALERT_CATEGORIES = {
     keywords: ["planned", "scheduled", "maintenance", "this weekend"],
     priority: 5,
   },
+  ACCESSIBILITY: {
+    keywords: ["elevator", "escalator", "accessible", "wheelchair", "out of service"],
+    priority: 6,
+  },
 };
 ```
 
@@ -163,6 +193,7 @@ const ALERT_CATEGORIES = {
 | 4        | DIVERSION          | MEDIUM - Different route  |
 | 4        | SHUTTLE            | MEDIUM - Bus replacement  |
 | 5        | PLANNED_CLOSURE    | HIGH - Advance notice     |
+| 6        | ACCESSIBILITY      | INFO - Elevator/escalator |
 
 ### Category Matching Logic
 
@@ -992,45 +1023,84 @@ CREATE TABLE planned_maintenance (
 ### `poll-alerts`
 
 **Trigger:** Cron schedule (every 30 seconds)  
-**Purpose:** Fetch, categorize, thread alerts from Bluesky + cross-check resolution with TTC Live API
-**Version:** v26 (December 11, 2025)
+**Purpose:** Fetch, categorize, thread alerts from Bluesky + TTC Live API secondary source + cross-check resolution
+**Version:** v39 (December 16, 2025)
 
 **Flow:**
 
-1. **TTC Live API Cross-Check** (NEW in v26)
+1. **TTC Live API Fetch + Cross-Check**
 
    - Fetch active alerts from `https://alerts.ttc.ca/api/alerts/live-alerts`
+   - **Save non-planned alerts** for later processing (v39)
    - Extract all routes with active disruptions
    - Query unresolved threads in our database
    - Mark threads as resolved if their routes are NOT in TTC's active alerts
    - Log resolved threads with reason
    - Falls back gracefully if TTC API is unavailable
 
-2. Fetch latest posts from @ttcalerts.bsky.social
-3. For each post:
-   - Extract text and routes (including letter suffix variants)
-   - Determine category from keywords
-   - Find or create incident thread (using route family matching + enhanced similarity)
-   - Store in `alert_cache`
+2. **Bluesky Processing (Primary Source)**
+   - Fetch latest posts from @ttcalerts.bsky.social
+   - For each post:
+     - Extract text and routes (including letter suffix variants)
+     - Determine category from keywords
+     - Check reply chain for thread linking (v31)
+     - Find or create incident thread (using route family matching + enhanced similarity)
+     - Store in `alert_cache`
+     - **Track routes covered** by Bluesky for deduplication (v39)
+
+3. **TTC Live API Processing (Secondary Source, v39)**
+   - Process saved non-planned TTC alerts
+   - For each TTC alert:
+     - Skip if route already has active Bluesky thread (deduplication)
+     - Map TTC effect to internal category
+     - Create thread using same rules as Bluesky alerts
+     - Store with `alert_id = ttc-{route}-{effect}-{id}`
+
 4. Update Realtime subscriptions
 
-**TTC Live API Cross-Check:**
+**TTC Live API Dual-Use (v39):**
 
-| Step              | Description                                         |
-| ----------------- | --------------------------------------------------- |
-| Fetch TTC API     | GET `alerts.ttc.ca/api/alerts/live-alerts`          |
-| Extract routes    | Parse `routes[]` and `siteWideCustom[]` arrays      |
-| Compare           | Check if our unresolved threads' routes are active  |
-| Resolve stale     | Mark threads resolved if route no longer in TTC API |
-| Graceful fallback | If TTC API unavailable, skip resolution step        |
+| Use Case           | Description                                         |
+| ------------------ | --------------------------------------------------- |
+| Cross-check        | Resolve threads when routes no longer in TTC API    |
+| Secondary source   | Create alerts for routes not covered by Bluesky     |
+| Filtering          | Exclude `alertType: "Planned"` (scheduled closures) |
+| Deduplication      | Bluesky threads take priority over TTC API          |
+| Alert ID format    | `ttc-{route}-{effect}-{id}` (e.g., `ttc-1-SIGNIFICANT_DELAYS-54744`) |
 
-**Why TTC Live API?**
+**TTC Alert Type Mapping (v39):**
 
-- Authoritative source for current service status
-- More accurate than time-based auto-resolve
-- Handles cases where TTC doesn't post SERVICE_RESUMED to Bluesky
-- Real-time cross-reference ensures data accuracy
-- Returns `ttcApiResolvedCount` and `ttcApiError` in response for monitoring
+| TTC API `effect`       | Internal Category     |
+| ---------------------- | --------------------- |
+| `NO_SERVICE`           | `SERVICE_DISRUPTION`  |
+| `REDUCED_SERVICE`      | `SERVICE_DISRUPTION`  |
+| `DETOUR`               | `DIVERSION`           |
+| `SIGNIFICANT_DELAYS`   | `DELAY`               |
+| `ACCESSIBILITY_ISSUE`  | `ACCESSIBILITY`       |
+
+**Response Fields (v39):**
+
+```json
+{
+  "success": true,
+  "newAlerts": 3,
+  "updatedThreads": 1,
+  "ttcApiResolvedCount": 0,
+  "ttcApiNewAlerts": 0,
+  "ttcApiError": null,
+  "version": 39,
+  "timestamp": "2025-12-16T01:02:50.350Z"
+}
+```
+
+| Field               | Description                                              |
+| ------------------- | -------------------------------------------------------- |
+| `newAlerts`         | New alerts created (Bluesky)                             |
+| `updatedThreads`    | Existing threads updated                                 |
+| `ttcApiResolvedCount` | Threads resolved via TTC API cross-check               |
+| `ttcApiNewAlerts`   | New alerts from TTC API secondary source (v39)           |
+| `ttcApiError`       | Error message if TTC API failed                          |
+| `version`           | Edge function version                                    |
 
 ### `scrape-maintenance`
 
@@ -1164,14 +1234,16 @@ ALTER TABLE alert_cache
 
 This system provides:
 
-✅ **Single source (Bluesky)** - @ttcalerts.bsky.social via AT Protocol  
-✅ **Keyword-based categorization** - 6 categories with priority ordering  
+✅ **Dual data sources** - Bluesky primary + TTC Live API secondary (v39)
+✅ **Keyword-based categorization** - 7 categories with priority ordering (incl. ACCESSIBILITY)
+✅ **Bluesky reply threading** - Native thread chains take priority (v31)
 ✅ **Incident threading** - Jaccard similarity + exact route number matching  
 ✅ **Cross-route prevention** - Route 46 cannot match with 996, 39 cannot match with 939  
-✅ **Smart SERVICE_RESUMED** - Lower threshold (20%) for different vocabulary  
-✅ **Auto-resolve** - SERVICE_RESUMED closes threads  
+✅ **Smart SERVICE_RESUMED** - Lower threshold (10%) for different vocabulary  
+✅ **Auto-resolve** - SERVICE_RESUMED closes threads + TTC API cross-check  
 ✅ **Mutually exclusive filters** - One category filter at a time  
-✅ **Planned alert separation** - Maintenance excluded from main feed  
+✅ **Planned alert separation** - TTC API planned alerts excluded from import
+✅ **Deduplication** - Bluesky routes prioritized, TTC API fills gaps only
 ✅ **Realtime updates** - Supabase subscriptions push changes  
 ✅ **Observable** - Thread state visible in UI  
 ✅ **Database validation** - Trigger prevents route mismatches

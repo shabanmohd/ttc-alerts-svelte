@@ -1,14 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// VERSION 38 - Direction mismatch penalty
-// - Added direction penalty (-0.5) for northbound vs southbound mismatches
-// - Keeps separate threads for different directions on same route
+// VERSION 39 - TTC Live API as secondary data source
+// - Integrates TTC Live API alerts as secondary source (Bluesky prioritized)
+// - Excludes planned/scheduled alerts from TTC API (alertType: "Planned")
+// - Creates threads for TTC API alerts not covered by Bluesky
+// - v38: Direction mismatch penalty
 // - v37: Planned maintenance threading for SERVICE_RESUMED
 // - v36: Bluesky reply chain threading
-// - v35: Station mismatch penalty
-// - v34: Address extraction bug fix
-const FUNCTION_VERSION = 38;
+const FUNCTION_VERSION = 39;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,6 +44,10 @@ const ALERT_CATEGORIES = {
   PLANNED_CLOSURE: {
     keywords: ['planned', 'scheduled', 'maintenance', 'this weekend'],
     priority: 5
+  },
+  ACCESSIBILITY: {
+    keywords: ['elevator', 'escalator', 'accessible', 'wheelchair', 'out of service'],
+    priority: 6
   }
 };
 
@@ -340,9 +344,11 @@ serve(async (req) => {
 
     // === CROSS-CHECK WITH TTC LIVE API ===
     // Use official TTC API as authoritative source for resolution status
+    // AND as secondary data source for alerts not covered by Bluesky
     const now = new Date();
     let ttcApiResolvedCount = 0;
     let ttcApiError: string | null = null;
+    let ttcApiAlerts: any[] = []; // Store TTC API alerts for later processing
     
     try {
       // Fetch live alerts from TTC official API
@@ -357,6 +363,7 @@ serve(async (req) => {
         const activeRoutes = new Set<string>();
         
         // Process routes array (main service alerts)
+        // ALSO save non-planned alerts for secondary data source
         if (ttcData.routes && Array.isArray(ttcData.routes)) {
           for (const alert of ttcData.routes) {
             if (alert.route) {
@@ -368,6 +375,16 @@ serve(async (req) => {
               if (/^[1-4]$/.test(route)) {
                 activeRoutes.add(`Line ${route}`);
               }
+            }
+            
+            // === SAVE NON-PLANNED ALERTS FOR SECONDARY DATA SOURCE ===
+            // Exclude alertType: "Planned" - we only want real-time unplanned incidents
+            // Include: NO_SERVICE, REDUCED_SERVICE, DETOUR, SIGNIFICANT_DELAYS, ACCESSIBILITY_ISSUE
+            const isPlanned = alert.alertType === 'Planned';
+            const hasRelevantEffect = ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'SIGNIFICANT_DELAYS', 'ACCESSIBILITY_ISSUE'].includes(alert.effect);
+            
+            if (!isPlanned && hasRelevantEffect && alert.route && alert.headerText) {
+              ttcApiAlerts.push(alert);
             }
           }
         }
@@ -382,10 +399,12 @@ serve(async (req) => {
                 activeRoutes.add(`Line ${route}`);
               }
             }
+            // Note: siteWideCustom alerts are typically planned/scheduled, so we don't add them to ttcApiAlerts
           }
         }
         
         console.log(`TTC API shows ${activeRoutes.size} routes with active alerts: ${[...activeRoutes].join(', ')}`);
+        console.log(`TTC API has ${ttcApiAlerts.length} non-planned alerts available as secondary source`);
         
         // Get all unresolved threads from our database
         const { data: unresolvedThreads } = await supabase
@@ -976,12 +995,186 @@ serve(async (req) => {
       }
     }
 
+    // === PROCESS TTC API ALERTS AS SECONDARY DATA SOURCE ===
+    // After processing Bluesky alerts, check if TTC API has alerts for routes 
+    // not covered by Bluesky. This fills gaps when @ttcalerts hasn't posted yet.
+    let ttcApiNewAlerts = 0;
+    
+    if (ttcApiAlerts.length > 0) {
+      // Get all routes that already have active (unresolved) threads from Bluesky
+      const { data: activeBlueskyThreads } = await supabase
+        .from('incident_threads')
+        .select('affected_routes')
+        .eq('is_resolved', false);
+      
+      const blueskyActiveRoutes = new Set<string>();
+      for (const thread of activeBlueskyThreads || []) {
+        const routes = thread.affected_routes || [];
+        for (const route of routes) {
+          blueskyActiveRoutes.add(route);
+          // Also add base route number for matching
+          const baseRoute = extractRouteNumber(route);
+          if (baseRoute) blueskyActiveRoutes.add(baseRoute);
+        }
+      }
+      
+      console.log(`Routes already covered by Bluesky threads: ${[...blueskyActiveRoutes].join(', ')}`);
+      
+      // Process each TTC API alert
+      for (const ttcAlert of ttcApiAlerts) {
+        const routeStr = ttcAlert.route.toString();
+        const routeBase = extractRouteNumber(routeStr);
+        
+        // Skip if this route already has a Bluesky thread
+        // Bluesky is prioritized as primary source
+        if (blueskyActiveRoutes.has(routeStr) || blueskyActiveRoutes.has(routeBase)) {
+          console.log(`TTC API: Skipping route ${routeStr} - already covered by Bluesky`);
+          continue;
+        }
+        
+        // Generate unique alert_id for TTC API alerts
+        // Format: ttc-{route}-{effect}-{id}
+        const ttcAlertId = `ttc-${routeStr}-${ttcAlert.effect}-${ttcAlert.id}`;
+        
+        // Check if we already have this TTC API alert
+        if (existingAlertIds.has(ttcAlertId)) {
+          console.log(`TTC API: Skipping alert ${ttcAlertId} - already exists`);
+          continue;
+        }
+        
+        // Determine category based on TTC API effect
+        let category = 'DELAY';
+        switch (ttcAlert.effect) {
+          case 'NO_SERVICE':
+            category = 'SERVICE_DISRUPTION';
+            break;
+          case 'REDUCED_SERVICE':
+            category = 'SERVICE_DISRUPTION';
+            break;
+          case 'DETOUR':
+            category = 'DIVERSION';
+            break;
+          case 'SIGNIFICANT_DELAYS':
+            category = 'DELAY';
+            break;
+          case 'ACCESSIBILITY_ISSUE':
+            category = 'ACCESSIBILITY';
+            break;
+        }
+        
+        // Format routes array
+        const routes: string[] = [];
+        if (/^[1-4]$/.test(routeStr)) {
+          // Subway line - add both formats
+          routes.push(`Line ${routeStr}`);
+        } else {
+          routes.push(routeStr);
+        }
+        
+        // Create header text from TTC API data
+        const headerText = ttcAlert.headerText || ttcAlert.title || `Route ${routeStr} service alert`;
+        const descriptionText = ttcAlert.customHeaderText || ttcAlert.headerText || headerText;
+        
+        // Create alert record
+        const alert = {
+          alert_id: ttcAlertId,
+          bluesky_uri: null, // Not from Bluesky
+          header_text: headerText.substring(0, 200),
+          description_text: descriptionText,
+          categories: JSON.parse(JSON.stringify([category])),
+          affected_routes: JSON.parse(JSON.stringify(routes)),
+          created_at: ttcAlert.lastUpdated || now.toISOString(),
+          is_latest: true,
+          effect: ttcAlert.effect,
+          raw_data: {
+            source: 'ttc-api',
+            ttcAlertId: ttcAlert.id,
+            severity: ttcAlert.severity,
+            cause: ttcAlert.cause,
+            causeDescription: ttcAlert.causeDescription,
+            stopStart: ttcAlert.stopStart,
+            stopEnd: ttcAlert.stopEnd,
+            direction: ttcAlert.direction
+          }
+        };
+        
+        // Insert alert
+        const { data: newAlert, error: insertError } = await supabase
+          .from('alert_cache')
+          .insert(alert)
+          .select()
+          .single();
+        
+        if (insertError) {
+          console.error('TTC API alert insert error:', insertError);
+          continue;
+        }
+        
+        ttcApiNewAlerts++;
+        existingAlertIds.add(ttcAlertId);
+        
+        // Create or find thread for this TTC API alert
+        // Check for existing thread with same route first
+        const { data: existingThreads } = await supabase
+          .from('incident_threads')
+          .select('*')
+          .eq('is_resolved', false)
+          .contains('affected_routes', routes);
+        
+        let threadId: string | null = null;
+        
+        if (existingThreads && existingThreads.length > 0) {
+          // Join existing thread
+          threadId = existingThreads[0].thread_id;
+          
+          // Link alert to thread
+          await supabase
+            .from('alert_cache')
+            .update({ thread_id: threadId })
+            .eq('alert_id', ttcAlertId);
+          
+          console.log(`TTC API: Alert ${ttcAlertId} joined existing thread ${threadId}`);
+        } else {
+          // Create new thread
+          const { data: newThread } = await supabase
+            .from('incident_threads')
+            .insert({
+              title: headerText.substring(0, 200),
+              categories: [category],
+              affected_routes: routes,
+              is_resolved: false
+            })
+            .select()
+            .single();
+          
+          if (newThread) {
+            threadId = newThread.thread_id;
+            
+            // Link alert to new thread
+            await supabase
+              .from('alert_cache')
+              .update({ thread_id: threadId })
+              .eq('alert_id', ttcAlertId);
+            
+            console.log(`TTC API: Created new thread ${threadId} for alert ${ttcAlertId}`);
+          }
+        }
+        
+        // Add route to covered routes so subsequent TTC alerts for same route are skipped
+        blueskyActiveRoutes.add(routeStr);
+        blueskyActiveRoutes.add(routeBase);
+      }
+      
+      console.log(`TTC API: Added ${ttcApiNewAlerts} new alerts as secondary source`);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         newAlerts, 
         updatedThreads,
         ttcApiResolvedCount,
+        ttcApiNewAlerts,
         ttcApiError,
         version: FUNCTION_VERSION,
         timestamp: new Date().toISOString()
