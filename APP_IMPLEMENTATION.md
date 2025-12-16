@@ -356,17 +356,34 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 16, 2025 - My Routes Tab: Resolved Filter and RSZ Grouping
+
+**Problem:** My Routes tab showing SERVICE_RESUMED alerts and RSZ alerts as individual cards instead of grouped table.
+
+**Fixes:**
+
+- ✅ Added `isResolved()` helper to filter out resolved/resumed alerts from My Routes
+- ✅ Added `isRSZAlert()` helper to identify TTC API RSZ alerts
+- ✅ RSZ alerts now displayed using `RSZAlertCard` component (grouped table view)
+- ✅ Regular alerts continue using standard `AlertCard` component
+
+**Files Updated:**
+
+- `src/lib/components/alerts/MyRouteAlerts.svelte` - Added resolved filtering and RSZ grouping
+
 ### Dec 16, 2025 - Scheduled Maintenance Display in Major Tab
 
 **Problem:** Scheduled closures (nightly subway closures) were not appearing in the Major tab even when currently active.
 
 **Root Causes:**
+
 1. `SCHEDULED_CLOSURE` category not recognized as MAJOR severity
 2. `getSubwayLineFromThread()` returned full line name (e.g., "Line 1 (Yonge - University)") instead of normalized "Line 1"
 3. Maintenance threads added to all severity tabs instead of just MAJOR
 4. Overnight closures didn't account for the "morning after" the last date
 
 **Fixes:**
+
 - ✅ Added `SCHEDULED_CLOSURE` to `majorEffects` and `majorCategories` in `getSeverityCategory()`
 - ✅ Fixed `getSubwayLineFromThread()` to extract "Line X" from "Line X (Name)" format
 - ✅ Maintenance threads now only included in `combinedActiveAlerts` when `$selectedSeverityCategory === "MAJOR"`
@@ -386,6 +403,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 | Dec 19, 6:01 AM onward | ❌ No |
 
 **Files Updated:**
+
 - `src/lib/stores/alerts.ts` - Added SCHEDULED_CLOSURE to major categories
 - `src/routes/alerts/+page.svelte` - Fixed line extraction and overnight closure logic
 
