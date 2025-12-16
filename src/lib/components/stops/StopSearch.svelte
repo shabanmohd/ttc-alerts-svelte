@@ -65,8 +65,9 @@
   // Handle scroll to close dropdown (but not when scrolling inside the dropdown itself)
   function handleScroll(event: Event) {
     // Don't close if scrolling inside the dropdown results
-    const target = event.target as HTMLElement;
-    if (target?.closest("[data-stop-results]")) {
+    const target = event.target;
+    // Check if target is an Element with closest method (not Document or Window)
+    if (target instanceof Element && target.closest("[data-stop-results]")) {
       return;
     }
     if (showResults) {
