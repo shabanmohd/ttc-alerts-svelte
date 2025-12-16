@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 9.0  
+**Version:** 10.0  
 **Date:** December 16, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v48 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API)  
+**Status:** ✅ Implemented and Active (poll-alerts v50 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -45,7 +45,7 @@ This document describes the alert categorization and threading system designed t
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  Bluesky API    │────▶│  poll-alerts (v39)   │────▶│  Supabase DB    │
+│  Bluesky API    │────▶│  poll-alerts (v50)   │────▶│  Supabase DB    │
 │  @ttcalerts     │     │  (Edge Function)     │     │  alert_cache    │
 │  (PRIMARY)      │     └──────────────────────┘     │  incident_      │
 └─────────────────┘              │   │               │  threads        │
@@ -88,9 +88,22 @@ This document describes the alert categorization and threading system designed t
 - **API:** Bluesky AT Protocol public API
 - **Endpoint:** `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
 - **Polling:** Edge function fetches last 50 posts per invocation
+- **Post Sorting:** Posts sorted by `createdAt` ascending (oldest first) before processing (v49)
 - **Deduplication:** Uses `alert_id` (generated from bluesky URI post_id as `bsky-{post_id}`)
 - **Reply Threading:** Extracts `reply.parent.uri` for thread chain detection (v31)
 - **Status:** ✅ Enabled (primary source, always prioritized)
+
+**Post Sorting Fix (v49):**
+
+Bluesky API returns posts newest-first by default. This caused threading issues where SERVICE_RESUMED alerts were processed before their DELAY/DISRUPTION counterparts, creating orphan threads.
+
+```typescript
+// Sort posts oldest-first so DELAY creates thread before SERVICE_RESUMED
+const posts = (bskyData.feed || []).sort((a: any, b: any) => 
+  new Date(a.post?.record?.createdAt || 0).getTime() - 
+  new Date(b.post?.record?.createdAt || 0).getTime()
+);
+```
 
 **Secondary Source: TTC Live API (v39+)**
 
@@ -113,13 +126,15 @@ This document describes the alert categorization and threading system designed t
 
 **GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear on Bluesky)
 
-### Dual-Source Priority Rules (v48)
+### Dual-Source Priority Rules (v50)
 
 1. **Bluesky is always primary** - If a route has an active Bluesky thread, TTC API alerts for that route are skipped
 2. **TTC API fills gaps** - Only creates alerts for routes without Bluesky coverage
 3. **Planned alerts excluded** - TTC API planned/scheduled alerts are never imported (Bluesky handles these)
 4. **Same threading logic** - TTC API alerts create/join threads using same rules as Bluesky
 5. **TTC API is SOLE source for RSZ alerts** - ALL BlueSky speed reduction posts are filtered out (v48)
+6. **Oldest-first processing** - Bluesky posts sorted by createdAt ascending to ensure DELAY threads exist before SERVICE_RESUMED (v49)
+7. **Subway route deduplication** - Skip redundant "X Name" routes when "Line X" already extracted (v50)
 
 ### RSZ (Reduced Speed Zone) Handling (v48)
 
@@ -291,41 +306,38 @@ Routes are extracted from alert text using regex patterns:
 ```typescript
 function extractRoutes(text: string): string[] {
   const routes: string[] = [];
-
-  // Match subway lines: Line 1, Line 2, Line 4
-  const lineMatch = text.match(/Line\s*(\d+)/gi);
+  const subwayLineNumbers = new Set<string>(); // Track subway line numbers (1-6) we've found
+  
+  // Match subway lines: Line 1, Line 2, Line 4, Line 6
+  const lineMatch = text.match(/Line\s*\d+/gi);
   if (lineMatch) {
-    lineMatch.forEach((m) => routes.push(m));
+    lineMatch.forEach(m => {
+      routes.push(m);
+      // Track the line number (e.g., "Line 6" -> "6")
+      const num = m.match(/\d+/);
+      if (num) subwayLineNumbers.add(num[0]);
+    });
   }
 
   // Match route numbers with letter suffix variants: "37A", "37B", "123C", "123D"
-  // This must come BEFORE route-with-name to capture letter variants
   const routeWithSuffixMatch = text.match(/\b(\d{1,3}[A-Z])\b/g);
   if (routeWithSuffixMatch) {
     routeWithSuffixMatch.forEach((m) => routes.push(m));
   }
 
   // Match numbered routes with names: "306 Carlton", "504 King"
-  const routeWithNameMatch = text.match(
-    /\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g
-  );
-  if (routeWithNameMatch) {
-    routeWithNameMatch.forEach((m) => routes.push(m));
+  // SKIP if we already have this as a subway line (e.g., "6 Finch" when we have "Line 6")
+  const routeWithNameRegex = /\b(\d{1,3})\s+([A-Z][a-z]+)/g;
+  let m;
+  while ((m = routeWithNameRegex.exec(text)) !== null) {
+    if (subwayLineNumbers.has(m[1])) continue; // Skip "6 Finch" if "Line 6" exists
+    if (!routes.some(r => r.startsWith(m[1]))) routes.push(m[0]);
   }
 
-  // Match standalone route numbers - handles "37, 37A" comma-separated format
-  const standaloneMatch = text.match(/\b(\d{1,3})(?=[,:\s]|$)/g);
-  if (standaloneMatch) {
-    standaloneMatch.forEach((num) => {
-      const numInt = parseInt(num);
-      // Only add if valid route number and not already captured as exact match
-      if (numInt >= 1 && numInt < 1000) {
-        const exactExists = routes.some((r) => r === num);
-        if (!exactExists) {
-          routes.push(num);
-        }
-      }
-    });
+  // Match standalone route numbers at start of text
+  const startMatch = text.match(/^(\d{1,3})\s+[A-Z]/);
+  if (startMatch && !subwayLineNumbers.has(startMatch[1]) && !routes.some(r => r.startsWith(startMatch[1]))) {
+    routes.push(startMatch[1]);
   }
 
   return [...new Set(routes)];
@@ -335,11 +347,20 @@ function extractRoutes(text: string): string[] {
 **Examples:**
 
 - "Line 1: No service" → `["Line 1"]`
+- "Line 6 Finch: Delay" → `["Line 6"]` ✅ (NOT `["Line 6", "6 Finch"]`)
 - "306 Carlton: Detour" → `["306 Carlton"]`
 - "504 King delays" → `["504 King"]`
 - "Routes 39, 85, 939" → `["39", "85", "939"]`
 - "37, 37A Islington: Detour" → `["37A", "37 Islington", "37"]` (all variants captured)
-- "123, 123C, 123D Sherway" → `["123C", "123D", "123 Sherway", "123"]` (multi-variant routes)
+
+**Subway Line Deduplication (v50):**
+
+When text contains "Line X" (subway lines 1-6), subsequent patterns like "X Name" are skipped to prevent duplicate badges:
+
+| Input Text | Before v50 | After v50 |
+|------------|------------|-----------|
+| "Line 6 Finch: Delay" | `["Line 6", "6 Finch"]` | `["Line 6"]` |
+| "Line 2: No service at Warden" | `["Line 2", "2 No"]` | `["Line 2"]` |
 
 ---
 
@@ -858,11 +879,11 @@ The frontend provides two levels of filtering for alerts:
 
 Alerts are categorized into three severity levels based on their effect and type:
 
-| Category          | TTC API Effects                                                       | Description                                     |
-| ----------------- | --------------------------------------------------------------------- | ----------------------------------------------- |
+| Category          | TTC API Effects                                                          | Description                                                    |
+| ----------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
 | **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE | Closures, detours, shuttles, no service, scheduled maintenance |
-| **MINOR**         | SIGNIFICANT_DELAYS, DELAY                                             | Delays, reduced speed zones                     |
-| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)                              | Elevator and escalator outages                  |
+| **MINOR**         | SIGNIFICANT_DELAYS, DELAY                                                | Delays, reduced speed zones                                    |
+| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)                                 | Elevator and escalator outages                                 |
 
 **Categorization Logic (`getSeverityCategory()` in alerts.ts):**
 

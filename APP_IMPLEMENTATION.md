@@ -74,7 +74,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | File                                           | Status | Purpose                                                       |
 | ---------------------------------------------- | ------ | ------------------------------------------------------------- |
 | `components/alerts/AccessibilityBadge.svelte`  | ✅     | Wheelchair icon badge for elevator/escalator alerts 🆕        |
-| `components/alerts/AlertCard.svelte`           | ✅     | Alert cards w/ accessibility badge support, route extraction  |
+| `components/alerts/AlertCard.svelte`           | ✅     | Alert cards w/ accessibility badge, route deduplication (v50) |
 | `components/alerts/RSZAlertCard.svelte`        | ✅     | Reduced Speed Zone alerts - grouped table display 🆕          |
 | `components/alerts/BookmarkRouteButton.svelte` | ✅     | Save route button with feedback animation 🆕 **B**            |
 | `components/alerts/CategoryFilter.svelte`      | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA  |
@@ -125,7 +125,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                           |
 | `functions/auth-session/index.ts`       | ✅     | Validate existing session                                   |
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                  |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v48: RSZ exclusive from TTC API) |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v50: subway route deduplication)  |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                                 |
 | `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B**   |
 
@@ -348,7 +348,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 | auth-verify        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`        |
 | auth-session       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`       |
 | auth-recover       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`       |
-| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v48)  |
+| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v50)  |
 | get-eta            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`            |
 | scrape-maintenance | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance` |
 
@@ -367,6 +367,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 - ✅ Major tab badge now includes active scheduled maintenance count
 
 **Priority Order (both My Routes and Minor tab):**
+
 1. Scheduled closures (if active and matching routes)
 2. Regular alerts (delays, service issues)
 3. RSZ alerts (lowest priority)
@@ -381,6 +382,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 **Problem:** Active scheduled closures not showing in My Routes tab.
 
 **Fix:** My Routes now displays active scheduled maintenance when:
+
 1. User has matching subway line saved (e.g., Line 1)
 2. The closure is currently happening (using same `isMaintenanceHappeningNow()` logic as Major tab)
 
@@ -438,6 +440,32 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 - `src/lib/stores/alerts.ts` - Added SCHEDULED_CLOSURE to major categories
 - `src/routes/alerts/+page.svelte` - Fixed line extraction and overnight closure logic
+
+### Dec 16, 2025 - Subway Route Badge Deduplication (poll-alerts v49-v50)
+
+**Problem 1 (v49):** Orphan threading - SERVICE_RESUMED alerts creating new threads instead of joining existing DELAY threads. Root cause: Bluesky API returns posts newest-first, so resolution was processed before the incident thread existed.
+
+**Solution (v49):** Sort Bluesky posts by `createdAt` ascending (oldest-first) before processing.
+
+```typescript
+const posts = (bskyData.feed || []).sort((a: any, b: any) => 
+  new Date(a.post?.record?.createdAt || 0).getTime() - 
+  new Date(b.post?.record?.createdAt || 0).getTime()
+);
+```
+
+**Problem 2 (v50):** Duplicate route badges for subway lines - alerts showing both "Line 6" and "6" (or "6 Finch") as separate badges.
+
+**Solution (v50):**
+
+1. **Backend (poll-alerts):** Track `subwayLineNumbers` Set during route extraction. Skip "X Name" patterns when "Line X" already found.
+2. **Frontend (AlertCard.svelte):** Added `SUBWAY_LINE_NUMBERS` Set (1-6). `getDisplayRoutes()` normalizes any standalone subway line numbers to "Line X" format.
+
+**Files Updated:**
+
+- `supabase/functions/poll-alerts/index.ts` - v49: sort posts, v50: subway route dedup
+- `src/lib/components/alerts/AlertCard.svelte` - Subway line badge normalization
+- `alert-categorization-and-threading.md` - Documentation updated to v10.0
 
 ### Dec 16, 2025 - RSZ Alerts Exclusively from TTC API (poll-alerts v48)
 
