@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const FUNCTION_VERSION = 46;
+const FUNCTION_VERSION = 47;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -331,6 +331,9 @@ serve(async (req) => {
         for (const thread of candidateThreads || []) {
           const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
           if (!threadRoutes.length) continue;
+          // Skip RSZ threads for non-RSZ alerts (RSZ threads have "slower than usual" in title)
+          const isRszThread = (thread.title || '').toLowerCase().includes('slower than usual');
+          if (isRszThread && !text.toLowerCase().includes('slower than usual')) continue;
           const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
           const allMatch = alertBaseRoutes.every(ab => threadBaseRoutes.includes(ab));
           const hasOverlap = alertBaseRoutes.some(ab => threadBaseRoutes.includes(ab));
