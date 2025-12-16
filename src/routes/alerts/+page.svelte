@@ -614,10 +614,24 @@
     });
   });
 
-  // Derived: Resolved alerts (service resumed only)
+  // Derived: Resolved alerts (service resumed only, excluding accessibility alerts)
+  // Accessibility alerts (elevator/escalator) should not appear in Resolved tab
+  // because "elevator working again" isn't newsworthy like "service has resumed"
   let resolvedAlerts = $derived(() => {
     return allThreads()
-      .filter((thread) => isResolved(thread))
+      .filter((thread) => {
+        if (!isResolved(thread)) return false;
+        
+        // Exclude accessibility alerts from resolved tab
+        const categories = Array.isArray(thread.latestAlert?.categories)
+          ? thread.latestAlert.categories
+          : [];
+        const effect = thread.latestAlert?.effect || "";
+        const headerText = thread.latestAlert?.header_text || "";
+        
+        const severity = getSeverityCategory(categories, effect, headerText);
+        return severity !== 'ACCESSIBILITY';
+      })
       .sort(
         (a, b) =>
           new Date(b.latestAlert?.created_at || 0).getTime() -
