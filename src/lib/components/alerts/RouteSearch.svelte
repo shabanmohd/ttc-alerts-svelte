@@ -408,7 +408,10 @@
 
   function handleBlur(event: FocusEvent) {
     const relatedTarget = event.relatedTarget;
-    if (relatedTarget instanceof Element && relatedTarget.closest(".route-search-results")) {
+    if (
+      relatedTarget instanceof Element &&
+      relatedTarget.closest(".route-search-results")
+    ) {
       return;
     }
     setTimeout(() => {

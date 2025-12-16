@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 8.0  
-**Date:** December 15, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v46 + Bluesky reply threading + TTC API dual-use + RSZ deduplication)  
+**Version:** 9.0  
+**Date:** December 16, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v48 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -113,24 +113,32 @@ This document describes the alert categorization and threading system designed t
 
 **GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear on Bluesky)
 
-### Dual-Source Priority Rules (v46)
+### Dual-Source Priority Rules (v48)
 
 1. **Bluesky is always primary** - If a route has an active Bluesky thread, TTC API alerts for that route are skipped
 2. **TTC API fills gaps** - Only creates alerts for routes without Bluesky coverage
 3. **Planned alerts excluded** - TTC API planned/scheduled alerts are never imported (Bluesky handles these)
 4. **Same threading logic** - TTC API alerts create/join threads using same rules as Bluesky
-5. **TTC API is authoritative for RSZ alerts** - BlueSky speed reduction posts are skipped if TTC API already has an active RSZ thread for the same subway line (v46)
+5. **TTC API is SOLE source for RSZ alerts** - ALL BlueSky speed reduction posts are filtered out (v48)
 
-### RSZ (Reduced Speed Zone) Deduplication (v46)
+### RSZ (Reduced Speed Zone) Handling (v48)
 
-**Problem:** Both BlueSky and TTC API can post about subway speed reductions, causing redundant minor alerts.
+**Problem:** Both BlueSky and TTC API can post about subway speed reductions, but TTC API provides more accurate data (exact stop locations, direction).
 
-**Solution:** TTC API provides more accurate RSZ data (exact stop locations, direction), so BlueSky RSZ posts are skipped when TTC API already covers that subway line.
+**Solution (v48):** TTC API is the **sole authoritative source** for RSZ alerts. All BlueSky RSZ posts are filtered out.
 
-**Strict Keyword Detection for BlueSky RSZ:**
+**Key Behaviors:**
+
+1. **No BlueSky RSZ alerts** - All BlueSky posts mentioning speed reductions are skipped
+2. **Deletion on resolve** - When TTC removes an RSZ alert, it's **deleted** from database (not marked resolved)
+3. **No Resolved tab** - RSZ alerts never appear in Resolved tab; they simply vanish when resolved
+4. **1:1 mapping** - Each active RSZ zone has exactly one TTC API alert and one thread
+
+**Keyword Detection for BlueSky RSZ Filtering:**
 
 ```typescript
-const strictPatterns = [
+const patterns = [
+  "slower than usual", // Main RSZ phrase from TTC
   "reduced speed",
   "slow zone",
   "speed restriction",
@@ -138,14 +146,15 @@ const strictPatterns = [
   "operating at reduced speed",
   "trains running slower",
   "slower service",
+  "move slower", // "trains will move slower"
+  "running slower",
 ];
 ```
 
-**Skip Logic:**
+**Response Counters:**
 
-1. Before BlueSky processing, query active TTC API RSZ threads for Lines 1-4
-2. If a BlueSky post matches RSZ keywords AND the subway line already has a TTC API RSZ thread → skip
-3. Response includes `skippedRszAlerts` count for monitoring
+- `skippedRszAlerts` - BlueSky RSZ posts that were filtered out
+- `rszDeletedCount` - Stale RSZ alerts deleted (TTC removed them)
 
 ### Key Principles
 

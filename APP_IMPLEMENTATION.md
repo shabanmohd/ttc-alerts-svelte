@@ -125,7 +125,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                                   |
 | `functions/auth-session/index.ts`       | ✅     | Validate existing session                                           |
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                          |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v27: alert_id fix + TTC API cross-check) |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v48: RSZ exclusive from TTC API)         |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                                         |
 | `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B**           |
 
@@ -348,13 +348,41 @@ For local development, use `localhost` and `http://localhost:5173`.
 | auth-verify        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`        |
 | auth-session       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`       |
 | auth-recover       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`       |
-| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v27)  |
+| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v48)  |
 | get-eta            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`            |
 | scrape-maintenance | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance` |
 
 ---
 
 ## Changelog
+
+### Dec 16, 2025 - RSZ Alerts Exclusively from TTC API (poll-alerts v48)
+
+**Problem:** RSZ (Reduced Speed Zone) alerts appeared in both Active and Resolved tabs, and BlueSky posts were redundant with TTC API data.
+
+**Solution (v48):** TTC API is now the **sole source** for RSZ alerts:
+
+- ✅ **ALL BlueSky RSZ posts filtered out** - TTC API provides more accurate data (exact stops, direction)
+- ✅ **RSZ alerts DELETED when resolved** - Instead of marking as resolved, stale RSZ alerts are deleted
+- ✅ **No RSZ in Resolved tab** - RSZ alerts simply vanish when TTC removes them
+- ✅ **Clean 1:1 mapping** - Each RSZ zone has exactly one TTC API alert and one thread
+
+**BlueSky RSZ Detection Patterns:**
+
+```typescript
+const patterns = [
+  "slower than usual", // Main TTC phrase
+  "reduced speed",
+  "slow zone",
+  "move slower",
+  // ... plus 6 more patterns
+];
+```
+
+**Files Updated:**
+
+- `supabase/functions/poll-alerts/index.ts` - RSZ exclusive handling (v48)
+- `alert-categorization-and-threading.md` - Documentation updated to v9.0
 
 ### Dec 15, 2025 - Line 6 Finch West LRT Launch & ETA Improvements
 
