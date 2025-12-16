@@ -64,7 +64,7 @@
 
     if (isSaved) {
       await savedRoutes.remove(route);
-      toast.info($_("toasts.routeRemoved"), {
+      toast.success($_("toasts.routeRemoved"), {
         description: `${route} ${name}`,
       });
     } else if (!atMax) {

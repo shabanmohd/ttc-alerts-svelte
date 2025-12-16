@@ -442,6 +442,40 @@ Toast notifications use svelte-sonner with dark solid backgrounds for high contr
 - Title: `text-foreground font-medium`
 - Description: `text-foreground/90 text-sm` (90% opacity for slight hierarchy)
 
+**Usage Guidelines:**
+
+| Action                 | Toast Type | Example                                     |
+| ---------------------- | ---------- | ------------------------------------------- |
+| Item added/saved       | `success`  | "Stop added" with stop name as description  |
+| Item removed           | `success`  | "Route removed" with route as description   |
+| Already exists         | `info`     | "Stop already saved"                        |
+| Max limit reached      | `error`    | "Maximum 20 stops reached"                  |
+| Permission granted     | `success`  | "Location access enabled"                   |
+| Permission denied      | `error`    | "Location access denied"                    |
+| User guidance          | `info`     | "To change location access..." (5s timeout) |
+| Copy success           | `success`  | "All recovery codes copied!"                |
+| Copy failed            | `error`    | "Failed to copy codes"                      |
+
+**Pattern:**
+
+```typescript
+// Success with description
+toast.success($_("toasts.stopAdded"), {
+  description: stop.name,
+});
+
+// Info with longer duration for instructions
+toast.info($_("toasts.locationChangeInBrowser"), {
+  description: $_("toasts.locationChangeInBrowserDesc"),
+  duration: 5000,
+});
+
+// Error (no description needed)
+toast.error($_("toasts.locationDenied"));
+```
+
+**i18n:** All toast titles and descriptions should use translation keys from `toasts.*` namespace.
+
 **Mobile Positioning:**
 Toasts appear above the mobile bottom nav:
 
@@ -917,6 +951,38 @@ The Subway Status Cards display the current service status for each subway line 
 /* Card container */
 /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -945,6 +1011,38 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */

@@ -97,8 +97,7 @@
     if (checked === currentState) {
       if (checked) {
         toast.info($_("toasts.locationChangeInBrowser"), {
-          description:
-            "Look for the location/site settings in your browser menu",
+          description: $_("toasts.locationChangeInBrowserDesc"),
           duration: 5000,
         });
       }
@@ -108,7 +107,7 @@
     // If trying to turn off when granted
     if (!checked && locationPermission === "granted") {
       toast.info($_("toasts.locationDisableInBrowser"), {
-        description: "Look for the location/site settings in your browser menu",
+        description: $_("toasts.locationDisableInBrowserDesc"),
         duration: 5000,
       });
       return;
@@ -117,8 +116,7 @@
     // If permission was denied
     if (locationPermission === "denied") {
       toast.info($_("toasts.locationBlocked"), {
-        description:
-          "Enable location in your browser settings to use this feature",
+        description: $_("toasts.locationBlockedDesc"),
         duration: 5000,
       });
       return;

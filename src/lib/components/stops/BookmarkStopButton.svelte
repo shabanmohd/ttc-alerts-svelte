@@ -52,7 +52,7 @@
 
     if (isSaved) {
       await savedStops.remove(stop.id);
-      toast.info($_("toasts.stopRemoved"), {
+      toast.success($_("toasts.stopRemoved"), {
         description: stop.name,
       });
     } else if (!atMax) {
