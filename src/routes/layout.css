@@ -2177,56 +2177,66 @@ html.reduce-motion .eta-live-indicator svg {
   color: inherit !important;
 }
 
-/* Success toast - dark green bg in both modes */
+/* Toast icon styling - ensure visibility */
+[data-sonner-toast] [data-icon] {
+  color: inherit !important;
+}
+
+[data-sonner-toast] [data-icon] svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Success toast - TTC green with high contrast */
 [data-sonner-toast][data-type="success"] {
-  background: hsl(142 50% 25%) !important;
-  border: 1px solid hsl(142 50% 35%) !important;
-  color: hsl(0 0% 98%) !important;
+  background: hsl(142 72% 29%) !important;
+  border: 1px solid hsl(142 60% 40%) !important;
+  color: hsl(0 0% 100%) !important;
 }
 
 .dark [data-sonner-toast][data-type="success"] {
-  background: hsl(142 45% 20%) !important;
-  border: 1px solid hsl(142 45% 30%) !important;
-  color: hsl(142 60% 85%) !important;
+  background: hsl(142 55% 22%) !important;
+  border: 1px solid hsl(142 55% 35%) !important;
+  color: hsl(142 90% 95%) !important;
 }
 
-/* Info toast - dark blue bg in both modes */
+/* Info toast - blue with high contrast */
 [data-sonner-toast][data-type="info"] {
-  background: hsl(217 60% 30%) !important;
-  border: 1px solid hsl(217 50% 40%) !important;
-  color: hsl(0 0% 98%) !important;
+  background: hsl(217 70% 35%) !important;
+  border: 1px solid hsl(217 60% 45%) !important;
+  color: hsl(0 0% 100%) !important;
 }
 
 .dark [data-sonner-toast][data-type="info"] {
-  background: hsl(217 50% 22%) !important;
-  border: 1px solid hsl(217 50% 32%) !important;
-  color: hsl(213 80% 85%) !important;
+  background: hsl(217 60% 25%) !important;
+  border: 1px solid hsl(217 60% 38%) !important;
+  color: hsl(213 100% 95%) !important;
 }
 
-/* Error toast - dark red bg in both modes */
+/* Error toast - red with high contrast */
 [data-sonner-toast][data-type="error"] {
-  background: hsl(0 60% 35%) !important;
-  border: 1px solid hsl(0 50% 45%) !important;
-  color: hsl(0 0% 98%) !important;
+  background: hsl(0 72% 40%) !important;
+  border: 1px solid hsl(0 60% 50%) !important;
+  color: hsl(0 0% 100%) !important;
 }
 
 .dark [data-sonner-toast][data-type="error"] {
-  background: hsl(0 55% 25%) !important;
-  border: 1px solid hsl(0 50% 35%) !important;
-  color: hsl(0 80% 88%) !important;
+  background: hsl(0 65% 30%) !important;
+  border: 1px solid hsl(0 60% 42%) !important;
+  color: hsl(0 100% 95%) !important;
 }
 
-/* Warning toast - dark amber bg in both modes */
+/* Warning toast - amber/orange with high contrast */
 [data-sonner-toast][data-type="warning"] {
-  background: hsl(28 70% 30%) !important;
-  border: 1px solid hsl(28 60% 40%) !important;
-  color: hsl(0 0% 98%) !important;
+  background: hsl(38 92% 40%) !important;
+  border: 1px solid hsl(38 80% 50%) !important;
+  color: hsl(0 0% 0%) !important;
 }
 
 .dark [data-sonner-toast][data-type="warning"] {
-  background: hsl(28 60% 22%) !important;
-  border: 1px solid hsl(28 55% 32%) !important;
-  color: hsl(43 90% 85%) !important;
+  background: hsl(38 75% 32%) !important;
+  border: 1px solid hsl(38 70% 45%) !important;
+  color: hsl(43 100% 95%) !important;
 }
 
 /* ============================================

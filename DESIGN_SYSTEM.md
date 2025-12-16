@@ -428,14 +428,14 @@ Toast notifications use svelte-sonner with dark solid backgrounds for high contr
 />
 ```
 
-**Color Scheme (WCAG AA Compliant - White text on dark backgrounds):**
+**Color Scheme (WCAG AA Compliant - High contrast text on colored backgrounds):**
 
-| Toast Type  | Light Mode Background | Dark Mode Background | Text Color |
-| ----------- | --------------------- | -------------------- | ---------- |
-| **Success** | `green-700`           | `green-800`          | White      |
-| **Info**    | `blue-700`            | `blue-800`           | White      |
-| **Warning** | `amber-600`           | `amber-700`          | White      |
-| **Error**   | `red-700`             | `red-800`            | White      |
+| Toast Type  | Light Mode BG          | Dark Mode BG           | Text Color |
+| ----------- | ---------------------- | ---------------------- | ---------- |
+| **Success** | `hsl(142 72% 29%)`     | `hsl(142 55% 22%)`     | White      |
+| **Info**    | `hsl(217 70% 35%)`     | `hsl(217 60% 25%)`     | White      |
+| **Warning** | `hsl(38 92% 40%)`      | `hsl(38 75% 32%)`      | Black/White|
+| **Error**   | `hsl(0 72% 40%)`       | `hsl(0 65% 30%)`       | White      |
 
 **Key Classes:**
 
