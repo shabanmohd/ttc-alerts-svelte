@@ -14,6 +14,7 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import AlertCard from "./AlertCard.svelte";
+  import RSZAlertCard from "./RSZAlertCard.svelte";
   import RouteSearch from "./RouteSearch.svelte";
   import RouteBadge from "./RouteBadge.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -140,17 +141,55 @@
     );
   }
 
-  // Get all alerts matching saved routes
+  // Helper: check if thread has SERVICE_RESUMED status (resolved)
+  function isResolved(thread: ThreadWithAlerts): boolean {
+    // Check if the thread is marked as resolved
+    if (thread.is_resolved) return true;
+
+    // Check if the latest alert has SERVICE_RESUMED effect
+    const effect = thread.latestAlert?.effect?.toUpperCase() || "";
+    if (effect.includes("SERVICE_RESUMED") || effect.includes("RESUMED"))
+      return true;
+
+    // Check header text for "Service has resumed"
+    const headerText = thread.latestAlert?.header_text?.toLowerCase() || "";
+    if (
+      headerText.includes("service has resumed") ||
+      headerText.includes("service resumed")
+    )
+      return true;
+
+    return false;
+  }
+
+  // Helper: Check if a thread is an RSZ (Reduced Speed Zone) alert from TTC API
+  function isRSZAlert(thread: ThreadWithAlerts): boolean {
+    const alert = thread.latestAlert;
+    if (!alert) return false;
+
+    // RSZ alerts have effect SIGNIFICANT_DELAYS and raw_data with stopStart/stopEnd
+    const rawData = alert.raw_data as Record<string, unknown> | null;
+    return (
+      alert.effect === "SIGNIFICANT_DELAYS" &&
+      rawData?.source === "ttc-api" &&
+      typeof rawData?.stopStart === "string" &&
+      typeof rawData?.stopEnd === "string"
+    );
+  }
+
+  // Get all alerts matching saved routes (excluding resolved)
   let routeMatchedAlerts = $derived.by<ThreadWithAlerts[]>(() => {
     if (routeIds.length === 0) return [];
-    return $threadsWithAlerts.filter(matchesRoutes);
+    return $threadsWithAlerts
+      .filter(matchesRoutes)
+      .filter((thread) => !isResolved(thread));
   });
 
   // Filter alerts for saved routes with optional route filter applied
   let myAlerts = $derived.by<ThreadWithAlerts[]>(() => {
     const routeFilter = selectedRouteFilter;
 
-    // Start with route-matched alerts
+    // Start with route-matched alerts (already excludes resolved)
     let filtered = routeMatchedAlerts;
 
     // Apply specific route filter if selected
@@ -162,6 +201,10 @@
 
     return filtered;
   });
+
+  // Separate RSZ alerts from regular alerts
+  let rszAlerts = $derived(myAlerts.filter(isRSZAlert));
+  let regularAlerts = $derived(myAlerts.filter((t) => !isRSZAlert(t)));
 
   function handleAddRoutes() {
     goto("/routes");
@@ -313,7 +356,40 @@
       role="feed"
       aria-label="Alerts for your saved routes"
     >
-      {#each myAlerts as thread, i (thread.thread_id)}
+      <!-- RSZ Alerts grouped by line -->
+      {#if rszAlerts.length > 0}
+        {@const line1RSZ = rszAlerts.filter((t) => {
+          const routes = t.affected_routes || t.latestAlert?.affected_routes;
+          if (!routes) return false;
+          const routeArr = Array.isArray(routes) ? routes : [routes];
+          return routeArr.some(
+            (r: string) =>
+              r === "1" ||
+              r.toLowerCase() === "line 1" ||
+              r.toLowerCase().includes("line 1")
+          );
+        })}
+        {@const line2RSZ = rszAlerts.filter((t) => {
+          const routes = t.affected_routes || t.latestAlert?.affected_routes;
+          if (!routes) return false;
+          const routeArr = Array.isArray(routes) ? routes : [routes];
+          return routeArr.some(
+            (r: string) =>
+              r === "2" ||
+              r.toLowerCase() === "line 2" ||
+              r.toLowerCase().includes("line 2")
+          );
+        })}
+        {#if line1RSZ.length > 0}
+          <RSZAlertCard threads={line1RSZ} />
+        {/if}
+        {#if line2RSZ.length > 0}
+          <RSZAlertCard threads={line2RSZ} />
+        {/if}
+      {/if}
+
+      <!-- Regular Alerts -->
+      {#each regularAlerts as thread, i (thread.thread_id)}
         {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
         <div
           class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
