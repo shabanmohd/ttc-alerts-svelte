@@ -447,7 +447,7 @@
   }
 </script>
 
-<div class="relative w-full z-0" bind:this={containerRef}>
+<div class="relative w-full" bind:this={containerRef}>
   <!-- Search Input -->
   <div class="relative flex items-center">
     <Search

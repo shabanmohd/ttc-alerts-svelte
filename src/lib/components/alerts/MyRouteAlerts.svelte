@@ -384,6 +384,8 @@
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 1rem;
+    position: relative;
+    z-index: 50;
   }
 
   /* Route tabs container with fade indicator on mobile */
@@ -527,6 +529,8 @@
     border-radius: var(--radius);
     border: 1px dashed hsl(var(--border));
     cursor: pointer;
+    position: relative;
+    z-index: 0;
   }
 
   .empty-state-icon {

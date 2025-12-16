@@ -494,31 +494,31 @@ Displays TTC API Reduced Speed Zone alerts grouped by subway line in an accordio
 
 #### Key Styles
 
-| Class               | Purpose                  | Key Properties                                      |
-| ------------------- | ------------------------ | --------------------------------------------------- |
-| `.rsz-accordion-card` | Card container          | `border-radius: var(--radius); border: 1px solid`  |
-| `.rsz-top-border`    | Colored line indicator   | `height: 4px; background: line-color`              |
-| `.rsz-line-badge`    | Line number badge        | `min-width: 2rem; height: 2rem; font-weight: 700`  |
-| `.rsz-line-info`     | Line name + label stack  | `flex-direction: column; gap: 0.125rem`            |
-| `.rsz-label`         | "REDUCED SPEED ZONE"     | `font-size: 0.6875rem; color: hsl(45 93% 40%)`     |
-| `.rsz-zone-count`    | "2 zones" count          | `font-size: 0.75rem; text-transform: uppercase`    |
+| Class                 | Purpose                 | Key Properties                                    |
+| --------------------- | ----------------------- | ------------------------------------------------- |
+| `.rsz-accordion-card` | Card container          | `border-radius: var(--radius); border: 1px solid` |
+| `.rsz-top-border`     | Colored line indicator  | `height: 4px; background: line-color`             |
+| `.rsz-line-badge`     | Line number badge       | `min-width: 2rem; height: 2rem; font-weight: 700` |
+| `.rsz-line-info`      | Line name + label stack | `flex-direction: column; gap: 0.125rem`           |
+| `.rsz-label`          | "REDUCED SPEED ZONE"    | `font-size: 0.6875rem; color: hsl(45 93% 40%)`    |
+| `.rsz-zone-count`     | "2 zones" count         | `font-size: 0.75rem; text-transform: uppercase`   |
 
 #### Direction Badge Colors
 
-| Direction     | Background            | Text Color           |
-| ------------- | -------------------- | -------------------- |
-| Northbound    | `emerald-600/20`     | `emerald-700`        |
-| Southbound    | `rose-600/20`        | `rose-700`           |
-| Eastbound     | `sky-600/20`         | `sky-700`            |
-| Westbound     | `amber-600/20`       | `amber-700`          |
+| Direction  | Background       | Text Color    |
+| ---------- | ---------------- | ------------- |
+| Northbound | `emerald-600/20` | `emerald-700` |
+| Southbound | `rose-600/20`    | `rose-700`    |
+| Eastbound  | `sky-600/20`     | `sky-700`     |
+| Westbound  | `amber-600/20`   | `amber-700`   |
 
 #### i18n Keys
 
-| Key                           | EN                                                                        |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| `alerts.reducedSpeedZone`     | "Reduced Speed Zone"                                                      |
-| `alerts.reducedSpeedZones`    | "Reduced Speed Zones"                                                     |
-| `alerts.reducedSpeedZonesDesc`| "Trains are running slower than usual in these sections due to track work"|
+| Key                            | EN                                                                         |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| `alerts.reducedSpeedZone`      | "Reduced Speed Zone"                                                       |
+| `alerts.reducedSpeedZones`     | "Reduced Speed Zones"                                                      |
+| `alerts.reducedSpeedZonesDesc` | "Trains are running slower than usual in these sections due to track work" |
 
 ### Maintenance Widget Cards
 
@@ -853,6 +853,14 @@ The Subway Status Cards display the current service status for each subway line 
 /* Card container */
 /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -881,6 +889,14 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */

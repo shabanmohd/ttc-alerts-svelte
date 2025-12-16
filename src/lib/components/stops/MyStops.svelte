@@ -350,6 +350,8 @@
     border-radius: var(--radius);
     border: 1px dashed hsl(var(--border));
     cursor: pointer;
+    position: relative;
+    z-index: 0;
   }
 
   .empty-state-icon {
