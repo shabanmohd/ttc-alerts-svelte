@@ -390,11 +390,7 @@
   />
 </svelte:head>
 
-<Header
-  isAuthenticated={$isAuthenticated}
-  username={$userName || ""}
-  onSignOut={handleSignOut}
-/>
+<Header />
 
 <main class="content-area">
   <!-- Search -->

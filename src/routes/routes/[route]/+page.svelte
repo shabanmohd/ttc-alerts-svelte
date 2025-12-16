@@ -268,12 +268,7 @@
   />
 </svelte:head>
 
-<Header
-  isAuthenticated={$isAuthenticated}
-  username={$userName || ""}
-  onOpenDialog={handleOpenDialog}
-  onSignOut={handleSignOut}
-/>
+<Header onOpenDialog={handleOpenDialog} />
 
 <main class="content-area">
   <!-- Back Button -->
