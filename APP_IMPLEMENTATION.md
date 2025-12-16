@@ -356,6 +356,38 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Dec 16, 2025 - RSZ Alerts Priority and Badge Count
+
+**Problem:** RSZ alerts showed at top of lists, and Major tab badge didn't count active scheduled closures.
+
+**Fixes:**
+
+- ✅ RSZ alerts now display at **bottom** of My Routes (after scheduled closures and regular alerts)
+- ✅ RSZ alerts now display at **bottom** of Minor tab (after all other alerts)
+- ✅ Major tab badge now includes active scheduled maintenance count
+
+**Priority Order (both My Routes and Minor tab):**
+1. Scheduled closures (if active and matching routes)
+2. Regular alerts (delays, service issues)
+3. RSZ alerts (lowest priority)
+
+**Files Updated:**
+
+- `src/lib/components/alerts/MyRouteAlerts.svelte` - Moved RSZ section after regular alerts
+- `src/routes/alerts/+page.svelte` - Moved RSZ section to bottom, fixed severityCounts
+
+### Dec 16, 2025 - Scheduled Closures in My Routes Tab
+
+**Problem:** Active scheduled closures not showing in My Routes tab.
+
+**Fix:** My Routes now displays active scheduled maintenance when:
+1. User has matching subway line saved (e.g., Line 1)
+2. The closure is currently happening (using same `isMaintenanceHappeningNow()` logic as Major tab)
+
+**Files Updated:**
+
+- `src/lib/components/alerts/MyRouteAlerts.svelte` - Added maintenance import, helpers, and display
+
 ### Dec 16, 2025 - My Routes Tab: Resolved Filter and RSZ Grouping
 
 **Problem:** My Routes tab showing SERVICE_RESUMED alerts and RSZ alerts as individual cards instead of grouped table.
