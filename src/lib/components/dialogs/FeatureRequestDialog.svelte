@@ -136,27 +136,9 @@
            sm:!rounded-lg sm:!max-w-md
            [&_[data-dialog-close]]:size-6 [&_[data-dialog-close]_svg]:size-5"
   >
-    <Dialog.Header class="text-left">
-      <div class="flex items-start gap-3">
-        <div
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/10 mt-0.5"
-        >
-          <Lightbulb class="h-5 w-5 text-amber-500" />
-        </div>
-        <div>
-          <Dialog.Title class="text-lg font-semibold"
-            >{$_("feedback.featureRequest")}</Dialog.Title
-          >
-          <Dialog.Description class="text-sm text-left opacity-50">
-            {$_("feedback.featureRequestDesc")}
-          </Dialog.Description>
-        </div>
-      </div>
-    </Dialog.Header>
-
     {#if submitStatus === "success"}
-      <!-- Success State -->
-      <div class="flex flex-col items-center justify-center py-8 gap-4">
+      <!-- Success State - Clean view without header -->
+      <div class="flex flex-col items-center justify-center py-12 gap-4">
         <div
           class="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10"
         >
@@ -170,6 +152,25 @@
         </div>
       </div>
     {:else}
+      <!-- Header - Only show when form is visible -->
+      <Dialog.Header class="text-left">
+        <div class="flex items-start gap-3">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/10 mt-0.5"
+          >
+            <Lightbulb class="h-5 w-5 text-amber-500" />
+          </div>
+          <div>
+            <Dialog.Title class="text-lg font-semibold"
+              >{$_("feedback.featureRequest")}</Dialog.Title
+            >
+            <Dialog.Description class="text-sm text-left opacity-50">
+              {$_("feedback.featureRequestDesc")}
+            </Dialog.Description>
+          </div>
+        </div>
+      </Dialog.Header>
+
       <!-- Form -->
       <form
         onsubmit={(e) => {
