@@ -5,7 +5,10 @@
   import Sidebar from "$lib/components/layout/Sidebar.svelte";
   import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
   import PullToRefresh from "$lib/components/layout/PullToRefresh.svelte";
-  import { HowToUseDialog } from "$lib/components/dialogs";
+  import {
+    ReportIssueDialog,
+    FeatureRequestDialog,
+  } from "$lib/components/dialogs";
   import { onMount, onDestroy } from "svelte";
   import {
     subscribeToAlerts,
@@ -19,6 +22,7 @@
   import { localPreferences } from "$lib/stores/localPreferences";
   import { initLanguage } from "$lib/stores/language";
   import { initI18n } from "$lib/i18n";
+  import { activeDialog, openDialog, closeDialog } from "$lib/stores/dialogs";
 
   // Initialize i18n translations
   initI18n();
@@ -28,16 +32,7 @@
 
   let { children } = $props();
 
-  let activeDialog = $state<string | null>(null);
   let unsubscribeAlerts: (() => void) | null = null;
-
-  function handleOpenDialog(dialog: string) {
-    activeDialog = dialog;
-  }
-
-  function handleCloseDialog() {
-    activeDialog = null;
-  }
 
   // Pull-to-refresh handler
   async function handlePullRefresh() {
@@ -84,7 +79,7 @@
 </svelte:head>
 
 <!-- Desktop Sidebar -->
-<Sidebar onOpenDialog={handleOpenDialog} />
+<Sidebar onOpenDialog={openDialog} />
 
 <!-- Main wrapper with pull-to-refresh -->
 <PullToRefresh onRefresh={handlePullRefresh}>
@@ -96,11 +91,18 @@
 <!-- Mobile Bottom Navigation -->
 <MobileBottomNav />
 
-<!-- Global Dialogs (triggered from sidebar) -->
-<HowToUseDialog
-  open={activeDialog === "how-to-use"}
+<!-- Global Dialogs (triggered from sidebar or header) -->
+<ReportIssueDialog
+  open={$activeDialog === "report-bug"}
   onOpenChange={(open) => {
-    if (!open) activeDialog = null;
+    if (!open) closeDialog();
+  }}
+/>
+
+<FeatureRequestDialog
+  open={$activeDialog === "feature-request"}
+  onOpenChange={(open) => {
+    if (!open) closeDialog();
   }}
 />
 

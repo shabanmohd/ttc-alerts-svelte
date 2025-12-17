@@ -84,16 +84,21 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/MyRouteAlerts.svelte`       | ✅     | My Routes tab with responsive route badge tabs                |
 | `components/alerts/RouteBadge.svelte`          | ✅     | TTC-branded route badges (full names, colors)                 |
 | `components/alerts/StatusBadge.svelte`         | ✅     | Status indicators (Delay, Detour, Resumed, etc.)              |
-| `components/dialogs/HowToUseDialog.svelte`     | ✅     | User guide                                                    |
+| `components/dialogs/HowToUseDialog.svelte`     | ✅     | User guide with sections and bottom sheet on mobile           |
+| `components/dialogs/AboutDialog.svelte`        | ✅     | App info, version, links                                      |
+| `components/dialogs/ReportIssueDialog.svelte`  | ✅     | Bug/issue report form with Turnstile + Resend                 |
+| `components/dialogs/FeatureRequestDialog.svelte`| ✅    | Feature suggestion form with Turnstile + Resend               |
 | `components/dialogs/InstallPWADialog.svelte`   | ✅     | PWA install prompt                                            |
 | `components/layout/Header.svelte`              | ✅     | App header - language toggle, hamburger menu w/ iOS safe area |
 | `components/layout/PullToRefresh.svelte`       | ✅     | Touch-based pull-to-refresh (80px threshold, mobile-only)     |
 | `components/layout/Sidebar.svelte`             | ✅     | Desktop navigation                                            |
 | `components/layout/MobileBottomNav.svelte`     | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom         |
 | `components/ui/*`                              | ✅     | shadcn-svelte base components                                 |
+| `components/ui/turnstile/`                     | ✅     | Cloudflare Turnstile captcha component                        |
 | `services/webauthn.ts`                         | ✅     | WebAuthn browser API wrapper                                  |
 | `stores/alerts.ts`                             | ✅     | Alerts state + 30-day accessibility query window              |
 | `stores/auth.ts`                               | ✅     | Custom WebAuthn auth store                                    |
+| `stores/dialogs.ts`                            | ✅     | Shared dialog state (hamburger menu → dialogs)                |
 | `stores/preferences.ts`                        | ✅     | User preferences state                                        |
 | `types/auth.ts`                                | ✅     | Auth TypeScript types                                         |
 | `types/database.ts`                            | ✅     | Database types (JSONB fields)                                 |
@@ -351,10 +356,70 @@ For local development, use `localhost` and `http://localhost:5173`.
 | poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v50)  |
 | get-eta            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`            |
 | scrape-maintenance | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance` |
+| submit-feedback    | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/submit-feedback`    |
+
+### submit-feedback Edge Function
+
+Handles bug reports and feature requests with Cloudflare Turnstile captcha verification and Resend email delivery.
+
+**Secrets Required:**
+| Secret | Purpose |
+|--------|---------|
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile verification |
+| `RESEND_API_KEY` | Resend email API |
+
+**Request Body:**
+```json
+{
+  "type": "bug|usability|data-error|complaint|other|feature",
+  "title": "Issue title (3-100 chars)",
+  "description": "Details (10-2000 chars)",
+  "email": "optional@email.com",
+  "turnstileToken": "captcha-token",
+  "userAgent": "navigator.userAgent",
+  "url": "current page URL"
+}
+```
 
 ---
 
 ## Changelog
+
+### Dec 20, 2025 - Feedback System & Form Dialog UX
+
+**Change:** Added Report Issue and Feature Request forms with Cloudflare Turnstile captcha and Resend email delivery.
+
+**New Components:**
+- `ReportIssueDialog.svelte` - Bug/issue report form with 5 issue categories
+- `FeatureRequestDialog.svelte` - Feature suggestion form
+- `AboutDialog.svelte` - App info and version
+- `HowToUseDialog.svelte` - User guide (updated with bottom sheet)
+- `stores/dialogs.ts` - Shared dialog state for hamburger menu
+- `components/ui/turnstile/` - Cloudflare Turnstile captcha component
+- `submit-feedback` Edge Function - Turnstile verification + Resend email
+
+**Form Dialog UX Patterns:**
+- ✅ Mobile: Bottom sheet (fixed bottom, rounded top corners, max 85vh)
+- ✅ Desktop: Centered modal (max-width 28rem)
+- ✅ Header: Left-aligned with top-aligned icon
+- ✅ Text hierarchy: `opacity-50` for descriptions/hints, `text-muted-foreground/60` for counts
+- ✅ Email validation (optional but validates format if provided)
+- ✅ Placeholder text: Consistent `#71717a` (zinc-500)
+- ✅ Close button: Enlarged to `size-5`
+
+**Issue Types:**
+| Type | Icon | Use Case |
+|------|------|----------|
+| Bug | Bug | Technical bugs |
+| Usability | AlertTriangle | UX problems |
+| Data Error | Database | Incorrect alert data |
+| Complaint | MessageSquare | General complaints |
+| Other | HelpCircle | Miscellaneous |
+
+**Files Updated:**
+- `DESIGN_SYSTEM.md` - Added form dialog patterns, text hierarchy, input validation
+- `APP_IMPLEMENTATION.md` - Added new components and Edge Function
+- `en.json` / `fr.json` - Added issue type translations
 
 ### Dec 16, 2025 - Remove Subway Line Accordion Grouping
 

@@ -27,7 +27,11 @@
   import { toast } from "svelte-sonner";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import RouteSearch from "$lib/components/alerts/RouteSearch.svelte";
-  import { HowToUseDialog } from "$lib/components/dialogs";
+  import {
+    HowToUseDialog,
+    ReportIssueDialog,
+    FeatureRequestDialog,
+  } from "$lib/components/dialogs";
   import { StopSearch } from "$lib/components/stops";
   import type { TTCStop } from "$lib/data/stops-db";
   import { savedStops, type SavedStop } from "$lib/stores/savedStops";
@@ -610,18 +614,14 @@
       </Card.Description>
     </Card.Header>
     <Card.Content class="space-y-3">
-      <Button
-        variant="outline"
-        class="w-full gap-2"
-        onclick={() => (activeDialog = "how-to-use")}
-      >
+      <Button variant="outline" class="w-full gap-2" href="/help">
         <HelpCircle class="h-4 w-4" />
         {$_("sidebar.howToUse")}
       </Button>
       <Button
         variant="outline"
         class="w-full gap-2"
-        href="mailto:feedback@ttc-alerts.app"
+        onclick={() => (activeDialog = "report-bug")}
       >
         <Flag class="h-4 w-4" />
         {$_("sidebar.reportBug")}
@@ -629,16 +629,12 @@
       <Button
         variant="outline"
         class="w-full gap-2"
-        href="mailto:feedback@ttc-alerts.app"
+        onclick={() => (activeDialog = "feature-request")}
       >
         <Lightbulb class="h-4 w-4" />
         {$_("settings.requestFeature")}
       </Button>
-      <Button
-        variant="outline"
-        class="w-full gap-2"
-        onclick={() => (activeDialog = "about")}
-      >
+      <Button variant="outline" class="w-full gap-2" href="/about">
         <Info class="h-4 w-4" />
         {$_("sidebar.about")}
       </Button>
@@ -655,6 +651,20 @@
 <!-- Dialogs -->
 <HowToUseDialog
   open={activeDialog === "how-to-use"}
+  onOpenChange={(open) => {
+    if (!open) activeDialog = null;
+  }}
+/>
+
+<ReportIssueDialog
+  open={activeDialog === "report-bug"}
+  onOpenChange={(open) => {
+    if (!open) activeDialog = null;
+  }}
+/>
+
+<FeatureRequestDialog
+  open={activeDialog === "feature-request"}
   onOpenChange={(open) => {
     if (!open) activeDialog = null;
   }}

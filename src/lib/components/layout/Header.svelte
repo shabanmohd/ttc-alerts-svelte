@@ -15,11 +15,14 @@
   import { etaStore } from "$lib/stores/eta";
   import { language, getSupportedLanguages } from "$lib/stores/language";
   import { localPreferences } from "$lib/stores/localPreferences";
+  import { openDialog } from "$lib/stores/dialogs";
   import { onMount } from "svelte";
   import { _ } from "svelte-i18n";
 
+  // Legacy prop - kept for backwards compatibility but ignored
+  // All dialog handling now goes through the shared store
   let {
-    onOpenDialog,
+    onOpenDialog: _onOpenDialog,
   }: {
     onOpenDialog?: (dialog: string) => void;
   } = $props();
@@ -217,14 +220,14 @@
       </button>
 
       <!-- Help button (desktop only) -->
-      <button
+      <a
+        href="/help"
         class="hidden sm:flex p-2 rounded-md hover:bg-accent transition-colors"
-        onclick={() => onOpenDialog?.("how-to-use")}
         title={$_("header.howToUse")}
         aria-label={$_("header.howToUse")}
       >
         <HelpCircle class="w-5 h-5" aria-hidden="true" />
-      </button>
+      </a>
 
       <!-- Mobile Menu Button - toggles between hamburger and X -->
       <button
@@ -375,11 +378,9 @@
           Help & Info
         </p>
 
-        <button
-          onclick={() => {
-            mobileMenuOpen = false;
-            onOpenDialog?.("how-to-use");
-          }}
+        <a
+          href="/help"
+          onclick={() => (mobileMenuOpen = false)}
           class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-all text-left active:scale-[0.98]"
           style="color: hsl(var(--foreground));"
           onmouseenter={(e) =>
@@ -389,12 +390,12 @@
         >
           <HelpCircle class="w-5 h-5" aria-hidden="true" />
           <span class="text-sm font-medium">{$_("sidebar.howToUse")}</span>
-        </button>
+        </a>
 
         <button
           onclick={() => {
             mobileMenuOpen = false;
-            onOpenDialog?.("report-bug");
+            openDialog("report-bug");
           }}
           class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-all text-left active:scale-[0.98]"
           style="color: hsl(var(--foreground));"
@@ -410,7 +411,7 @@
         <button
           onclick={() => {
             mobileMenuOpen = false;
-            onOpenDialog?.("feature-request");
+            openDialog("feature-request");
           }}
           class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-all text-left active:scale-[0.98]"
           style="color: hsl(var(--foreground));"
@@ -424,11 +425,9 @@
           >
         </button>
 
-        <button
-          onclick={() => {
-            mobileMenuOpen = false;
-            onOpenDialog?.("about");
-          }}
+        <a
+          href="/about"
+          onclick={() => (mobileMenuOpen = false)}
           class="flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-all text-left active:scale-[0.98]"
           style="color: hsl(var(--foreground));"
           onmouseenter={(e) =>
@@ -438,7 +437,7 @@
         >
           <Info class="w-5 h-5" aria-hidden="true" />
           <span class="text-sm font-medium">{$_("sidebar.about")}</span>
-        </button>
+        </a>
       </div>
     </nav>
   </div>

@@ -1539,7 +1539,7 @@ header.sticky {
 }
 
 .input::placeholder {
-  color: hsl(var(--muted-foreground));
+  color: #71717a; /* zinc-500 - consistent placeholder color */
 }
 
 .input:disabled {

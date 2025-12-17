@@ -239,8 +239,9 @@
    INPUT PLACEHOLDER STYLING
    ============================================ */
 
-input::placeholder {
-  color: hsl(var(--muted-foreground));
+input::placeholder,
+textarea::placeholder {
+  color: #71717a; /* zinc-500 - consistent placeholder color */
   opacity: 1;
 }
 

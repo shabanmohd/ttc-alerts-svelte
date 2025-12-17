@@ -33,7 +33,7 @@
     }
     // Home: active when on / with any ?home= param or no param
     if (href === "/") {
-      return currentPath === "/" || currentPath === "";
+      return currentPath === "/";
     }
     return false;
   }
@@ -76,14 +76,14 @@
   <div class="sidebar-footer">
     <!-- Help & Info Links -->
     <div class="sidebar-footer-links">
-      <button
-        onclick={() => handleDialog("how-to-use")}
+      <a
+        href="/help"
         class="sidebar-footer-link"
         title={$_("sidebar.howToUse")}
       >
         <HelpCircle class="w-4 h-4" />
         <span>{$_("sidebar.howToUse")}</span>
-      </button>
+      </a>
       <button
         onclick={() => handleDialog("report-bug")}
         class="sidebar-footer-link"
@@ -100,14 +100,10 @@
         <Lightbulb class="w-4 h-4" />
         <span>{$_("sidebar.featureRequest")}</span>
       </button>
-      <button
-        onclick={() => handleDialog("about")}
-        class="sidebar-footer-link"
-        title={$_("sidebar.about")}
-      >
+      <a href="/about" class="sidebar-footer-link" title={$_("sidebar.about")}>
         <Info class="w-4 h-4" />
         <span>{$_("sidebar.about")}</span>
-      </button>
+      </a>
     </div>
   </div>
 </aside>

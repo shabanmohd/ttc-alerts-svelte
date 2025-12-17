@@ -214,53 +214,138 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
 - Small: `h-9 px-3`
 - Icon: `h-10 w-10`
 
-### Dialogs (Confirmation Modals)
+### Dialogs
 
-Dialogs are used for confirmation prompts (delete, clear data) and informational modals. Built with shadcn-svelte `Dialog` component.
+Dialogs are used for confirmation prompts, forms, and informational modals. Built with shadcn-svelte `Dialog` component.
 
-#### Basic Structure
+#### Mobile Bottom Sheet Pattern
+
+Form dialogs use a bottom sheet on mobile for better UX, transforming to centered modals on desktop.
 
 ```svelte
-<script>
-  import * as Dialog from "$lib/components/ui/dialog";
-  import { Button } from "$lib/components/ui/button";
-  import { Trash2 } from "lucide-svelte";
-</script>
+<Dialog.Content
+  class="max-w-md bg-white dark:bg-zinc-900 
+         !fixed !inset-x-0 !bottom-0 !top-auto !start-0 !translate-x-0 !translate-y-0 
+         !rounded-t-2xl !rounded-b-none !max-h-[85vh] overflow-y-auto !max-w-full
+         sm:!inset-auto sm:!top-1/2 sm:!left-1/2 sm:!start-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2 
+         sm:!rounded-lg sm:!max-w-md
+         [&_[data-dialog-close]]:size-6 [&_[data-dialog-close]_svg]:size-5"
+>
+```
 
-<Dialog.Root open={showDialog} onOpenChange={(open) => { if (!open) showDialog = false; }}>
-  <Dialog.Content
-    class="sm:max-w-md"
-    style="background-color: hsl(var(--background)); border: 1px solid hsl(var(--border));"
-  >
-    <Dialog.Header>
-      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
-        <Trash2 class="h-7 w-7 text-destructive" />
-      </div>
-      <Dialog.Title class="text-center text-lg font-semibold">Confirm Action?</Dialog.Title>
-      <Dialog.Description class="text-center text-sm text-muted-foreground">
-        Are you sure you want to proceed? This action cannot be undone.
+| Property | Light Mode | Dark Mode |
+|----------|-----------|-----------|
+| Background | `bg-white` | `bg-zinc-900` |
+| Text | Default (dark) | Default (light) |
+
+| Breakpoint | Behavior                                         |
+| ---------- | ------------------------------------------------ |
+| Mobile     | Fixed bottom, full width, rounded top corners    |
+| Desktop    | Centered modal, max-width 28rem, rounded corners |
+
+#### Form Dialog Header Pattern
+
+Headers use left-aligned layout with icon top-aligned to text.
+
+```svelte
+<Dialog.Header class="text-left">
+  <div class="flex items-start gap-3">
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10 mt-0.5">
+      <Flag class="h-5 w-5 text-destructive" />
+    </div>
+    <div>
+      <Dialog.Title class="text-lg font-semibold">Title</Dialog.Title>
+      <Dialog.Description class="text-sm text-left opacity-50">
+        Description text with reduced opacity.
       </Dialog.Description>
-    </Dialog.Header>
-    <Dialog.Footer class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-center">
-      <Button variant="outline" class="w-full sm:w-auto" onclick={() => showDialog = false}>
-        Cancel
-      </Button>
-      <Button variant="destructive" class="w-full sm:w-auto" onclick={handleConfirm}>
-        Confirm
-      </Button>
-    </Dialog.Footer>
-  </Dialog.Content>
-</Dialog.Root>
+    </div>
+  </div>
+</Dialog.Header>
+```
+
+| Element     | Style                                                                  |
+| ----------- | ---------------------------------------------------------------------- |
+| Container   | `flex items-start gap-3` (icon top-aligned)                            |
+| Icon circle | `h-10 w-10 rounded-full bg-{color}/10 mt-0.5`                          |
+| Icon        | `h-5 w-5 text-{color}`                                                 |
+| Title       | `text-lg font-semibold`                                                |
+| Description | `text-sm text-left opacity-50` (50% opacity for visual hierarchy)      |
+| Close btn   | `size-6` container with `size-5` icon (via `[&_[data-dialog-close]]`)  |
+
+#### Text Hierarchy in Dialogs
+
+Use opacity classes to establish visual hierarchy:
+
+| Element        | Style                       | Example Use                     |
+| -------------- | --------------------------- | ------------------------------- |
+| Primary text   | No opacity class (100%)     | Labels, titles                  |
+| Secondary text | `opacity-50`                | Descriptions, hints, "(optional)" |
+| Tertiary text  | `text-muted-foreground/60`  | Character counts                |
+| Error text     | `text-destructive`          | Validation errors               |
+
+```svelte
+<!-- Label with optional badge -->
+<Label>
+  Email
+  <span class="opacity-50 text-xs">(optional)</span>
+</Label>
+
+<!-- Helper text below input -->
+<p class="text-xs opacity-50">We'll only use this to respond to your feedback.</p>
+
+<!-- Character count -->
+<p class="text-xs text-muted-foreground/60 text-right">{title.length}/100</p>
+```
+
+#### Confirmation Dialog (Centered)
+
+Simple confirmation dialogs use centered layout.
+
+```svelte
+<Dialog.Content class="sm:max-w-md">
+  <Dialog.Header>
+    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+      <Trash2 class="h-7 w-7 text-destructive" />
+    </div>
+    <Dialog.Title class="text-center text-lg font-semibold">Confirm Action?</Dialog.Title>
+    <Dialog.Description class="text-center text-sm text-muted-foreground">
+      Are you sure? This cannot be undone.
+    </Dialog.Description>
+  </Dialog.Header>
+  <Dialog.Footer class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-center">
+    <Button variant="outline" class="w-full sm:w-auto">Cancel</Button>
+    <Button variant="destructive" class="w-full sm:w-auto">Confirm</Button>
+  </Dialog.Footer>
+</Dialog.Content>
 ```
 
 #### Dialog Types by Icon Color
 
-| Type        | Icon Container      | Icon Color         | Example Use          |
-| ----------- | ------------------- | ------------------ | -------------------- |
-| **Danger**  | `bg-destructive/10` | `text-destructive` | Delete, Clear data   |
-| **Info**    | `bg-blue-500/10`    | `text-blue-500`    | How to use, About    |
-| **Warning** | `bg-amber-500/10`   | `text-amber-500`   | Unsaved changes      |
-| **Success** | `bg-green-500/10`   | `text-green-500`   | Confirmation success |
+| Type        | Icon Container      | Icon Color         | Example Use              |
+| ----------- | ------------------- | ------------------ | ------------------------ |
+| **Danger**  | `bg-destructive/10` | `text-destructive` | Delete, Report Issue     |
+| **Info**    | `bg-blue-500/10`    | `text-blue-500`    | How to use, About        |
+| **Warning** | `bg-amber-500/10`   | `text-amber-500`   | Feature Request          |
+| **Success** | `bg-green-500/10`   | `text-green-500`   | Confirmation success     |
+
+#### Form Dialog Footer
+
+```svelte
+<Dialog.Footer class="flex flex-col gap-3 sm:flex-row">
+  <Button variant="outline" class="w-full sm:w-auto" disabled={isLoading}>
+    Cancel
+  </Button>
+  <Button class="w-full sm:w-auto" disabled={!isValid || isLoading}>
+    {#if isLoading}<Loader2 class="h-4 w-4 mr-2 animate-spin" />{/if}
+    Submit
+  </Button>
+</Dialog.Footer>
+```
+
+| Breakpoint | Button Layout                              |
+| ---------- | ------------------------------------------ |
+| Mobile     | Stack vertically, full width               |
+| Desktop    | Horizontal row, auto width                 |
 
 ### Tab Indicators
 
@@ -315,6 +400,41 @@ border-color: hsl(var(--border));
 ```
 
 **Note:** Due to Tailwind 4 color handling differences, the Input component uses inline `style` attributes rather than utility classes for background and border colors.
+
+#### Placeholder Text Styling
+
+Placeholders use a consistent mid-gray color (`zinc-500` / `#71717a`) across all inputs and textareas:
+
+```css
+/* Global placeholder styling in ttc-theme.css and layout.css */
+input::placeholder,
+textarea::placeholder {
+  color: #71717a; /* zinc-500 */
+  opacity: 1;
+}
+```
+
+```svelte
+<!-- Input and Textarea components include these Tailwind classes -->
+<Input class="placeholder:text-zinc-500 dark:placeholder:text-zinc-500" />
+<Textarea class="placeholder:text-zinc-500 dark:placeholder:text-zinc-500" />
+```
+
+#### Input Validation States
+
+```svelte
+<!-- Error state with red border -->
+<Input
+  class={email.trim() && !isEmailValid
+    ? "border-destructive focus-visible:ring-destructive"
+    : ""}
+/>
+
+<!-- Error message below input -->
+{#if email.trim() && !isEmailValid}
+  <p class="text-xs text-destructive">Invalid email format</p>
+{/if}
+```
 
 ### Route Badges
 
