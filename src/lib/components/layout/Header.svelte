@@ -264,14 +264,14 @@
 {#if mobileMenuOpen}
   <!-- Backdrop -->
   <button
-    class="sm:hidden fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm animate-fade-in"
+    class="sm:hidden fixed inset-0 z-[1001] bg-black/50 backdrop-blur-sm animate-fade-in"
     onclick={() => (mobileMenuOpen = false)}
     aria-label={$_("header.closeMenu")}
   ></button>
 
   <!-- Header bar with close button - accounts for iOS safe area -->
   <div
-    class="sm:hidden fixed left-0 right-0 top-0 z-[102] flex items-center justify-between px-4 border-b animate-fade-in"
+    class="sm:hidden fixed left-0 right-0 top-0 z-[1003] flex items-center justify-between px-4 border-b animate-fade-in"
     style="background-color: hsl(var(--background)); border-color: hsl(var(--border)); padding-top: env(safe-area-inset-top, 0px); height: calc(57px + env(safe-area-inset-top, 0px));"
   >
     <div class="flex items-center gap-2">
@@ -292,7 +292,7 @@
 
   <!-- Menu Content - positioned below header with safe area -->
   <div
-    class="sm:hidden fixed left-0 right-0 z-[101] border-t border-border shadow-xl overflow-y-auto animate-fade-in-down"
+    class="sm:hidden fixed left-0 right-0 z-[1002] border-t border-border shadow-xl overflow-y-auto animate-fade-in-down"
     style="background-color: hsl(var(--background)); top: calc(57px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 57px - env(safe-area-inset-top, 0px));"
   >
     <nav class="px-4 py-4 space-y-4">
