@@ -15,8 +15,22 @@ const FEEDBACK_EMAIL = 'orangeisblackish@gmail.com';
 // Resend API key - must be set in Supabase secrets
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
+// Valid feedback types
+const VALID_TYPES = ['feature', 'bug', 'usability', 'data-error', 'complaint', 'other'] as const;
+type FeedbackType = typeof VALID_TYPES[number];
+
+// Type labels for email display
+const TYPE_LABELS: Record<FeedbackType, { label: string; emoji: string; color: string }> = {
+  feature: { label: 'Feature Request', emoji: '💡', color: '#f59e0b' },
+  bug: { label: 'Bug Report', emoji: '🐛', color: '#dc2626' },
+  usability: { label: 'Usability Issue', emoji: '⚠️', color: '#f97316' },
+  'data-error': { label: 'Data Error', emoji: '📊', color: '#8b5cf6' },
+  complaint: { label: 'Complaint', emoji: '💬', color: '#6b7280' },
+  other: { label: 'Other Feedback', emoji: '❓', color: '#3b82f6' },
+};
+
 interface FeedbackRequest {
-  type: 'bug' | 'feature';
+  type: FeedbackType;
   title: string;
   description: string;
   email?: string;
@@ -60,7 +74,7 @@ async function verifyTurnstile(token: string): Promise<boolean> {
 
 // Send email via Resend
 async function sendEmailViaResend(
-  type: 'bug' | 'feature',
+  type: FeedbackType,
   title: string,
   description: string,
   email?: string,
@@ -81,12 +95,13 @@ async function sendEmailViaResend(
     return { success: true }; // Return true in dev to allow testing
   }
 
-  const typeLabel = type === 'bug' ? '🐛 Bug Report' : '💡 Feature Request';
+  const typeInfo = TYPE_LABELS[type];
+  const typeLabel = `${typeInfo.emoji} ${typeInfo.label}`;
   const timestamp = new Date().toISOString();
 
   const htmlContent = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: ${type === 'bug' ? '#dc2626' : '#f59e0b'};">${typeLabel}</h2>
+      <h2 style="color: ${typeInfo.color};">${typeLabel}</h2>
       
       <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <h3 style="margin: 0 0 8px 0; color: #111827;">${title}</h3>
@@ -156,7 +171,7 @@ serve(async (req) => {
     const { type, title, description, email, turnstileToken, userAgent, url } = body;
 
     // Validate required fields
-    if (!type || !['bug', 'feature'].includes(type)) {
+    if (!type || !VALID_TYPES.includes(type as FeedbackType)) {
       return new Response(JSON.stringify({ error: 'Invalid feedback type' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

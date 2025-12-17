@@ -195,11 +195,15 @@
               : ""}
           />
           <div class="flex justify-between text-xs">
-            <span class={title.trim().length > 0 && title.trim().length < 3 
-              ? "text-amber-500" 
-              : "text-muted-foreground/60"}>
+            <span
+              class={title.trim().length > 0 && title.trim().length < 3
+                ? "text-amber-500"
+                : "text-muted-foreground/60"}
+            >
               {#if title.trim().length > 0 && title.trim().length < 3}
-                {$_("feedback.titleCharsNeeded", { values: { count: 3 - title.trim().length }})}
+                {$_("feedback.titleCharsNeeded", {
+                  values: { count: 3 - title.trim().length },
+                })}
               {:else}
                 {$_("feedback.titleMinChars")}
               {/if}
@@ -219,21 +223,30 @@
             bind:value={description}
             disabled={isLoading}
             maxlength={2000}
-            class={`min-h-[120px] ${description.trim().length > 0 && description.trim().length < 10
-              ? "border-amber-500 focus-visible:ring-amber-500/50"
-              : ""}`}
+            class={`min-h-[120px] ${
+              description.trim().length > 0 && description.trim().length < 10
+                ? "border-amber-500 focus-visible:ring-amber-500/50"
+                : ""
+            }`}
           />
           <div class="flex justify-between text-xs">
-            <span class={description.trim().length > 0 && description.trim().length < 10 
-              ? "text-amber-500" 
-              : "text-muted-foreground/60"}>
+            <span
+              class={description.trim().length > 0 &&
+              description.trim().length < 10
+                ? "text-amber-500"
+                : "text-muted-foreground/60"}
+            >
               {#if description.trim().length > 0 && description.trim().length < 10}
-                {$_("feedback.descriptionCharsNeeded", { values: { count: 10 - description.trim().length }})}
+                {$_("feedback.descriptionCharsNeeded", {
+                  values: { count: 10 - description.trim().length },
+                })}
               {:else}
                 {$_("feedback.descriptionMinChars")}
               {/if}
             </span>
-            <span class="text-muted-foreground/60">{description.length}/2000</span>
+            <span class="text-muted-foreground/60"
+              >{description.length}/2000</span
+            >
           </div>
         </div>
 
