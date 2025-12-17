@@ -190,10 +190,22 @@
             bind:value={title}
             disabled={isLoading}
             maxlength={100}
+            class={title.trim().length > 0 && title.trim().length < 3
+              ? "border-amber-500 focus-visible:ring-amber-500/50"
+              : ""}
           />
-          <p class="text-xs text-muted-foreground/60 text-right">
-            {title.length}/100
-          </p>
+          <div class="flex justify-between text-xs">
+            <span class={title.trim().length > 0 && title.trim().length < 3 
+              ? "text-amber-500" 
+              : "text-muted-foreground/60"}>
+              {#if title.trim().length > 0 && title.trim().length < 3}
+                {$_("feedback.titleCharsNeeded", { values: { count: 3 - title.trim().length }})}
+              {:else}
+                {$_("feedback.titleMinChars")}
+              {/if}
+            </span>
+            <span class="text-muted-foreground/60">{title.length}/100</span>
+          </div>
         </div>
 
         <!-- Description -->
@@ -207,11 +219,22 @@
             bind:value={description}
             disabled={isLoading}
             maxlength={2000}
-            class="min-h-[120px]"
+            class={`min-h-[120px] ${description.trim().length > 0 && description.trim().length < 10
+              ? "border-amber-500 focus-visible:ring-amber-500/50"
+              : ""}`}
           />
-          <p class="text-xs text-muted-foreground/60 text-right">
-            {description.length}/2000
-          </p>
+          <div class="flex justify-between text-xs">
+            <span class={description.trim().length > 0 && description.trim().length < 10 
+              ? "text-amber-500" 
+              : "text-muted-foreground/60"}>
+              {#if description.trim().length > 0 && description.trim().length < 10}
+                {$_("feedback.descriptionCharsNeeded", { values: { count: 10 - description.trim().length }})}
+              {:else}
+                {$_("feedback.descriptionMinChars")}
+              {/if}
+            </span>
+            <span class="text-muted-foreground/60">{description.length}/2000</span>
+          </div>
         </div>
 
         <!-- Email (optional) -->

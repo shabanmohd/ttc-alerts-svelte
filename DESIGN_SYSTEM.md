@@ -335,8 +335,8 @@ Simple confirmation dialogs use centered layout.
   <Button variant="outline" class="w-full sm:w-auto" disabled={isLoading}>
     Cancel
   </Button>
-  <Button 
-    class="w-full sm:w-auto bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100" 
+  <Button
+    class="w-full sm:w-auto bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
     disabled={!isValid || isLoading}
   >
     {#if isLoading}<Loader2 class="h-4 w-4 mr-2 animate-spin" />{/if}
@@ -345,12 +345,12 @@ Simple confirmation dialogs use centered layout.
 </Dialog.Footer>
 ```
 
-| Property         | Light Mode                                        | Dark Mode                                         |
-| ---------------- | ------------------------------------------------- | ------------------------------------------------- |
-| Cancel Button    | `variant="outline"` - border with transparent bg  | `variant="outline"` - border with transparent bg  |
-| Submit Button BG | `bg-zinc-900` (dark)                              | `bg-white` (light)                                |
-| Submit Text      | `text-white`                                      | `text-zinc-900`                                   |
-| Hover State      | `hover:bg-zinc-800`                               | `dark:hover:bg-zinc-100`                          |
+| Property         | Light Mode                                       | Dark Mode                                        |
+| ---------------- | ------------------------------------------------ | ------------------------------------------------ |
+| Cancel Button    | `variant="outline"` - border with transparent bg | `variant="outline"` - border with transparent bg |
+| Submit Button BG | `bg-zinc-900` (dark)                             | `bg-white` (light)                               |
+| Submit Text      | `text-white`                                     | `text-zinc-900`                                  |
+| Hover State      | `hover:bg-zinc-800`                              | `dark:hover:bg-zinc-100`                         |
 
 **Important**: The high-contrast Submit button styling ensures the primary action is visually distinct from the Cancel button in both light and dark modes. This inverted color scheme provides maximum contrast and clear visual hierarchy.
 
@@ -1307,6 +1307,262 @@ The Subway Status Cards display the current service status for each subway line 
 /* Card container */
 /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -1335,6 +1591,262 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
