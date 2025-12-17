@@ -224,19 +224,19 @@ Form dialogs use a bottom sheet on mobile for better UX, transforming to centere
 
 ```svelte
 <Dialog.Content
-  class="max-w-md bg-white dark:bg-zinc-900 
-         !fixed !inset-x-0 !bottom-0 !top-auto !start-0 !translate-x-0 !translate-y-0 
+  class="max-w-md bg-white dark:bg-zinc-900
+         !fixed !inset-x-0 !bottom-0 !top-auto !start-0 !translate-x-0 !translate-y-0
          !rounded-t-2xl !rounded-b-none !max-h-[85vh] overflow-y-auto !max-w-full
-         sm:!inset-auto sm:!top-1/2 sm:!left-1/2 sm:!start-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2 
+         sm:!inset-auto sm:!top-1/2 sm:!left-1/2 sm:!start-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2
          sm:!rounded-lg sm:!max-w-md
          [&_[data-dialog-close]]:size-6 [&_[data-dialog-close]_svg]:size-5"
 >
 ```
 
-| Property | Light Mode | Dark Mode |
-|----------|-----------|-----------|
-| Background | `bg-white` | `bg-zinc-900` |
-| Text | Default (dark) | Default (light) |
+| Property   | Light Mode     | Dark Mode       |
+| ---------- | -------------- | --------------- |
+| Background | `bg-white`     | `bg-zinc-900`   |
+| Text       | Default (dark) | Default (light) |
 
 | Breakpoint | Behavior                                         |
 | ---------- | ------------------------------------------------ |
@@ -263,25 +263,25 @@ Headers use left-aligned layout with icon top-aligned to text.
 </Dialog.Header>
 ```
 
-| Element     | Style                                                                  |
-| ----------- | ---------------------------------------------------------------------- |
-| Container   | `flex items-start gap-3` (icon top-aligned)                            |
-| Icon circle | `h-10 w-10 rounded-full bg-{color}/10 mt-0.5`                          |
-| Icon        | `h-5 w-5 text-{color}`                                                 |
-| Title       | `text-lg font-semibold`                                                |
-| Description | `text-sm text-left opacity-50` (50% opacity for visual hierarchy)      |
-| Close btn   | `size-6` container with `size-5` icon (via `[&_[data-dialog-close]]`)  |
+| Element     | Style                                                                 |
+| ----------- | --------------------------------------------------------------------- |
+| Container   | `flex items-start gap-3` (icon top-aligned)                           |
+| Icon circle | `h-10 w-10 rounded-full bg-{color}/10 mt-0.5`                         |
+| Icon        | `h-5 w-5 text-{color}`                                                |
+| Title       | `text-lg font-semibold`                                               |
+| Description | `text-sm text-left opacity-50` (50% opacity for visual hierarchy)     |
+| Close btn   | `size-6` container with `size-5` icon (via `[&_[data-dialog-close]]`) |
 
 #### Text Hierarchy in Dialogs
 
 Use opacity classes to establish visual hierarchy:
 
-| Element        | Style                       | Example Use                     |
-| -------------- | --------------------------- | ------------------------------- |
-| Primary text   | No opacity class (100%)     | Labels, titles                  |
-| Secondary text | `opacity-50`                | Descriptions, hints, "(optional)" |
-| Tertiary text  | `text-muted-foreground/60`  | Character counts                |
-| Error text     | `text-destructive`          | Validation errors               |
+| Element        | Style                      | Example Use                       |
+| -------------- | -------------------------- | --------------------------------- |
+| Primary text   | No opacity class (100%)    | Labels, titles                    |
+| Secondary text | `opacity-50`               | Descriptions, hints, "(optional)" |
+| Tertiary text  | `text-muted-foreground/60` | Character counts                  |
+| Error text     | `text-destructive`         | Validation errors                 |
 
 ```svelte
 <!-- Label with optional badge -->
@@ -321,12 +321,12 @@ Simple confirmation dialogs use centered layout.
 
 #### Dialog Types by Icon Color
 
-| Type        | Icon Container      | Icon Color         | Example Use              |
-| ----------- | ------------------- | ------------------ | ------------------------ |
-| **Danger**  | `bg-destructive/10` | `text-destructive` | Delete, Report Issue     |
-| **Info**    | `bg-blue-500/10`    | `text-blue-500`    | How to use, About        |
-| **Warning** | `bg-amber-500/10`   | `text-amber-500`   | Feature Request          |
-| **Success** | `bg-green-500/10`   | `text-green-500`   | Confirmation success     |
+| Type        | Icon Container      | Icon Color         | Example Use          |
+| ----------- | ------------------- | ------------------ | -------------------- |
+| **Danger**  | `bg-destructive/10` | `text-destructive` | Delete, Report Issue |
+| **Info**    | `bg-blue-500/10`    | `text-blue-500`    | How to use, About    |
+| **Warning** | `bg-amber-500/10`   | `text-amber-500`   | Feature Request      |
+| **Success** | `bg-green-500/10`   | `text-green-500`   | Confirmation success |
 
 #### Form Dialog Footer
 
@@ -335,17 +335,29 @@ Simple confirmation dialogs use centered layout.
   <Button variant="outline" class="w-full sm:w-auto" disabled={isLoading}>
     Cancel
   </Button>
-  <Button class="w-full sm:w-auto" disabled={!isValid || isLoading}>
+  <Button 
+    class="w-full sm:w-auto bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100" 
+    disabled={!isValid || isLoading}
+  >
     {#if isLoading}<Loader2 class="h-4 w-4 mr-2 animate-spin" />{/if}
     Submit
   </Button>
 </Dialog.Footer>
 ```
 
-| Breakpoint | Button Layout                              |
-| ---------- | ------------------------------------------ |
-| Mobile     | Stack vertically, full width               |
-| Desktop    | Horizontal row, auto width                 |
+| Property         | Light Mode                                        | Dark Mode                                         |
+| ---------------- | ------------------------------------------------- | ------------------------------------------------- |
+| Cancel Button    | `variant="outline"` - border with transparent bg  | `variant="outline"` - border with transparent bg  |
+| Submit Button BG | `bg-zinc-900` (dark)                              | `bg-white` (light)                                |
+| Submit Text      | `text-white`                                      | `text-zinc-900`                                   |
+| Hover State      | `hover:bg-zinc-800`                               | `dark:hover:bg-zinc-100`                          |
+
+**Important**: The high-contrast Submit button styling ensures the primary action is visually distinct from the Cancel button in both light and dark modes. This inverted color scheme provides maximum contrast and clear visual hierarchy.
+
+| Breakpoint | Button Layout                |
+| ---------- | ---------------------------- |
+| Mobile     | Stack vertically, full width |
+| Desktop    | Horizontal row, auto width   |
 
 ### Tab Indicators
 
@@ -1167,6 +1179,134 @@ The Subway Status Cards display the current service status for each subway line 
 /* Card container */
 /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -1195,6 +1335,134 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */

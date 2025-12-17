@@ -292,9 +292,7 @@
         <div class="space-y-2">
           <Label for="issue-email">
             {$_("feedback.email")}
-            <span class="opacity-50 text-xs"
-              >({$_("common.optional")})</span
-            >
+            <span class="opacity-50 text-xs">({$_("common.optional")})</span>
           </Label>
           <Input
             id="issue-email"
@@ -351,7 +349,7 @@
           {$_("common.cancel")}
         </Button>
         <Button
-          class="w-full sm:w-auto"
+          class="w-full sm:w-auto bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
           onclick={handleSubmit}
           disabled={!isValid || isLoading}
         >
