@@ -90,7 +90,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/dialogs/FeatureRequestDialog.svelte` | ✅     | Feature suggestion form with Turnstile + Resend               |
 | `components/dialogs/InstallPWADialog.svelte`     | ✅     | PWA install prompt                                            |
 | `components/layout/Header.svelte`                | ✅     | App header - language toggle, hamburger menu w/ iOS safe area |
-| `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh (80px threshold, mobile-only)     |
+| `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header         |
 | `components/layout/Sidebar.svelte`               | ✅     | Desktop navigation                                            |
 | `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom         |
 | `components/ui/*`                                | ✅     | shadcn-svelte base components                                 |
@@ -822,6 +822,7 @@ const patterns = [
 - ✅ Requires 20px pull distance before preventing default scroll (was 10px)
 - ✅ Upward scroll movement immediately cancels pull gesture
 - ✅ Uses correct scroll position detection (document.body.scrollTop)
+- ✅ Transform only applied when actively pulling (preserves sticky positioning)
 
 **Files Updated:**
 

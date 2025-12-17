@@ -145,11 +145,10 @@
   {/if}
 
   <!-- Content with transform during pull -->
+  <!-- Only apply transform when actively pulling to preserve sticky positioning -->
   <div
     class="pull-content"
-    style="transform: translateY({pullDistance}px); transition: {isPulling
-      ? 'none'
-      : 'transform 0.3s ease'};"
+    style={pullDistance > 0 ? `transform: translateY(${pullDistance}px); transition: ${isPulling ? 'none' : 'transform 0.3s ease'};` : ''}
   >
     {@render children()}
   </div>

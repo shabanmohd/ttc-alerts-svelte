@@ -2150,6 +2150,35 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 ```
 
+### Sticky Header & Pull-to-Refresh
+
+The header uses `position: sticky` for smooth scrolling with the page. The `PullToRefresh` component wraps page content and must preserve sticky positioning.
+
+**Critical Implementation Detail:**
+
+CSS `transform` property creates a new stacking context which breaks `position: sticky`. The PullToRefresh component only applies `transform: translateY()` when actively pulling (pullDistance > 0), removing it when idle to preserve sticky header behavior.
+
+```svelte
+<!-- Only apply transform when actively pulling -->
+<div
+  class="pull-content"
+  style={pullDistance > 0 ? `transform: translateY(${pullDistance}px);` : ''}
+>
+  {@render children()}
+</div>
+```
+
+**Z-Index Hierarchy:**
+
+| Element            | Z-Index | Notes                        |
+| ------------------ | ------- | ---------------------------- |
+| Header             | 1000    | Sticky at top                |
+| Menu Backdrop      | 1001    | Above header                 |
+| Menu Content Panel | 1002    | Above backdrop               |
+| Menu Header Bar    | 1003    | Above content panel          |
+| Mobile Bottom Nav  | 50      | Fixed at bottom              |
+| Pull Indicator     | 10      | During pull-to-refresh only  |
+
 ---
 
 ## 8. Animations
