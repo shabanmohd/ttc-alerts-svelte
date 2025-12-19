@@ -198,16 +198,32 @@ export async function fetchAlerts(): Promise<void> {
     
     if (accessibilityError) throw accessibilityError;
     
-    // Merge recent alerts with accessibility alerts (deduplicate by alert_id)
+    // Step 1c: Also fetch RSZ alerts with extended 30-day window
+    // Reduced Speed Zones persist for weeks/months due to ongoing track work
+    const { data: rszAlerts, error: rszError } = await supabase
+      .from('alert_cache')
+      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
+      .like('alert_id', 'ttc-RSZ-%')
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(50);
+    
+    if (rszError) throw rszError;
+    
+    // Merge recent alerts with accessibility and RSZ alerts (deduplicate by alert_id)
     const allRecentAlerts = recentAlerts || [];
     const allAccessibilityAlerts = accessibilityAlerts || [];
+    const allRszAlerts = rszAlerts || [];
     const existingIds = new Set(allRecentAlerts.map(a => a.alert_id));
     const mergedAlerts = [
       ...allRecentAlerts,
-      ...allAccessibilityAlerts.filter(a => !existingIds.has(a.alert_id))
+      ...allAccessibilityAlerts.filter(a => !existingIds.has(a.alert_id)),
+      ...allRszAlerts.filter(a => !existingIds.has(a.alert_id))
     ];
+    // Update existingIds to include RSZ alerts for proper deduplication
+    allRszAlerts.forEach(a => existingIds.add(a.alert_id));
     
-    // Get unique thread IDs from all alerts (recent + accessibility)
+    // Get unique thread IDs from all alerts (recent + accessibility + RSZ)
     const threadIds = [...new Set(mergedAlerts.map(a => a.thread_id).filter(Boolean))];
     
     // Step 2: Fetch ALL alerts from these active threads (not just last 24h)
