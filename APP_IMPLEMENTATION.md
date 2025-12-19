@@ -193,6 +193,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 - **Live ETA Display**: Real-time predictions with live signal icon, route badge, direction/destination
 - **Scheduled First Bus**: For routes without live data, shows GTFS scheduled first bus times
+- **Blue Visual Distinction**: Scheduled section has blue-tinted background to distinguish from live ETAs
 - **No Service Indicator**: Shows "No Service" for routes that don't run on current day (e.g., 939 on weekends)
 - **Day Type Header**: "Scheduled Next Bus · Weekday (Friday)" with current day name
 - **Responsive Layout**: Vertical on mobile (5xl time), horizontal on desktop (4xl time)

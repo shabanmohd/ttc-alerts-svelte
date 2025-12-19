@@ -986,6 +986,23 @@ The ETA Cards display real-time arrival predictions for bookmarked stops. Each c
 | **Live**      | `Radio` (lucide) | `#EAB308` yellow | Pulsing (opacity 0.7→1.0) | "Live"              |
 | **Scheduled** | `Clock` (lucide) | muted-foreground | None                      | "Scheduled 8:15 PM" |
 
+#### Scheduled Section (GTFS First Bus Times)
+
+When routes don't have real-time ETA data, ETACard shows their scheduled first bus times from GTFS data. This section is **visually distinct** using a blue tint to differentiate from live ETA predictions above.
+
+| Element             | Light Mode          | Dark Mode             |
+| ------------------- | ------------------- | --------------------- |
+| Section background  | `bg-blue-500/10`    | `bg-blue-950/30`      |
+| Header background   | `bg-blue-500/20`    | `bg-blue-900/40`      |
+| Header text         | `text-blue-700`     | `text-blue-300/80`    |
+| Border              | `border-blue-500/20`| `border-blue-500/20`  |
+
+**Header Format**: "Scheduled Next Bus · Weekday (Friday)" with Calendar icon
+
+**Special States**:
+- **No Service**: Routes that don't run on current day (e.g., 939 Express on weekends) show "No Service" in `text-muted-foreground/60`
+- **Tomorrow**: If next bus is tomorrow, shows "(tmrw)" suffix
+
 #### Component Structure (Svelte)
 
 ```svelte

@@ -18,6 +18,7 @@
     type NextDepartureInfo,
   } from "$lib/services/schedule-lookup";
   import { getRouteName } from "$lib/data/route-names";
+  import { db } from "$lib/data/stops-db";
   import LiveSignalIcon from "./LiveSignalIcon.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -196,10 +197,38 @@
   let routesWithNoService = $state<Set<string>>(new Set());
   let scheduleLoaded = $state(false);
 
-  // Get the routes this stop serves from saved stops
+  // Track routes from stops database lookup
+  let dbRoutes = $state<string[]>([]);
+
+  // Load routes from stops database if not available from saved stops
+  $effect(() => {
+    const savedStop = $savedStops.find((s) => s.id === eta.stopId);
+    if (!savedStop?.routes || savedStop.routes.length === 0) {
+      // Look up routes from the stops database
+      db.stops.get(eta.stopId).then((stop) => {
+        if (stop?.routes) {
+          dbRoutes = stop.routes;
+        }
+      });
+    }
+  });
+
+  // Get the routes this stop serves from saved stops, database, or predictions
   let stopRoutes = $derived.by(() => {
     const savedStop = $savedStops.find((s) => s.id === eta.stopId);
-    return savedStop?.routes || [];
+    // If saved stop has routes, use them
+    if (savedStop?.routes && savedStop.routes.length > 0) {
+      return savedStop.routes;
+    }
+    // Fallback to routes from database lookup
+    if (dbRoutes.length > 0) {
+      return dbRoutes;
+    }
+    // Last fallback: get routes from predictions if available
+    if (eta.predictions.length > 0) {
+      return [...new Set(eta.predictions.map((p) => p.route))];
+    }
+    return [];
   });
 
   // Get routes that have real-time predictions
@@ -233,7 +262,17 @@
 
   // Load scheduled departures for missing routes
   $effect(() => {
-    if (!eta.isLoading && !scheduleLoaded && routesNeedingSchedule.length > 0) {
+    // Load schedules if:
+    // 1. Not currently loading ETA data
+    // 2. Schedule not already loaded
+    // 3. Either we need schedules for routes without predictions, OR there are no predictions at all but we have routes
+    const shouldLoadSchedules =
+      !eta.isLoading &&
+      !scheduleLoaded &&
+      (routesNeedingSchedule.length > 0 ||
+        (sortedPredictions.length === 0 && stopRoutes.length > 0));
+
+    if (shouldLoadSchedules) {
       loadScheduleData().then(() => {
         if (stopRoutes.length > 0) {
           const departures = getNextScheduledDeparturesForStop(
@@ -328,104 +367,163 @@
       {/each}
     </div>
   {:else if sortedPredictions.length === 0}
-    <!-- No Predictions - Context-aware message with scheduled departures -->
+    <!-- No Predictions - Show scheduled departures in full card style -->
     {@const emptyState = getEmptyStateMessage(isSubway, eta.stopId)}
-    <div class="p-5 flex flex-col items-center gap-3 text-center">
-      {#if emptyState.icon === "moon"}
-        <Moon class="h-6 w-6 text-muted-foreground/50 mb-1" />
-      {:else if emptyState.icon === "alert"}
-        <AlertCircle class="h-6 w-6 text-muted-foreground/50 mb-1" />
-      {:else}
-        <Clock class="h-6 w-6 text-muted-foreground/50 mb-1" />
-      {/if}
-      <p class="text-sm font-medium text-muted-foreground">
-        {emptyState.title}
-      </p>
-      <p class="text-xs text-muted-foreground/70">{emptyState.subtitle}</p>
+    {@const firstDepartureWithTime = [...scheduledDepartures.values()].find(
+      (d) => d !== null
+    )}
+    {@const dayName = new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+    })}
+    {@const scheduleLabel =
+      firstDepartureWithTime?.dayType === "Weekday"
+        ? `Weekday (${dayName})`
+        : firstDepartureWithTime?.dayType === "Saturday"
+          ? "Saturday"
+          : firstDepartureWithTime?.dayType === "Sunday"
+            ? "Sunday"
+            : dayName}
 
-      <!-- Scheduled Departures Section -->
-      {#if scheduleLoaded && scheduledDepartures.size > 0}
-        <div class="w-full mt-2 pt-3 border-t border-border/50">
+    {#if scheduleLoaded && scheduledDepartures.size > 0}
+      <!-- Show scheduled departures in same style as live ETA -->
+      <div class="bg-blue-500/10 dark:bg-blue-950/30">
+        <!-- Section Header -->
+        <div class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20">
           <div
-            class="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70 mb-3"
+            class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
           >
             <Calendar class="h-3.5 w-3.5" />
-            <span>Scheduled first departures</span>
+            <span>Scheduled Next Bus · {scheduleLabel}</span>
           </div>
-          <div class="space-y-2">
-            {#each [...scheduledDepartures.entries()] as [routeId, departure]}
-              <div
-                class="flex items-center justify-between px-3 py-2 bg-muted/30 rounded-lg"
-              >
-                <div class="flex items-center gap-2">
-                  <RouteBadge route={routeId} size="sm" />
-                  <span class="text-xs text-muted-foreground">
-                    {departure.dayType === "weekday"
-                      ? "Weekday"
-                      : departure.dayType === "Saturday"
-                        ? "Saturday"
-                        : "Sunday"}
-                  </span>
+        </div>
+
+        <!-- Scheduled Route Cards - Same style as live ETA -->
+        <div class="divide-y divide-border">
+          {#each [...scheduledDepartures.entries()] as [routeId, departure]}
+            {@const routeName = getRouteName(routeId)}
+            <div class="px-4 py-3">
+              <!-- Mobile: Vertical layout -->
+              <div class="sm:hidden">
+                <!-- Row 1: Route Badge + Route Name -->
+                <div class="flex items-start gap-3">
+                  <RouteBadge route={routeId} size="lg" class="flex-shrink-0" />
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-foreground leading-snug">
+                      {routeName || routeId}
+                    </p>
+                    <p class="text-xs text-muted-foreground mt-0.5">
+                      {crossStreets}
+                    </p>
+                  </div>
                 </div>
-                <div class="text-right">
-                  <span class="text-sm font-medium text-foreground">
-                    {departure.time}
-                  </span>
-                  {#if !departure.isToday}
-                    <span class="text-xs text-muted-foreground ml-1"
-                      >(tomorrow)</span
+                <!-- Row 2: Time (right aligned, matching live ETA style) -->
+                <div class="flex items-baseline justify-end gap-2 mt-2">
+                  {#if departure}
+                    <span
+                      class="text-5xl font-bold text-foreground/70 tabular-nums"
                     >
+                      {departure.time}
+                    </span>
+                    {#if !departure.isToday}
+                      <span class="text-lg text-muted-foreground">(tmrw)</span>
+                    {/if}
+                  {:else}
+                    <span
+                      class="text-2xl font-semibold text-muted-foreground/60"
+                    >
+                      No Service
+                    </span>
                   {/if}
                 </div>
               </div>
-            {/each}
-          </div>
-        </div>
-      {:else if !scheduleLoaded && stopRoutes.length > 0}
-        <!-- Loading schedule data -->
-        <div class="w-full mt-2 pt-3 border-t border-border/50">
-          <div
-            class="flex items-center justify-center gap-2 text-xs text-muted-foreground/60"
-          >
-            <div
-              class="h-3 w-3 border-2 border-muted-foreground/30 border-t-muted-foreground/70 rounded-full animate-spin"
-            ></div>
-            <span>Loading schedule...</span>
-          </div>
-        </div>
-      {:else}
-        {#if emptyState.frequency}
-          <p class="text-xs text-muted-foreground/60 italic">
-            {emptyState.frequency}
-          </p>
-        {/if}
-        {#if emptyState.additionalInfo}
-          <p class="text-xs text-muted-foreground/60 italic">
-            {emptyState.additionalInfo}
-          </p>
-        {/if}
-      {/if}
 
-      {#if onRefresh}
-        <Button
-          variant="outline"
-          size="sm"
-          class="mt-2 gap-1.5"
-          onclick={handleRefresh}
-          disabled={isRefreshing || eta.isLoading}
+              <!-- Desktop: Horizontal layout -->
+              <div class="hidden sm:flex items-center justify-between gap-4">
+                <!-- Left: Route Badge + Route Name -->
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <RouteBadge route={routeId} size="lg" class="flex-shrink-0" />
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-medium text-foreground leading-snug">
+                      {routeName || routeId}
+                    </p>
+                    <p class="text-xs text-muted-foreground mt-0.5">
+                      {crossStreets}
+                    </p>
+                  </div>
+                </div>
+                <!-- Right: Time -->
+                <div class="flex items-baseline gap-1 flex-shrink-0">
+                  {#if departure}
+                    <span
+                      class="text-4xl font-bold text-foreground/70 tabular-nums"
+                    >
+                      {departure.time}
+                    </span>
+                    {#if !departure.isToday}
+                      <span class="text-base text-muted-foreground ml-1"
+                        >(tmrw)</span
+                      >
+                    {/if}
+                  {:else}
+                    <span
+                      class="text-xl font-semibold text-muted-foreground/60"
+                    >
+                      No Service
+                    </span>
+                  {/if}
+                </div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {:else if !scheduleLoaded && stopRoutes.length > 0}
+      <!-- Loading schedule data -->
+      <div class="p-5 flex flex-col items-center gap-3 text-center">
+        <div
+          class="h-3 w-3 border-2 border-muted-foreground/30 border-t-muted-foreground/70 rounded-full animate-spin"
+        ></div>
+        <span class="text-xs text-muted-foreground/60">Loading schedule...</span
         >
-          <RefreshCw
-            class={cn(
-              "h-3.5 w-3.5",
-              (isRefreshing || eta.isLoading) && "animate-spin"
-            )}
-          />
-          <span
-            >{isRefreshing || eta.isLoading ? "Refreshing..." : "Refresh"}</span
+      </div>
+    {:else}
+      <!-- Fallback: No scheduled data available -->
+      <div class="p-5 flex flex-col items-center gap-3 text-center">
+        {#if emptyState.icon === "moon"}
+          <Moon class="h-6 w-6 text-muted-foreground/50 mb-1" />
+        {:else if emptyState.icon === "alert"}
+          <AlertCircle class="h-6 w-6 text-muted-foreground/50 mb-1" />
+        {:else}
+          <Clock class="h-6 w-6 text-muted-foreground/50 mb-1" />
+        {/if}
+        <p class="text-sm font-medium text-muted-foreground">
+          {emptyState.title}
+        </p>
+        <p class="text-xs text-muted-foreground/70">{emptyState.subtitle}</p>
+
+        {#if onRefresh}
+          <Button
+            variant="outline"
+            size="sm"
+            class="mt-2 gap-1.5"
+            onclick={handleRefresh}
+            disabled={isRefreshing || eta.isLoading}
           >
-        </Button>
-      {/if}
-    </div>
+            <RefreshCw
+              class={cn(
+                "h-3.5 w-3.5",
+                (isRefreshing || eta.isLoading) && "animate-spin"
+              )}
+            />
+            <span
+              >{isRefreshing || eta.isLoading
+                ? "Refreshing..."
+                : "Refresh"}</span
+            >
+          </Button>
+        {/if}
+      </div>
+    {/if}
   {:else}
     <!-- Stacked Route Cards with Dividers -->
     <div class="divide-y divide-border">
@@ -543,11 +641,11 @@
             : firstDepartureWithTime?.dayType === "Sunday"
               ? "Sunday"
               : dayName}
-      <div class="border-t border-border/50">
+      <div class="border-t border-blue-500/20 bg-blue-500/10 dark:bg-blue-950/30">
         <!-- Section Header -->
-        <div class="px-4 py-2 bg-muted/30 border-b border-border/30">
+        <div class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20">
           <div
-            class="flex items-center gap-1.5 text-xs text-muted-foreground/70"
+            class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
           >
             <Calendar class="h-3.5 w-3.5" />
             <span>Scheduled Next Bus · {scheduleLabel}</span>
@@ -558,7 +656,7 @@
         <div class="divide-y divide-border/50">
           {#each [...missingRoutesSchedule.entries()] as [routeId, departure]}
             {@const routeName = getRouteName(routeId)}
-            <div class="px-4 py-3 bg-muted/10">
+            <div class="px-4 py-3">
               <!-- Mobile: Vertical layout -->
               <div class="sm:hidden">
                 <!-- Row 1: Route Badge + Route Name -->
