@@ -3,7 +3,6 @@
     Home,
     AlertTriangle,
     Settings,
-    HelpCircle,
     Flag,
     Lightbulb,
     Info,
@@ -76,14 +75,6 @@
   <div class="sidebar-footer">
     <!-- Help & Info Links -->
     <div class="sidebar-footer-links">
-      <a
-        href="/help"
-        class="sidebar-footer-link"
-        title={$_("sidebar.howToUse")}
-      >
-        <HelpCircle class="w-4 h-4" />
-        <span>{$_("sidebar.howToUse")}</span>
-      </a>
       <button
         onclick={() => handleDialog("report-bug")}
         class="sidebar-footer-link"

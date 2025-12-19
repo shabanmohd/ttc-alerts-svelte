@@ -259,7 +259,7 @@
 <style>
   .maintenance-widget {
     background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
+    border: 2px solid hsl(var(--border));
     border-radius: var(--radius);
     overflow: hidden;
   }

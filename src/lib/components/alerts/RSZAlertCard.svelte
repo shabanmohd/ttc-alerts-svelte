@@ -237,7 +237,7 @@
   .rsz-accordion-card {
     background: var(--card);
     border-radius: var(--radius);
-    border: 1px solid hsl(var(--border));
+    border: 2px solid hsl(var(--border));
     overflow: hidden;
   }
 

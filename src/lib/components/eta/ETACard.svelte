@@ -298,7 +298,7 @@
 
 <div
   class={cn(
-    "w-full rounded-lg border bg-card overflow-hidden",
+    "w-full rounded-lg border-2 bg-card overflow-hidden",
     eta.error && "border-destructive/30",
     className
   )}
@@ -388,7 +388,9 @@
       <!-- Show scheduled departures in same style as live ETA -->
       <div class="bg-blue-500/10 dark:bg-blue-950/30">
         <!-- Section Header -->
-        <div class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20">
+        <div
+          class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20"
+        >
           <div
             class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
           >
@@ -641,9 +643,13 @@
             : firstDepartureWithTime?.dayType === "Sunday"
               ? "Sunday"
               : dayName}
-      <div class="border-t border-blue-500/20 bg-blue-500/10 dark:bg-blue-950/30">
+      <div
+        class="border-t border-blue-500/20 bg-blue-500/10 dark:bg-blue-950/30"
+      >
         <!-- Section Header -->
-        <div class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20">
+        <div
+          class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20"
+        >
           <div
             class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
           >

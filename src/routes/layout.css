@@ -927,7 +927,7 @@ header.sticky {
 
 .alert-card {
   border-radius: var(--radius);
-  border: 1px solid hsl(var(--border));
+  border: 2px solid hsl(var(--border));
   background-color: hsl(var(--card));
   overflow: hidden;
   transition: box-shadow 0.2s ease;

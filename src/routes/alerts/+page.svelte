@@ -1386,7 +1386,7 @@
     padding: 0.625rem;
     border-radius: var(--radius);
     background-color: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
+    border: 2px solid hsl(var(--border));
     text-align: left;
   }
 

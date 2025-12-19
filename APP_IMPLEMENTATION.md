@@ -92,7 +92,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/dialogs/InstallPWADialog.svelte`     | ✅     | PWA install prompt                                            |
 | `components/layout/Header.svelte`                | ✅     | App header - language toggle, hamburger menu w/ iOS safe area |
 | `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header         |
-| `components/layout/Sidebar.svelte`               | ✅     | Desktop navigation                                            |
+| `components/layout/Sidebar.svelte`               | ✅     | Desktop sidebar - nav + footer links (no How to Use)          |
 | `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom         |
 | `components/ui/*`                                | ✅     | shadcn-svelte base components                                 |
 | `components/ui/turnstile/`                       | ✅     | Cloudflare Turnstile captcha component                        |

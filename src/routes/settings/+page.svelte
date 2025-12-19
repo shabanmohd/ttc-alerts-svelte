@@ -18,6 +18,7 @@
     CirclePause,
     MapPinned,
     ExternalLink,
+    Database,
   } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -578,7 +579,7 @@
   <Card.Root class="mb-6">
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
-        <Trash2 class="h-5 w-5 text-primary" />
+        <Database class="h-5 w-5 text-primary" />
         {$_("settings.dataManagement")}
       </Card.Title>
       <Card.Description>
@@ -602,8 +603,8 @@
   </Card.Root>
 
   <!-- ==================== HELP & INFO ==================== -->
-  <!-- Hidden on desktop (lg+) since it's in the sidebar -->
-  <Card.Root class="mb-6 lg:hidden">
+  <!-- Hidden everywhere since it's available in sidebar/hamburger menu
+  <Card.Root class="mb-6 hidden">
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <HelpCircle class="h-5 w-5 text-primary" />
@@ -632,7 +633,7 @@
         onclick={() => (activeDialog = "feature-request")}
       >
         <Lightbulb class="h-4 w-4" />
-        {$_("settings.requestFeature")}
+        {$_("sidebar.featureRequest")}
       </Button>
       <Button variant="outline" class="w-full gap-2" href="/about">
         <Info class="h-4 w-4" />
@@ -640,6 +641,7 @@
       </Button>
     </Card.Content>
   </Card.Root>
+  -->
 
   <!-- Return Home -->
   <Button variant="ghost" class="w-full gap-2 mb-6" href="/">
