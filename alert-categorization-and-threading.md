@@ -1098,7 +1098,7 @@ Nightly closures (starting at 10 PM or later) remain visible in the Scheduled ta
 function shouldShowInScheduled(item: PlannedMaintenance): boolean {
   // Future or current items always shown
   if (endDate >= today) return true;
-  
+
   // Past nightly closures: show until 6am after end_date
   const isNightlyClosure = startHour >= 22;
   if (isNightlyClosure) {

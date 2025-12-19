@@ -153,13 +153,11 @@
    * Filters out past items (except nightly closures until 6am).
    */
   const sortedItems = $derived(() => {
-    return $maintenanceItems
-      .filter(shouldShowInScheduled)
-      .sort((a, b) => {
-        const startA = parseLocalDate(a.start_date).getTime();
-        const startB = parseLocalDate(b.start_date).getTime();
-        return startA - startB;
-      });
+    return $maintenanceItems.filter(shouldShowInScheduled).sort((a, b) => {
+      const startA = parseLocalDate(a.start_date).getTime();
+      const startB = parseLocalDate(b.start_date).getTime();
+      return startA - startB;
+    });
   });
 
   function formatDateRange(startDate: string, endDate: string): string {

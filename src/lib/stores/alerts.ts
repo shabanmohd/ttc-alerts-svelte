@@ -447,11 +447,17 @@ export async function refreshAlerts(): Promise<void> {
 // Fetch planned maintenance from Supabase
 export async function fetchMaintenance(): Promise<PlannedMaintenance[]> {
   try {
+    // Get yesterday's date to include nightly closures that extend to 6am
+    // e.g., Dec 18 closure with 11:59 PM start should show until Dec 19 at 6 AM
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
     const { data, error: fetchError } = await supabase
       .from('planned_maintenance')
       .select('*')
       .eq('is_active', true)
-      .gte('end_date', new Date().toISOString())
+      .gte('end_date', yesterdayStr) // Include yesterday for overnight/nightly closures
       .order('start_date', { ascending: true })
       .limit(20);
     
