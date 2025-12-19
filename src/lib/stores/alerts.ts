@@ -55,8 +55,8 @@ function extractRoutes(data: unknown): string[] {
 /**
  * Determine the severity category of an alert/thread based on its categories and effect.
  * Maps TTC API effects to our simplified categories:
- * - MAJOR: NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SERVICE_DISRUPTION
- * - MINOR: SIGNIFICANT_DELAYS, DELAY, SLOW_ZONE
+ * - MAJOR: NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SERVICE_DISRUPTION, DELAY, SIGNIFICANT_DELAYS
+ * - MINOR: RSZ (Reduced Speed Zone) only - "slower than usual", "slow zone", "reduced speed"
  * - ACCESSIBILITY: ACCESSIBILITY_ISSUE, elevator/escalator keywords
  */
 export function getSeverityCategory(categories: string[], effect?: string, headerText?: string): SeverityCategory {
@@ -75,9 +75,24 @@ export function getSeverityCategory(categories: string[], effect?: string, heade
     return 'ACCESSIBILITY';
   }
   
-  // Check for major disruptions (closures, detours, no service, shuttles)
-  const majorEffects = ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'MODIFIED_SERVICE', 'SCHEDULED_CLOSURE'];
-  const majorCategories = ['SERVICE_DISRUPTION', 'DISRUPTION', 'CLOSURE', 'SCHEDULED_CLOSURE', 'DETOUR', 'SHUTTLE'];
+  // Check for RSZ (Reduced Speed Zone) alerts FIRST - these are MINOR
+  // RSZ alerts are specifically about subway slow zones, not general delays
+  const isRSZ = 
+    lowerHeader.includes('slower than usual') ||
+    lowerHeader.includes('slow zone') ||
+    lowerHeader.includes('reduced speed') ||
+    lowerHeader.includes('move slower') ||
+    lowerHeader.includes('running slower') ||
+    lowerHeader.includes('speed restriction');
+  
+  if (isRSZ) {
+    return 'MINOR';
+  }
+  
+  // Check for major disruptions (closures, detours, no service, shuttles, delays)
+  // Note: Regular delays are now MAJOR (not MINOR) - only RSZ is MINOR
+  const majorEffects = ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'MODIFIED_SERVICE', 'SCHEDULED_CLOSURE', 'SIGNIFICANT_DELAYS', 'DELAY'];
+  const majorCategories = ['SERVICE_DISRUPTION', 'DISRUPTION', 'CLOSURE', 'SCHEDULED_CLOSURE', 'DETOUR', 'SHUTTLE', 'DELAY'];
   
   if (
     majorEffects.some(e => upperEffect.includes(e)) ||
@@ -87,23 +102,10 @@ export function getSeverityCategory(categories: string[], effect?: string, heade
     lowerHeader.includes('no service') ||
     lowerHeader.includes('suspended') ||
     lowerHeader.includes('diverting') ||
-    lowerHeader.includes('detour')
+    lowerHeader.includes('detour') ||
+    lowerHeader.includes('delay')
   ) {
     return 'MAJOR';
-  }
-  
-  // Check for minor delays (delays, slow zones, reduced speed)
-  const minorEffects = ['SIGNIFICANT_DELAYS', 'DELAY', 'SLOW'];
-  const minorCategories = ['DELAY', 'SLOW_ZONE'];
-  
-  if (
-    minorEffects.some(e => upperEffect.includes(e)) ||
-    minorCategories.some(c => upperCategories.includes(c)) ||
-    lowerHeader.includes('delay') ||
-    lowerHeader.includes('slow') ||
-    lowerHeader.includes('reduced speed')
-  ) {
-    return 'MINOR';
   }
   
   // Default to MAJOR for unknown (better safe than sorry)

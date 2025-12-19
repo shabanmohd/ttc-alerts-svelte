@@ -912,11 +912,11 @@ The frontend provides two levels of filtering for alerts:
 
 Alerts are categorized into three severity levels based on their effect and type:
 
-| Category          | TTC API Effects                                                          | Description                                                    |
-| ----------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE | Closures, detours, shuttles, no service, scheduled maintenance |
-| **MINOR**         | SIGNIFICANT_DELAYS, DELAY                                                | Delays, reduced speed zones                                    |
-| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)                                 | Elevator and escalator outages                                 |
+| Category          | TTC API Effects                                                                             | Description                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance    |
+| **MINOR**         | RSZ (Reduced Speed Zone) only                                                               | Subway slow zones ("slower than usual", "reduced speed")        |
+| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)                                                    | Elevator and escalator outages                                  |
 
 **Categorization Logic (`getSeverityCategory()` in alerts.ts):**
 
@@ -933,6 +933,7 @@ export function getSeverityCategory(
   // Check for accessibility alerts first (elevator/escalator)
   if (
     upperCategories.includes("ACCESSIBILITY_ISSUE") ||
+    upperCategories.includes("ACCESSIBILITY") ||
     upperEffect.includes("ACCESSIBILITY") ||
     lowerHeader.includes("elevator") ||
     lowerHeader.includes("escalator")
@@ -940,13 +941,30 @@ export function getSeverityCategory(
     return "ACCESSIBILITY";
   }
 
-  // Check for major disruptions (including scheduled closures)
+  // Check for RSZ (Reduced Speed Zone) alerts FIRST - these are MINOR
+  // RSZ alerts are specifically about subway slow zones, not general delays
+  const isRSZ =
+    lowerHeader.includes("slower than usual") ||
+    lowerHeader.includes("slow zone") ||
+    lowerHeader.includes("reduced speed") ||
+    lowerHeader.includes("move slower") ||
+    lowerHeader.includes("running slower") ||
+    lowerHeader.includes("speed restriction");
+
+  if (isRSZ) {
+    return "MINOR";
+  }
+
+  // Check for major disruptions (closures, detours, no service, shuttles, delays)
+  // Note: Regular delays are now MAJOR (not MINOR) - only RSZ is MINOR
   const majorEffects = [
     "NO_SERVICE",
     "REDUCED_SERVICE",
     "DETOUR",
     "MODIFIED_SERVICE",
     "SCHEDULED_CLOSURE",
+    "SIGNIFICANT_DELAYS",
+    "DELAY",
   ];
   const majorCategories = [
     "SERVICE_DISRUPTION",
@@ -955,6 +973,7 @@ export function getSeverityCategory(
     "SCHEDULED_CLOSURE",
     "DETOUR",
     "SHUTTLE",
+    "DELAY",
   ];
 
   if (
@@ -962,22 +981,13 @@ export function getSeverityCategory(
     majorCategories.some((c) => upperCategories.includes(c)) ||
     lowerHeader.includes("closed") ||
     lowerHeader.includes("shuttle") ||
-    lowerHeader.includes("no service")
+    lowerHeader.includes("no service") ||
+    lowerHeader.includes("suspended") ||
+    lowerHeader.includes("diverting") ||
+    lowerHeader.includes("detour") ||
+    lowerHeader.includes("delay")
   ) {
     return "MAJOR";
-  }
-
-  // Check for minor delays
-  const minorEffects = ["SIGNIFICANT_DELAYS", "DELAY", "SLOW"];
-  const minorCategories = ["DELAY", "SLOW_ZONE"];
-
-  if (
-    minorEffects.some((e) => upperEffect.includes(e)) ||
-    minorCategories.some((c) => upperCategories.includes(c)) ||
-    lowerHeader.includes("delay") ||
-    lowerHeader.includes("slow")
-  ) {
-    return "MINOR";
   }
 
   return "MAJOR"; // Default to MAJOR for unknown
