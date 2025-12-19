@@ -200,9 +200,31 @@
     return savedStop?.routes || [];
   });
 
-  // Load scheduled departures when there are no predictions
+  // Get routes that have real-time predictions
+  let routesWithPredictions = $derived.by(() => {
+    return new Set(sortedPredictions.map((p) => p.route));
+  });
+
+  // Get routes that need scheduled time (saved but no real-time data)
+  let routesNeedingSchedule = $derived.by(() => {
+    return stopRoutes.filter((r) => !routesWithPredictions.has(r));
+  });
+
+  // Scheduled departures for routes without real-time data
+  let missingRoutesSchedule = $derived.by(() => {
+    if (!scheduleLoaded) return new Map<string, NextDepartureInfo>();
+    const result = new Map<string, NextDepartureInfo>();
+    for (const [routeId, info] of scheduledDepartures.entries()) {
+      if (!routesWithPredictions.has(routeId)) {
+        result.set(routeId, info);
+      }
+    }
+    return result;
+  });
+
+  // Load scheduled departures for missing routes
   $effect(() => {
-    if (sortedPredictions.length === 0 && !eta.isLoading && !scheduleLoaded) {
+    if (!eta.isLoading && !scheduleLoaded && routesNeedingSchedule.length > 0) {
       loadScheduleData().then(() => {
         if (stopRoutes.length > 0) {
           scheduledDepartures = getNextScheduledDeparturesForStop(
@@ -471,5 +493,35 @@
         </div>
       {/each}
     </div>
+    
+    <!-- Routes without real-time data - show scheduled times -->
+    {#if scheduleLoaded && missingRoutesSchedule.size > 0}
+      <div class="border-t border-border/50 px-4 py-3 bg-muted/20">
+        <div class="flex items-center gap-1.5 text-xs text-muted-foreground/70 mb-2">
+          <Calendar class="h-3.5 w-3.5" />
+          <span>Scheduled (no live data)</span>
+        </div>
+        <div class="space-y-2">
+          {#each [...missingRoutesSchedule.entries()] as [routeId, departure]}
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <RouteBadge route={routeId} size="sm" />
+                <span class="text-xs text-muted-foreground">
+                  First bus {departure.dayType === 'weekday' ? '' : departure.dayType === 'Saturday' ? '(Sat)' : '(Sun)'}
+                </span>
+              </div>
+              <div class="text-right">
+                <span class="text-sm font-medium text-foreground/70">
+                  {departure.time}
+                </span>
+                {#if !departure.isToday}
+                  <span class="text-xs text-muted-foreground ml-1">(tomorrow)</span>
+                {/if}
+              </div>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>
