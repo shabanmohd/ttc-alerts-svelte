@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import {
     AlertCircle,
     MapPin,
@@ -6,10 +7,16 @@
     Moon,
     Clock,
     RefreshCw,
+    Calendar,
   } from "lucide-svelte";
   import { savedStops } from "$lib/stores/savedStops";
   import { type StopETA, type ETAPrediction } from "$lib/stores/eta";
   import { isSubwayLine } from "$lib/services/subway-eta";
+  import {
+    loadScheduleData,
+    getNextScheduledDeparturesForStop,
+    type NextDepartureInfo,
+  } from "$lib/services/schedule-lookup";
   import LiveSignalIcon from "./LiveSignalIcon.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -182,6 +189,31 @@
   let sortedPredictions = $derived(sortPredictions(eta.predictions));
   let primaryDirection = $derived(getPrimaryDirection(eta.predictions));
   let crossStreets = $derived(formatCrossStreets(eta.stopName));
+
+  // Schedule lookup state
+  let scheduledDepartures = $state<Map<string, NextDepartureInfo>>(new Map());
+  let scheduleLoaded = $state(false);
+
+  // Get the routes this stop serves from saved stops
+  let stopRoutes = $derived.by(() => {
+    const savedStop = $savedStops.find((s) => s.id === eta.stopId);
+    return savedStop?.routes || [];
+  });
+
+  // Load scheduled departures when there are no predictions
+  $effect(() => {
+    if (sortedPredictions.length === 0 && !eta.isLoading && !scheduleLoaded) {
+      loadScheduleData().then(() => {
+        if (stopRoutes.length > 0) {
+          scheduledDepartures = getNextScheduledDeparturesForStop(
+            eta.stopId,
+            stopRoutes
+          );
+        }
+        scheduleLoaded = true;
+      });
+    }
+  });
 </script>
 
 <div
@@ -255,9 +287,9 @@
       {/each}
     </div>
   {:else if sortedPredictions.length === 0}
-    <!-- No Predictions - Context-aware message with refresh button -->
+    <!-- No Predictions - Context-aware message with scheduled departures -->
     {@const emptyState = getEmptyStateMessage(isSubway, eta.stopId)}
-    <div class="p-5 flex flex-col items-center gap-2 text-center">
+    <div class="p-5 flex flex-col items-center gap-3 text-center">
       {#if emptyState.icon === "moon"}
         <Moon class="h-6 w-6 text-muted-foreground/50 mb-1" />
       {:else if emptyState.icon === "alert"}
@@ -269,16 +301,56 @@
         {emptyState.title}
       </p>
       <p class="text-xs text-muted-foreground/70">{emptyState.subtitle}</p>
-      {#if emptyState.frequency}
-        <p class="text-xs text-muted-foreground/60 italic">
-          {emptyState.frequency}
-        </p>
+      
+      <!-- Scheduled Departures Section -->
+      {#if scheduleLoaded && scheduledDepartures.size > 0}
+        <div class="w-full mt-2 pt-3 border-t border-border/50">
+          <div class="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70 mb-3">
+            <Calendar class="h-3.5 w-3.5" />
+            <span>Scheduled first departures</span>
+          </div>
+          <div class="space-y-2">
+            {#each [...scheduledDepartures.entries()] as [routeId, departure]}
+              <div class="flex items-center justify-between px-3 py-2 bg-muted/30 rounded-lg">
+                <div class="flex items-center gap-2">
+                  <RouteBadge route={routeId} size="sm" />
+                  <span class="text-xs text-muted-foreground">
+                    {departure.dayType === 'weekday' ? 'Weekday' : departure.dayType === 'Saturday' ? 'Saturday' : 'Sunday'}
+                  </span>
+                </div>
+                <div class="text-right">
+                  <span class="text-sm font-medium text-foreground">
+                    {departure.time}
+                  </span>
+                  {#if !departure.isToday}
+                    <span class="text-xs text-muted-foreground ml-1">(tomorrow)</span>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {:else if !scheduleLoaded && stopRoutes.length > 0}
+        <!-- Loading schedule data -->
+        <div class="w-full mt-2 pt-3 border-t border-border/50">
+          <div class="flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
+            <div class="h-3 w-3 border-2 border-muted-foreground/30 border-t-muted-foreground/70 rounded-full animate-spin"></div>
+            <span>Loading schedule...</span>
+          </div>
+        </div>
+      {:else}
+        {#if emptyState.frequency}
+          <p class="text-xs text-muted-foreground/60 italic">
+            {emptyState.frequency}
+          </p>
+        {/if}
+        {#if emptyState.additionalInfo}
+          <p class="text-xs text-muted-foreground/60 italic">
+            {emptyState.additionalInfo}
+          </p>
+        {/if}
       {/if}
-      {#if emptyState.additionalInfo}
-        <p class="text-xs text-muted-foreground/60 italic">
-          {emptyState.additionalInfo}
-        </p>
-      {/if}
+      
       {#if onRefresh}
         <Button
           variant="outline"

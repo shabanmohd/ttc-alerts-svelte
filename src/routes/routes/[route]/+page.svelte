@@ -29,51 +29,17 @@
     type TTCStop,
   } from "$lib/data/stops-db";
 
+  // Import route names data
+  import { getRouteName } from "$lib/data/route-names";
+
   // Import dialogs
   import { HowToUseDialog, InstallPWADialog } from "$lib/components/dialogs";
 
   // Get route from URL param (with fallback)
   let routeId = $derived($page.params.route || "");
 
-  // Get route details
-  const ROUTE_NAMES: Record<string, string> = {
-    "Line 1": "Yonge-University",
-    "Line 2": "Bloor-Danforth",
-    "Line 4": "Sheppard",
-    "Line 5": "Eglinton (Under Construction)",
-    "Line 6": "Finch West",
-    "501": "Queen",
-    "503": "Kingston Rd",
-    "504": "King",
-    "505": "Dundas",
-    "506": "Carlton",
-    "507": "Long Branch",
-    "508": "Lake Shore",
-    "509": "Harbourfront",
-    "510": "Spadina",
-    "511": "Bathurst",
-    "512": "St Clair",
-    "7": "Bathurst",
-    "25": "Don Mills",
-    "29": "Dufferin",
-    "32": "Eglinton West",
-    "34": "Eglinton East",
-    "35": "Jane",
-    "36": "Finch West",
-    "39": "Finch East",
-    "41": "Keele",
-    "52": "Lawrence West",
-    "54": "Lawrence East",
-    "60": "Steeles West",
-    "63": "Ossington",
-    "84": "Sheppard West",
-    "85": "Sheppard East",
-    "95": "York Mills",
-    "96": "Wilson",
-    "97": "Yonge",
-  };
-
-  let routeName = $derived(ROUTE_NAMES[routeId] || "");
+  // Get route name from centralized data
+  let routeName = $derived(getRouteName(routeId));
 
   // Check if this is a not-yet-operational line
   let isNotOperational = $derived(routeId === "Line 5");
@@ -286,12 +252,7 @@
   <div class="route-header">
     <div class="route-header-info">
       <RouteBadge route={routeId} size="lg" />
-      <div class="route-header-text">
-        <h1 class="route-title">{routeId}</h1>
-        {#if routeName}
-          <p class="route-name">{routeName}</p>
-        {/if}
-      </div>
+      <h1 class="route-title">{routeName || routeId}</h1>
     </div>
 
     <BookmarkRouteButton
@@ -527,22 +488,11 @@
     gap: 1rem;
   }
 
-  .route-header-text {
-    display: flex;
-    flex-direction: column;
-  }
-
   .route-title {
     font-size: 1.5rem;
     font-weight: 700;
     color: hsl(var(--foreground));
     line-height: 1.2;
-  }
-
-  .route-name {
-    font-size: 0.875rem;
-    color: hsl(var(--muted-foreground));
-    margin-top: 0.125rem;
   }
 
   .section-title {
