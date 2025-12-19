@@ -1013,11 +1013,6 @@ header.sticky {
   border-left: 4px solid #0c8379;
 }
 
-/* Subway Line Color Accent Bar for grouped alerts */
-.alert-card.has-line-accent {
-  border-left: 4px solid var(--alert-line-color, hsl(var(--border)));
-}
-
 /* ============================================
    SUBWAY SECTION HEADERS (Alert Grouping)
    ============================================ */
