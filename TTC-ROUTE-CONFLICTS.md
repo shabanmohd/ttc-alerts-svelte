@@ -336,6 +336,62 @@ normalizeRouteId(threadRoute) === normalizeRouteId(savedRoute);
 
 ---
 
+## Pattern D: Subway Lines vs Bus Routes with Same Street Names
+
+**Pattern:** "Line X [Street Name]" vs "XX [Street Name]"
+**Risk Level:** HIGH
+
+Subway lines are named after the streets they run on, which can conflict with bus routes serving those same streets.
+
+| Subway Line                     | Bus Route(s) with Same Name | Street/Area  |
+| ------------------------------- | --------------------------- | ------------ |
+| Line 1 Yonge-University         | (no direct conflicts)       | Yonge        |
+| Line 2 Bloor-Danforth           | (no direct conflicts)       | Bloor        |
+| Line 4 Sheppard                 | 84/85 Sheppard              | Sheppard     |
+| **Line 5 Eglinton**             | **32 Eglinton West**        | **Eglinton** |
+| **Line 6 Finch West** (planned) | 36 Finch West               | Finch West   |
+
+### Why This Pattern Is Problematic
+
+- Street name "Eglinton" appears in both "Line 5 Eglinton" and "32 Eglinton West"
+- Street name "Sheppard" appears in both "Line 4 Sheppard" and "84/85 Sheppard"
+- Naive string matching could confuse bus routes for subway lines
+- UI would show wrong badge color (orange subway instead of green bus)
+
+### Historical Bug (Fixed December 18, 2025)
+
+❌ **WRONG - Street name matching caused false positives:**
+
+```typescript
+// This incorrectly matched "32 Eglinton West" as Line 5!
+if (routeLower.includes("eglinton")) {
+  return "route-line-5";
+}
+```
+
+✅ **CORRECT - Explicit subway line detection only:**
+
+```typescript
+// Only match explicit "Line X" patterns or single digits 1-6
+function isSubwayLineRoute(route: string): boolean {
+  const routeLower = route.toLowerCase().trim();
+  return (
+    routeLower.match(/^line\s*[1-6]/) !== null ||
+    route.trim().match(/^[1-6]$/) !== null
+  );
+}
+```
+
+### Affected Files (Fixed)
+
+| File                                          | Function                | Fix Applied                         |
+| --------------------------------------------- | ----------------------- | ----------------------------------- |
+| `src/lib/components/alerts/RouteBadge.svelte` | `getRouteClass()`       | Only match "Line X" or single digit |
+| `src/lib/components/alerts/AlertCard.svelte`  | `isSubwayLineRoute()`   | Only match "Line X" or single digit |
+| `src/lib/components/alerts/AlertCard.svelte`  | `normalizeSubwayLine()` | Only normalize explicit subway refs |
+
+---
+
 ## Monitoring
 
 The Edge Function logs route comparisons when debugging is needed. Check Supabase Edge Function logs for threading decisions.
@@ -350,7 +406,7 @@ The Edge Function logs route comparisons when debugging is needed. Check Supabas
 
 ---
 
-**Version:** 1.2
+**Version:** 1.3
 **Created:** November 20, 2025
-**Updated:** December 5, 2025
+**Updated:** December 18, 2025
 **Purpose:** Route conflict reference for alert threading system

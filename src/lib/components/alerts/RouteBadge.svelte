@@ -42,34 +42,32 @@
   /**
    * Determine route type and style class.
    * TTC brand colors are used with appropriate contrast ratios.
+   *
+   * IMPORTANT: Only match subway lines when explicitly mentioned as "Line X"
+   * or when the route is a single digit (1-6). Do NOT match based on street
+   * names like "Eglinton" or "Bloor" as those are also bus route names.
    */
   function getRouteClass(route: string): string {
     const routeLower = route.toLowerCase();
     const routeNum = getRouteNumber(route);
 
-    // Subway lines
-    if (
-      routeLower.includes("line 1") ||
-      routeLower.includes("yonge") ||
-      routeLower.includes("university")
-    ) {
-      return "route-line-1";
-    }
-    if (
-      routeLower.includes("line 2") ||
-      routeLower.includes("bloor") ||
-      routeLower.includes("danforth")
-    ) {
-      return "route-line-2";
-    }
-    if (routeLower.includes("line 4") || routeLower.includes("sheppard")) {
-      return "route-line-4";
-    }
-    if (routeLower.includes("line 5") || routeLower.includes("eglinton")) {
-      return "route-line-5";
-    }
-    if (routeLower.includes("line 6") || routeLower.includes("finch west")) {
-      return "route-line-6";
+    // Only treat as subway if:
+    // 1. Explicitly says "Line X" (e.g., "Line 1", "Line 2")
+    // 2. Route is just a single digit 1-6 (e.g., "1", "2", "4")
+    const isExplicitSubwayLine = routeLower.match(/^line\s*[1-6]/);
+    const isSingleDigitSubway = route.match(/^[1-6]$/);
+
+    // Subway lines - only match explicit Line references or single digits
+    if (isExplicitSubwayLine || isSingleDigitSubway) {
+      // Extract the line number
+      const lineNumMatch = route.match(/([1-6])/);
+      const lineNum = lineNumMatch ? lineNumMatch[1] : "";
+
+      if (lineNum === "1") return "route-line-1";
+      if (lineNum === "2") return "route-line-2";
+      if (lineNum === "4") return "route-line-4";
+      if (lineNum === "5") return "route-line-5";
+      if (lineNum === "6") return "route-line-6";
     }
 
     // Night routes (300-series)

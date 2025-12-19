@@ -607,9 +607,10 @@
     });
   });
 
-  // Derived: Resolved alerts (service resumed only, excluding accessibility alerts)
+  // Derived: Resolved alerts (service resumed only, excluding accessibility and RSZ alerts)
   // Accessibility alerts (elevator/escalator) should not appear in Resolved tab
   // because "elevator working again" isn't newsworthy like "service has resumed"
+  // RSZ alerts should be deleted when resolved, but if any slip through, exclude them
   let resolvedAlerts = $derived(() => {
     return allThreads()
       .filter((thread) => {
@@ -623,7 +624,34 @@
         const headerText = thread.latestAlert?.header_text || "";
 
         const severity = getSeverityCategory(categories, effect, headerText);
-        return severity !== "ACCESSIBILITY";
+        if (severity === "ACCESSIBILITY") return false;
+
+        // Exclude RSZ (Reduced Speed Zone) alerts - they should never appear in Resolved tab
+        // RSZ alerts are supposed to be deleted when resolved, not marked resolved
+        const lowerHeader = headerText.toLowerCase();
+        const isRSZ =
+          lowerHeader.includes("slower than usual") ||
+          lowerHeader.includes("reduced speed") ||
+          lowerHeader.includes("move slower") ||
+          lowerHeader.includes("running slower") ||
+          lowerHeader.includes("slow zone") ||
+          effect === "SIGNIFICANT_DELAYS";
+        if (isRSZ) return false;
+
+        // Exclude orphaned SERVICE_RESUMED threads (no parent disruption alert)
+        // These are threads where:
+        // 1. All alerts are SERVICE_RESUMED (no preceding DELAY/DISRUPTION)
+        // 2. Thread only has 1 alert (orphaned resumption)
+        const threadCategories = Array.isArray(thread.categories)
+          ? thread.categories
+          : [];
+        const onlyServiceResumed =
+          threadCategories.length === 1 &&
+          threadCategories[0] === "SERVICE_RESUMED";
+        const singleAlertThread = thread.alerts?.length === 1;
+        if (onlyServiceResumed && singleAlertThread) return false;
+
+        return true;
       })
       .sort(
         (a, b) =>
@@ -701,14 +729,24 @@
     const alert = thread.latestAlert;
     if (!alert) return false;
 
-    // RSZ alerts have effect SIGNIFICANT_DELAYS and raw_data with stopStart/stopEnd
+    // RSZ alerts have effect SIGNIFICANT_DELAYS and raw_data with stopStart/stopEnd (TTC API source)
     const rawData = alert.raw_data as Record<string, unknown> | null;
-    return (
+    const isTTCApiRSZ =
       alert.effect === "SIGNIFICANT_DELAYS" &&
       rawData?.source === "ttc-api" &&
       typeof rawData?.stopStart === "string" &&
-      typeof rawData?.stopEnd === "string"
-    );
+      typeof rawData?.stopEnd === "string";
+
+    // Also detect Bluesky-sourced RSZ alerts by text patterns
+    const headerText = (alert.header_text || "").toLowerCase();
+    const isBlueskyRSZ =
+      headerText.includes("slower than usual") ||
+      headerText.includes("reduced speed") ||
+      headerText.includes("move slower") ||
+      headerText.includes("running slower") ||
+      headerText.includes("slow zone");
+
+    return isTTCApiRSZ || isBlueskyRSZ;
   }
 
   // Derived: RSZ alerts (filtered out when in MINOR view to display separately)

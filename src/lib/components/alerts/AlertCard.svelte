@@ -166,52 +166,43 @@
 
   /**
    * Normalize subway line names to just "Line X" format.
+   * Only normalizes explicit subway line references.
    * E.g., "Line 1 Yonge-University" -> "Line 1"
    * E.g., "Line 2 Bloor-Danforth" -> "Line 2"
-   * E.g., "1 Yonge" -> "Line 1"
+   * E.g., "1" -> "Line 1"
+   * Does NOT convert street names (e.g., "32 Eglinton West" stays as-is)
    */
   function normalizeSubwayLine(route: string): string {
-    // Check if already in "Line X" format
-    const lineMatch = route.match(/^(Line\s*\d+)/i);
+    const routeTrimmed = route.trim();
+
+    // Check if already in "Line X" format - extract just "Line X"
+    const lineMatch = routeTrimmed.match(/^(Line\s*[1-6])/i);
     if (lineMatch) {
-      return lineMatch[1];
+      // Normalize spacing: "Line1" -> "Line 1"
+      const num = lineMatch[1].match(/[1-6]/)?.[0];
+      return num ? `Line ${num}` : lineMatch[1];
     }
 
-    // Check for "1 Yonge" or "2 Bloor" format (number + subway line name)
-    const routeLower = route.toLowerCase();
-    if (routeLower.includes("yonge") || routeLower.includes("university")) {
-      return "Line 1";
-    }
-    if (routeLower.includes("bloor") || routeLower.includes("danforth")) {
-      return "Line 2";
-    }
-    if (routeLower.includes("sheppard")) {
-      return "Line 4";
-    }
-    if (routeLower.includes("eglinton")) {
-      return "Line 5";
-    }
-    if (routeLower.includes("finch west")) {
-      return "Line 6";
+    // Single digit 1-6 -> "Line X"
+    if (routeTrimmed.match(/^[1-6]$/)) {
+      return `Line ${routeTrimmed}`;
     }
 
+    // Not a subway line reference, return as-is
     return route;
   }
 
   /**
    * Check if a route string represents a subway line.
+   * Only matches explicit "Line X" patterns or single-digit routes (1-6).
+   * Does NOT match based on street names (e.g., "32 Eglinton West" is a BUS, not Line 5).
    */
   function isSubwayLineRoute(route: string): boolean {
-    const routeLower = route.toLowerCase();
+    const routeLower = route.toLowerCase().trim();
+    // Only match explicit "Line X" format or single digit 1-6
     return (
-      routeLower.startsWith("line") ||
-      routeLower.includes("yonge") ||
-      routeLower.includes("university") ||
-      routeLower.includes("bloor") ||
-      routeLower.includes("danforth") ||
-      routeLower.includes("sheppard") ||
-      routeLower.includes("eglinton") ||
-      routeLower.includes("finch west")
+      routeLower.match(/^line\s*[1-6]/) !== null ||
+      route.trim().match(/^[1-6]$/) !== null
     );
   }
 
@@ -393,14 +384,13 @@
           <!-- Accessibility alerts: Show wheelchair icon badge -->
           <AccessibilityBadge size="lg" class="alert-badge-fixed" />
         {:else}
-          <!-- Regular alerts: Show route badge(s) -->
-          {#each displayRoutes.slice(0, 2) as route}
-            <RouteBadge {route} size="lg" class="alert-badge-fixed" />
-          {/each}
-          {#if displayRoutes.length > 2}
-            <span class="text-xs text-muted-foreground"
-              >+{displayRoutes.length - 2}</span
-            >
+          <!-- Regular alerts: Show single route badge (first/primary route) -->
+          {#if displayRoutes.length > 0}
+            <RouteBadge
+              route={displayRoutes[0]}
+              size="lg"
+              class="alert-badge-fixed"
+            />
           {/if}
         {/if}
       </div>

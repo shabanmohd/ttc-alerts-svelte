@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 10.0  
-**Date:** December 16, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v50 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication)  
+**Version:** 11.0  
+**Date:** June 16, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v51 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -127,7 +127,7 @@ const posts = (bskyData.feed || []).sort(
 
 **GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear on Bluesky)
 
-### Dual-Source Priority Rules (v50)
+### Dual-Source Priority Rules (v51)
 
 1. **Bluesky is always primary** - If a route has an active Bluesky thread, TTC API alerts for that route are skipped
 2. **TTC API fills gaps** - Only creates alerts for routes without Bluesky coverage
@@ -136,6 +136,34 @@ const posts = (bskyData.feed || []).sort(
 5. **TTC API is SOLE source for RSZ alerts** - ALL BlueSky speed reduction posts are filtered out (v48)
 6. **Oldest-first processing** - Bluesky posts sorted by createdAt ascending to ensure DELAY threads exist before SERVICE_RESUMED (v49)
 7. **Subway route deduplication** - Skip redundant "X Name" routes when "Line X" already extracted (v50)
+8. **SERVICE_RESUMED orphan prevention** - SERVICE_RESUMED alerts only join existing threads; if no match found, alert is deleted (v51)
+
+### SERVICE_RESUMED Orphan Prevention (v51)
+
+**Problem:** SERVICE_RESUMED alerts occasionally created orphaned threads when no matching parent disruption thread was found. This resulted in confusing "service resumed" entries appearing without any associated disruption.
+
+**Solution (v51):** SERVICE_RESUMED alerts can only **join** existing threads, never create new ones.
+
+**Key Behaviors:**
+
+1. **Extended lookback** - SERVICE_RESUMED searches 24h (instead of 12h) for matching parent threads
+2. **No orphan creation** - If no matching thread found, SERVICE_RESUMED alert is **deleted** instead of creating a new thread
+3. **New counter** - Response includes `skippedOrphanedServiceResumed` tracking deleted orphans
+4. **Frontend backup filter** - Alerts page also filters out any existing orphaned SERVICE_RESUMED threads
+
+**Code (poll-alerts v51):**
+
+```typescript
+} else if (category === 'SERVICE_RESUMED') {
+  // SERVICE_RESUMED alerts should NEVER create new threads
+  // If we couldn't match it to an existing thread, just delete the orphaned alert
+  await supabase.from('alert_cache').delete().eq('alert_id', newAlert.alert_id);
+  existingAlertIds.delete(alertId);
+  newAlerts--;
+  skippedOrphanedServiceResumed++;
+  continue;
+}
+```
 
 ### RSZ (Reduced Speed Zone) Handling (v48)
 

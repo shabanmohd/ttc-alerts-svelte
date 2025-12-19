@@ -1,7 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const FUNCTION_VERSION = 50;
+// v51: SERVICE_RESUMED alerts no longer create orphaned threads - they only join existing threads
+// If no matching thread found, the SERVICE_RESUMED alert is deleted instead of creating a new resolved thread
+const FUNCTION_VERSION = 51;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -264,7 +266,7 @@ serve(async (req) => {
       new Date(a.post?.record?.createdAt || 0).getTime() - new Date(b.post?.record?.createdAt || 0).getTime()
     );
     
-    let newAlerts = 0, updatedThreads = 0, skippedRszAlerts = 0;
+    let newAlerts = 0, updatedThreads = 0, skippedRszAlerts = 0, skippedOrphanedServiceResumed = 0;
     const { data: existingAlerts } = await supabase.from('alert_cache').select('alert_id, thread_id').gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
     const existingAlertIds = new Set(existingAlerts?.map(a => a.alert_id) || []);
     const alertToThreadMap = new Map<string, string>();
@@ -303,7 +305,9 @@ serve(async (req) => {
       newAlerts++;
       existingAlertIds.add(alertId);
 
-      const { data: candidateThreads } = await supabase.from('incident_threads').select('*').gte('updated_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()).order('updated_at', { ascending: false });
+      // Extend lookback window for SERVICE_RESUMED to 24h (others use 12h) to improve matching
+      const threadLookbackMs = category === 'SERVICE_RESUMED' ? 24 * 60 * 60 * 1000 : 12 * 60 * 60 * 1000;
+      const { data: candidateThreads } = await supabase.from('incident_threads').select('*').gte('updated_at', new Date(Date.now() - threadLookbackMs).toISOString()).order('updated_at', { ascending: false });
       
       let plannedMaintenanceThreads: any[] = [];
       if (category === 'SERVICE_RESUMED') {
@@ -389,9 +393,18 @@ serve(async (req) => {
         if (category === 'SERVICE_RESUMED') { updates.is_resolved = true; updates.resolved_at = new Date().toISOString(); }
         await supabase.from('incident_threads').update(updates).eq('thread_id', matchedThread.thread_id);
         updatedThreads++;
+      } else if (category === 'SERVICE_RESUMED') {
+        // SERVICE_RESUMED alerts should NEVER create new threads
+        // If we couldn't match it to an existing thread, just delete the orphaned alert
+        // This prevents orphaned "service resumed" entries appearing without parent disruption
+        await supabase.from('alert_cache').delete().eq('alert_id', newAlert.alert_id);
+        existingAlertIds.delete(alertId);
+        newAlerts--;
+        skippedOrphanedServiceResumed++;
+        continue;
       } else {
         const headerTitle = text.split('\n')[0].substring(0, 200);
-        const { data: threadResult, error: threadError } = await supabase.rpc('find_or_create_thread', { p_title: headerTitle, p_routes: routes, p_categories: [category], p_is_resolved: category === 'SERVICE_RESUMED' });
+        const { data: threadResult, error: threadError } = await supabase.rpc('find_or_create_thread', { p_title: headerTitle, p_routes: routes, p_categories: [category], p_is_resolved: false });
         if (threadError) {
           let joined = false;
           if (routes.length > 0) {
@@ -408,7 +421,7 @@ serve(async (req) => {
             }
           }
           if (!joined) {
-            const { data: nt } = await supabase.from('incident_threads').insert({ title: headerTitle, categories: [category], affected_routes: routes, is_resolved: category === 'SERVICE_RESUMED', resolved_at: category === 'SERVICE_RESUMED' ? now.toISOString() : null }).select().single();
+            const { data: nt } = await supabase.from('incident_threads').insert({ title: headerTitle, categories: [category], affected_routes: routes, is_resolved: false, resolved_at: null }).select().single();
             if (nt) { await supabase.from('alert_cache').update({ thread_id: nt.thread_id }).eq('alert_id', newAlert.alert_id); alertToThreadMap.set(alertId, nt.thread_id); }
           }
         } else if (threadResult?.length) {
@@ -504,7 +517,7 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, newAlerts, updatedThreads, ttcApiResolvedCount, ttcApiNewAlerts, skippedRszAlerts, rszDeletedCount, ttcApiError, version: FUNCTION_VERSION, timestamp: new Date().toISOString() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true, newAlerts, updatedThreads, ttcApiResolvedCount, ttcApiNewAlerts, skippedRszAlerts, skippedOrphanedServiceResumed, rszDeletedCount, ttcApiError, version: FUNCTION_VERSION, timestamp: new Date().toISOString() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message, version: FUNCTION_VERSION }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
