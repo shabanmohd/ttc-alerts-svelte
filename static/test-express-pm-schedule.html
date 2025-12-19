@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Express Route PM Schedule Test</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    h1 {
+      color: #fff;
+      border-bottom: 2px solid #4361ee;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #4cc9f0;
+      margin-top: 30px;
+    }
+    .test-section {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .controls {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    input, select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #4361ee;
+      background: #0f0f23;
+      color: #fff;
+      font-size: 14px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #4361ee;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #3a56d4;
+    }
+    button.secondary {
+      background: #22c55e;
+    }
+    button.secondary:hover {
+      background: #16a34a;
+    }
+    .result {
+      background: #0f0f23;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #333;
+    }
+    .result-item:last-child {
+      border-bottom: none;
+    }
+    .route-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .route-express {
+      background: #22c55e;
+      color: white;
+    }
+    .route-regular {
+      background: #dc2626;
+      color: white;
+    }
+    .route-streetcar {
+      background: #dc2626;
+      color: white;
+    }
+    .time {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4cc9f0;
+    }
+    .time-live {
+      color: #22c55e;
+    }
+    .day-type {
+      font-size: 12px;
+      color: #888;
+    }
+    .pm-indicator {
+      background: #f59e0b;
+      color: black;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+    .live-indicator {
+      background: #22c55e;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+    .scheduled-indicator {
+      background: #3b82f6;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+    .tomorrow-indicator {
+      color: #888;
+      font-size: 14px;
+    }
+    .no-service {
+      color: #888;
+      font-style: italic;
+    }
+    .info-box {
+      background: #1e3a5f;
+      border-left: 4px solid #4cc9f0;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .info-box.warning {
+      border-left-color: #f59e0b;
+      background: #422006;
+    }
+    .schedule-raw {
+      font-family: monospace;
+      font-size: 12px;
+      background: #0a0a1a;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .two-column {
+        grid-template-columns: 1fr;
+      }
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    .section-title h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+    .arrivals {
+      font-size: 14px;
+      color: #888;
+    }
+    .arrivals span {
+      color: #4cc9f0;
+      font-weight: bold;
+    }
+    .loading {
+      color: #f59e0b;
+      font-style: italic;
+    }
+    .error {
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚌 Express Route PM Schedule Test</h1>
+  
+  <div class="info-box">
+    <strong>What this tests:</strong> Express routes (9xx) show evening first bus times when:
+    <ul>
+      <li>It's a weekday</li>
+      <li>At least 2 hours have passed since AM first departure</li>
+      <li>Current time is before PM first departure</li>
+    </ul>
+    <p style="margin-top: 10px; color: #f59e0b">
+      <strong>⚠️ Note:</strong> In the real app, scheduled times only appear when there's NO real-time ETA data available for a route. 
+      Express routes typically have no mid-day service, so they'll show the PM schedule as a fallback.
+    </p>
+  </div>
+
+  <div class="test-section">
+    <h2>Test Configuration</h2>
+    <div class="controls">
+      <label>
+        Stop ID:
+        <input type="text" id="stopId" value="14446" placeholder="e.g., 14446">
+      </label>
+      <label>
+        Simulated Day:
+        <select id="dayType">
+          <option value="weekday">Weekday (Mon-Fri)</option>
+          <option value="saturday">Saturday</option>
+          <option value="sunday">Sunday</option>
+        </select>
+      </label>
+      <label>
+        Simulated Time:
+        <input type="time" id="simTime" value="12:00">
+      </label>
+      <button onclick="runTest()">Run Schedule Test</button>
+      <button class="secondary" onclick="fetchLiveETA()">Fetch Live ETA</button>
+    </div>
+    
+    <div class="info-box">
+      <strong>Test Stop 14446 (Staines Rd / Jacques Rd):</strong>
+      <ul>
+        <li><strong>Route 939</strong> (Express): weekday AM: 5:47 AM, <span style="color: #f59e0b">weekday PM: 3:09 PM</span></li>
+        <li><strong>Route 116</strong> (Regular): weekday: 4:48 AM (no PM)</li>
+        <li><strong>Route 133</strong> (Regular): weekday: 5:00 AM (no PM)</li>
+        <li><strong>Route 353</strong> (Night): weekday: 3:28 AM (no PM)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>Results</h2>
+    <div class="two-column">
+      <div>
+        <div class="section-title">
+          <span style="color: #22c55e">●</span>
+          <h3>Live Real-Time ETA</h3>
+        </div>
+        <div id="liveResults" class="result">
+          <p style="color: #888">Click "Fetch Live ETA" to get real-time arrivals...</p>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">
+          <span style="color: #3b82f6">●</span>
+          <h3>Scheduled First Bus (Simulated)</h3>
+        </div>
+        <div id="scheduleResults" class="result">
+          <p style="color: #888">Click "Run Schedule Test" to see scheduled times...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>Quick Test Scenarios</h2>
+    <button onclick="testScenario('weekday', '06:00')">Weekday 6:00 AM (before all)</button>
+    <button onclick="testScenario('weekday', '08:00')">Weekday 8:00 AM (2h after AM)</button>
+    <button onclick="testScenario('weekday', '10:00')">Weekday 10:00 AM (mid-day gap)</button>
+    <button onclick="testScenario('weekday', '14:00')">Weekday 2:00 PM (should show PM)</button>
+    <button onclick="testScenario('weekday', '16:00')">Weekday 4:00 PM (after PM start)</button>
+    <button onclick="testScenario('saturday', '12:00')">Saturday 12:00 PM (no PM logic)</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Raw Data</h2>
+    <div class="two-column">
+      <div>
+        <h4>Schedule Data for Stop</h4>
+        <div id="rawScheduleData" class="schedule-raw">Loading...</div>
+      </div>
+      <div>
+        <h4>Live ETA Response</h4>
+        <div id="rawLiveData" class="schedule-raw">Click "Fetch Live ETA" to see response...</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Import Supabase client
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    
+    // Supabase config (from environment)
+    const SUPABASE_URL = 'https://wmchvmegxcpyfjcuzqzk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtY2h2bWVneGNweWZqY3V6cXprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MTk4MzgsImV4cCI6MjA3OTQ5NTgzOH0.Jy0t3-TtKIHamd0ZIxZRZxN9Q8rNZuD-IFBta6VdwXM';
+    
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    let scheduleData = null;
+    
+    // Load schedule data
+    fetch('/data/ttc-schedules.json')
+      .then(r => r.json())
+      .then(data => {
+        scheduleData = data;
+        document.getElementById('rawScheduleData').textContent = 
+          'Schedule data loaded! ' + Object.keys(data).length + ' stops';
+      })
+      .catch(err => {
+        document.getElementById('rawScheduleData').textContent = 'Error loading: ' + err.message;
+      });
+
+    function isExpressRoute(routeId) {
+      const routeNum = parseInt(routeId, 10);
+      return routeNum >= 900 && routeNum <= 999;
+    }
+
+    function formatTo12Hour(time24) {
+      const [hours, minutes] = time24.split(':').map(Number);
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const hour12 = hours % 12 || 12;
+      return `${hour12}:${String(minutes).padStart(2, '0')} ${period}`;
+    }
+
+    function timeToMinutes(time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    }
+
+    function getNextDeparture(stopId, routeId, dayType, currentTime) {
+      if (!scheduleData || !scheduleData[stopId]) return null;
+      
+      const routeSchedule = scheduleData[stopId][routeId];
+      if (!routeSchedule) return null;
+
+      const currentMinutes = timeToMinutes(currentTime);
+      const PM_START_MINUTES = 15 * 60; // 3PM = 900 minutes
+      const isExpress = isExpressRoute(routeId);
+      
+      // For express routes on weekends, return special "no weekend service" indicator
+      if (isExpress && (dayType === 'saturday' || dayType === 'sunday')) {
+        return {
+          noWeekendService: true
+        };
+      }
+      
+      // Get today's first departure based on day type
+      const todayFirst = routeSchedule[dayType] || null;
+      
+      // Check if today's AM service is still upcoming
+      if (todayFirst) {
+        const departureMinutes = timeToMinutes(todayFirst);
+        if (departureMinutes > currentMinutes) {
+          return {
+            time: formatTo12Hour(todayFirst),
+            dayType: dayType.charAt(0).toUpperCase() + dayType.slice(1),
+            isToday: true,
+            isPM: false
+          };
+        }
+      }
+      
+      // For express routes on weekdays, check PM schedule ONLY if:
+      // 1. Current time is past AM first departure
+      // 2. Current time is before PM first departure  
+      // 3. Current time is in the "gap" period (typically late morning to early afternoon)
+      if (dayType === 'weekday' && isExpress && routeSchedule.weekdayPM) {
+        const pmDepartureMinutes = timeToMinutes(routeSchedule.weekdayPM);
+        const amDepartureMinutes = todayFirst ? timeToMinutes(todayFirst) : 0;
+        
+        // Only show PM schedule if we're in the mid-day gap period
+        // (after AM service has passed, before PM service starts)
+        // This prevents showing PM at 6am when AM service just passed
+        if (currentMinutes > amDepartureMinutes && currentMinutes < pmDepartureMinutes) {
+          // Additional check: only show PM if current time is reasonably past AM
+          // (at least 2 hours after AM first departure to avoid early morning edge case)
+          const hoursPastAM = (currentMinutes - amDepartureMinutes) / 60;
+          if (hoursPastAM >= 2) {
+            return {
+              time: formatTo12Hour(routeSchedule.weekdayPM),
+              dayType: 'Weekday (PM)',
+              isToday: true,
+              isPM: true
+            };
+          }
+        }
+      }
+      
+      // Tomorrow's service
+      const tomorrowType = dayType === 'weekday' ? 'weekday' : 
+                          dayType === 'saturday' ? 'sunday' : 'weekday';
+      const tomorrowFirst = routeSchedule[tomorrowType];
+      
+      if (tomorrowFirst) {
+        return {
+          time: formatTo12Hour(tomorrowFirst),
+          dayType: tomorrowType.charAt(0).toUpperCase() + tomorrowType.slice(1),
+          isToday: false,
+          isTomorrow: true
+        };
+      }
+      
+      return null;
+    }
+
+    window.runTest = function() {
+      const stopId = document.getElementById('stopId').value;
+      const dayType = document.getElementById('dayType').value;
+      const simTime = document.getElementById('simTime').value;
+      
+      if (!scheduleData || !scheduleData[stopId]) {
+        document.getElementById('scheduleResults').innerHTML = 
+          `<p class="error">Stop ${stopId} not found in schedule data</p>`;
+        return;
+      }
+      
+      const stopData = scheduleData[stopId];
+      const routes = Object.keys(stopData).sort((a, b) => parseInt(a) - parseInt(b));
+      
+      let html = `<p style="margin-bottom: 10px"><strong>Simulating ${dayType} at ${simTime}</strong></p>`;
+      
+      // Show raw data for this stop
+      document.getElementById('rawScheduleData').textContent = JSON.stringify(stopData, null, 2);
+      
+      for (const routeId of routes) {
+        const isExpress = isExpressRoute(routeId);
+        const result = getNextDeparture(stopId, routeId, dayType, simTime);
+        
+        html += `<div class="result-item">
+          <div>
+            <span class="route-badge ${isExpress ? 'route-express' : 'route-regular'}">${routeId}</span>
+            ${isExpress ? ' <small>(Express)</small>' : ''}
+          </div>
+          <div style="text-align: right">`;
+        
+        if (result && result.noWeekendService) {
+          html += `<span class="no-service">No Weekend Service</span>`;
+        } else if (result && result.time) {
+          html += `<span class="time">${result.time}</span>`;
+          if (result.isPM) {
+            html += `<span class="pm-indicator">PM SERVICE</span>`;
+          } else {
+            html += `<span class="scheduled-indicator">SCHEDULED</span>`;
+          }
+          if (result.isTomorrow) {
+            html += `<span class="tomorrow-indicator"> (tmrw)</span>`;
+          }
+          html += `<br><span class="day-type">${result.dayType}${result.isToday ? '' : ' - Tomorrow'}</span>`;
+        } else {
+          html += `<span class="no-service">No Service</span>`;
+        }
+        
+        html += `</div></div>`;
+      }
+      
+      document.getElementById('scheduleResults').innerHTML = html;
+    }
+
+    window.testScenario = function(day, time) {
+      document.getElementById('dayType').value = day;
+      document.getElementById('simTime').value = time;
+      window.runTest();
+    }
+
+    window.fetchLiveETA = async function() {
+      const stopId = document.getElementById('stopId').value;
+      
+      document.getElementById('liveResults').innerHTML = '<p class="loading">Fetching live ETA...</p>';
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('get-eta', {
+          body: { 
+            stopId: stopId,
+            type: 'surface'
+          }
+        });
+        
+        if (error) {
+          document.getElementById('liveResults').innerHTML = 
+            `<p class="error">Error: ${error.message}</p>`;
+          document.getElementById('rawLiveData').textContent = JSON.stringify(error, null, 2);
+          return;
+        }
+        
+        document.getElementById('rawLiveData').textContent = JSON.stringify(data, null, 2);
+        
+        if (data?.error) {
+          document.getElementById('liveResults').innerHTML = 
+            `<p class="error">API Error: ${data.error}</p>`;
+          return;
+        }
+        
+        const predictions = data?.predictions || [];
+        
+        if (predictions.length === 0) {
+          document.getElementById('liveResults').innerHTML = 
+            `<p style="color: #888">No live predictions available for stop ${stopId}</p>`;
+          return;
+        }
+        
+        let html = `<p style="margin-bottom: 10px"><strong>Stop: ${data?.stopTitle || stopId}</strong></p>`;
+        
+        for (const pred of predictions) {
+          const isExpress = isExpressRoute(pred.route);
+          const arrivals = pred.arrivals || [];
+          
+          html += `<div class="result-item">
+            <div>
+              <span class="route-badge ${isExpress ? 'route-express' : 'route-regular'}">${pred.route}</span>
+              ${isExpress ? ' <small>(Express)</small>' : ''}
+              <br><small style="color: #888">${pred.direction}</small>
+            </div>
+            <div style="text-align: right">`;
+          
+          if (arrivals.length > 0) {
+            html += `<span class="time time-live">${arrivals[0]} min</span>`;
+            html += `<span class="live-indicator">LIVE</span>`;
+            if (arrivals.length > 1) {
+              html += `<br><span class="arrivals">Also: ${arrivals.slice(1, 4).map(a => `<span>${a} min</span>`).join(', ')}</span>`;
+            }
+          } else {
+            html += `<span class="no-service">No arrivals</span>`;
+          }
+          
+          html += `</div></div>`;
+        }
+        
+        document.getElementById('liveResults').innerHTML = html;
+        
+      } catch (err) {
+        document.getElementById('liveResults').innerHTML = 
+          `<p class="error">Error: ${err.message}</p>`;
+        document.getElementById('rawLiveData').textContent = err.toString();
+      }
+    }
+  </script>
+</body>
+</html>

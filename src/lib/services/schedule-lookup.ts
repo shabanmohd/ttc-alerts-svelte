@@ -13,7 +13,8 @@ import { getTTCHoliday } from '$lib/utils/ttc-service-info';
 // ============================================
 
 export interface RouteSchedule {
-  weekday?: string;  // First departure time HH:MM
+  weekday?: string;    // First AM departure time HH:MM
+  weekdayPM?: string;  // First PM departure (after 3PM) for express routes
   saturday?: string;
   sunday?: string;
 }
@@ -31,6 +32,18 @@ export interface NextDepartureInfo {
   dayType: string;        // e.g., "weekday", "Saturday", "Sunday"
   isToday: boolean;       // Whether this departure is today or tomorrow
   tomorrowLabel?: string; // e.g., "Tomorrow (Saturday)"
+  isPM?: boolean;         // Whether this is an evening/PM departure
+  noWeekendService?: boolean; // Express routes don't run on weekends
+}
+
+// PM period starts at 3PM (15:00)
+const PM_START_HOUR = 15;
+const PM_START_MINUTES = PM_START_HOUR * 60;
+
+// Express bus routes (9xx series) - run only during peak hours
+function isExpressRoute(routeId: string): boolean {
+  const routeNum = parseInt(routeId, 10);
+  return routeNum >= 900 && routeNum <= 999;
 }
 
 // ============================================
@@ -185,6 +198,11 @@ export function getStopFirstDepartures(
 /**
  * Get the next scheduled departure considering current time
  * Returns info about when the next bus will come
+ * 
+ * For express routes (9xx), also checks PM schedule when:
+ * - It's a weekday
+ * - Current time is past the AM first departure
+ * - There's an evening service available
  */
 export function getNextScheduledDeparture(
   stopId: string,
@@ -198,9 +216,25 @@ export function getNextScheduledDeparture(
   
   // Get today's service type and first departure
   const todayType = getServiceDayType(now);
-  const todayFirst = getFirstDeparture(stopId, routeId, todayType);
+  const stopSchedules = scheduleData[stopId];
+  if (!stopSchedules) return null;
   
-  // Check if today's service is still upcoming
+  const routeSchedule = stopSchedules[routeId];
+  if (!routeSchedule) return null;
+  
+  // Express routes don't run on weekends - return special indicator
+  if (isExpressRoute(routeId) && (todayType === 'saturday' || todayType === 'sunday')) {
+    return {
+      time: '',
+      dayType: '',
+      isToday: false,
+      noWeekendService: true
+    };
+  }
+  
+  const todayFirst = routeSchedule[todayType] || null;
+  
+  // Check if today's AM service is still upcoming
   if (todayFirst) {
     const departureMinutes = timeToMinutes(todayFirst);
     if (departureMinutes > currentMinutes) {
@@ -209,6 +243,30 @@ export function getNextScheduledDeparture(
         dayType: getDayTypeLabel(todayType),
         isToday: true
       };
+    }
+  }
+  
+  // For express routes on weekdays, check PM schedule
+  // This shows evening service when AM service has passed but evening hasn't started
+  // Only show PM when we're in the mid-day gap (at least 2 hours after AM departure)
+  if (todayType === 'weekday' && isExpressRoute(routeId) && routeSchedule.weekdayPM) {
+    const pmDepartureMinutes = timeToMinutes(routeSchedule.weekdayPM);
+    const amDepartureMinutes = todayFirst ? timeToMinutes(todayFirst) : 0;
+    
+    // Only show PM schedule if:
+    // 1. Current time is after AM departure
+    // 2. Current time is before PM departure
+    // 3. At least 2 hours have passed since AM departure (to avoid early morning edge case)
+    if (currentMinutes > amDepartureMinutes && currentMinutes < pmDepartureMinutes) {
+      const hoursPastAM = (currentMinutes - amDepartureMinutes) / 60;
+      if (hoursPastAM >= 2) {
+        return {
+          time: formatTo12Hour(routeSchedule.weekdayPM),
+          dayType: 'Weekday (PM)',
+          isToday: true,
+          isPM: true
+        };
+      }
     }
   }
   

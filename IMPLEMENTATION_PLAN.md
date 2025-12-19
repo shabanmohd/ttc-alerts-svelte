@@ -1465,6 +1465,9 @@ Settings persist via localStorage
 - [x] `supabase/functions/get-eta/index.ts` ✅ Phase 3
 - [x] `supabase/migrations/20251204_bookmarked_stops.sql` ✅ Phase 2
 - [x] `scripts/transform-gtfs.js` ✅ Phase 2
+- [x] `scripts/process-gtfs-schedules.ts` ✅ Phase 3 - Extract first bus times (AM + PM for express)
+- [x] `src/lib/services/schedule-lookup.ts` ✅ Phase 3 - GTFS schedule lookup, PM fallback, holidays
+- [x] `static/data/ttc-schedules.json` ✅ Phase 3 - First departure times (9,270 stops)
 
 ### Files to Modify
 

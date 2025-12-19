@@ -420,7 +420,7 @@
                 </div>
                 <!-- Row 2: Time (right aligned, matching live ETA style) -->
                 <div class="flex items-baseline justify-end gap-2 mt-2">
-                  {#if departure}
+                  {#if departure && departure.time}
                     <span
                       class="text-5xl font-bold text-foreground/70 tabular-nums"
                     >
@@ -429,6 +429,12 @@
                     {#if !departure.isToday}
                       <span class="text-lg text-muted-foreground">(tmrw)</span>
                     {/if}
+                  {:else if departure?.noWeekendService}
+                    <span
+                      class="text-xl font-semibold text-muted-foreground/60"
+                    >
+                      No Weekend Service
+                    </span>
                   {:else}
                     <span
                       class="text-2xl font-semibold text-muted-foreground/60"
@@ -455,7 +461,7 @@
                 </div>
                 <!-- Right: Time -->
                 <div class="flex items-baseline gap-1 flex-shrink-0">
-                  {#if departure}
+                  {#if departure && departure.time}
                     <span
                       class="text-4xl font-bold text-foreground/70 tabular-nums"
                     >
@@ -466,6 +472,12 @@
                         >(tmrw)</span
                       >
                     {/if}
+                  {:else if departure?.noWeekendService}
+                    <span
+                      class="text-lg font-semibold text-muted-foreground/60"
+                    >
+                      No Weekend Service
+                    </span>
                   {:else}
                     <span
                       class="text-xl font-semibold text-muted-foreground/60"
@@ -679,7 +691,7 @@
                 </div>
                 <!-- Row 2: Time (right aligned, matching live ETA style) -->
                 <div class="flex items-baseline justify-end gap-2 mt-2">
-                  {#if departure}
+                  {#if departure && departure.time}
                     <span
                       class="text-5xl font-bold text-foreground/70 tabular-nums"
                     >
@@ -688,6 +700,12 @@
                     {#if !departure.isToday}
                       <span class="text-lg text-muted-foreground">(tmrw)</span>
                     {/if}
+                  {:else if departure?.noWeekendService}
+                    <span
+                      class="text-xl font-semibold text-muted-foreground/60"
+                    >
+                      No Weekend Service
+                    </span>
                   {:else}
                     <span
                       class="text-2xl font-semibold text-muted-foreground/60"
@@ -714,7 +732,7 @@
                 </div>
                 <!-- Right: Time -->
                 <div class="flex items-baseline gap-1 flex-shrink-0">
-                  {#if departure}
+                  {#if departure && departure.time}
                     <span
                       class="text-4xl font-bold text-foreground/70 tabular-nums"
                     >
@@ -725,6 +743,12 @@
                         >(tmrw)</span
                       >
                     {/if}
+                  {:else if departure?.noWeekendService}
+                    <span
+                      class="text-lg font-semibold text-muted-foreground/60"
+                    >
+                      No Weekend Service
+                    </span>
                   {:else}
                     <span
                       class="text-xl font-semibold text-muted-foreground/60"

@@ -821,14 +821,14 @@ The Maintenance Widget displays planned subway closures. Each maintenance item u
 
 **Global Card Border Standard**: All cards use `2px` borders for better visual separation when stacked vertically.
 
-| Card Type          | Border Style                    | Location                    |
-| ------------------ | ------------------------------- | --------------------------- |
-| ETACard            | `border-2` (Tailwind)           | ETACard.svelte              |
-| Alert Card         | `border: 2px solid`             | layout.css `.alert-card`    |
-| RSZ Alert Card     | `border: 2px solid`             | RSZAlertCard.svelte         |
-| Maintenance Widget | `border: 2px solid`             | MaintenanceWidget.svelte    |
-| Subway Status Card | `border: 2px solid`             | alerts/+page.svelte         |
-| shadcn Card.Root   | Default (uses component styles) | From shadcn-svelte          |
+| Card Type          | Border Style                    | Location                 |
+| ------------------ | ------------------------------- | ------------------------ |
+| ETACard            | `border-2` (Tailwind)           | ETACard.svelte           |
+| Alert Card         | `border: 2px solid`             | layout.css `.alert-card` |
+| RSZ Alert Card     | `border: 2px solid`             | RSZAlertCard.svelte      |
+| Maintenance Widget | `border: 2px solid`             | MaintenanceWidget.svelte |
+| Subway Status Card | `border: 2px solid`             | alerts/+page.svelte      |
+| shadcn Card.Root   | Default (uses component styles) | From shadcn-svelte       |
 
 ```svelte
 <Card.Root>
@@ -3138,6 +3138,2054 @@ The Subway Status Cards display the current service status for each subway line 
 /* Card container */
 /* Card container */
 /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service */
 .subway-status-card.status-delay       /* Delay */
 .subway-status-card.status-disruption  /* Disruption */
@@ -3166,6 +5214,2054 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .closure-type-badge          /* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
+/* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */
 /* Base badge styles */

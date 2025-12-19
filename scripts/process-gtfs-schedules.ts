@@ -4,6 +4,10 @@
  * This script creates a compact lookup table for showing "next scheduled bus"
  * when real-time data isn't available (e.g., off-hours).
  * 
+ * For express routes that only run during peak hours, we capture both:
+ * - First AM departure (earliest of the day)
+ * - First PM departure (first after 3PM / 15:00)
+ * 
  * Usage: npx ts-node scripts/process-gtfs-schedules.ts
  * 
  * Output: static/data/ttc-schedules.json
@@ -20,6 +24,17 @@ const __dirname = path.dirname(__filename);
 const GTFS_DIR = path.join(__dirname, 'gtfs');
 const OUTPUT_DIR = path.join(__dirname, '..', 'static', 'data');
 const OUTPUT_FILE = path.join(OUTPUT_DIR, 'ttc-schedules.json');
+
+// PM period starts at 3PM (15:00) - captures evening rush service
+const PM_START_HOUR = 15;
+const PM_START_MINUTES = PM_START_HOUR * 60; // 900 minutes
+
+// Express bus routes (9xx series) - these run only during peak hours
+// and benefit from showing PM first departure times
+function isExpressRoute(routeId: string): boolean {
+  const routeNum = parseInt(routeId, 10);
+  return routeNum >= 900 && routeNum <= 999;
+}
 
 // ============================================
 // Types
@@ -58,10 +73,12 @@ interface ServiceCalendar {
 type ServiceType = 'weekday' | 'saturday' | 'sunday';
 
 // Output structure: stopId -> routeId -> serviceType -> firstDeparture (HH:MM)
+// weekdayPM is the first departure after 3PM on weekdays (for express routes)
 interface ScheduleLookup {
   [stopId: string]: {
     [routeId: string]: {
       weekday?: string;
+      weekdayPM?: string;  // First PM departure (after 3PM) for express routes
       saturday?: string;
       sunday?: string;
     };
@@ -256,10 +273,22 @@ async function main() {
       schedules[stopId][trip.routeId] = {};
     }
     
-    // Only keep the earliest departure for each service type
+    const arrivalMinutes = timeToMinutes(arrivalTime);
+    const formattedTime = formatTime(arrivalTime);
+    
+    // Track first AM departure (any time before 3PM or earliest overall)
     const currentFirst = schedules[stopId][trip.routeId][serviceType];
-    if (!currentFirst || timeToMinutes(arrivalTime) < timeToMinutes(currentFirst + ':00')) {
-      schedules[stopId][trip.routeId][serviceType] = formatTime(arrivalTime);
+    if (!currentFirst || arrivalMinutes < timeToMinutes(currentFirst + ':00')) {
+      schedules[stopId][trip.routeId][serviceType] = formattedTime;
+    }
+    
+    // For weekdays, also track first PM departure (after 3PM / 15:00)
+    // Only for express routes (9xx) which run during peak hours only
+    if (serviceType === 'weekday' && arrivalMinutes >= PM_START_MINUTES && isExpressRoute(trip.routeId)) {
+      const currentPM = schedules[stopId][trip.routeId].weekdayPM;
+      if (!currentPM || arrivalMinutes < timeToMinutes(currentPM + ':00')) {
+        schedules[stopId][trip.routeId].weekdayPM = formattedTime;
+      }
     }
   }
   
