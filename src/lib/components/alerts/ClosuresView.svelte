@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
-  import { LayoutGrid, CalendarDays, TrainFrontTunnel, CheckCircle } from "lucide-svelte";
+  import { LayoutGrid, CalendarDays, CheckCircle } from "lucide-svelte";
   import AlertCard from "./AlertCard.svelte";
   import { maintenanceItems } from "$lib/stores/alerts";
   import type {
@@ -232,7 +232,7 @@
   <!-- Empty State: No closures at all -->
   <div class="empty-state success">
     <div class="empty-state-icon success">
-      <TrainFrontTunnel class="h-8 w-8" />
+      <CheckCircle class="h-8 w-8" />
     </div>
     <h3 class="empty-state-title">
       {$_("closures.noPlannedClosures")}

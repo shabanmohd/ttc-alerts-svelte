@@ -3,7 +3,7 @@
   import {
     Search,
     Plus,
-    Bell,
+    CheckCircle,
     X,
     Pencil,
     RefreshCw,
@@ -532,7 +532,7 @@
     <!-- Empty State: Routes Saved but No Active Alerts -->
     <div class="empty-state success animate-fade-in">
       <div class="empty-state-icon success">
-        <Bell class="h-8 w-8" />
+        <CheckCircle class="h-8 w-8" />
       </div>
       <h3 class="empty-state-title">{$_("myRoutes.allClear")}</h3>
       <p class="empty-state-description">

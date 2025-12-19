@@ -125,15 +125,10 @@
   <div class="card-container">
     <div class="empty-state success">
       <div class="empty-state-icon success">
-        <!-- Train/Subway Icon -->
+        <!-- Check Circle Icon (same as "All clear" states) -->
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="3" width="16" height="16" rx="2"/>
-          <circle cx="8.5" cy="13.5" r="1.5"/>
-          <circle cx="15.5" cy="13.5" r="1.5"/>
-          <path d="M8.5 19v2"/>
-          <path d="M15.5 19v2"/>
-          <path d="M4 11h16"/>
-          <path d="M10 7h4"/>
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
       </div>
       <h3 class="empty-state-title">No planned closures</h3>
@@ -272,10 +267,10 @@
   <div class="card-container">
     <div class="empty-state success">
       <div class="empty-state-icon success">
-        <!-- Bell Icon -->
+        <!-- Check Circle Icon (consistent with all "All clear" states) -->
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
       </div>
       <h3 class="empty-state-title">All clear!</h3>
@@ -308,15 +303,14 @@
       <li><strong>Clickable states:</strong> Add cursor: pointer and hover effects when the empty state can trigger an action</li>
       <li><strong>Icon selection:</strong> Choose contextually relevant icons:
         <ul class="ml-4 mt-1 space-y-1">
-          <li>• Train/Subway for subway closures</li>
+          <li>• <strong>Check Circle</strong> for all "All clear" / success states (consistent)</li>
           <li>• Calendar for date-filtered results</li>
-          <li>• Check Circle for "all clear" success states</li>
           <li>• Alert Triangle for "no major alerts"</li>
           <li>• Clock for "no minor alerts"</li>
           <li>• Accessibility icon for accessibility-related empty states</li>
-          <li>• Route for route-related states</li>
-          <li>• Map Pin for stop-related states</li>
-          <li>• Bell for notification-related states</li>
+          <li>• Route for "no routes saved"</li>
+          <li>• Map Pin for "no stops saved"</li>
+          <li>• SearchX for "no results" / search-related states</li>
         </ul>
       </li>
     </ul>
