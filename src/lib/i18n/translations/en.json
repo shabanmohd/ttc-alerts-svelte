@@ -153,9 +153,13 @@
   },
   "closures": {
     "title": "Subway Closures",
-    "titleFull": "Planned Subway Closures",
+    "titleFull": "Scheduled Subway Closures",
     "noPlannedClosures": "No planned closures",
     "operatingNormally": "All subway lines are operating normally with no scheduled closures.",
+    "filterAll": "All",
+    "filterWeekend": "This Weekend",
+    "noClosuresForFilter": "No closures this weekend",
+    "tryOtherFilter": "Try the 'All' filter to see all scheduled closures.",
     "tabs": {
       "startingSoon": "Starting Soon",
       "soon": "Soon",

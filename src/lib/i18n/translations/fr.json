@@ -180,7 +180,11 @@
     "nightlyFrom": "Chaque nuit à partir de {time}",
     "until": "Jusqu'à {time}",
     "fromTime": "à partir de {time}",
-    "inEffect": "Fermeture planifiée en vigueur"
+    "inEffect": "Fermeture planifiée en vigueur",
+    "filterAll": "Tous",
+    "filterWeekend": "Ce week-end",
+    "noClosuresForFilter": "Pas de fermeture ce week-end",
+    "tryOtherFilter": "Essayez le filtre \"Tous\" pour voir toutes les fermetures programmées."
   },
   "maintenance": {
     "title": "Fermetures planifiées du métro",
