@@ -1,9 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// v51: SERVICE_RESUMED alerts no longer create orphaned threads - they only join existing threads
-// If no matching thread found, the SERVICE_RESUMED alert is deleted instead of creating a new resolved thread
-const FUNCTION_VERSION = 51;
+// v52: Add safeguard to prevent mass-resolving accessibility threads when API returns empty/partial data
+// If accessibility array is missing/empty but we have existing accessibility threads, skip auto-resolve
+const FUNCTION_VERSION = 52;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -227,6 +227,14 @@ serve(async (req) => {
         // Auto-resolve NON-RSZ threads not in TTC API
         const { data: unresolvedThreads } = await supabase.from('incident_threads').select('thread_id, title, affected_routes, categories').eq('is_resolved', false);
         if (unresolvedThreads) {
+          // Count existing accessibility threads for safeguard
+          const accessibilityThreadCount = unresolvedThreads.filter(t => (t.categories || []).includes('ACCESSIBILITY')).length;
+          const apiAccessibilityCount = ttcData.accessibility?.length || 0;
+          
+          // Safeguard: Skip accessibility auto-resolve if API returned empty/missing accessibility data
+          // but we have existing accessibility threads (likely API glitch)
+          const skipAccessibilityResolve = accessibilityThreadCount > 0 && apiAccessibilityCount === 0;
+          
           for (const thread of unresolvedThreads) {
             // Skip RSZ threads - they are handled by deletion above
             const isRszThread = (thread.title || '').toLowerCase().includes('slower than usual');
@@ -234,6 +242,9 @@ serve(async (req) => {
             
             const threadRoutes = thread.affected_routes || [];
             if ((thread.categories || []).includes('ACCESSIBILITY')) {
+              // Skip if safeguard triggered (API returned empty accessibility data)
+              if (skipAccessibilityResolve) continue;
+              
               const stillActive = ttcData.accessibility?.some((acc: any) => threadRoutes.some((r: string) => (acc.headerText || '').toLowerCase().includes(r.toLowerCase()))) ?? false;
               if (!stillActive) {
                 await supabase.from('incident_threads').update({ is_resolved: true, resolved_at: now.toISOString(), updated_at: now.toISOString() }).eq('thread_id', thread.thread_id);
