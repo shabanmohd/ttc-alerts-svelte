@@ -921,15 +921,25 @@ Empty states are displayed when content is not available or when filters produce
 
 #### Usage Examples
 
-| Context                 | Icon            | Title                     | Variant |
-| ----------------------- | --------------- | ------------------------- | ------- |
-| No saved stops          | `MapPin`        | "Add your first stop"     | Default |
-| No saved routes         | `MapPinned`     | "No routes saved"         | Default |
-| No alerts (all clear)   | `CheckCircle`   | "All Clear!"              | Success |
-| No major alerts         | `AlertTriangle` | "No major alerts"         | Default |
-| No minor alerts         | `Clock`         | "No minor alerts"         | Default |
-| No accessibility alerts | `Accessibility` | "No accessibility alerts" | Default |
-| Search no results       | `SearchX`       | "No results found"        | Default |
+| Context                              | Icon            | Title                          | Variant |
+| ------------------------------------ | --------------- | ------------------------------ | ------- |
+| Scheduled closures - none            | `CheckCircle`   | "No planned closures"          | Success |
+| Scheduled closures - weekend filter  | `CalendarDays`  | "No closures this weekend"     | Default |
+| Active alerts - all clear            | `CheckCircle`   | "All Clear!"                   | Success |
+| Active alerts - no major             | `AlertTriangle` | "No major alerts"              | Default |
+| Active alerts - no minor             | `Clock`         | "No minor alerts"              | Default |
+| Active alerts - no accessibility     | `Accessibility` | "No accessibility alerts"      | Default |
+| Resolved alerts - none               | `SearchX`       | "No resolved alerts"           | Default |
+| My Routes - no routes saved          | `Route`         | "No routes saved"              | Default |
+| My Routes - routes saved, all clear  | `CheckCircle`   | "All clear!"                   | Success |
+| My Stops - no stops saved            | `MapPin`        | "No stops saved"               | Default |
+| Search - no results                  | `SearchX`       | "No results found"             | Default |
+
+> **Icon Consistency Rule:** All "All clear" / success states use `CheckCircle` icon for consistency.
+
+#### Test File
+
+See `static/test-empty-states.html` for a visual reference of all empty state patterns with dark mode toggle.
 
 ### ETA Cards (Swipeable Direction Carousel)
 
