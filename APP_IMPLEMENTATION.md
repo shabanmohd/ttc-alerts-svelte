@@ -256,11 +256,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 **Schedule Lookup Features (`schedule-lookup.ts`)**:
 
+> ⚠️ **Important**: Scheduled times are only displayed as a **fallback** when no real-time ETA data is available for a route. Routes with live predictions always show live ETA instead.
+
 - **GTFS Data**: 9,270 stops with first bus times (weekday/saturday/sunday)
 - **Day Type Detection**: Weekday, Saturday, Sunday (auto-detected)
 - **Holiday Handling**: TTC holidays use Sunday schedule (2025-2026 holidays defined)
-- **Express Route PM Schedule**: 9xx routes show PM first departure (after 3PM) on weekday afternoons
-- **No Weekend Service**: Express routes (9xx) show "No Weekend Service" on Sat/Sun
+- **Express Route PM Schedule**: 9xx routes show PM first departure (after 3PM) on weekday afternoons when no live ETA
+- **No Weekend Service**: Express routes (9xx) show "No Weekend Service" on Sat/Sun (express routes don't operate weekends)
 - **No Service Detection**: Routes without schedule data show "No Service"
 - **12-Hour Format**: Times displayed as "5:21 AM" format
 
@@ -287,12 +289,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
-| File                        | Status | Purpose                                                                   |
-| --------------------------- | ------ | ------------------------------------------------------------------------- |
-| `transform-gtfs.js`         | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT           |
-| `generate-icons.js`         | ✅     | Generate PWA icons from source                                            |
-| `translate-i18n.cjs`        | ✅     | Sync i18n source files to translations folder, DeepL API                  |
-| `process-gtfs-schedules.ts` | ✅     | Process TTC GTFS data to extract first departure times (AM + PM for 9xx)  |
+| File                        | Status | Purpose                                                                  |
+| --------------------------- | ------ | ------------------------------------------------------------------------ |
+| `transform-gtfs.js`         | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT          |
+| `generate-icons.js`         | ✅     | Generate PWA icons from source                                           |
+| `translate-i18n.cjs`        | ✅     | Sync i18n source files to translations folder, DeepL API                 |
+| `process-gtfs-schedules.ts` | ✅     | Process TTC GTFS data to extract first departure times (AM + PM for 9xx) |
 
 ### Migrations (`supabase/migrations/`)
 
