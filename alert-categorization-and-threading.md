@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 11.0  
-**Date:** June 16, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v51 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention)  
+**Version:** 11.1  
+**Date:** June 17, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v51 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -912,11 +912,11 @@ The frontend provides two levels of filtering for alerts:
 
 Alerts are categorized into three severity levels based on their effect and type:
 
-| Category          | TTC API Effects                                                                             | Description                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance    |
-| **MINOR**         | RSZ (Reduced Speed Zone) only                                                               | Subway slow zones ("slower than usual", "reduced speed")        |
-| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)                                                    | Elevator and escalator outages                                  |
+| Category          | TTC API Effects                                                                                     | Description                                                  |
+| ----------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance |
+| **MINOR**         | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")     |
+| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)                                                            | Elevator and escalator outages                               |
 
 **Categorization Logic (`getSeverityCategory()` in alerts.ts):**
 
@@ -1077,6 +1077,71 @@ Filters are displayed as chips in `FilterChips.svelte`:
 - Click a chip → Show only alerts in that category
 - Click active chip → Clear filter (show all)
 - Categories come from `ALERT_CATEGORIES` in poll-alerts Edge Function
+
+### Scheduled Maintenance Display
+
+**Component:** `ClosuresView.svelte` (in Scheduled tab)
+
+The scheduled maintenance tab displays all upcoming and active subway closures in a single sorted list (no sub-tabs).
+
+**Display Logic:**
+
+1. **Items shown** - Sorted by start date (earliest first)
+2. **Past closures hidden** - Except nightly closures until 6am (see below)
+3. **Badge types** - "Weekend" for full weekend closures, "Nightly" for late-night closures
+
+**Nightly Closure Extension (6am Rule):**
+
+Nightly closures (starting at 10 PM or later) remain visible in the Scheduled tab until 6 AM the day AFTER the `end_date`:
+
+```typescript
+function shouldShowInScheduled(item: PlannedMaintenance): boolean {
+  // Future or current items always shown
+  if (endDate >= today) return true;
+  
+  // Past nightly closures: show until 6am after end_date
+  const isNightlyClosure = startHour >= 22;
+  if (isNightlyClosure) {
+    const morningAfterEnd = new Date(endDate);
+    morningAfterEnd.setDate(morningAfterEnd.getDate() + 1);
+    morningAfterEnd.setHours(6, 0, 0);
+    return now < morningAfterEnd;
+  }
+  return false;
+}
+```
+
+**Example:** Dec 15-18 nightly closure → visible until Dec 19 at 6:00 AM
+
+### Active Maintenance in Active Tab
+
+**Function:** `isMaintenanceHappeningNow()` (in `+page.svelte`)
+
+Nightly closures also appear in the Active alerts tab while they're in progress:
+
+1. **Within date range** - Shows when `startDate <= now <= endDate`
+2. **Overnight extension** - Shows until 6 AM on the morning after each nightly closure
+3. **Morning after end_date** - Shows until 6 AM on `endDate + 1` for the final night
+
+```typescript
+// Nightly closures with start time >= 10 PM
+const isNightlyClosure = startTime && startTime.hours >= 22;
+
+// Extend end to 6 AM if no explicit end time
+if (isNightlyClosure && !endTime) {
+  endTime = { hours: 6, minutes: 0 };
+}
+
+// Extend date range to include morning after end_date
+if (isNightlyClosure && endTime?.hours < 12) {
+  endDateExtended.setDate(endDateExtended.getDate() + 1);
+}
+
+// Active if: late night (>= start time) OR early morning (<= 6 AM)
+return nowMinutes >= startMinutes || nowMinutes <= endMinutes;
+```
+
+**Result:** Nightly closures appear in MAJOR severity tab while active, alongside real-time alerts.
 
 ---
 
@@ -1540,6 +1605,39 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 ---
 
 ## Changelog
+
+### Version 11.1 - June 17, 2025 (Simplified Scheduled Maintenance View)
+
+**Frontend Changes:**
+
+- ✅ **Removed tabs from ClosuresView.svelte**: No more "Starting Soon", "This Weekend", "Coming Up" tabs
+- ✅ **Single sorted list**: All closures displayed in one list sorted by start date
+- ✅ **Nightly closure 6am extension**: Nightly closures remain visible until 6 AM the day after `end_date`
+- ✅ **Active tab integration**: Nightly closures appear in Active alerts (MAJOR) while in progress
+
+**Implementation:**
+
+```typescript
+// ClosuresView.svelte - Show nightly closures until 6am after end_date
+function shouldShowInScheduled(item: PlannedMaintenance): boolean {
+  if (endDate >= today) return true;
+  const isNightlyClosure = startHour >= 22;
+  if (isNightlyClosure) {
+    const morningAfterEnd = new Date(endDate);
+    morningAfterEnd.setDate(morningAfterEnd.getDate() + 1);
+    morningAfterEnd.setHours(6, 0, 0);
+    return now < morningAfterEnd;
+  }
+  return false;
+}
+```
+
+**Files Modified:**
+
+- `src/lib/components/alerts/ClosuresView.svelte` - Simplified to single list with 6am extension
+- `src/lib/components/alerts/MaintenanceWidget.svelte` - Removed (unused)
+
+---
 
 ### Version 5.4 - December 10, 2025 (Stale Candidate Threads Fix)
 

@@ -2,13 +2,8 @@
   import { _ } from "svelte-i18n";
   import { ExternalLink, Train } from "lucide-svelte";
   import RouteBadge from "./RouteBadge.svelte";
-  import { cn } from "$lib/utils";
   import { maintenanceItems } from "$lib/stores/alerts";
   import type { PlannedMaintenance } from "$lib/types/database";
-
-  let activeTab = $state<"starting-soon" | "weekend" | "coming-up">(
-    "starting-soon"
-  );
 
   /**
    * Parse date string as local time to avoid UTC shift.
@@ -95,118 +90,76 @@
     return null;
   }
 
-  function getNextWeekendStart(): Date {
+  /**
+   * Check if a nightly closure is still active (until 6am after end_date).
+   * Used to keep nightly closures visible in scheduled maintenance view.
+   */
+  function isNightlyClosureStillActive(item: PlannedMaintenance): boolean {
+    const startHour = parseTimeHour(item.start_time);
+    if (startHour === null || startHour < 22) return false; // Not a nightly closure
+
     const now = new Date();
-    const dayOfWeek = now.getDay();
-    if (dayOfWeek === 6 || dayOfWeek === 0) {
-      return new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        0,
-        0,
-        0
-      );
-    }
-    const daysUntilSaturday = 6 - dayOfWeek;
-    return new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + daysUntilSaturday,
-      0,
+    const endDate = parseLocalDate(item.end_date);
+
+    // Calculate morning after end_date at 6 AM
+    const morningAfterEnd = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate() + 1, // Day after end_date
+      6, // 6 AM
       0,
       0
     );
-  }
 
-  function getNextWeekendEnd(): Date {
-    const start = getNextWeekendStart();
-    const dayOfWeek = start.getDay();
-    if (dayOfWeek === 6) {
-      return new Date(
-        start.getFullYear(),
-        start.getMonth(),
-        start.getDate() + 1,
-        23,
-        59,
-        59
-      );
-    }
-    return new Date(
-      start.getFullYear(),
-      start.getMonth(),
-      start.getDate(),
-      23,
-      59,
-      59
-    );
+    // Nightly closure is still active if now is before 6 AM the morning after end_date
+    return now < morningAfterEnd;
   }
 
   /**
-   * Categorize maintenance items by timeframe.
+   * Check if a maintenance item should be shown in scheduled view.
+   * Items are shown if:
+   * 1. Start date is in the future, OR
+   * 2. End date is today or in the future, OR
+   * 3. For nightly closures: until 6 AM the morning after end_date
    */
-  const categorizedItems = $derived(() => {
+  function shouldShowInScheduled(item: PlannedMaintenance): boolean {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfWeekend = getNextWeekendStart();
-    const endOfWeekend = getNextWeekendEnd();
+    const startDate = parseLocalDate(item.start_date);
+    const endDate = parseLocalDate(item.end_date);
+    const startDateOnly = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      startDate.getDate()
+    );
+    const endDateOnly = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate()
+    );
 
-    const startingSoon: PlannedMaintenance[] = [];
-    const weekend: PlannedMaintenance[] = [];
-    const comingUp: PlannedMaintenance[] = [];
+    // Future start date - always show
+    if (startDateOnly > today) return true;
 
-    $maintenanceItems.forEach((item) => {
-      const startDate = parseLocalDate(item.start_date);
-      const endDate = parseLocalDate(item.end_date);
-      const startDay = new Date(
-        startDate.getFullYear(),
-        startDate.getMonth(),
-        startDate.getDate()
-      );
-      const daysDiff = Math.ceil(
-        (startDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-      );
+    // End date is today or future - always show
+    if (endDateOnly >= today) return true;
 
-      // Categories are NOT mutually exclusive
-      // Starting Soon: starts within 1 day
-      if (daysDiff <= 1) {
-        startingSoon.push(item);
-      }
+    // Past end date: check if it's a nightly closure still active (until 6am)
+    return isNightlyClosureStillActive(item);
+  }
 
-      // This Weekend: overlaps with the upcoming weekend (Sat-Sun)
-      // Check if the closure period overlaps with the weekend period
-      const closureStart = startDay;
-      const closureEnd = new Date(
-        endDate.getFullYear(),
-        endDate.getMonth(),
-        endDate.getDate()
-      );
-      const weekendStart = new Date(
-        startOfWeekend.getFullYear(),
-        startOfWeekend.getMonth(),
-        startOfWeekend.getDate()
-      );
-      const weekendEnd = new Date(
-        endOfWeekend.getFullYear(),
-        endOfWeekend.getMonth(),
-        endOfWeekend.getDate()
-      );
-
-      // Overlap check: closure starts before weekend ends AND closure ends after weekend starts
-      if (closureStart <= weekendEnd && closureEnd >= weekendStart) {
-        weekend.push(item);
-      }
-
-      // Coming Up: starts more than 1 day from now AND not in the weekend category
-      if (
-        daysDiff > 1 &&
-        !(closureStart <= weekendEnd && closureEnd >= weekendStart)
-      ) {
-        comingUp.push(item);
-      }
-    });
-
-    return { startingSoon, weekend, comingUp };
+  /**
+   * Get all maintenance items sorted by start date.
+   * Filters out past items (except nightly closures until 6am).
+   */
+  const sortedItems = $derived(() => {
+    return $maintenanceItems
+      .filter(shouldShowInScheduled)
+      .sort((a, b) => {
+        const startA = parseLocalDate(a.start_date).getTime();
+        const startB = parseLocalDate(b.start_date).getTime();
+        return startA - startB;
+      });
   });
 
   function formatDateRange(startDate: string, endDate: string): string {
@@ -238,51 +191,7 @@
     return `${startMonth} ${startDateNum} – ${endMonth} ${endDateNum}${yearStr}`;
   }
 
-  const currentItems = $derived(() => {
-    const cats = categorizedItems();
-    switch (activeTab) {
-      case "starting-soon":
-        return cats.startingSoon;
-      case "weekend":
-        return cats.weekend;
-      case "coming-up":
-        return cats.comingUp;
-      default:
-        return [];
-    }
-  });
-
-  const tabCounts = $derived(() => {
-    const cats = categorizedItems();
-    return {
-      "starting-soon": cats.startingSoon.length,
-      weekend: cats.weekend.length,
-      "coming-up": cats.comingUp.length,
-    };
-  });
-
-  const totalCount = $derived($maintenanceItems.length);
-
-  const tabs = [
-    {
-      id: "starting-soon",
-      labelKey: "closures.tabs.startingSoon",
-      shortLabelKey: "closures.tabs.soon",
-      ariaLabelKey: "closures.tabs.ariaStartingSoon",
-    },
-    {
-      id: "weekend",
-      labelKey: "closures.tabs.thisWeekend",
-      shortLabelKey: "closures.tabs.weekend",
-      ariaLabelKey: "closures.tabs.ariaWeekend",
-    },
-    {
-      id: "coming-up",
-      labelKey: "closures.tabs.comingUp",
-      shortLabelKey: "closures.tabs.coming",
-      ariaLabelKey: "closures.tabs.ariaComingUp",
-    },
-  ] as const;
+  const totalCount = $derived(sortedItems().length);
 </script>
 
 <section class="closures-view" aria-labelledby="closures-heading">
@@ -308,95 +217,59 @@
       </p>
     </div>
   {:else}
-    <!-- Tabs -->
-    <div class="closures-tabs-wrapper">
-      <div
-        class="closures-tabs"
-        role="tablist"
-        aria-label={$_("closures.tabs.ariaClosureTimeframe")}
-      >
-        {#each tabs as tab}
-          {@const count = tabCounts()[tab.id]}
-          <button
-            class={cn("closures-tab", activeTab === tab.id && "active")}
-            onclick={() => (activeTab = tab.id)}
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            aria-label={$_(tab.ariaLabelKey)}
-            type="button"
-          >
-            <span class="closures-tab-label-short">{$_(tab.shortLabelKey)}</span
-            >
-            <span class="closures-tab-label-full">{$_(tab.labelKey)}</span>
-            <span class="closures-tab-count">{count}</span>
-          </button>
-        {/each}
-      </div>
-    </div>
-
-    <!-- Items -->
-    <div class="closures-items" role="tabpanel">
-      {#if currentItems().length === 0}
-        <p class="closures-no-items">
-          No {activeTab === "starting-soon"
-            ? "imminent"
-            : activeTab === "weekend"
-              ? "weekend"
-              : "upcoming"} closures scheduled.
-        </p>
-      {:else}
-        {#each currentItems() as item, i}
-          {@const closureBadge = getClosureBadge(item)}
-          {@const startTime = formatTime(item.start_time)}
-          <article
-            class="closure-card animate-fade-in-up"
-            style="animation-delay: {Math.min(i * 50, 200)}ms"
-          >
-            <div class="closure-card-grid">
-              <div class="closure-card-left">
-                <p class="closure-card-stations">{item.affected_stations}</p>
-                <div class="closure-card-badges">
-                  {#each item.routes as route}
-                    <RouteBadge {route} />
-                  {/each}
-                </div>
-              </div>
-              <div class="closure-card-datetime">
-                <time class="closure-card-date" datetime={item.start_date}>
-                  {formatDateRange(item.start_date, item.end_date)}
-                </time>
-                {#if startTime && closureBadge?.type !== "weekend"}
-                  <span class="closure-card-time"
-                    >{$_("closures.fromTime", {
-                      values: { time: startTime },
-                    })}</span
-                  >
-                {/if}
+    <!-- All Closures List (sorted by start date) -->
+    <div class="closures-items">
+      {#each sortedItems() as item, i}
+        {@const closureBadge = getClosureBadge(item)}
+        {@const startTime = formatTime(item.start_time)}
+        <article
+          class="closure-card animate-fade-in-up"
+          style="animation-delay: {Math.min(i * 50, 200)}ms"
+        >
+          <div class="closure-card-grid">
+            <div class="closure-card-left">
+              <p class="closure-card-stations">{item.affected_stations}</p>
+              <div class="closure-card-badges">
+                {#each item.routes as route}
+                  <RouteBadge {route} />
+                {/each}
               </div>
             </div>
-            <div class="closure-card-footer">
-              {#if closureBadge}
-                <span class="closure-type-badge {closureBadge.type}">
-                  {$_(closureBadge.translationKey)}
-                </span>
-              {:else}
-                <span></span>
-              {/if}
-              {#if item.url}
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="closure-card-link"
+            <div class="closure-card-datetime">
+              <time class="closure-card-date" datetime={item.start_date}>
+                {formatDateRange(item.start_date, item.end_date)}
+              </time>
+              {#if startTime && closureBadge?.type !== "weekend"}
+                <span class="closure-card-time"
+                  >{$_("closures.fromTime", {
+                    values: { time: startTime },
+                  })}</span
                 >
-                  {$_("common.moreDetails")}
-                  <ExternalLink class="h-3 w-3" aria-hidden="true" />
-                </a>
               {/if}
             </div>
-          </article>
-        {/each}
-      {/if}
+          </div>
+          <div class="closure-card-footer">
+            {#if closureBadge}
+              <span class="closure-type-badge {closureBadge.type}">
+                {$_(closureBadge.translationKey)}
+              </span>
+            {:else}
+              <span></span>
+            {/if}
+            {#if item.url}
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="closure-card-link"
+              >
+                {$_("common.moreDetails")}
+                <ExternalLink class="h-3 w-3" aria-hidden="true" />
+              </a>
+            {/if}
+          </div>
+        </article>
+      {/each}
     </div>
   {/if}
 </section>
@@ -450,15 +323,6 @@
     }
   }
 
-  .closures-badge {
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 0.25rem 0.625rem;
-    background-color: hsl(var(--primary) / 0.1);
-    color: hsl(var(--primary));
-    border-radius: var(--radius);
-  }
-
   /* Empty State */
   .closures-empty {
     display: flex;
@@ -494,110 +358,9 @@
     max-width: 280px;
   }
 
-  /* Tabs */
-  .closures-tabs-wrapper {
-    padding: 0.75rem 1rem 0;
-  }
-
-  .closures-tabs {
-    display: flex;
-    gap: 0.25rem;
-    padding: 0.25rem;
-    background-color: hsl(var(--muted));
-    border-radius: calc(var(--radius) + 2px);
-  }
-
-  .closures-tab {
-    position: relative;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.375rem;
-    padding: 0.5rem 0.5rem;
-    border-radius: var(--radius);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: hsl(var(--muted-foreground));
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-
-  .closures-tab.active:after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2rem;
-    height: 2px;
-    background: hsl(var(--primary));
-    border-radius: 1px;
-  }
-
-  /* Mobile: show short labels */
-  .closures-tab-label-short {
-    display: inline;
-  }
-
-  .closures-tab-label-full {
-    display: none;
-  }
-
-  /* Desktop: show full labels */
-  @media (min-width: 640px) {
-    .closures-tab {
-      gap: 0.5rem;
-      padding: 0.5rem 0.75rem;
-    }
-
-    .closures-tab-label-short {
-      display: none;
-    }
-
-    .closures-tab-label-full {
-      display: inline;
-    }
-  }
-
-  .closures-tab:hover:not(.active) {
-    color: hsl(var(--foreground));
-    background-color: hsl(var(--muted-foreground) / 0.1);
-  }
-
-  .closures-tab.active {
-    color: hsl(var(--foreground));
-    background-color: hsl(var(--background));
-    box-shadow: 0 1px 3px hsl(var(--foreground) / 0.1);
-  }
-
-  .closures-tab-count {
-    font-size: 0.75rem;
-    padding: 0.125rem 0.375rem;
-    background-color: hsl(var(--muted-foreground) / 0.2);
-    border-radius: 9999px;
-    min-width: 1.25rem;
-    text-align: center;
-  }
-
-  .closures-tab.active .closures-tab-count {
-    background-color: hsl(var(--primary) / 0.15);
-    color: hsl(var(--primary));
-  }
-
   /* Items */
   .closures-items {
     padding: 0.75rem;
-  }
-
-  .closures-no-items {
-    text-align: center;
-    padding: 2rem 1rem;
-    color: hsl(var(--muted-foreground));
-    font-size: 0.875rem;
   }
 
   .closure-card {

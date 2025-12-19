@@ -8,9 +8,6 @@
   let { items = [] }: { items?: PlannedMaintenance[] } = $props();
 
   let isExpanded = $state(false);
-  let activeTab = $state<"starting-soon" | "weekend" | "coming-up">(
-    "starting-soon"
-  );
 
   /**
    * Parse date string as local time to avoid UTC shift.
@@ -110,109 +107,6 @@
     return null;
   }
 
-  /**
-   * Categorize maintenance items by timeframe.
-   */
-  const categorizedItems = $derived(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfWeekend = getNextWeekendStart();
-    const endOfWeekend = getNextWeekendEnd();
-
-    const startingSoon: PlannedMaintenance[] = [];
-    const weekend: PlannedMaintenance[] = [];
-    const comingUp: PlannedMaintenance[] = [];
-
-    items.forEach((item) => {
-      const startDate = parseLocalDate(item.start_date);
-      const startDay = new Date(
-        startDate.getFullYear(),
-        startDate.getMonth(),
-        startDate.getDate()
-      );
-      const daysDiff = Math.ceil(
-        (startDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      // Starting today or tomorrow (within ~24 hours)
-      if (daysDiff <= 1) {
-        startingSoon.push(item);
-      }
-      // This weekend
-      else if (startDate >= startOfWeekend && startDate <= endOfWeekend) {
-        weekend.push(item);
-      }
-      // Coming up (everything else)
-      else {
-        comingUp.push(item);
-      }
-    });
-
-    return { startingSoon, weekend, comingUp };
-  });
-
-  function getNextWeekendStart(): Date {
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    // If today is Saturday (6) or Sunday (0), use today/tomorrow
-    if (dayOfWeek === 6) {
-      return new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        0,
-        0,
-        0
-      );
-    }
-    if (dayOfWeek === 0) {
-      return new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        0,
-        0,
-        0
-      );
-    }
-    // Otherwise, find next Saturday
-    const daysUntilSaturday = 6 - dayOfWeek;
-    const saturday = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + daysUntilSaturday,
-      0,
-      0,
-      0
-    );
-    return saturday;
-  }
-
-  function getNextWeekendEnd(): Date {
-    const start = getNextWeekendStart();
-    const dayOfWeek = start.getDay();
-    // If start is Saturday, end is Sunday
-    if (dayOfWeek === 6) {
-      return new Date(
-        start.getFullYear(),
-        start.getMonth(),
-        start.getDate() + 1,
-        23,
-        59,
-        59
-      );
-    }
-    // If start is Sunday, end is same day
-    return new Date(
-      start.getFullYear(),
-      start.getMonth(),
-      start.getDate(),
-      23,
-      59,
-      59
-    );
-  }
-
   function formatDateRange(startDate: string, endDate: string): string {
     const start = parseLocalDate(startDate);
     const end = parseLocalDate(endDate);
@@ -247,49 +141,17 @@
   }
 
   const totalCount = $derived(items.length);
-  const currentItems = $derived(() => {
-    const cats = categorizedItems();
-    switch (activeTab) {
-      case "starting-soon":
-        return cats.startingSoon;
-      case "weekend":
-        return cats.weekend;
-      case "coming-up":
-        return cats.comingUp;
-      default:
-        return [];
-    }
-  });
-
-  const tabCounts = $derived(() => {
-    const cats = categorizedItems();
-    return {
-      "starting-soon": cats.startingSoon.length,
-      weekend: cats.weekend.length,
-      "coming-up": cats.comingUp.length,
-    };
-  });
 
   /**
-   * Tab configuration for consistent rendering.
+   * Sort items by start date (soonest first)
    */
-  const tabs = [
-    {
-      id: "starting-soon",
-      label: "Starting Soon",
-      ariaLabel: "View maintenance starting soon",
-    },
-    {
-      id: "weekend",
-      label: "This Weekend",
-      ariaLabel: "View weekend maintenance",
-    },
-    {
-      id: "coming-up",
-      label: "Coming Up",
-      ariaLabel: "View upcoming maintenance",
-    },
-  ] as const;
+  const sortedItems = $derived(() => {
+    return [...items].sort((a, b) => {
+      const startA = parseLocalDate(a.start_date);
+      const startB = parseLocalDate(b.start_date);
+      return startA.getTime() - startB.getTime();
+    });
+  });
 </script>
 
 {#if totalCount > 0}
@@ -324,49 +186,14 @@
 
     {#if isExpanded}
       <div class="maintenance-content" id="maintenance-content">
-        <!-- Maintenance Tabs -->
-        <div class="maintenance-tabs-wrapper">
-          <div
-            class="maintenance-tabs"
-            role="tablist"
-            aria-label="Maintenance timeframe"
-          >
-            {#each tabs as tab}
-              {@const count = tabCounts()[tab.id]}
-              <button
-                class={cn("maintenance-tab", activeTab === tab.id && "active")}
-                onclick={() => (activeTab = tab.id)}
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                aria-controls="maintenance-panel-{tab.id}"
-                id="maintenance-tab-{tab.id}"
-                aria-label="{tab.ariaLabel} ({count} items)"
-                type="button"
-              >
-                <span>{tab.label}</span>
-                <span class="maintenance-tab-count">{count}</span>
-              </button>
-            {/each}
-          </div>
-        </div>
-
-        <!-- Maintenance Items -->
-        <div
-          class="maintenance-items"
-          role="tabpanel"
-          id="maintenance-panel-{activeTab}"
-          aria-labelledby="maintenance-tab-{activeTab}"
-        >
-          {#if currentItems().length === 0}
+        <!-- All Maintenance Items (no tabs) -->
+        <div class="maintenance-items">
+          {#if sortedItems().length === 0}
             <p class="text-sm text-muted-foreground p-4">
-              No {activeTab === "starting-soon"
-                ? "imminent"
-                : activeTab === "weekend"
-                  ? "weekend"
-                  : "upcoming"} maintenance scheduled.
+              No planned maintenance scheduled.
             </p>
           {:else}
-            {#each currentItems() as item}
+            {#each sortedItems() as item}
               {@const closureBadge = getClosureBadge(item)}
               {@const startTime = formatTime(item.start_time)}
               <article class="maintenance-item">
@@ -428,3 +255,171 @@
     {/if}
   </section>
 {/if}
+
+<style>
+  .maintenance-widget {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .maintenance-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .maintenance-toggle:hover {
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  .maintenance-toggle-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .maintenance-toggle-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: hsl(var(--primary));
+  }
+
+  .maintenance-toggle-title {
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+
+  .maintenance-toggle-badge {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  .maintenance-toggle-chevron {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: hsl(var(--muted-foreground));
+    transition: transform 0.2s ease;
+  }
+
+  .maintenance-content {
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .maintenance-items {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .maintenance-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .maintenance-item:last-child {
+    border-bottom: none;
+  }
+
+  .maintenance-item-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .maintenance-item-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .maintenance-item-stations {
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    margin: 0 0 0.375rem 0;
+    line-height: 1.3;
+  }
+
+  .maintenance-item-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .maintenance-item-datetime {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .maintenance-item-date {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+  }
+
+  .maintenance-item-start-time {
+    display: block;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .maintenance-item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .maintenance-item-closure-badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  .maintenance-item-closure-badge.nightly {
+    background: hsl(220 90% 56% / 0.15);
+    color: hsl(220 90% 56%);
+  }
+
+  .maintenance-item-closure-badge.weekend {
+    background: hsl(280 70% 56% / 0.15);
+    color: hsl(280 70% 56%);
+  }
+
+  .maintenance-item-link {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: hsl(var(--primary));
+    text-decoration: none;
+  }
+
+  .maintenance-item-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Dark mode adjustments */
+  :global(.dark) .maintenance-item-closure-badge.nightly {
+    background: hsl(220 90% 56% / 0.2);
+    color: hsl(220 90% 70%);
+  }
+
+  :global(.dark) .maintenance-item-closure-badge.weekend {
+    background: hsl(280 70% 56% / 0.2);
+    color: hsl(280 70% 70%);
+  }
+</style>
