@@ -17,6 +17,7 @@
     getNextScheduledDeparturesForStop,
     type NextDepartureInfo,
   } from "$lib/services/schedule-lookup";
+  import { getRouteName } from "$lib/data/route-names";
   import LiveSignalIcon from "./LiveSignalIcon.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -192,6 +193,7 @@
 
   // Schedule lookup state
   let scheduledDepartures = $state<Map<string, NextDepartureInfo>>(new Map());
+  let routesWithNoService = $state<Set<string>>(new Set());
   let scheduleLoaded = $state(false);
 
   // Get the routes this stop serves from saved stops
@@ -212,11 +214,18 @@
 
   // Scheduled departures for routes without real-time data
   let missingRoutesSchedule = $derived.by(() => {
-    if (!scheduleLoaded) return new Map<string, NextDepartureInfo>();
-    const result = new Map<string, NextDepartureInfo>();
+    if (!scheduleLoaded) return new Map<string, NextDepartureInfo | null>();
+    const result = new Map<string, NextDepartureInfo | null>();
+    // Include routes with scheduled departures
     for (const [routeId, info] of scheduledDepartures.entries()) {
       if (!routesWithPredictions.has(routeId)) {
         result.set(routeId, info);
+      }
+    }
+    // Include routes with no service (show "No Service")
+    for (const routeId of routesWithNoService) {
+      if (!routesWithPredictions.has(routeId)) {
+        result.set(routeId, null);
       }
     }
     return result;
@@ -227,10 +236,20 @@
     if (!eta.isLoading && !scheduleLoaded && routesNeedingSchedule.length > 0) {
       loadScheduleData().then(() => {
         if (stopRoutes.length > 0) {
-          scheduledDepartures = getNextScheduledDeparturesForStop(
+          const departures = getNextScheduledDeparturesForStop(
             eta.stopId,
             stopRoutes
           );
+          scheduledDepartures = departures;
+
+          // Track routes that have no service (not in departures map)
+          const noService = new Set<string>();
+          for (const routeId of stopRoutes) {
+            if (!departures.has(routeId)) {
+              noService.add(routeId);
+            }
+          }
+          routesWithNoService = noService;
         }
         scheduleLoaded = true;
       });
@@ -323,21 +342,29 @@
         {emptyState.title}
       </p>
       <p class="text-xs text-muted-foreground/70">{emptyState.subtitle}</p>
-      
+
       <!-- Scheduled Departures Section -->
       {#if scheduleLoaded && scheduledDepartures.size > 0}
         <div class="w-full mt-2 pt-3 border-t border-border/50">
-          <div class="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70 mb-3">
+          <div
+            class="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70 mb-3"
+          >
             <Calendar class="h-3.5 w-3.5" />
             <span>Scheduled first departures</span>
           </div>
           <div class="space-y-2">
             {#each [...scheduledDepartures.entries()] as [routeId, departure]}
-              <div class="flex items-center justify-between px-3 py-2 bg-muted/30 rounded-lg">
+              <div
+                class="flex items-center justify-between px-3 py-2 bg-muted/30 rounded-lg"
+              >
                 <div class="flex items-center gap-2">
                   <RouteBadge route={routeId} size="sm" />
                   <span class="text-xs text-muted-foreground">
-                    {departure.dayType === 'weekday' ? 'Weekday' : departure.dayType === 'Saturday' ? 'Saturday' : 'Sunday'}
+                    {departure.dayType === "weekday"
+                      ? "Weekday"
+                      : departure.dayType === "Saturday"
+                        ? "Saturday"
+                        : "Sunday"}
                   </span>
                 </div>
                 <div class="text-right">
@@ -345,7 +372,9 @@
                     {departure.time}
                   </span>
                   {#if !departure.isToday}
-                    <span class="text-xs text-muted-foreground ml-1">(tomorrow)</span>
+                    <span class="text-xs text-muted-foreground ml-1"
+                      >(tomorrow)</span
+                    >
                   {/if}
                 </div>
               </div>
@@ -355,8 +384,12 @@
       {:else if !scheduleLoaded && stopRoutes.length > 0}
         <!-- Loading schedule data -->
         <div class="w-full mt-2 pt-3 border-t border-border/50">
-          <div class="flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
-            <div class="h-3 w-3 border-2 border-muted-foreground/30 border-t-muted-foreground/70 rounded-full animate-spin"></div>
+          <div
+            class="flex items-center justify-center gap-2 text-xs text-muted-foreground/60"
+          >
+            <div
+              class="h-3 w-3 border-2 border-muted-foreground/30 border-t-muted-foreground/70 rounded-full animate-spin"
+            ></div>
             <span>Loading schedule...</span>
           </div>
         </div>
@@ -372,7 +405,7 @@
           </p>
         {/if}
       {/if}
-      
+
       {#if onRefresh}
         <Button
           variant="outline"
@@ -493,30 +526,109 @@
         </div>
       {/each}
     </div>
-    
+
     <!-- Routes without real-time data - show scheduled times -->
     {#if scheduleLoaded && missingRoutesSchedule.size > 0}
-      <div class="border-t border-border/50 px-4 py-3 bg-muted/20">
-        <div class="flex items-center gap-1.5 text-xs text-muted-foreground/70 mb-2">
-          <Calendar class="h-3.5 w-3.5" />
-          <span>Scheduled (no live data)</span>
+      {@const firstDepartureWithTime = [...missingRoutesSchedule.values()].find(
+        (d) => d !== null
+      )}
+      {@const dayName = new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+      })}
+      {@const scheduleLabel =
+        firstDepartureWithTime?.dayType === "Weekday"
+          ? `Weekday (${dayName})`
+          : firstDepartureWithTime?.dayType === "Saturday"
+            ? "Saturday"
+            : firstDepartureWithTime?.dayType === "Sunday"
+              ? "Sunday"
+              : dayName}
+      <div class="border-t border-border/50">
+        <!-- Section Header -->
+        <div class="px-4 py-2 bg-muted/30 border-b border-border/30">
+          <div
+            class="flex items-center gap-1.5 text-xs text-muted-foreground/70"
+          >
+            <Calendar class="h-3.5 w-3.5" />
+            <span>Scheduled Next Bus · {scheduleLabel}</span>
+          </div>
         </div>
-        <div class="space-y-2">
+
+        <!-- Scheduled Route Cards -->
+        <div class="divide-y divide-border/50">
           {#each [...missingRoutesSchedule.entries()] as [routeId, departure]}
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <RouteBadge route={routeId} size="sm" />
-                <span class="text-xs text-muted-foreground">
-                  First bus {departure.dayType === 'weekday' ? '' : departure.dayType === 'Saturday' ? '(Sat)' : '(Sun)'}
-                </span>
+            {@const routeName = getRouteName(routeId)}
+            <div class="px-4 py-3 bg-muted/10">
+              <!-- Mobile: Vertical layout -->
+              <div class="sm:hidden">
+                <!-- Row 1: Route Badge + Route Name -->
+                <div class="flex items-start gap-3">
+                  <RouteBadge route={routeId} size="lg" class="flex-shrink-0" />
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-foreground leading-snug">
+                      {routeName || routeId}
+                    </p>
+                    <p class="text-xs text-muted-foreground mt-0.5">
+                      {crossStreets}
+                    </p>
+                  </div>
+                </div>
+                <!-- Row 2: Time (right aligned, matching live ETA style) -->
+                <div class="flex items-baseline justify-end gap-2 mt-2">
+                  {#if departure}
+                    <span
+                      class="text-5xl font-bold text-foreground/70 tabular-nums"
+                    >
+                      {departure.time}
+                    </span>
+                    {#if !departure.isToday}
+                      <span class="text-lg text-muted-foreground">(tmrw)</span>
+                    {/if}
+                  {:else}
+                    <span
+                      class="text-2xl font-semibold text-muted-foreground/60"
+                    >
+                      No Service
+                    </span>
+                  {/if}
+                </div>
               </div>
-              <div class="text-right">
-                <span class="text-sm font-medium text-foreground/70">
-                  {departure.time}
-                </span>
-                {#if !departure.isToday}
-                  <span class="text-xs text-muted-foreground ml-1">(tomorrow)</span>
-                {/if}
+
+              <!-- Desktop: Horizontal layout -->
+              <div class="hidden sm:flex items-center justify-between gap-4">
+                <!-- Left: Route Badge + Route Name -->
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <RouteBadge route={routeId} size="lg" class="flex-shrink-0" />
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-medium text-foreground leading-snug">
+                      {routeName || routeId}
+                    </p>
+                    <p class="text-xs text-muted-foreground mt-0.5">
+                      {crossStreets}
+                    </p>
+                  </div>
+                </div>
+                <!-- Right: Time -->
+                <div class="flex items-baseline gap-1 flex-shrink-0">
+                  {#if departure}
+                    <span
+                      class="text-4xl font-bold text-foreground/70 tabular-nums"
+                    >
+                      {departure.time}
+                    </span>
+                    {#if !departure.isToday}
+                      <span class="text-base text-muted-foreground ml-1"
+                        >(tmrw)</span
+                      >
+                    {/if}
+                  {:else}
+                    <span
+                      class="text-xl font-semibold text-muted-foreground/60"
+                    >
+                      No Service
+                    </span>
+                  {/if}
+                </div>
               </div>
             </div>
           {/each}

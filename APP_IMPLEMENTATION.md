@@ -30,22 +30,22 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Feature Availability
 
-| Feature                       | Version A | Version B |
-| ----------------------------- | --------- | --------- |
-| Real-time alerts              | ✅        | ✅        |
-| WebAuthn authentication       | ✅        | ✅        |
-| Planned maintenance widget    | ✅        | ✅        |
-| Accessibility settings        | ❌        | ✅        |
-| Visibility-aware polling      | ❌        | ✅        |
-| Stop search (9,346 stops)     | ❌        | ✅        |
-| Stop bookmarks                | ❌        | ✅        |
-| Nearby stops (geolocation)    | ❌        | ✅        |
-| Location permission settings  | ❌        | ✅        |
-| ETA predictions               | ❌        | ✅        |
-| GTFS scheduled departures     | ❌        | ✅        |
-| Route Browser                 | ❌        | ✅        |
-| Weather warnings              | ❌        | ✅        |
-| French language (i18n)        | ❌        | ✅        |
+| Feature                      | Version A | Version B |
+| ---------------------------- | --------- | --------- |
+| Real-time alerts             | ✅        | ✅        |
+| WebAuthn authentication      | ✅        | ✅        |
+| Planned maintenance widget   | ✅        | ✅        |
+| Accessibility settings       | ❌        | ✅        |
+| Visibility-aware polling     | ❌        | ✅        |
+| Stop search (9,346 stops)    | ❌        | ✅        |
+| Stop bookmarks               | ❌        | ✅        |
+| Nearby stops (geolocation)   | ❌        | ✅        |
+| Location permission settings | ❌        | ✅        |
+| ETA predictions              | ❌        | ✅        |
+| GTFS scheduled departures    | ❌        | ✅        |
+| Route Browser                | ❌        | ✅        |
+| Weather warnings             | ❌        | ✅        |
+| French language (i18n)       | ❌        | ✅        |
 
 ---
 
@@ -181,12 +181,22 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
 
-| File                       | Status | Purpose                                                                        |
-| -------------------------- | ------ | ------------------------------------------------------------------------------ |
-| `ETABadge.svelte`          | ✅     | Individual arrival time badge with urgency                                     |
-| `ETACard.svelte`           | ✅     | Route-grouped ETA card, NTAS direction parsing, vehicle-type aware empty state |
-| `ETAWidget.svelte`         | ✅     | Homepage widget showing bookmarked stop ETAs                                   |
-| `ETADirectionSlide.svelte` | ✅     | Direction carousel slide for ETA swiper 🆕                                     |
+| File                       | Status | Purpose                                                                            |
+| -------------------------- | ------ | ---------------------------------------------------------------------------------- |
+| `ETABadge.svelte`          | ✅     | Individual arrival time badge with urgency                                         |
+| `ETACard.svelte`           | ✅     | Route-grouped ETA card w/ live times + GTFS scheduled first bus for routes w/o ETA |
+| `ETAWidget.svelte`         | ✅     | Homepage widget showing bookmarked stop ETAs                                       |
+| `ETADirectionSlide.svelte` | ✅     | Direction carousel slide for ETA swiper 🆕                                         |
+| `LiveSignalIcon.svelte`    | ✅     | Animated signal icon for real-time predictions                                     |
+
+**ETACard Features**:
+
+- **Live ETA Display**: Real-time predictions with live signal icon, route badge, direction/destination
+- **Scheduled First Bus**: For routes without live data, shows GTFS scheduled first bus times
+- **No Service Indicator**: Shows "No Service" for routes that don't run on current day (e.g., 939 on weekends)
+- **Day Type Header**: "Scheduled Next Bus · Weekday (Friday)" with current day name
+- **Responsive Layout**: Vertical on mobile (5xl time), horizontal on desktop (4xl time)
+- **Vehicle-Type Empty State**: Context-aware messages for buses vs subway
 
 ### Weather Components (`src/lib/components/weather/`) 🆕 **Version B Only**
 
@@ -237,11 +247,19 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Services (`src/lib/services/`)
 
-| File                  | Status | Purpose                                          | Version |
-| --------------------- | ------ | ------------------------------------------------ | ------- |
-| `webauthn.ts`         | ✅     | WebAuthn browser API wrapper                     | A & B   |
-| `storage.ts`          | ✅     | IndexedDB storage for stops, routes, preferences | **B**   |
-| `schedule-lookup.ts`  | ✅     | GTFS schedule lookup for off-hours ETA display   | **B**   |
+| File                 | Status | Purpose                                                                | Version |
+| -------------------- | ------ | ---------------------------------------------------------------------- | ------- |
+| `webauthn.ts`        | ✅     | WebAuthn browser API wrapper                                           | A & B   |
+| `storage.ts`         | ✅     | IndexedDB storage for stops, routes, preferences                       | **B**   |
+| `schedule-lookup.ts` | ✅     | GTFS schedule lookup with holiday detection, first bus times, day type | **B**   |
+
+**Schedule Lookup Features (`schedule-lookup.ts`)**:
+
+- **GTFS Data**: 9,270 stops with first bus times (weekday/saturday/sunday)
+- **Day Type Detection**: Weekday, Saturday, Sunday (auto-detected)
+- **Holiday Handling**: TTC holidays use Sunday schedule (2025-2026 holidays defined)
+- **No Service Detection**: Routes without weekend service show "No Service"
+- **12-Hour Format**: Times displayed as "5:21 AM" format
 
 ### Utilities (`src/lib/utils/`) 🆕 **Version B Only**
 
@@ -266,12 +284,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
-| File                          | Status | Purpose                                                         |
-| ----------------------------- | ------ | --------------------------------------------------------------- |
-| `transform-gtfs.js`           | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT |
-| `generate-icons.js`           | ✅     | Generate PWA icons from source                                  |
-| `translate-i18n.cjs`          | ✅     | Sync i18n source files to translations folder, DeepL API        |
-| `process-gtfs-schedules.ts`   | ✅     | Process TTC GTFS data to extract first departure times          |
+| File                        | Status | Purpose                                                         |
+| --------------------------- | ------ | --------------------------------------------------------------- |
+| `transform-gtfs.js`         | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT |
+| `generate-icons.js`         | ✅     | Generate PWA icons from source                                  |
+| `translate-i18n.cjs`        | ✅     | Sync i18n source files to translations folder, DeepL API        |
+| `process-gtfs-schedules.ts` | ✅     | Process TTC GTFS data to extract first departure times          |
 
 ### Migrations (`supabase/migrations/`)
 
