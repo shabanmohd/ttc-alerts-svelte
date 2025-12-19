@@ -30,21 +30,22 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Feature Availability
 
-| Feature                      | Version A | Version B |
-| ---------------------------- | --------- | --------- |
-| Real-time alerts             | ✅        | ✅        |
-| WebAuthn authentication      | ✅        | ✅        |
-| Planned maintenance widget   | ✅        | ✅        |
-| Accessibility settings       | ❌        | ✅        |
-| Visibility-aware polling     | ❌        | ✅        |
-| Stop search (9,346 stops)    | ❌        | ✅        |
-| Stop bookmarks               | ❌        | ✅        |
-| Nearby stops (geolocation)   | ❌        | ✅        |
-| Location permission settings | ❌        | ✅        |
-| ETA predictions              | ❌        | ✅        |
-| Route Browser                | ❌        | ✅        |
-| Weather warnings             | ❌        | ✅        |
-| French language (i18n)       | ❌        | ✅        |
+| Feature                       | Version A | Version B |
+| ----------------------------- | --------- | --------- |
+| Real-time alerts              | ✅        | ✅        |
+| WebAuthn authentication       | ✅        | ✅        |
+| Planned maintenance widget    | ✅        | ✅        |
+| Accessibility settings        | ❌        | ✅        |
+| Visibility-aware polling      | ❌        | ✅        |
+| Stop search (9,346 stops)     | ❌        | ✅        |
+| Stop bookmarks                | ❌        | ✅        |
+| Nearby stops (geolocation)    | ❌        | ✅        |
+| Location permission settings  | ❌        | ✅        |
+| ETA predictions               | ❌        | ✅        |
+| GTFS scheduled departures     | ❌        | ✅        |
+| Route Browser                 | ❌        | ✅        |
+| Weather warnings              | ❌        | ✅        |
+| French language (i18n)        | ❌        | ✅        |
 
 ---
 
@@ -148,18 +149,20 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Static (`static/`)
 
-| File                  | Status | Purpose                                                             |
-| --------------------- | ------ | ------------------------------------------------------------------- |
-| `manifest.json`       | ✅     | PWA manifest (Version B: "TTC Alerts Beta")                         |
-| `sw.js`               | ✅     | Service worker (Version B: beta cache prefix)                       |
-| `icons/*`             | ✅     | All PWA icons (72-512px)                                            |
-| `data/ttc-stops.json` | ✅     | TTC stops database (9,346 stops, 184 subway w/ sequence) 🆕 **V-B** |
+| File                      | Status | Purpose                                                             |
+| ------------------------- | ------ | ------------------------------------------------------------------- |
+| `manifest.json`           | ✅     | PWA manifest (Version B: "TTC Alerts Beta")                         |
+| `sw.js`                   | ✅     | Service worker (Version B: beta cache prefix)                       |
+| `icons/*`                 | ✅     | All PWA icons (72-512px)                                            |
+| `data/ttc-stops.json`     | ✅     | TTC stops database (9,346 stops, 184 subway w/ sequence) 🆕 **V-B** |
+| `data/ttc-schedules.json` | ✅     | First departure schedules (weekday/sat/sun) 🆕 **V-B**              |
 
 ### Data (`src/lib/data/`) 🆕 **Version B Only**
 
-| File          | Status | Purpose                                                           |
-| ------------- | ------ | ----------------------------------------------------------------- |
-| `stops-db.ts` | ✅     | IndexedDB layer with Dexie.js, GTFS direction/sequence for subway |
+| File             | Status | Purpose                                                           |
+| ---------------- | ------ | ----------------------------------------------------------------- |
+| `stops-db.ts`    | ✅     | IndexedDB layer with Dexie.js, GTFS direction/sequence for subway |
+| `route-names.ts` | ✅     | Comprehensive TTC route name lookup (220+ routes)                 |
 
 ### Stops Components (`src/lib/components/stops/`) 🆕 **Version B Only**
 
@@ -234,10 +237,11 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Services (`src/lib/services/`)
 
-| File          | Status | Purpose                                          | Version |
-| ------------- | ------ | ------------------------------------------------ | ------- |
-| `webauthn.ts` | ✅     | WebAuthn browser API wrapper                     | A & B   |
-| `storage.ts`  | ✅     | IndexedDB storage for stops, routes, preferences | **B**   |
+| File                  | Status | Purpose                                          | Version |
+| --------------------- | ------ | ------------------------------------------------ | ------- |
+| `webauthn.ts`         | ✅     | WebAuthn browser API wrapper                     | A & B   |
+| `storage.ts`          | ✅     | IndexedDB storage for stops, routes, preferences | **B**   |
+| `schedule-lookup.ts`  | ✅     | GTFS schedule lookup for off-hours ETA display   | **B**   |
 
 ### Utilities (`src/lib/utils/`) 🆕 **Version B Only**
 
@@ -262,11 +266,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
-| File                 | Status | Purpose                                                         |
-| -------------------- | ------ | --------------------------------------------------------------- |
-| `transform-gtfs.js`  | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT |
-| `generate-icons.js`  | ✅     | Generate PWA icons from source                                  |
-| `translate-i18n.cjs` | ✅     | Sync i18n source files to translations folder, DeepL API        |
+| File                          | Status | Purpose                                                         |
+| ----------------------------- | ------ | --------------------------------------------------------------- |
+| `transform-gtfs.js`           | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT |
+| `generate-icons.js`           | ✅     | Generate PWA icons from source                                  |
+| `translate-i18n.cjs`          | ✅     | Sync i18n source files to translations folder, DeepL API        |
+| `process-gtfs-schedules.ts`   | ✅     | Process TTC GTFS data to extract first departure times          |
 
 ### Migrations (`supabase/migrations/`)
 
