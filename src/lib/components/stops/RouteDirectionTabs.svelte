@@ -85,22 +85,22 @@
     // "Towards Finch and Morningside" -> "Finch/Morningside"
     if (direction.startsWith("Towards ")) {
       let terminal = direction.replace("Towards ", "");
-      
+
       // Shorten common suffixes
       terminal = terminal.replace(" Station", " Stn");
       terminal = terminal.replace(" and ", "/");
-      
+
       // Specific shortenings for known long names
       if (terminal === "Sheppard-Yonge") return "Shep-Yonge";
       if (terminal === "Humber College") return "Humber";
       if (terminal === "Finch West") return "Finch W";
       if (terminal.includes("Metropolitan Centre")) return "VMC";
-      
+
       // Truncate if still too long
       if (terminal.length > 15) {
         terminal = terminal.substring(0, 14) + "…";
       }
-      
+
       return terminal;
     }
 
@@ -116,12 +116,12 @@
     if (DIRECTION_COLORS[direction]) {
       return DIRECTION_COLORS[direction];
     }
-    
+
     // For "Towards X" labels, use a neutral accent color
     if (direction.startsWith("Towards ")) {
       return "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300";
     }
-    
+
     return "bg-muted text-muted-foreground";
   }
 </script>
