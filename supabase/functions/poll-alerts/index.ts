@@ -1,9 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// v52: Add safeguard to prevent mass-resolving accessibility threads when API returns empty/partial data
-// If accessibility array is missing/empty but we have existing accessibility threads, skip auto-resolve
-const FUNCTION_VERSION = 52;
+// v53: Improved auto-resolve logic - track disruption routes separately from RSZ routes
+// This prevents RSZ alerts from blocking auto-resolve of disruption threads on the same line
+const FUNCTION_VERSION = 53;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -176,11 +176,21 @@ serve(async (req) => {
       const ttcRes = await fetch('https://alerts.ttc.ca/api/alerts/live-alerts', { headers: { 'Accept': 'application/json' } });
       if (ttcRes.ok) {
         const ttcData = await ttcRes.json();
-        const activeRoutes = new Set<string>();
+        const activeRoutes = new Set<string>(); // All routes with any alert
+        const activeDisruptionRoutes = new Set<string>(); // Routes with NO_SERVICE, DETOUR, etc. (not RSZ)
         
         if (ttcData.routes?.length) {
           for (const a of ttcData.routes) {
-            if (a.route) { activeRoutes.add(a.route.toString()); if (/^[1-4]$/.test(a.route.toString())) activeRoutes.add(`Line ${a.route}`); }
+            if (a.route) { 
+              activeRoutes.add(a.route.toString()); 
+              if (/^[1-4]$/.test(a.route.toString())) activeRoutes.add(`Line ${a.route}`); 
+              
+              // Track disruption routes separately (exclude RSZ = SIGNIFICANT_DELAYS)
+              if (['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR'].includes(a.effect)) {
+                activeDisruptionRoutes.add(a.route.toString());
+                if (/^[1-4]$/.test(a.route.toString())) activeDisruptionRoutes.add(`Line ${a.route}`);
+              }
+            }
             const isPlanned = a.alertType === 'Planned' && ['NO_SERVICE', 'REDUCED_SERVICE'].includes(a.effect);
             if (!isPlanned && ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'SIGNIFICANT_DELAYS', 'ACCESSIBILITY_ISSUE'].includes(a.effect) && a.route && a.headerText) {
               ttcApiAlerts.push(a);
@@ -252,11 +262,18 @@ serve(async (req) => {
               }
               continue;
             }
+            
+            // For disruption threads (non-accessibility, non-RSZ), check against activeDisruptionRoutes
+            // This ensures disruption threads auto-resolve even if RSZ alerts exist on the same line
             const isStillActive = threadRoutes.some((r: string) => {
-              if (activeRoutes.has(r)) return true;
+              // First check if there's an active disruption on this route
+              if (activeDisruptionRoutes.has(r)) return true;
               const num = r.match(/^(\d+)/)?.[1];
-              if (num && activeRoutes.has(num)) return true;
-              if (r.toLowerCase().startsWith('line')) { const ln = r.match(/\d+/)?.[0]; if (ln && (activeRoutes.has(ln) || activeRoutes.has(`Line ${ln}`))) return true; }
+              if (num && activeDisruptionRoutes.has(num)) return true;
+              if (r.toLowerCase().startsWith('line')) { 
+                const ln = r.match(/\d+/)?.[0]; 
+                if (ln && (activeDisruptionRoutes.has(ln) || activeDisruptionRoutes.has(`Line ${ln}`))) return true; 
+              }
               return false;
             });
             if (!isStillActive) {
