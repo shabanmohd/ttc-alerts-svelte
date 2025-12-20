@@ -429,24 +429,30 @@ function getSubwayDirectionGroups(stops: TTCStop[], routeNumber: string): Direct
 
 /**
  * Group bus/streetcar stops by their direction field or name
+ * Shared stops (no direction) are included in ALL direction groups
  */
 function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): DirectionGroup[] {
 	const directionMap = new Map<DirectionLabel, TTCStop[]>();
+	const sharedStops: TTCStop[] = []; // Stops without direction (shared between directions)
 
 	for (const stop of stops) {
 		let dir: DirectionLabel;
 		if (stop.dir) {
 			dir = normalizeDirection(stop.dir);
+			if (!directionMap.has(dir)) {
+				directionMap.set(dir, []);
+			}
+			directionMap.get(dir)!.push(stop);
 		} else if (stop.type === 'subway') {
 			dir = extractDirectionFromName(stop.name);
+			if (!directionMap.has(dir)) {
+				directionMap.set(dir, []);
+			}
+			directionMap.get(dir)!.push(stop);
 		} else {
-			dir = DIRECTION_LABELS.UNKNOWN;
+			// Shared stop - will be added to all direction groups
+			sharedStops.push(stop);
 		}
-
-		if (!directionMap.has(dir)) {
-			directionMap.set(dir, []);
-		}
-		directionMap.get(dir)!.push(stop);
 	}
 
 	const groups: DirectionGroup[] = [];
@@ -454,20 +460,32 @@ function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): Direction
 		DIRECTION_LABELS.EASTBOUND,
 		DIRECTION_LABELS.WESTBOUND,
 		DIRECTION_LABELS.NORTHBOUND,
-		DIRECTION_LABELS.SOUTHBOUND,
-		DIRECTION_LABELS.UNKNOWN
+		DIRECTION_LABELS.SOUTHBOUND
 	];
 
 	for (const dir of directionOrder) {
 		const dirStops = directionMap.get(dir);
 		if (dirStops && dirStops.length > 0) {
-			const sortedStops = sortStopsByPosition(dirStops, dir, routeNumber);
+			// Combine direction-specific stops with shared stops
+			const allDirStops = [...dirStops, ...sharedStops];
+			const sortedStops = sortStopsByPosition(allDirStops, dir, routeNumber);
 			groups.push({
 				direction: dir,
 				stops: sortedStops,
 				colorClass: DIRECTION_COLORS[dir]
 			});
 		}
+	}
+
+	// If no direction-specific stops found, create a single "All Stops" group
+	if (groups.length === 0 && (stops.length > 0 || sharedStops.length > 0)) {
+		const allStops = [...stops];
+		const sortedStops = sortStopsByPosition(allStops, DIRECTION_LABELS.UNKNOWN, routeNumber);
+		groups.push({
+			direction: DIRECTION_LABELS.UNKNOWN,
+			stops: sortedStops,
+			colorClass: DIRECTION_COLORS[DIRECTION_LABELS.UNKNOWN]
+		});
 	}
 
 	return groups;
