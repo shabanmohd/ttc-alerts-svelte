@@ -9,24 +9,25 @@
     CircleDot,
   } from "lucide-svelte";
 
-  // Props
+  // Props - now accepts string labels (destination-based like "Towards Kennedy Station")
   let {
     directions = [],
     selected,
     onSelect,
-    stopCounts = {} as Record<DirectionLabel, number>,
+    stopCounts = {} as Record<string, number>,
   }: {
-    directions: DirectionLabel[];
-    selected: DirectionLabel;
-    onSelect: (direction: DirectionLabel) => void;
-    stopCounts?: Record<DirectionLabel, number>;
+    directions: string[];
+    selected: string;
+    onSelect: (direction: string) => void;
+    stopCounts?: Record<string, number>;
   } = $props();
 
   /**
-   * Get icon component for direction
+   * Get icon component for direction label
+   * Handles both cardinal directions and "Towards X" style labels
    */
-  function getDirectionIcon(direction: DirectionLabel) {
-    // Cardinal directions
+  function getDirectionIcon(direction: string) {
+    // Cardinal directions (legacy, for fallback)
     switch (direction) {
       case "Eastbound":
         return ArrowRight;
@@ -36,6 +37,11 @@
         return ArrowUp;
       case "Southbound":
         return ArrowDown;
+    }
+
+    // For "Towards X" labels, use generic right arrow (destination indicator)
+    if (direction.startsWith("Towards ")) {
+      return ArrowRight;
     }
 
     // Subway terminal directions - map to appropriate arrows
@@ -57,9 +63,10 @@
 
   /**
    * Get short label for mobile display
+   * Handles both cardinal directions and "Towards X" labels
    */
-  function getShortLabel(direction: DirectionLabel): string {
-    // Cardinal directions
+  function getShortLabel(direction: string): string {
+    // Cardinal directions (legacy fallback)
     switch (direction) {
       case "Eastbound":
         return "East";
@@ -73,21 +80,49 @@
         return "All";
     }
 
-    // Subway terminal names - extract terminal station
-    // "Towards VMC" -> "VMC"
-    // "Towards Kennedy" -> "Kennedy"
-    // "Towards Sheppard-Yonge" -> "Shep-Yonge"
+    // Extract destination from "Towards X" labels
+    // "Towards Kennedy Station" -> "Kennedy Stn"
+    // "Towards Finch and Morningside" -> "Finch/Morningside"
     if (direction.startsWith("Towards ")) {
-      const terminal = direction.replace("Towards ", "");
-      // Shorten long station names
+      let terminal = direction.replace("Towards ", "");
+      
+      // Shorten common suffixes
+      terminal = terminal.replace(" Station", " Stn");
+      terminal = terminal.replace(" and ", "/");
+      
+      // Specific shortenings for known long names
       if (terminal === "Sheppard-Yonge") return "Shep-Yonge";
       if (terminal === "Humber College") return "Humber";
       if (terminal === "Finch West") return "Finch W";
-      if (terminal === "Don Mills") return "Don Mills";
+      if (terminal.includes("Metropolitan Centre")) return "VMC";
+      
+      // Truncate if still too long
+      if (terminal.length > 15) {
+        terminal = terminal.substring(0, 14) + "…";
+      }
+      
       return terminal;
     }
 
     return direction;
+  }
+
+  /**
+   * Get color class for direction label
+   * Falls back to neutral color for destination-based labels
+   */
+  function getColorClass(direction: string): string {
+    // Check standard direction colors first
+    if (DIRECTION_COLORS[direction]) {
+      return DIRECTION_COLORS[direction];
+    }
+    
+    // For "Towards X" labels, use a neutral accent color
+    if (direction.startsWith("Towards ")) {
+      return "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300";
+    }
+    
+    return "bg-muted text-muted-foreground";
   }
 </script>
 
@@ -95,7 +130,7 @@
   {#each directions as direction (direction)}
     {@const Icon = getDirectionIcon(direction)}
     {@const isSelected = selected === direction}
-    {@const colorClass = DIRECTION_COLORS[direction]}
+    {@const colorClass = getColorClass(direction)}
     {@const count = stopCounts[direction] || 0}
 
     <button

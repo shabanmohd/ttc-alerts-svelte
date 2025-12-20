@@ -1,0 +1,874 @@
+{
+  "7": {
+    "south": "Bathurst Station",
+    "north": "Steeles"
+  },
+  "8": {
+    "north": "Warden Station",
+    "south": "Hennick Bridgepoint Hospital"
+  },
+  "9": {
+    "south": "Warden Station",
+    "north": "Scarborough Centre Stn"
+  },
+  "10": {
+    "east": "Victoria Park",
+    "west": "Don Mills Station"
+  },
+  "11": {
+    "south": "Davisville Station",
+    "north": "Steeles"
+  },
+  "12": {
+    "east": "Kennedy Station",
+    "west": "Victoria Park Station"
+  },
+  "13": {
+    "south": "Queen's Park",
+    "north": "Eglinton Station"
+  },
+  "14": {
+    "east": "Davisville Station",
+    "west": "Caledonia"
+  },
+  "15": {
+    "west": "Sherway Gardens",
+    "east": "Royal York Station"
+  },
+  "16": {
+    "south": "Warden Station",
+    "north": "Scarborough Centre Stn"
+  },
+  "17": {
+    "south": "Warden Station",
+    "north": "Steeles"
+  },
+  "19": {
+    "south": "Union Station",
+    "north": "Dupont"
+  },
+  "20": {
+    "east": "Kennedy Station",
+    "west": "Main Street Station"
+  },
+  "21": {
+    "south": "Kennedy Station",
+    "north": "Steeles"
+  },
+  "22": {
+    "south": "Queen",
+    "north": "Coxwell Station"
+  },
+  "23": {
+    "south": "Main Street Station",
+    "north": "St Clair"
+  },
+  "24": {
+    "south": "Victoria Park Station",
+    "north": "Steeles"
+  },
+  "25": {
+    "south": "Broadview Station",
+    "north": "Steeles"
+  },
+  "26": {
+    "east": "St George Station",
+    "west": "Jane Station"
+  },
+  "28": {
+    "east": "Brick Works",
+    "west": "Davisville Station"
+  },
+  "29": {
+    "south": "Exhibition (Princes' Gates)",
+    "north": "Wilson Station"
+  },
+  "30": {
+    "south": "High Park Station",
+    "north": "Runnymede"
+  },
+  "31": {
+    "south": "Queen & Eastern",
+    "north": "Coxwell Station"
+  },
+  "32": {
+    "east": "Eglinton Station",
+    "west": "Renforth Station"
+  },
+  "33": {
+    "south": "St Clair West Station",
+    "north": "Eglinton (Roselawn)"
+  },
+  "34": {
+    "east": "Kennedy Station",
+    "west": "Eglinton Station"
+  },
+  "35": {
+    "south": "Jane Station",
+    "north": "Pioneer Village Station"
+  },
+  "36": {
+    "east": "Finch Station",
+    "west": "Finch West Station"
+  },
+  "37": {
+    "south": "Islington Station",
+    "north": "Humber College"
+  },
+  "38": {
+    "east": "Rouge Hill GO Stn",
+    "west": "Kennedy Station"
+  },
+  "39": {
+    "east": "Old Finch and Morningview",
+    "west": "Finch Station"
+  },
+  "40": {
+    "east": "Dundas West Station",
+    "west": "Kipling Station"
+  },
+  "41": {
+    "south": "Keele Station",
+    "north": "Pioneer Village Station"
+  },
+  "42": {
+    "east": "Middlefield (Dynamic)",
+    "west": "Finch Station"
+  },
+  "43": {
+    "south": "Kennedy Station",
+    "north": "Steeles"
+  },
+  "44": {
+    "south": "Lake Shore",
+    "north": "Kipling Station"
+  },
+  "45": {
+    "south": "Kipling Station",
+    "north": "Steeles"
+  },
+  "46": {
+    "south": "Kipling Station",
+    "north": "Steeles"
+  },
+  "47": {
+    "south": "Queen",
+    "north": "St Clair"
+  },
+  "48": {
+    "east": "Royal York Station",
+    "west": "Mill Rd"
+  },
+  "49": {
+    "east": "Kipling Station",
+    "west": "Markland Wood"
+  },
+  "50": {
+    "east": "Islington Station",
+    "west": "Mill Road"
+  },
+  "51": {
+    "south": "Eglinton Station",
+    "north": "Steeles"
+  },
+  "52": {
+    "east": "Lawrence Station",
+    "west": "Pearson Airport"
+  },
+  "53": {
+    "east": "Morningside",
+    "west": "Finch Station"
+  },
+  "54": {
+    "east": "Starspray",
+    "west": "Eglinton Station"
+  },
+  "55": {
+    "south": "Jane Station",
+    "north": "Warren Park"
+  },
+  "56": {
+    "south": "Donlands Station",
+    "north": "Eglinton Station"
+  },
+  "57": {
+    "south": "Kennedy Station",
+    "north": "Steeles"
+  },
+  "59": {
+    "east": "Lawrence West Station",
+    "west": "Weston Rd"
+  },
+  "60": {
+    "east": "Finch Station",
+    "west": "Highway 27"
+  },
+  "61": {
+    "south": "Eglinton Station",
+    "north": "Highway 401"
+  },
+  "62": {
+    "east": "Main Street Station",
+    "west": "Hennick Bridgepoint Hospital"
+  },
+  "63": {
+    "south": "Liberty Village",
+    "north": "Cedarvale Station"
+  },
+  "64": {
+    "south": "Queen",
+    "north": "Main Street Station"
+  },
+  "65": {
+    "south": "Queens Quay and Sherbourne",
+    "north": "Castle Frank Station"
+  },
+  "66": {
+    "south": "Lake Shore",
+    "north": "Old Mill Station"
+  },
+  "67": {
+    "south": "Victoria Park Station",
+    "north": "Ellesmere"
+  },
+  "68": {
+    "south": "Warden Station",
+    "north": "Steeles"
+  },
+  "69": {
+    "south": "St Clair (Barkdene Hills)",
+    "north": "Warden Station"
+  },
+  "70": {
+    "west": "Coxwell Station",
+    "east": "Eglinton"
+  },
+  "71": {
+    "south": "Runnymede Station",
+    "north": "Industry St"
+  },
+  "72": {
+    "south": "Commissioners",
+    "north": "Eglinton & Don Mills"
+  },
+  "73": {
+    "south": "Royal York Station",
+    "north": "Claireport"
+  },
+  "74": {
+    "south": "St Clair Station",
+    "north": "Eglinton Station"
+  },
+  "75": {
+    "south": "Queens Quay",
+    "north": "Sherbourne Station"
+  },
+  "76": {
+    "south": "Lake Shore",
+    "north": "Royal York Station"
+  },
+  "77": {
+    "south": "Queensway",
+    "north": "Runnymede Station"
+  },
+  "78": {
+    "east": "Bayview",
+    "west": "York Mills Station"
+  },
+  "79": {
+    "south": "Runnymede Station",
+    "north": "Lawrence & Jane"
+  },
+  "80": {
+    "east": "Keele Station",
+    "west": "Royal York"
+  },
+  "82": {
+    "west": "Rosedale Station",
+    "east": "Summerhill"
+  },
+  "83": {
+    "south": "Commissioners",
+    "north": "Donlands Station"
+  },
+  "84": {
+    "east": "Sheppard-Yonge Station",
+    "west": "Weston Rd"
+  },
+  "85": {
+    "east": "Meadowvale",
+    "west": "Don Mills Station"
+  },
+  "86": {
+    "east": "Beechgrove",
+    "west": "Kennedy Station"
+  },
+  "87": {
+    "east": "Main Street Station",
+    "west": "Broadview Station"
+  },
+  "88": {
+    "east": "Laird Station",
+    "west": "St Clair Station"
+  },
+  "89": {
+    "south": "Keele Station",
+    "north": "Albion Rd"
+  },
+  "90": {
+    "south": "St Clair West Station",
+    "north": "Cedarvale Station"
+  },
+  "91": {
+    "south": "Woodbine Station",
+    "north": "York Mills"
+  },
+  "92": {
+    "south": "Lake Shore",
+    "north": "Woodbine Station"
+  },
+  "93": {
+    "south": "Woodbine Station",
+    "north": "Parkview Hills"
+  },
+  "94": {
+    "east": "Castle Frank Station",
+    "west": "Ossington Station"
+  },
+  "95": {
+    "east": "Port Union",
+    "west": "York Mills Station"
+  },
+  "96": {
+    "east": "York Mills Station",
+    "west": "Carrier Dr"
+  },
+  "97": {
+    "south": "St Clair Station",
+    "north": "Steeles"
+  },
+  "98": {
+    "east": "Steeles",
+    "west": "Peckham"
+  },
+  "99": {
+    "south": "Arrow Rd",
+    "north": "Jane"
+  },
+  "100": {
+    "south": "Broadview Station",
+    "north": "Don Mills & Wynford"
+  },
+  "101": {
+    "south": "Wilson Station",
+    "north": "Finch West Station"
+  },
+  "102": {
+    "south": "Warden Station",
+    "north": "Steeles"
+  },
+  "103": {
+    "south": "Eglinton Station",
+    "north": "Doncliffe"
+  },
+  "104": {
+    "south": "Wilson Station",
+    "north": "Sheppard West Station"
+  },
+  "105": {
+    "south": "Sheppard West Station",
+    "north": "Steeles"
+  },
+  "106": {
+    "east": "Sheppard West Station",
+    "west": "Pioneer Village Station"
+  },
+  "107": {
+    "south": "Sheppard West Station",
+    "north": "Finch West Station"
+  },
+  "108": {
+    "east": "Sheppard West Station",
+    "west": "Pioneer Village Station"
+  },
+  "109": {
+    "south": "Lawrence West Station",
+    "north": "Neptune"
+  },
+  "110": {
+    "south": "Long Branch",
+    "north": "Islington Station"
+  },
+  "111": {
+    "south": "Kipling Station",
+    "north": "Eglinton"
+  },
+  "112": {
+    "south": "Kipling Station",
+    "north": "Disco Rd"
+  },
+  "113": {
+    "east": "Kennedy Station",
+    "west": "Main Street Station"
+  },
+  "114": {
+    "east": "Carlaw",
+    "west": "Union Station"
+  },
+  "115": {
+    "east": "Leslie",
+    "west": "York Mills Station"
+  },
+  "116": {
+    "east": "Finch and Morningside",
+    "west": "Kennedy Station"
+  },
+  "117": {
+    "south": "Victoria Park Station",
+    "north": "Danforth"
+  },
+  "118": {
+    "east": "Wilson Station",
+    "west": "Thistle Down"
+  },
+  "119": {
+    "east": "Wilson Station",
+    "west": "Milvan"
+  },
+  "120": {
+    "east": "Wilson Station",
+    "west": "Sheppard/Jane"
+  },
+  "121": {
+    "east": "Hennick Bridgepoint Hospital",
+    "west": "Union Station"
+  },
+  "122": {
+    "east": "Roywood",
+    "west": "York Mills Station"
+  },
+  "123": {
+    "south": "Long Branch",
+    "north": "Kipling Station"
+  },
+  "124": {
+    "east": "Sunnybrook Hospital",
+    "west": "Lawrence Station"
+  },
+  "125": {
+    "east": "Finch Station",
+    "west": "Bathurst (Torresdale)"
+  },
+  "126": {
+    "south": "Christie Station",
+    "north": "St Clair West Station"
+  },
+  "127": {
+    "east": "Spadina Station",
+    "west": "St Clair & Old Weston Rd"
+  },
+  "129": {
+    "south": "Kennedy Stn",
+    "north": "Major Mackenzie"
+  },
+  "130": {
+    "south": "Scarborough Centre Stn",
+    "north": "Steeles"
+  },
+  "131": {
+    "west": "Kennedy Stn",
+    "east": "Old Finch/Morningview"
+  },
+  "132": {
+    "west": "Scarborough Centre Stn",
+    "east": "McLevin & Hupfield"
+  },
+  "133": {
+    "south": "Kennedy Stn",
+    "north": "Morningside Heights"
+  },
+  "134": {
+    "south": "Scarborough Centre Stn",
+    "north": "McNicoll"
+  },
+  "135": {
+    "east": "Warden Station",
+    "west": "Main Street Station"
+  },
+  "149": {
+    "east": "High Park Station/Line 2 Accessibility Shuttle",
+    "west": "Kipling Station/Line 2 Accessibility Shuttle"
+  },
+  "154": {
+    "east": "U of T Scarborough",
+    "west": "Kennedy Station"
+  },
+  "160": {
+    "south": "Wilson Station",
+    "north": "Centre Street"
+  },
+  "161": {
+    "east": "Ossington Station",
+    "west": "Mount Dennis Station"
+  },
+  "162": {
+    "east": "Don Mills",
+    "west": "Lawrence Station"
+  },
+  "164": {
+    "east": "Cedarvale Station",
+    "west": "Mount Dennis Station"
+  },
+  "165": {
+    "east": "York Mills Station",
+    "west": "Steeles"
+  },
+  "166": {
+    "east": "Steeles and Islington",
+    "west": "Milvan"
+  },
+  "167": {
+    "south": "Don Mills Station",
+    "north": "Steeles"
+  },
+  "168": {
+    "south": "Dundas West Station",
+    "north": "Mount Dennis Station"
+  },
+  "169": {
+    "east": "Scarborough Centre Stn",
+    "west": "Don Mills Station"
+  },
+  "171": {
+    "south": "Eglinton and Black Creek",
+    "north": "Industry Street"
+  },
+  "184": {
+    "east": "Wilson Station",
+    "west": "De Havilland"
+  },
+  "185": {
+    "east": "Don Mills Station",
+    "west": "Sheppard-Yonge Station"
+  },
+  "189": {
+    "east": "High Park Station",
+    "west": "Scarlett Rd"
+  },
+  "191": {
+    "south": "Don Mills & Wynford",
+    "north": "York Mills"
+  },
+  "300": {
+    "east": "Warden",
+    "west": "West Mall"
+  },
+  "301": {
+    "east": "Neville Park",
+    "west": "Long Branch"
+  },
+  "302": {
+    "south": "Victoria Park and Kingston Rd",
+    "north": "Steeles"
+  },
+  "304": {
+    "east": "Distillery",
+    "west": "Dundas West Station"
+  },
+  "305": {
+    "east": "Broadview Station",
+    "west": "Dundas West Station"
+  },
+  "306": {
+    "east": "Main Street Station",
+    "west": "High Park"
+  },
+  "307": {
+    "south": "Exhibition",
+    "north": "Steeles"
+  },
+  "310": {
+    "south": "Union Station",
+    "north": "Spadina Station"
+  },
+  "312": {
+    "east": "St Clair Station",
+    "west": "Keele"
+  },
+  "315": {
+    "east": "Royal York Station",
+    "west": "Long Branch"
+  },
+  "320": {
+    "south": "Queens Quay",
+    "north": "Eglinton Station"
+  },
+  "322": {
+    "east": "Queen",
+    "west": "Broadview Station"
+  },
+  "324": {
+    "south": "Kingston Rd",
+    "north": "Steeles"
+  },
+  "325": {
+    "south": "Commissioners",
+    "north": "Steeles"
+  },
+  "329": {
+    "south": "Exhibition (Princes' Gates)",
+    "north": "Steeles"
+  },
+  "332": {
+    "east": "Eglinton Station",
+    "west": "Renforth and Pearson Airport"
+  },
+  "334": {
+    "west": "Eglinton Station",
+    "east": "Kennedy Station"
+  },
+  "335": {
+    "south": "Jane Station",
+    "north": "York University"
+  },
+  "336": {
+    "east": "Yonge Street",
+    "west": "Humber College"
+  },
+  "337": {
+    "south": "Lake Shore",
+    "north": "Steeles"
+  },
+  "339": {
+    "east": "Markham Rd",
+    "west": "Finch Station"
+  },
+  "340": {
+    "east": "St Clair and Gunns",
+    "west": "Dundas West Stn"
+  },
+  "341": {
+    "south": "Keele Station",
+    "north": "York University"
+  },
+  "343": {
+    "south": "Kennedy Station",
+    "north": "Steeles"
+  },
+  "352": {
+    "east": "Sunnybrook Hospital",
+    "west": "Pearson Airport"
+  },
+  "353": {
+    "east": "Staines",
+    "west": "York University"
+  },
+  "354": {
+    "east": "Starspray Blvd",
+    "west": "Eglinton Station"
+  },
+  "363": {
+    "south": "Exhibition",
+    "north": "Cedarvale Station"
+  },
+  "365": {
+    "south": "Queens Quay and Sherbourne",
+    "north": "Castle Frank Station"
+  },
+  "384": {
+    "east": "Sheppard-Yonge Station",
+    "west": "Weston Rd"
+  },
+  "385": {
+    "east": "Rouge Hill GO Stn",
+    "west": "Sheppard-Yonge Station"
+  },
+  "386": {
+    "east": "Sheppard",
+    "west": "Kennedy Station"
+  },
+  "395": {
+    "east": "Rouge Hill GO Stn",
+    "west": "York Mills Station"
+  },
+  "396": {
+    "east": "York Mills Station",
+    "west": "Martin Grove and Steeles"
+  },
+  "400": {
+    "east": "No Frills",
+    "west": "Humber River Hospital"
+  },
+  "402": {
+    "south": "Queen Elizabeth Hospital",
+    "north": "Dufferin Mall"
+  },
+  "403": {
+    "south": "East York Town Centre",
+    "north": "Don Mills Shopping Centre"
+  },
+  "404": {
+    "east": "Kingston Rd",
+    "west": "Coxwell Station"
+  },
+  "405": {
+    "east": "Scarlett Rd",
+    "west": "Kipling"
+  },
+  "406": {
+    "south": "Guildwood GO Stn",
+    "north": "Scarborough Centre Stn"
+  },
+  "501": {
+    "east": "Neville Park",
+    "west": "Humber"
+  },
+  "503": {
+    "east": "Victoria Park",
+    "west": "York"
+  },
+  "504": {
+    "east": "Broadview Station",
+    "west": "Dundas West Station"
+  },
+  "505": {
+    "east": "Broadview Station",
+    "west": "Dundas West Station"
+  },
+  "506": {
+    "east": "Main Street Station",
+    "west": "High Park"
+  },
+  "507": {
+    "east": "Humber",
+    "west": "Long Branch"
+  },
+  "508": {
+    "east": "Distillery",
+    "west": "Long Branch"
+  },
+  "509": {
+    "east": "Union Station",
+    "west": "Exhibition"
+  },
+  "510": {
+    "south": "Union Station",
+    "north": "Spadina Station"
+  },
+  "511": {
+    "south": "Exhibition",
+    "north": "Bathurst Station"
+  },
+  "512": {
+    "east": "St Clair Station",
+    "west": "Keele"
+  },
+  "900": {
+    "south": "Kipling Station",
+    "north": "Pearson Airport"
+  },
+  "902": {
+    "south": "Warden Station",
+    "north": "Steeles Ave East"
+  },
+  "903": {
+    "south": "Kennedy Stn",
+    "north": "Scarborough Centre Stn"
+  },
+  "904": {
+    "south": "Kennedy Stn",
+    "north": "Don Mills Station"
+  },
+  "905": {
+    "east": "Conlins",
+    "west": "Kennedy Station"
+  },
+  "924": {
+    "south": "Victoria Park Station",
+    "north": "Steeles"
+  },
+  "925": {
+    "south": "Broadview Station",
+    "north": "Steeles"
+  },
+  "927": {
+    "south": "Kipling Station",
+    "north": "Steeles and Signal Hill"
+  },
+  "929": {
+    "south": "Exhibition (Dufferin Gate)",
+    "north": "Wilson Station"
+  },
+  "935": {
+    "south": "Jane Station",
+    "north": "Pioneer Village Station"
+  },
+  "937": {
+    "south": "Islington Station",
+    "north": "Steeles"
+  },
+  "938": {
+    "east": "U of T Scarborough",
+    "west": "Kennedy Stn"
+  },
+  "939": {
+    "east": "Kennedy Stn",
+    "west": "Finch West Stn"
+  },
+  "941": {
+    "south": "Keele Station",
+    "north": "Finch West Station"
+  },
+  "944": {
+    "south": "Lake Shore",
+    "north": "Kipling Station"
+  },
+  "945": {
+    "south": "Kipling Station",
+    "north": "Steeles"
+  },
+  "952": {
+    "east": "Lawrence Station",
+    "west": "Pearson Airport"
+  },
+  "953": {
+    "east": "Staines Rd",
+    "west": "Finch Station"
+  },
+  "954": {
+    "east": "Starspray",
+    "west": "Kennedy Station"
+  },
+  "960": {
+    "east": "Finch Station",
+    "west": "Highway 27"
+  },
+  "968": {
+    "south": "Warden Station",
+    "north": "Steeles"
+  },
+  "984": {
+    "east": "Sheppard-Yonge Station",
+    "west": "Weston Rd"
+  },
+  "985": {
+    "east": "Meadowvale",
+    "west": "Don Mills Station"
+  },
+  "986": {
+    "east": "Sheppard",
+    "west": "Kennedy Station"
+  },
+  "989": {
+    "south": "Keele Station",
+    "north": "Steeles"
+  },
+  "995": {
+    "east": "U of T Scarborough",
+    "west": "York Mills Station"
+  },
+  "996": {
+    "east": "Scarborough Centre Station",
+    "west": "Humber College"
+  }
+}
