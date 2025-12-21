@@ -305,6 +305,18 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `fix-route-stop-orders.cjs` | ✅     | Convert route stop IDs from NextBus tags to GTFS stopIds (211 routes) 🆕  |
 | `fix-route-branches.cjs`    | ✅     | Convert branch stop IDs from NextBus tags to GTFS stopIds (211 routes) 🆕 |
 
+### GitHub Workflows (`.github/workflows/`) 🆕 **Version B Only**
+
+| File                      | Status | Purpose                                                       |
+| ------------------------- | ------ | ------------------------------------------------------------- |
+| `refresh-route-data.yml`  | ✅     | Weekly automated refresh of route data from NextBus API 🆕    |
+
+**Route Data Refresh Workflow:**
+- **Schedule:** Weekly (Sundays 2:00 AM UTC / Saturday 9:00 PM EST)
+- **Trigger:** Also manually triggerable via GitHub Actions UI
+- **Action:** Runs `fix-route-stop-orders.cjs` and `fix-route-branches.cjs`
+- **Output:** Creates PR if data changes detected
+
 ### Migrations (`supabase/migrations/`)
 
 | File                                 | Status | Purpose                                    | Version |
