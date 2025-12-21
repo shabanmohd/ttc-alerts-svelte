@@ -10,6 +10,8 @@
 
 import Dexie, { type Table } from 'dexie';
 
+import routeStopOrders from '$lib/data/ttc-route-stop-orders.json';
+
 // Stop data structure matching our transformed GTFS data
 export interface TTCStop {
 	id: string;
@@ -46,7 +48,7 @@ let isInitialized = false;
 let initPromise: Promise<void> | null = null;
 
 // Data version - increment when stops data changes to force reload
-const DATA_VERSION = '2025-01-15-subway-seq-v3';
+const DATA_VERSION = '2025-01-20-gtfs-sequences-v1';
 
 /**
  * Initialize the stops database, loading data if needed
@@ -362,12 +364,11 @@ export async function getStopsByRouteGroupedByDirection(
 		return [];
 	}
 
-	// Check if this is a subway/LRT line with sequence data
-	const hasSubwaySequence = stops.some(s => 
-		s.seq && s.seq[routeNumber] && Object.keys(s.seq[routeNumber]).length > 0
-	);
+	// Check if this is a subway/LRT line (defined in SUBWAY_DIRECTION_LABELS)
+	// Only use subway grouping for actual subway lines, not for buses with sequence data
+	const isSubwayLine = routeNumber in SUBWAY_DIRECTION_LABELS;
 
-	if (hasSubwaySequence) {
+	if (isSubwayLine) {
 		// Use GTFS direction-based grouping for subway/LRT
 		return getSubwayDirectionGroups(stops, routeNumber);
 	}
@@ -429,11 +430,70 @@ function getSubwayDirectionGroups(stops: TTCStop[], routeNumber: string): Direct
 
 /**
  * Group bus/streetcar stops by their direction field or name
- * Shared stops (no direction) are included in ALL direction groups
+ * 
+ * Uses routeStopOrders (NextBus API data) as the authoritative source for:
+ * 1. Which stops belong to which direction
+ * 2. The correct order of stops within each direction
+ * 
+ * Falls back to GTFS dir field and geographic sorting if no route stop orders exist.
  */
 function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): DirectionGroup[] {
+	// Check if we have authoritative route stop orders from NextBus API
+	const routeOrders = (routeStopOrders as Record<string, Record<string, string[]>>)[routeNumber];
+	
+	if (routeOrders && Object.keys(routeOrders).length > 0) {
+		// Use NextBus-derived stop orders as authoritative source
+		return getBusDirectionGroupsFromRouteOrders(stops, routeNumber, routeOrders);
+	}
+	
+	// Fall back to GTFS-based grouping for routes without NextBus data
+	return getBusDirectionGroupsFromGTFS(stops, routeNumber);
+}
+
+/**
+ * Group stops using NextBus-derived route stop orders as authoritative source
+ * This provides correct stop-to-direction assignment and ordering
+ */
+function getBusDirectionGroupsFromRouteOrders(
+	stops: TTCStop[], 
+	routeNumber: string,
+	routeOrders: Record<string, string[]>
+): DirectionGroup[] {
+	const groups: DirectionGroup[] = [];
+	const stopById = new Map(stops.map(s => [s.id, s]));
+	
+	// Process each direction in the route orders
+	for (const [direction, stopIds] of Object.entries(routeOrders)) {
+		const dirLabel = direction as DirectionLabel;
+		const dirStops: TTCStop[] = [];
+		
+		// Get stops in the exact order from routeOrders
+		for (const stopId of stopIds) {
+			const stop = stopById.get(stopId);
+			if (stop) {
+				dirStops.push(stop);
+			}
+		}
+		
+		if (dirStops.length > 0) {
+			groups.push({
+				direction: dirLabel,
+				stops: dirStops, // Already in correct order from routeOrders
+				colorClass: DIRECTION_COLORS[dirLabel] || DIRECTION_COLORS[DIRECTION_LABELS.UNKNOWN]
+			});
+		}
+	}
+	
+	return groups;
+}
+
+/**
+ * Fall back to GTFS-based grouping when no NextBus route orders exist
+ * Uses stop.dir field and geographic sorting
+ */
+function getBusDirectionGroupsFromGTFS(stops: TTCStop[], routeNumber: string): DirectionGroup[] {
 	const directionMap = new Map<DirectionLabel, TTCStop[]>();
-	const sharedStops: TTCStop[] = []; // Stops without direction (shared between directions)
+	const sharedStops: TTCStop[] = []; // Stops without direction
 
 	for (const stop of stops) {
 		let dir: DirectionLabel;
@@ -450,7 +510,7 @@ function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): Direction
 			}
 			directionMap.get(dir)!.push(stop);
 		} else {
-			// Shared stop - will be added to all direction groups
+			// Shared stop - will be filtered by sequence key later
 			sharedStops.push(stop);
 		}
 	}
@@ -466,8 +526,17 @@ function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): Direction
 	for (const dir of directionOrder) {
 		const dirStops = directionMap.get(dir);
 		if (dirStops && dirStops.length > 0) {
-			// Combine direction-specific stops with shared stops
-			const allDirStops = [...dirStops, ...sharedStops];
+			// Detect which sequence key (main/reverse) is dominant for this direction
+			const dominantKey = detectDominantSequenceKey(dirStops, routeNumber);
+			
+			// Filter shared stops to only include those with the dominant sequence key
+			const filteredSharedStops = sharedStops.filter(stop => {
+				if (!stop.seq || !stop.seq[routeNumber]) return false;
+				return stop.seq[routeNumber][dominantKey] !== undefined;
+			});
+			
+			// Combine direction-specific stops with filtered shared stops
+			const allDirStops = [...dirStops, ...filteredSharedStops];
 			const sortedStops = sortStopsByPosition(allDirStops, dir, routeNumber);
 			groups.push({
 				direction: dir,
@@ -489,6 +558,23 @@ function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): Direction
 	}
 
 	return groups;
+}
+
+/**
+ * Detect which sequence key (main/reverse) is dominant for a set of stops
+ */
+function detectDominantSequenceKey(stops: TTCStop[], routeNumber: string): 'main' | 'reverse' {
+	let mainCount = 0;
+	let reverseCount = 0;
+	
+	for (const stop of stops) {
+		if (stop.seq && stop.seq[routeNumber]) {
+			if (stop.seq[routeNumber]['main'] !== undefined) mainCount++;
+			if (stop.seq[routeNumber]['reverse'] !== undefined) reverseCount++;
+		}
+	}
+	
+	return reverseCount > mainCount ? 'reverse' : 'main';
 }
 
 /**
@@ -556,25 +642,53 @@ function extractDirectionFromName(name: string): DirectionLabel {
  */
 function sortStopsByPosition(stops: TTCStop[], direction: DirectionLabel, routeNumber?: string): TTCStop[] {
 	const sorted = [...stops];
+
+	// Prefer explicit, per-route stop ordering overrides (TTC website-derived)
+	// This fixes incomplete/non-sequential GTFS-derived sequences for some bus/streetcar routes.
+	if (routeNumber && direction !== DIRECTION_LABELS.UNKNOWN) {
+		const routeOrder = (routeStopOrders as Record<string, Record<string, string[]>>)[routeNumber]?.[direction];
+		if (routeOrder && routeOrder.length > 0) {
+			const indexByStopId = new Map<string, number>(routeOrder.map((id, i) => [id, i]));
+			sorted.sort((a, b) => {
+				const ia = indexByStopId.get(a.id);
+				const ib = indexByStopId.get(b.id);
+				if (ia === undefined && ib === undefined) return 0;
+				if (ia === undefined) return 1;
+				if (ib === undefined) return -1;
+				return ia - ib;
+			});
+			return sorted;
+		}
+	}
 	
 	// Check if these stops have sequence data for this route
 	const hasSequenceData = routeNumber && sorted.some(s => 
-		s.seq && s.seq[routeNumber] && Object.keys(s.seq[routeNumber]).length > 0
+		s.seq && s.seq[routeNumber] && (s.seq[routeNumber]['main'] !== undefined || s.seq[routeNumber]['reverse'] !== undefined)
 	);
 	
 	if (hasSequenceData && routeNumber) {
-		// Sort by sequence number (use any available direction's sequence)
-		// Since each platform only belongs to one direction, we just need to find
-		// the sequence value that exists for this stop on this route
+		// Detect which sequence key (main/reverse) is dominant for stops WITH a direction field
+		// This tells us which GTFS direction corresponds to this tab
+		const stopsWithDir = sorted.filter(s => s.dir && s.seq && s.seq[routeNumber]);
+		let dominantKey: 'main' | 'reverse' = 'main';
+		
+		if (stopsWithDir.length > 0) {
+			const mainCount = stopsWithDir.filter(s => s.seq![routeNumber]['main'] !== undefined).length;
+			const reverseCount = stopsWithDir.filter(s => s.seq![routeNumber]['reverse'] !== undefined).length;
+			dominantKey = reverseCount > mainCount ? 'reverse' : 'main';
+		}
+		
+		// Sort by sequence number using the dominant key
+		// Stops without the dominant key go to the end (they belong to the other direction)
 		sorted.sort((a, b) => {
-			const seqA = getStopSequence(a, routeNumber);
-			const seqB = getStopSequence(b, routeNumber);
+			const seqA = getStopSequenceForKey(a, routeNumber, dominantKey);
+			const seqB = getStopSequenceForKey(b, routeNumber, dominantKey);
 			
-			// If both have sequences, sort by sequence
+			// If both have sequences for this direction, sort by sequence
 			if (seqA !== null && seqB !== null) {
 				return seqA - seqB;
 			}
-			// Stops without sequence go to the end
+			// Stops without sequence for this direction go to the end
 			if (seqA === null) return 1;
 			if (seqB === null) return -1;
 			return 0;
@@ -610,19 +724,73 @@ function sortStopsByPosition(stops: TTCStop[], direction: DirectionLabel, routeN
 }
 
 /**
- * Get the stop sequence for a stop on a specific route
- * Returns the first available sequence value (since each platform only has one direction)
+ * Get the stop sequence for a specific key (main or reverse)
+ */
+function getStopSequenceForKey(stop: TTCStop, routeNumber: string, key: 'main' | 'reverse'): number | null {
+	if (!stop.seq || !stop.seq[routeNumber]) return null;
+	const seq = stop.seq[routeNumber][key];
+	return seq !== undefined ? seq : null;
+}
+
+/**
+ * Get the stop sequence on a route (uses whichever direction key the stop has)
+ * Each stop typically only has one direction's sequence (main OR reverse)
  */
 function getStopSequence(stop: TTCStop, routeNumber: string): number | null {
 	if (!stop.seq || !stop.seq[routeNumber]) return null;
 	
 	const directionSeqs = stop.seq[routeNumber];
+	
+	// Return the sequence from whichever key is present
+	if (directionSeqs['main'] !== undefined) {
+		return directionSeqs['main'];
+	}
+	if (directionSeqs['reverse'] !== undefined) {
+		return directionSeqs['reverse'];
+	}
+	
+	return null;
+}
+
+/**
+ * Map DirectionLabel to GTFS direction key
+ * GTFS direction_id 0 = "main" (typically East/North - outbound)
+ * GTFS direction_id 1 = "reverse" (typically West/South - inbound)
+ */
+function getGtfsDirectionKey(direction: DirectionLabel): 'main' | 'reverse' {
+	switch (direction) {
+		case DIRECTION_LABELS.EASTBOUND:
+		case DIRECTION_LABELS.NORTHBOUND:
+			return 'main';
+		case DIRECTION_LABELS.WESTBOUND:
+		case DIRECTION_LABELS.SOUTHBOUND:
+			return 'reverse';
+		default:
+			return 'main'; // Default to main for unknown
+	}
+}
+
+/**
+ * Get the stop sequence for a specific direction on a route
+ */
+function getStopSequenceForDirection(stop: TTCStop, routeNumber: string, gtfsDirection: 'main' | 'reverse'): number | null {
+	if (!stop.seq || !stop.seq[routeNumber]) return null;
+	
+	const directionSeqs = stop.seq[routeNumber];
+	
+	// Try to get the specific direction's sequence
+	if (directionSeqs[gtfsDirection] !== undefined) {
+		return directionSeqs[gtfsDirection];
+	}
+	
+	// Fallback: if this stop only has one direction (e.g., a shared stop),
+	// return the first available sequence
 	const keys = Object.keys(directionSeqs);
+	if (keys.length > 0) {
+		return directionSeqs[keys[0]];
+	}
 	
-	if (keys.length === 0) return null;
-	
-	// Return the first (and typically only) sequence value
-	return directionSeqs[keys[0]];
+	return null;
 }
 
 /**
