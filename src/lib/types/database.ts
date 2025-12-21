@@ -165,8 +165,12 @@ export type AlertCategory =
   | 'BUS'
   | 'OTHER';
 
-// Thread with alerts for UI
+// Partial alert type for optimized queries (selected columns only)
+// Used throughout the app - full Alert includes extra columns not needed for display
+export type PartialAlert = Pick<Alert, 'alert_id' | 'thread_id' | 'header_text' | 'description_text' | 'effect' | 'categories' | 'affected_routes' | 'is_latest' | 'created_at' | 'raw_data'>;
+
+// Thread with alerts for UI (uses PartialAlert for performance)
 export interface ThreadWithAlerts extends Thread {
-  alerts: Alert[];
-  latestAlert: Alert;
+  alerts: PartialAlert[];
+  latestAlert: PartialAlert;
 }

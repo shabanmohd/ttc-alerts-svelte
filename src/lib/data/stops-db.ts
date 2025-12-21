@@ -12,6 +12,72 @@ import Dexie, { type Table } from 'dexie';
 
 import routeStopOrders from '$lib/data/ttc-route-stop-orders.json';
 import routeDirectionLabels from '$lib/data/ttc-direction-labels.json';
+import routeBranches from '$lib/data/ttc-route-branches.json';
+
+// Type for the enhanced route branches data
+export interface RouteBranchInfo {
+	id: string;
+	title: string;
+	stops: string[];
+}
+
+export interface RouteDirectionBranches {
+	branches: RouteBranchInfo[];
+}
+
+export interface RouteEnhancedData {
+	directions: Record<string, RouteDirectionBranches>;
+}
+
+// Cast the imported JSON to proper type
+const routeBranchesData = routeBranches as Record<string, RouteEnhancedData>;
+
+/**
+ * Get branch info for a route
+ * Returns the enhanced branch data structure with directions and their branches
+ */
+export function getRouteBranches(routeNumber: string): RouteEnhancedData | null {
+	return routeBranchesData[routeNumber] || null;
+}
+
+/**
+ * Get branches for a specific direction of a route
+ */
+export function getBranchesForDirection(
+	routeNumber: string,
+	direction: string
+): RouteBranchInfo[] | null {
+	const routeData = routeBranchesData[routeNumber];
+	if (!routeData) return null;
+	
+	const dirData = routeData.directions[direction];
+	if (!dirData) return null;
+	
+	return dirData.branches;
+}
+
+/**
+ * Check if a route has multiple branches in any direction
+ */
+export function routeHasMultipleBranches(routeNumber: string): boolean {
+	const routeData = routeBranchesData[routeNumber];
+	if (!routeData) return false;
+	
+	for (const direction of Object.values(routeData.directions)) {
+		if (direction.branches.length > 1) return true;
+	}
+	return false;
+}
+
+/**
+ * Get cardinal directions for a route (e.g., ["Northbound", "Southbound"])
+ */
+export function getRouteCardinalDirections(routeNumber: string): string[] {
+	const routeData = routeBranchesData[routeNumber];
+	if (!routeData) return [];
+	
+	return Object.keys(routeData.directions);
+}
 
 // Stop data structure matching our transformed GTFS data
 export interface TTCStop {
@@ -311,6 +377,20 @@ export const DIRECTION_COLORS: Record<string, string> = {
 };
 
 /**
+ * Branch variant within a direction (e.g., "Westbound2" -> "Towards Jane & Emmett")
+ */
+export interface BranchVariant {
+	/** Internal key (e.g., "Westbound2") */
+	key: string;
+	/** User-friendly display label (e.g., "Towards Jane & Emmett via Mount Dennis Station") */
+	label: string;
+	/** Number of stops in this branch */
+	stopCount: number;
+	/** Stops for this specific branch */
+	stops: TTCStop[];
+}
+
+/**
  * Group of stops for a specific direction
  */
 export interface DirectionGroup {
@@ -319,6 +399,10 @@ export interface DirectionGroup {
 	displayLabel?: string;
 	stops: TTCStop[];
 	colorClass: string;
+	/** Branch variants within this direction (for routes with multiple branches like 32) */
+	branches?: BranchVariant[];
+	/** Currently selected branch key (if branches exist) */
+	selectedBranch?: string;
 }
 
 /**
@@ -456,21 +540,28 @@ function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): Direction
 /**
  * Group stops using NextBus-derived route stop orders as authoritative source
  * This provides correct stop-to-direction assignment and ordering
+ * 
+ * When a route has branch variants (e.g., Westbound, Westbound2, Westbound3),
+ * this function consolidates them into a single direction group with branches.
  */
 function getBusDirectionGroupsFromRouteOrders(
 	stops: TTCStop[], 
 	routeNumber: string,
 	routeOrders: Record<string, string[]>
 ): DirectionGroup[] {
-	const groups: DirectionGroup[] = [];
 	const stopById = new Map(stops.map(s => [s.id, s]));
 	
 	// Get direction labels for this route (user-friendly names like "Towards Renforth Station")
 	const dirLabels = (routeDirectionLabels as Record<string, Record<string, string>>)[routeNumber] || {};
 	
+	// Group directions by base direction (Eastbound, Westbound, Northbound, Southbound)
+	// This consolidates Westbound, Westbound2, Westbound3 into a single group with branches
+	const baseDirectionMap = new Map<string, { 
+		variants: { key: string; label: string; stops: TTCStop[] }[] 
+	}>();
+	
 	// Process each direction in the route orders
 	for (const [direction, stopIds] of Object.entries(routeOrders)) {
-		const dirLabel = direction as DirectionLabel;
 		const dirStops: TTCStop[] = [];
 		
 		// Get stops in the exact order from routeOrders
@@ -481,21 +572,78 @@ function getBusDirectionGroupsFromRouteOrders(
 			}
 		}
 		
-		if (dirStops.length > 0) {
-			// Get user-friendly display label (e.g., "Towards Renforth Station")
-			// Falls back to direction key if no label exists
-			const displayLabel = dirLabels[direction] || direction;
-			
-			groups.push({
-				direction: dirLabel,
-				displayLabel: displayLabel,
-				stops: dirStops, // Already in correct order from routeOrders
-				colorClass: DIRECTION_COLORS[dirLabel] || getDirectionColorByName(dirLabel)
-			});
+		if (dirStops.length === 0) continue;
+		
+		// Extract base direction (Westbound2 -> Westbound)
+		const baseDirection = getBaseDirection(direction);
+		
+		// Get user-friendly display label
+		const displayLabel = dirLabels[direction] || direction;
+		
+		// Initialize base direction group if needed
+		if (!baseDirectionMap.has(baseDirection)) {
+			baseDirectionMap.set(baseDirection, { variants: [] });
 		}
+		
+		// Add this variant to the base direction group
+		baseDirectionMap.get(baseDirection)!.variants.push({
+			key: direction,
+			label: displayLabel,
+			stops: dirStops
+		});
+	}
+	
+	// Convert map to DirectionGroup array
+	const groups: DirectionGroup[] = [];
+	const directionOrder = ['Eastbound', 'Westbound', 'Northbound', 'Southbound'];
+	
+	for (const baseDir of directionOrder) {
+		const data = baseDirectionMap.get(baseDir);
+		if (!data || data.variants.length === 0) continue;
+		
+		// Sort variants: primary direction first (no number suffix), then by variant number
+		data.variants.sort((a, b) => {
+			const aNum = parseInt(a.key.replace(/^\D+/, '')) || 0;
+			const bNum = parseInt(b.key.replace(/^\D+/, '')) || 0;
+			return aNum - bNum;
+		});
+		
+		// Use the first (primary) variant's stops as the default
+		const primaryVariant = data.variants[0];
+		
+		// Create branch variants (only if more than 1 variant exists)
+		const branches: BranchVariant[] | undefined = data.variants.length > 1
+			? data.variants.map(v => ({
+					key: v.key,
+					label: v.label,
+					stopCount: v.stops.length,
+					stops: v.stops
+				}))
+			: undefined;
+		
+		groups.push({
+			direction: baseDir as DirectionLabel,
+			displayLabel: primaryVariant.label,
+			stops: primaryVariant.stops,
+			colorClass: DIRECTION_COLORS[baseDir as DirectionLabel] || getDirectionColorByName(baseDir),
+			branches,
+			selectedBranch: branches ? primaryVariant.key : undefined
+		});
 	}
 	
 	return groups;
+}
+
+/**
+ * Extract base direction from a direction key
+ * e.g., "Westbound2" -> "Westbound", "Eastbound" -> "Eastbound"
+ */
+function getBaseDirection(direction: string): string {
+	if (direction.startsWith('Eastbound')) return 'Eastbound';
+	if (direction.startsWith('Westbound')) return 'Westbound';
+	if (direction.startsWith('Northbound')) return 'Northbound';
+	if (direction.startsWith('Southbound')) return 'Southbound';
+	return direction; // Return as-is for non-cardinal directions
 }
 
 /**

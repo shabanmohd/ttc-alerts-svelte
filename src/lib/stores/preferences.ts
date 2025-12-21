@@ -2,6 +2,22 @@ import { writable, derived, get } from 'svelte/store';
 import { supabase } from '$lib/supabase';
 import type { UserPreferences, DevicePreferences } from '$lib/types/database';
 
+// Local preferences type for the store (union of both database types)
+type LocalPreferences = UserPreferences | DevicePreferences | LocalDefaultPrefs | null;
+
+// Local default preferences type (not matching DB exactly)
+interface LocalDefaultPrefs {
+  device_id?: string;
+  preferences?: {
+    transport_modes: string[];
+    routes: string[];
+    alert_types: string[];
+    schedule: null;
+    push_enabled: boolean;
+    show_weather_warnings: boolean;
+  };
+}
+
 // Device fingerprint for anonymous users
 let deviceFingerprint: string | null = null;
 
@@ -39,17 +55,17 @@ async function getDeviceFingerprint(): Promise<string> {
 }
 
 // Preferences state
-export const preferences = writable<UserPreferences | DevicePreferences | null>(null);
+export const preferences = writable<LocalPreferences>(null);
 export const isLoading = writable(true);
 export const isSaving = writable(false);
 export const userId = writable<string | null>(null);
 
 // Default preferences
 const defaultPreferences = {
-  transport_modes: [],
-  routes: [],
+  transport_modes: [] as string[],
+  routes: [] as string[],
   alert_types: ['disruption', 'delay', 'detour'],
-  schedule: null,
+  schedule: null as null,
   push_enabled: false,
   show_weather_warnings: false
 };
@@ -85,17 +101,17 @@ export async function loadPreferences() {
       .maybeSingle();
     
     if (data) {
-      preferences.set(data);
+      preferences.set(data as DevicePreferences);
     } else {
       // Create default device preferences
       preferences.set({
         device_id: fingerprint,
         preferences: defaultPreferences
-      } as DevicePreferences);
+      } as LocalDefaultPrefs);
     }
   } catch (error) {
     console.error('Error loading preferences:', error);
-    preferences.set(defaultPreferences as any);
+    preferences.set({ preferences: defaultPreferences } as LocalDefaultPrefs);
   } finally {
     isLoading.set(false);
   }
@@ -140,12 +156,14 @@ export async function savePreferences(updates: {
     } else {
       // Save to device_preferences
       const fingerprint = await getDeviceFingerprint();
-      const { error } = await supabase
+      const currentPrefs = (current as LocalDefaultPrefs)?.preferences || defaultPreferences;
+      // Use any type to bypass strict Supabase typing for upsert operations
+      const { error } = await (supabase as any)
         .from('device_preferences')
         .upsert({
           device_id: fingerprint,
           preferences: {
-            ...((current as any)?.preferences || defaultPreferences),
+            ...currentPrefs,
             ...dbUpdates
           },
           updated_at: new Date().toISOString()
@@ -154,7 +172,7 @@ export async function savePreferences(updates: {
       if (error) throw error;
     }
     
-    preferences.update(p => ({ ...p, ...dbUpdates } as any));
+    preferences.update(p => ({ ...p, ...dbUpdates } as LocalPreferences));
     return { success: true };
   } catch (error) {
     console.error('Error saving preferences:', error);
@@ -174,12 +192,13 @@ export async function migratePreferencesToUser(newUserId: string) {
       .eq('device_id', fingerprint)
       .single();
     
-    if (devicePrefs && devicePrefs.preferences) {
-      // Copy to user preferences
-      await supabase.from('user_preferences').upsert({
+    const typedDevicePrefs = devicePrefs as DevicePreferences | null;
+    if (typedDevicePrefs && typedDevicePrefs.preferences) {
+      // Copy to user preferences - use any to bypass strict Supabase typing
+      await (supabase as any).from('user_preferences').upsert({
         user_id: newUserId,
-        preferences: devicePrefs.preferences,
-        push_subscription: devicePrefs.push_subscription
+        preferences: typedDevicePrefs.preferences,
+        push_subscription: typedDevicePrefs.push_subscription
       });
       
       // Update store
@@ -229,20 +248,20 @@ export async function resetPreferences() {
     const currentUserId = get(userId);
     
     if (currentUserId) {
-      // Reset user preferences
-      const { error } = await supabase
+      // Reset user preferences - use any to bypass strict Supabase typing
+      const { error } = await (supabase as any)
         .from('user_preferences')
         .update({
-          ...defaultPreferences,
+          preferences: defaultPreferences,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', currentUserId);
       
       if (error) throw error;
     } else {
-      // Reset device preferences
+      // Reset device preferences - use any to bypass strict Supabase typing
       const fingerprint = await getDeviceFingerprint();
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('device_preferences')
         .update({
           preferences: defaultPreferences,
@@ -253,7 +272,7 @@ export async function resetPreferences() {
       if (error) throw error;
     }
     
-    preferences.set({ ...defaultPreferences } as any);
+    preferences.set({ preferences: defaultPreferences } as LocalDefaultPrefs);
     return { success: true };
   } catch (error) {
     console.error('Error resetting preferences:', error);

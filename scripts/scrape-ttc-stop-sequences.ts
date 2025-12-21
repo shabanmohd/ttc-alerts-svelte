@@ -110,8 +110,8 @@ async function extractDirectionLabel(page: Page): Promise<string> {
 		// Try to find the direction from the RouteDetails heading
 		// Look for elements with direction info like "East - 116 Morningside towards Finch"
 		const routeHeading =
-			document.querySelector('[class*="RouteDetails"] h1')?.innerText ||
-			document.querySelector('h1')?.innerText ||
+			(document.querySelector('[class*="RouteDetails"] h1') as HTMLElement | null)?.innerText ||
+			(document.querySelector('h1') as HTMLElement | null)?.innerText ||
 			'';
 
 		// Try to extract "East" or "West" from the beginning of the heading

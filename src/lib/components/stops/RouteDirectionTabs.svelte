@@ -162,9 +162,6 @@
         <span class="full-label">{dir.label}</span>
         <span class="short-label">{getShortLabel(dir.label)}</span>
       </span>
-      {#if count > 0}
-        <span class="stop-count">{count}</span>
-      {/if}
       {#if isSelected}
         <span class="selected-indicator"></span>
       {/if}
@@ -242,20 +239,6 @@
     .short-label {
       display: none;
     }
-  }
-
-  .stop-count {
-    font-size: 0.625rem;
-    font-weight: 600;
-    padding: 0.125rem 0.375rem;
-    background: hsl(var(--muted));
-    border-radius: 9999px;
-    color: hsl(var(--muted-foreground));
-  }
-
-  .direction-tab.selected .stop-count {
-    background: hsl(var(--primary) / 0.1);
-    color: hsl(var(--primary));
   }
 
   .selected-indicator {

@@ -19,15 +19,26 @@
   import type { ThreadWithAlerts } from "$lib/types/database";
 
   // Import route stops components
-  import RouteDirectionTabs, { type DirectionItem } from "$lib/components/stops/RouteDirectionTabs.svelte";
+  import RouteDirectionTabs, {
+    type DirectionItem,
+  } from "$lib/components/stops/RouteDirectionTabs.svelte";
   import RouteStopsList from "$lib/components/stops/RouteStopsList.svelte";
   import {
     initStopsDB,
     getStopsByRouteGroupedByDirection,
+    getRouteBranches,
+    getBranchesForDirection,
     type DirectionGroup,
     type DirectionLabel,
     type TTCStop,
+    type RouteBranchInfo,
+    type RouteEnhancedData,
   } from "$lib/data/stops-db";
+
+  // Import BranchDropdown component
+  import BranchDropdown, {
+    type BranchItem,
+  } from "$lib/components/stops/BranchDropdown.svelte";
 
   // Import route names and headsigns data
   import { getRouteName } from "$lib/data/route-names";
@@ -94,12 +105,45 @@
   // Stops state
   let directionGroups = $state<DirectionGroup[]>([]);
   let selectedDirection = $state<DirectionLabel>("All Stops");
+  let selectedBranch = $state<string | null>(null);
+  let routeBranchData = $state<RouteEnhancedData | null>(null);
   let isLoadingStops = $state(true);
   let stopsError = $state<string | null>(null);
   let expandedStopId = $state<string | null>(null);
 
-  // Derived: current stops for selected direction
+  // Derived: branches for current direction
+  let currentBranches = $derived.by((): BranchItem[] => {
+    if (!routeBranchData) return [];
+    const dirBranches = routeBranchData.directions[selectedDirection]?.branches;
+    if (!dirBranches) return [];
+    return dirBranches.map((b) => ({
+      id: b.id,
+      title: b.title,
+      stopCount: b.stops.length,
+    }));
+  });
+
+  // Derived: current stops for selected direction AND branch
   let currentStops = $derived(() => {
+    // If we have branch data and a selected branch, filter by branch stops
+    if (routeBranchData && selectedBranch) {
+      const dirBranches =
+        routeBranchData.directions[selectedDirection]?.branches;
+      const branch = dirBranches?.find((b) => b.id === selectedBranch);
+      if (branch) {
+        // Get all stops from directionGroups and filter to branch stops
+        const group = directionGroups.find(
+          (g) => g.direction === selectedDirection
+        );
+        if (group) {
+          // Branch stops array contains stop IDs - filter group stops by these IDs
+          const branchStopIds = new Set(branch.stops);
+          return group.stops.filter((s) => branchStopIds.has(s.id));
+        }
+      }
+    }
+
+    // Fallback: show all stops for direction
     const group = directionGroups.find(
       (g) => g.direction === selectedDirection
     );
@@ -114,6 +158,11 @@
   // Derived: direction labels for tabs (exclude "All Stops" if we have real directions)
   let directionLabels = $derived(() => {
     const labels = directionGroups.map((g) => g.direction);
+    console.log(
+      "[DEBUG PAGE] directionGroups:",
+      directionGroups.length,
+      directionGroups.map((g) => g.direction)
+    );
     // If we have real directions (E/W/N/S), filter out "All Stops"
     const realDirections = labels.filter((l) => l !== "All Stops");
     if (realDirections.length > 0) {
@@ -143,14 +192,27 @@
     return displayMap;
   });
 
-  // Derived: direction items for tabs (includes both key and label)
+  // Derived: direction items for tabs (shows cardinal directions like Northbound, Southbound)
   let directionItems = $derived(() => {
     const keys = directionLabels();
-    const displayMap = directionDisplayLabels();
-    return keys.map(key => ({
-      key,
-      label: displayMap[key] || key
-    } as DirectionItem));
+    // Show cardinal directions as labels (not destination labels)
+    const items = keys.map(
+      (key) =>
+        ({
+          key,
+          label: key, // Cardinal direction: Northbound, Southbound, etc.
+        }) as DirectionItem
+    );
+    console.log("[DEBUG PAGE] directionItems:", items);
+    return items;
+  });
+
+  // Derived: branch title for current direction (for single branch display)
+  let currentBranchTitle = $derived.by((): string | null => {
+    if (currentBranches.length === 1) {
+      return currentBranches[0].title;
+    }
+    return null;
   });
 
   // Derived: selected display label (for tabs)
@@ -196,6 +258,9 @@
       // Get stops grouped by direction
       directionGroups = await getStopsByRouteGroupedByDirection(routeId);
 
+      // Load branch data for this route
+      routeBranchData = getRouteBranches(routeId);
+
       // Set default selected direction to first valid (non-"All Stops" if available)
       if (directionGroups.length > 0) {
         const realDirections = directionGroups.filter(
@@ -205,6 +270,15 @@
           realDirections.length > 0
             ? realDirections[0].direction
             : directionGroups[0].direction;
+
+        // If we have branch data, select the first branch for the direction
+        if (routeBranchData) {
+          const dirBranches =
+            routeBranchData.directions[selectedDirection]?.branches;
+          if (dirBranches && dirBranches.length > 0) {
+            selectedBranch = dirBranches[0].id;
+          }
+        }
       }
     } catch (error) {
       console.error("Failed to load route stops:", error);
@@ -219,6 +293,24 @@
    */
   function handleDirectionSelect(directionKey: string) {
     selectedDirection = directionKey as DirectionLabel;
+    expandedStopId = null; // Collapse any expanded stop
+
+    // When direction changes, select first branch for that direction
+    if (routeBranchData) {
+      const dirBranches = routeBranchData.directions[directionKey]?.branches;
+      if (dirBranches && dirBranches.length > 0) {
+        selectedBranch = dirBranches[0].id;
+      } else {
+        selectedBranch = null;
+      }
+    }
+  }
+
+  /**
+   * Handle branch selection from dropdown
+   */
+  function handleBranchSelect(branchId: string) {
+    selectedBranch = branchId;
     expandedStopId = null; // Collapse any expanded stop
   }
 
@@ -471,8 +563,26 @@
           />
         </div>
 
+        <!-- Branch Dropdown OR Destination Label -->
+        {#if currentBranches.length > 1}
+          <!-- Multiple branches - show dropdown (no separate destination label needed) -->
+          <div class="mt-3 animate-fade-in branch-dropdown-container">
+            <BranchDropdown
+              branches={currentBranches}
+              selected={selectedBranch || currentBranches[0]?.id || ""}
+              onSelect={handleBranchSelect}
+              routeNumber={routeId}
+            />
+          </div>
+        {:else}
+          <!-- Single/no branch - show destination label as plain text -->
+          <p class="direction-destination-label animate-fade-in">
+            {selectedDisplayLabel()}
+          </p>
+        {/if}
+
         <!-- Stops List -->
-        <div class="mt-3">
+        <div class="mt-3 stops-list-container">
           <RouteStopsList
             stops={currentStops()}
             direction={selectedDirection}
@@ -646,5 +756,25 @@
     margin-top: 0.75rem;
     padding-top: 0.5rem;
     border-top: 1px dashed hsl(var(--border));
+  }
+
+  /* Direction destination label (shown below tabs as plain text heading) */
+  .direction-destination-label {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    font-weight: 500;
+  }
+
+  /* Branch dropdown container - needs high z-index to be above stops list */
+  .branch-dropdown-container {
+    position: relative;
+    z-index: 100;
+  }
+
+  /* Stops list container - lower z-index */
+  .stops-list-container {
+    position: relative;
+    z-index: 1;
   }
 </style>

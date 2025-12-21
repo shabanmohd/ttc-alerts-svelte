@@ -26,7 +26,7 @@
     }
     // Home tab: active when on / with any ?home= param or no param
     if (href === "/") {
-      return currentPath === "/" || currentPath === "";
+      return currentPath === "/" || currentPath.length === 0;
     }
     return false;
   }

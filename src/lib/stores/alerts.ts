@@ -1,10 +1,13 @@
 import { writable, derived, get } from 'svelte/store';
-import type { Alert, Thread, ThreadWithAlerts, Maintenance, PlannedMaintenance } from '$lib/types/database';
+import type { Alert, Thread, ThreadWithAlerts, Maintenance, PlannedMaintenance, PartialAlert } from '$lib/types/database';
 import { supabase } from '$lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+// Re-export PartialAlert for consumers that import from alerts store
+export type { PartialAlert } from '$lib/types/database';
+
 // Core alert state
-export const alerts = writable<Alert[]>([]);
+export const alerts = writable<PartialAlert[]>([]);
 export const threads = writable<Thread[]>([]);
 export const isLoading = writable(true);
 export const error = writable<string | null>(null);
@@ -211,11 +214,11 @@ export async function fetchAlerts(): Promise<void> {
     if (rszError) throw rszError;
     
     // Merge recent alerts with accessibility and RSZ alerts (deduplicate by alert_id)
-    const allRecentAlerts = recentAlerts || [];
-    const allAccessibilityAlerts = accessibilityAlerts || [];
-    const allRszAlerts = rszAlerts || [];
+    const allRecentAlerts: PartialAlert[] = (recentAlerts || []) as PartialAlert[];
+    const allAccessibilityAlerts: PartialAlert[] = (accessibilityAlerts || []) as PartialAlert[];
+    const allRszAlerts: PartialAlert[] = (rszAlerts || []) as PartialAlert[];
     const existingIds = new Set(allRecentAlerts.map(a => a.alert_id));
-    const mergedAlerts = [
+    const mergedAlerts: PartialAlert[] = [
       ...allRecentAlerts,
       ...allAccessibilityAlerts.filter(a => !existingIds.has(a.alert_id)),
       ...allRszAlerts.filter(a => !existingIds.has(a.alert_id))
@@ -224,11 +227,11 @@ export async function fetchAlerts(): Promise<void> {
     allRszAlerts.forEach(a => existingIds.add(a.alert_id));
     
     // Get unique thread IDs from all alerts (recent + accessibility + RSZ)
-    const threadIds = [...new Set(mergedAlerts.map(a => a.thread_id).filter(Boolean))];
+    const threadIds = [...new Set(mergedAlerts.map(a => a.thread_id).filter((id): id is string => Boolean(id)))];
     
     // Step 2: Fetch ALL alerts from these active threads (not just last 24h)
     // This ensures we get the full thread history for display
-    let allAlertsData = mergedAlerts;
+    let allAlertsData: PartialAlert[] = mergedAlerts;
     
     if (threadIds.length > 0) {
       // Fetch all alerts for the identified threads (up to 30 days to cover accessibility issues)
@@ -243,7 +246,7 @@ export async function fetchAlerts(): Promise<void> {
       
       // Merge: use thread alerts as base, which includes all alerts for those threads
       // This replaces the recent-only alerts with the full thread history
-      allAlertsData = threadAlerts || [];
+      allAlertsData = (threadAlerts || []) as PartialAlert[];
     }
     
     // Step 3: Fetch threads - select only needed columns to reduce egress
@@ -271,7 +274,7 @@ export async function fetchAlerts(): Promise<void> {
 }
 
 // Handle incoming alert from Realtime (minimal data transfer - only the changed row)
-function handleAlertInsert(newAlert: Alert): void {
+function handleAlertInsert(newAlert: PartialAlert): void {
   alerts.update(current => {
     // Add new alert at the beginning (most recent first)
     const updated = [newAlert, ...current];
@@ -281,9 +284,10 @@ function handleAlertInsert(newAlert: Alert): void {
   
   // Track this alert's thread as recently added for animation
   if (newAlert.thread_id) {
+    const threadId = newAlert.thread_id; // Capture in local variable for narrowing
     recentlyAddedThreadIds.update(ids => {
       const newIds = new Set(ids);
-      newIds.add(newAlert.thread_id);
+      newIds.add(threadId);
       return newIds;
     });
     
@@ -291,7 +295,7 @@ function handleAlertInsert(newAlert: Alert): void {
     setTimeout(() => {
       recentlyAddedThreadIds.update(ids => {
         const newIds = new Set(ids);
-        newIds.delete(newAlert.thread_id);
+        newIds.delete(threadId);
         return newIds;
       });
     }, 1000);
@@ -300,7 +304,7 @@ function handleAlertInsert(newAlert: Alert): void {
   lastUpdated.set(new Date());
 }
 
-function handleAlertUpdate(updatedAlert: Alert): void {
+function handleAlertUpdate(updatedAlert: PartialAlert): void {
   alerts.update(current => 
     current.map(a => a.alert_id === updatedAlert.alert_id ? updatedAlert : a)
   );

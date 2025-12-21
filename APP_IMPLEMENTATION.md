@@ -149,22 +149,24 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Static (`static/`)
 
-| File                              | Status | Purpose                                                                         |
-| --------------------------------- | ------ | ------------------------------------------------------------------------------- |
-| `manifest.json`                   | ✅     | PWA manifest (Version B: "TTC Alerts Beta")                                     |
-| `sw.js`                           | ✅     | Service worker (Version B: beta cache prefix)                                   |
-| `icons/*`                         | ✅     | All PWA icons (72-512px)                                                        |
-| `data/ttc-stops.json`             | ✅     | TTC stops database (9,346 stops, 184 subway w/ sequence) 🆕 **V-B**             |
-| `data/ttc-route-stop-orders.json` | ✅     | Per-route ordered stop lists (210 routes, auto-generated from NextBus API) 🆕 **V-B** |
-| `data/ttc-schedules.json`         | ✅     | First departure schedules (weekday/sat/sun) 🆕 **V-B**                          |
+| File                              | Status | Purpose                                                                               |
+| --------------------------------- | ------ | ------------------------------------------------------------------------------------- |
+| `manifest.json`                   | ✅     | PWA manifest (Version B: "TTC Alerts Beta")                                           |
+| `sw.js`                           | ✅     | Service worker (Version B: beta cache prefix)                                         |
+| `icons/*`                         | ✅     | All PWA icons (72-512px)                                                              |
+| `data/ttc-stops.json`             | ✅     | TTC stops database (9,346 stops, 184 subway w/ sequence) 🆕 **V-B**                   |
+| `data/ttc-route-stop-orders.json` | ✅     | Per-route ordered stop lists (211 routes, auto-generated from NextBus API) 🆕 **V-B** |
+| `data/ttc-schedules.json`         | ✅     | First departure schedules (weekday/sat/sun) 🆕 **V-B**                                |
 
 ### Data (`src/lib/data/`) 🆕 **Version B Only**
 
-| File                         | Status | Purpose                                                                  |
-| ---------------------------- | ------ | ------------------------------------------------------------------------ |
-| `stops-db.ts`                | ✅     | IndexedDB layer with Dexie.js, GTFS direction/sequence for subway        |
-| `ttc-route-stop-orders.json` | ✅     | Route stop ordering (210 routes, auto-generated from NextBus API) 🆕 **V-B** |
-| `route-names.ts`             | ✅     | Comprehensive TTC route name lookup (220+ routes)                        |
+| File                         | Status | Purpose                                                                            |
+| ---------------------------- | ------ | ---------------------------------------------------------------------------------- |
+| `stops-db.ts`                | ✅     | IndexedDB layer with Dexie.js, GTFS direction/sequence, branch helpers             |
+| `ttc-route-stop-orders.json` | ✅     | Route stop ordering (211 routes, auto-generated from NextBus API) 🆕 **V-B**       |
+| `ttc-route-branches.json`    | ✅     | Route branch data - directions with branches (102A/B/C/D, 501 variants) 🆕 **V-B** |
+| `ttc-direction-labels.json`  | ✅     | Direction display labels ("Towards Kennedy", etc.) 🆕 **V-B**                      |
+| `route-names.ts`             | ✅     | Comprehensive TTC route name lookup (220+ routes)                                  |
 
 ### Stops Components (`src/lib/components/stops/`) 🆕 **Version B Only**
 
@@ -172,10 +174,11 @@ Real-time Toronto Transit alerts with biometric authentication.
 | --------------------------- | ------ | ------------------------------------------------------------- |
 | `StopSearch.svelte`         | ✅     | Stop search with autocomplete, direction badges, ID search    |
 | `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops                              |
+| `BranchDropdown.svelte`     | ✅     | Branch selection dropdown for multi-branch routes (102, 501)  |
 | `MyStops.svelte`            | ✅     | Full-page My Stops list                                       |
 | `MyStopsEmpty.svelte`       | ✅     | Empty state for My Stops                                      |
 | `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                          |
-| `RouteDirectionTabs.svelte` | ✅     | Direction tabs for route pages (terminal names for subway)    |
+| `RouteDirectionTabs.svelte` | ✅     | Direction tabs (cardinal directions) for route pages          |
 | `RouteMapPreview.svelte`    | ✅     | Map preview for route stops                                   |
 | `RouteStopItem.svelte`      | ✅     | Stop item with ETA, platform badges, subway direction parsing |
 | `RouteStopsList.svelte`     | ✅     | List of stops with ETA expand/collapse, routeFilter prop      |
@@ -291,13 +294,14 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
-| File                         | Status | Purpose                                                                  |
-| ---------------------------- | ------ | ------------------------------------------------------------------------ |
-| `transform-gtfs.js`          | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT          |
-| `generate-icons.js`          | ✅     | Generate PWA icons from source                                           |
-| `translate-i18n.cjs`         | ✅     | Sync i18n source files to translations folder, DeepL API                 |
-| `process-gtfs-schedules.ts`  | ✅     | Process TTC GTFS data to extract first departure times (AM + PM for 9xx) |
-| `fetch-route-sequences.cjs`  | ✅     | Fetch sequential stop orders from NextBus API (210 routes) 🆕            |
+| File                        | Status | Purpose                                                                   |
+| --------------------------- | ------ | ------------------------------------------------------------------------- |
+| `transform-gtfs.js`         | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT           |
+| `generate-icons.js`         | ✅     | Generate PWA icons from source                                            |
+| `translate-i18n.cjs`        | ✅     | Sync i18n source files to translations folder, DeepL API                  |
+| `process-gtfs-schedules.ts` | ✅     | Process TTC GTFS data to extract first departure times (AM + PM for 9xx)  |
+| `fetch-route-sequences.cjs` | ✅     | Fetch sequential stop orders from NextBus API (210 routes) 🆕             |
+| `fetch-route-branches.ts`   | ✅     | Fetch branch data from NextBus API (224 routes, direction/branch mapping) |
 
 ### Migrations (`supabase/migrations/`)
 
