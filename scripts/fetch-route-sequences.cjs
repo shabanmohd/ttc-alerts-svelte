@@ -74,6 +74,7 @@ function fetchRouteConfig(routeNumber) {
 
 /**
  * Extract stop sequences from route config
+ * Also returns direction labels (e.g., "32d Eglinton West towards Jane & Emmett")
  */
 function extractStopSequences(routeConfig) {
   if (!routeConfig || !routeConfig.route) return null;
@@ -92,12 +93,14 @@ function extractStopSequences(routeConfig) {
   // Extract direction sequences
   const directions = Array.isArray(route.direction) ? route.direction : [route.direction].filter(Boolean);
   const sequences = {};
+  const labels = {}; // Store display labels
   
   for (const dir of directions) {
     if (!dir || !dir.stop) continue;
     
     // Determine direction key from name
     let dirKey = dir.name || 'Unknown';
+    const title = dir.title || '';
     
     // Normalize direction names
     if (dirKey.includes('North') || dirKey === 'North') dirKey = 'Northbound';
@@ -120,16 +123,30 @@ function extractStopSequences(routeConfig) {
     // Only add if we have stops
     if (stopIds.length > 0) {
       // If direction already exists, use a numbered suffix
+      let finalKey = dirKey;
       if (sequences[dirKey]) {
         let suffix = 2;
         while (sequences[`${dirKey}${suffix}`]) suffix++;
-        dirKey = `${dirKey}${suffix}`;
+        finalKey = `${dirKey}${suffix}`;
       }
-      sequences[dirKey] = stopIds;
+      sequences[finalKey] = stopIds;
+      
+      // Extract meaningful label from title
+      // e.g., "West - 32d Eglinton West towards Jane & Emmett via Mount Dennis Station"
+      // Extract the part after "towards" or "to"
+      let displayLabel = finalKey; // Default to direction key
+      const towardsMatch = title.match(/towards?\s+(.+)/i);
+      if (towardsMatch) {
+        displayLabel = `Towards ${towardsMatch[1]}`;
+      } else if (title.includes(' - ')) {
+        // Use the part after " - "
+        displayLabel = title.split(' - ').slice(1).join(' - ').trim();
+      }
+      labels[finalKey] = displayLabel;
     }
   }
   
-  return Object.keys(sequences).length > 0 ? sequences : null;
+  return Object.keys(sequences).length > 0 ? { sequences, labels } : null;
 }
 
 /**
@@ -145,9 +162,12 @@ function sleep(ms) {
 async function main() {
   console.log('🚌 Fetching TTC route sequences from NextBus API...\n');
   
-  const results = {};
   const errors = [];
   const notFound = [];
+  
+  // Separate objects for sequences and labels
+  const sequenceResults = {};
+  const labelResults = {};
   
   // Process routes with rate limiting
   for (let i = 0; i < ALL_ROUTES.length; i++) {
@@ -162,10 +182,11 @@ async function main() {
         continue;
       }
       
-      const sequences = extractStopSequences(config);
+      const result = extractStopSequences(config);
       
-      if (sequences) {
-        results[routeNum] = sequences;
+      if (result) {
+        sequenceResults[routeNum] = result.sequences;
+        labelResults[routeNum] = result.labels;
       } else {
         errors.push({ route: routeNum, error: 'No direction data' });
       }
@@ -179,27 +200,37 @@ async function main() {
   
   console.log('\n');
   
-  // Write results
+  // Write sequence results
   const outputPath = path.join(__dirname, '..', 'static', 'data', 'ttc-route-stop-orders.json');
-  fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
+  fs.writeFileSync(outputPath, JSON.stringify(sequenceResults, null, 2));
   
   // Also copy to src/lib/data
   const srcOutputPath = path.join(__dirname, '..', 'src', 'lib', 'data', 'ttc-route-stop-orders.json');
-  fs.writeFileSync(srcOutputPath, JSON.stringify(results, null, 2));
+  fs.writeFileSync(srcOutputPath, JSON.stringify(sequenceResults, null, 2));
+  
+  // Write direction labels
+  const labelsPath = path.join(__dirname, '..', 'static', 'data', 'ttc-direction-labels.json');
+  fs.writeFileSync(labelsPath, JSON.stringify(labelResults, null, 2));
+  
+  // Also copy to src/lib/data
+  const srcLabelsPath = path.join(__dirname, '..', 'src', 'lib', 'data', 'ttc-direction-labels.json');
+  fs.writeFileSync(srcLabelsPath, JSON.stringify(labelResults, null, 2));
   
   // Summary
   console.log('=== SUMMARY ===');
-  console.log(`✅ Routes processed: ${Object.keys(results).length}`);
+  console.log(`✅ Routes processed: ${Object.keys(sequenceResults).length}`);
   console.log(`⚠️  Routes not found: ${notFound.length}${notFound.length > 0 ? ' (' + notFound.join(', ') + ')' : ''}`);
   console.log(`❌ Errors: ${errors.length}${errors.length > 0 ? '\n' + errors.map(e => `   - Route ${e.route}: ${e.error}`).join('\n') : ''}`);
   console.log(`\n📁 Output written to:`);
   console.log(`   - ${outputPath}`);
   console.log(`   - ${srcOutputPath}`);
+  console.log(`   - ${labelsPath}`);
+  console.log(`   - ${srcLabelsPath}`);
   
   // Show sample
-  console.log('\n📊 Sample output (route 116):');
-  if (results['116']) {
-    console.log(JSON.stringify(results['116'], null, 2).split('\n').slice(0, 10).join('\n') + '\n   ...');
+  console.log('\n📊 Sample output (route 32):');
+  if (labelResults['32']) {
+    console.log('Labels:', JSON.stringify(labelResults['32'], null, 2));
   }
 }
 

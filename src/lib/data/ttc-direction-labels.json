@@ -1,0 +1,990 @@
+{
+  "7": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Bathurst Station"
+  },
+  "8": {
+    "Northbound": "Towards Warden Station via Broadview Station and O'Connor",
+    "Southbound": "Towards Hennick Bridgepoint Hospital via O'Connor and Broadview Station"
+  },
+  "9": {
+    "Northbound": "Towards Scarborough Centre Stn",
+    "Southbound": "Towards Warden Station"
+  },
+  "10": {
+    "Westbound": "Towards Don Mills Station",
+    "Eastbound": "Towards Victoria Park"
+  },
+  "11": {
+    "Southbound": "Towards Davisville Station via Sunnybrook",
+    "Northbound": "Towards Steeles via Sunnybrook"
+  },
+  "12": {
+    "Westbound": "Towards Victoria Park Station",
+    "Eastbound": "Towards U of T Scarborough",
+    "Eastbound2": "Towards Kennedy Station via Brimley",
+    "Eastbound3": "Towards Kennedy Station via Variety Village and Brimley",
+    "Westbound2": "Towards Victoria Park Station via Brimley and Variety Village",
+    "Westbound3": "Towards Victoria Park Station via Brimley"
+  },
+  "13": {
+    "Southbound": "Towards Gerrard",
+    "Northbound": "Towards Eglinton Station"
+  },
+  "14": {
+    "Westbound": "Towards Caledonia",
+    "Eastbound": "Towards Davisville Station"
+  },
+  "15": {
+    "Eastbound": "Towards Royal York Station",
+    "Westbound": "Towards Sherway Gardens"
+  },
+  "16": {
+    "Northbound": "Towards Scarborough Centre Stn",
+    "Southbound": "Towards Warden Station"
+  },
+  "17": {
+    "Northbound": "Towards Highway 7",
+    "Southbound": "Towards Warden Station"
+  },
+  "19": {
+    "Northbound": "Towards Dupont",
+    "Southbound": "Towards Union Station"
+  },
+  "20": {
+    "Westbound": "Towards Main Street Station",
+    "Eastbound": "Towards Kennedy Station"
+  },
+  "21": {
+    "Northbound": "Towards Steeles via Scarborough Centre Stn",
+    "Southbound": "Towards Kennedy Station via Scarborough Centre Stn"
+  },
+  "22": {
+    "Northbound": "Towards Coxwell Station",
+    "Southbound": "Towards Queen"
+  },
+  "23": {
+    "Southbound": "Towards Main Street Station",
+    "Northbound": "Towards St Clair"
+  },
+  "24": {
+    "Northbound": "Towards Don Mills Station via Consumers Rd",
+    "Southbound": "Towards Victoria Park Station via Consumers Rd",
+    "Northbound2": "Towards Steeles",
+    "Southbound2": "Towards Danforth"
+  },
+  "25": {
+    "Southbound": "Towards Broadview Station",
+    "Northbound": "Towards Steeles",
+    "Southbound2": "Towards Broadview Station via Don Mills Station",
+    "Southbound3": "Towards Broadview Station",
+    "Northbound2": "Towards Steeles via Don Mills Station",
+    "Southbound4": "Towards Don Mills Station",
+    "Northbound3": "Towards Steeles via Don Mills Station"
+  },
+  "26": {
+    "Westbound": "Towards Jane Station",
+    "Eastbound": "Towards St George Station"
+  },
+  "28": {
+    "Westbound": "Towards Davisville Station",
+    "Eastbound": "Towards Brick Works"
+  },
+  "29": {
+    "Northbound": "Towards Wilson Station",
+    "Southbound": "Towards Exhibition (Princes' Gates)"
+  },
+  "30": {
+    "Southbound": "Towards High Park Station",
+    "Northbound": "Towards Runnymede"
+  },
+  "31": {
+    "Northbound": "Towards Coxwell Station via Greenwood Station",
+    "Southbound": "Towards Queen & Eastern via Greenwood Station"
+  },
+  "32": {
+    "Westbound": "Towards Renforth Station",
+    "Westbound2": "Towards Jane & Emmett via Mount Dennis Station",
+    "Westbound3": "Towards Renforth Station",
+    "Eastbound": "Towards Eglinton Station via Cedarvale Station",
+    "Eastbound2": "Towards Cedarvale Station via Mount Dennis Station",
+    "Eastbound3": "Towards Eglinton Station via Cedarvale Station",
+    "Eastbound4": "Towards Eglinton Station via Cedarvale Station",
+    "Eastbound5": "Towards Eglinton Station via Cedarvale Station",
+    "Westbound4": "Towards Jane & Trethewey",
+    "Eastbound6": "Towards Cedarvale Station via Mount Dennis Station",
+    "Westbound5": "Towards Jane & Emmett via Mount Dennis Station",
+    "Westbound6": "Towards Jane & Trethewey"
+  },
+  "33": {
+    "Southbound": "Towards St Clair West Station",
+    "Northbound": "Towards Eglinton (Roselawn)"
+  },
+  "34": {
+    "Eastbound": "Towards Flemingdon Park (Grenoble & Spanbridge)",
+    "Eastbound2": "Towards Kennedy Station",
+    "Westbound": "Towards Eglinton Station",
+    "Eastbound3": "Towards Kennedy Station",
+    "Westbound2": "Towards Eglinton Station"
+  },
+  "35": {
+    "Northbound": "Towards Pioneer Village Station",
+    "Southbound": "Towards Jane Station via Hullmar",
+    "Southbound2": "Towards Jane Station",
+    "Northbound2": "Towards Pioneer Village Station via Hullmar"
+  },
+  "36": {
+    "Westbound": "Towards Finch West Station",
+    "Eastbound": "Towards Finch Station"
+  },
+  "37": {
+    "Northbound": "Towards Humber College via Rexdale Blvd and Woodbine Racetrack",
+    "Southbound": "Towards Islington Station",
+    "Southbound2": "Towards Islington Station via Woodbine Racetrack and Rexdale",
+    "Northbound2": "Towards Steeles"
+  },
+  "38": {
+    "Eastbound": "Towards Rouge Hill GO Stn via Scarborough Centre Stn",
+    "Westbound": "Towards Kennedy Station via Scarborough Centre Stn"
+  },
+  "39": {
+    "Eastbound": "Towards Victoria Park and Gordon Baker",
+    "Westbound": "Towards Finch Station",
+    "Westbound2": "Towards Finch Station",
+    "Westbound3": "Towards Finch Station",
+    "Eastbound2": "Towards Old Finch and Morningview"
+  },
+  "40": {
+    "Eastbound": "Towards Dundas West Station",
+    "Westbound": "Towards Kipling Station",
+    "Eastbound2": "Towards Dundas West Station"
+  },
+  "41": {
+    "Southbound": "Towards Keele Station",
+    "Northbound": "Towards Pioneer Village Station"
+  },
+  "42": {
+    "Westbound": "Towards Finch Station",
+    "Eastbound": "Towards Middlefield (Dynamic)"
+  },
+  "43": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Kennedy Station",
+    "Southbound2": "Towards Kennedy Station",
+    "Northbound2": "Towards Scarborough Centre Stn via Progress"
+  },
+  "44": {
+    "Northbound": "Towards Kipling Station",
+    "Southbound": "Towards Lake Shore"
+  },
+  "45": {
+    "Southbound": "Towards Kipling Station",
+    "Southbound2": "Towards Kipling Station",
+    "Northbound": "Towards Carlingview via Belfield",
+    "Northbound2": "Towards Steeles"
+  },
+  "46": {
+    "Southbound": "Towards Kipling Station",
+    "Northbound": "Towards Steeles"
+  },
+  "47": {
+    "Southbound": "Towards Queen via Bridgeland and Caledonia",
+    "Northbound": "Towards Yorkdale Station via Caledonia and Orfus",
+    "Northbound2": "Towards Yorkdale Station via Caledonia and Bridgeland",
+    "Southbound2": "Towards Queen via Orfus and Caledonia"
+  },
+  "48": {
+    "Eastbound": "Towards Royal York Station",
+    "Westbound": "Towards Mill Rd",
+    "Eastbound2": "Towards Royal York Station"
+  },
+  "49": {
+    "Eastbound": "Towards Kipling Station",
+    "Westbound": "Towards Markland Wood"
+  },
+  "50": {
+    "Eastbound": "Towards Islington Station",
+    "Westbound": "Towards Mill Road"
+  },
+  "51": {
+    "Southbound": "Towards Eglinton Station",
+    "Northbound": "Towards Steeles"
+  },
+  "52": {
+    "Eastbound": "Towards Lawrence Station",
+    "Westbound": "Towards Westwood via Dixon Rd",
+    "Westbound2": "Towards Martin Grove via The Westway",
+    "Westbound3": "Towards Lawrence Station",
+    "Westbound4": "Towards Martin Grove via The Westway",
+    "Westbound5": "Towards Royal York",
+    "Westbound6": "Towards McNaughton via Dixon Rd",
+    "Westbound7": "Towards Westwood via Dixon Rd",
+    "Westbound8": "Towards Pearson Airport via Dixon Rd",
+    "Eastbound2": "Towards Lawrence West Station",
+    "Eastbound3": "Towards Lawrence Station",
+    "Eastbound4": "Towards Lawrence Station",
+    "Eastbound5": "Towards Lawrence Station",
+    "Eastbound6": "Towards Lawrence Station"
+  },
+  "53": {
+    "Eastbound": "Towards Staines",
+    "Westbound": "Towards Finch Station"
+  },
+  "54": {
+    "Westbound": "Towards Eglinton Station",
+    "Eastbound": "Towards Starspray"
+  },
+  "55": {
+    "Northbound": "Towards Warren Park",
+    "Southbound": "Towards Jane Station"
+  },
+  "56": {
+    "Northbound": "Towards Eglinton Station",
+    "Southbound": "Towards Donlands Station"
+  },
+  "57": {
+    "Southbound": "Towards Kennedy Station",
+    "Northbound": "Towards Steeles"
+  },
+  "59": {
+    "Westbound": "Towards Weston Rd via Culford and Benton and Church",
+    "Westbound2": "Towards Weston Rd via Culford and Benton and Gary Dr",
+    "Eastbound": "Towards Lawrence West Station via Culford and Benton",
+    "Eastbound2": "Towards Lawrence West Station via Culford and Benton"
+  },
+  "60": {
+    "Eastbound": "Towards Finch Station via Pioneer Village Station",
+    "Westbound": "Towards Highway 27 via Pioneer Village Station",
+    "Westbound2": "Towards Martin Grove via Pioneer Village Station",
+    "Eastbound2": "Towards Finch Station via Pioneer Village Station"
+  },
+  "61": {
+    "Southbound": "Towards Eglinton Station",
+    "Northbound": "Towards Highway 401"
+  },
+  "62": {
+    "Eastbound": "Towards Main Street Station via Broadview Station",
+    "Westbound": "Towards Hennick Bridgepoint Hospital via Broadview Station"
+  },
+  "63": {
+    "Northbound": "Towards Cedarvale Station",
+    "Southbound": "Towards Liberty Village"
+  },
+  "64": {
+    "Southbound": "Towards Queen",
+    "Northbound": "Towards Main Street Station"
+  },
+  "65": {
+    "Northbound": "Towards Castle Frank Station",
+    "Southbound": "Towards Queens Quay and Sherbourne"
+  },
+  "66": {
+    "Northbound": "Towards Old Mill Station",
+    "Northbound2": "Towards Old Mill Station",
+    "Southbound": "Towards Lake Shore",
+    "Southbound2": "Towards Humber Loop"
+  },
+  "67": {
+    "Southbound": "Towards Victoria Park Station",
+    "Northbound": "Towards Ellesmere"
+  },
+  "68": {
+    "Northbound": "Towards Major Mackenzie",
+    "Southbound": "Towards Warden Station"
+  },
+  "69": {
+    "Southbound": "Towards St Clair (Barkdene Hills)",
+    "Northbound": "Towards Warden Station"
+  },
+  "70": {
+    "Westbound": "Towards Coxwell Station",
+    "Eastbound": "Towards Eglinton"
+  },
+  "71": {
+    "Northbound": "Towards Industry St",
+    "Southbound": "Towards Runnymede Station"
+  },
+  "72": {
+    "Southbound": "Towards Commissioners via Pape Stn",
+    "Northbound": "Towards Eglinton & Don Mills via Pape Station"
+  },
+  "73": {
+    "Southbound": "Towards Royal York Station",
+    "Southbound2": "Towards Royal York Station",
+    "Northbound": "Towards Claireport via Albion Rd",
+    "Northbound2": "Towards Mount Dennis Station"
+  },
+  "74": {
+    "Northbound": "Towards Eglinton Station",
+    "Southbound": "Towards St Clair Station"
+  },
+  "75": {
+    "Southbound": "Towards Queens Quay via South Drive",
+    "Northbound": "Towards Sherbourne Station"
+  },
+  "76": {
+    "Northbound": "Towards Royal York Station",
+    "Southbound": "Towards Queensway and Grand Avenue",
+    "Northbound2": "Towards Royal York Station",
+    "Southbound2": "Towards Lake Shore"
+  },
+  "77": {
+    "Southbound": "Towards Queensway",
+    "Northbound": "Towards Runnymede Station"
+  },
+  "78": {
+    "Eastbound": "Towards Bayview",
+    "Westbound": "Towards York Mills Station"
+  },
+  "79": {
+    "Southbound": "Towards Runnymede Station via Foxwell/Pritchard",
+    "Northbound": "Towards Lawrence & Jane via St Clair",
+    "Northbound2": "Towards Lawrence & Jane via Pritchard/Foxwell",
+    "Southbound2": "Towards Jane",
+    "Southbound3": "Towards Runnymede Station via St Clair"
+  },
+  "80": {
+    "Westbound": "Towards Sherway Gardens via Marine Parade and Mimico GO",
+    "Westbound2": "Towards Sherway Gardens",
+    "Eastbound": "Towards Keele Station"
+  },
+  "82": {
+    "Eastbound": "Towards Summerhill",
+    "Westbound": "Towards Rosedale Station"
+  },
+  "83": {
+    "Northbound": "Towards Donlands Station",
+    "Southbound": "Towards Commissioners"
+  },
+  "84": {
+    "Eastbound": "Towards Sheppard-Yonge Station via Sheppard West Station",
+    "Eastbound2": "Towards Sheppard-Yonge Station via Sheppard West Station",
+    "Eastbound3": "Towards Sheppard-Yonge Station via Sheppard West Station",
+    "Westbound": "Towards Weston Rd",
+    "Westbound2": "Towards Pioneer Village Station via Oakdale",
+    "Westbound3": "Towards Steeles via Arrow Rd"
+  },
+  "85": {
+    "Westbound": "Towards Don Mills Station",
+    "Eastbound": "Towards Rouge Hill GO Station"
+  },
+  "86": {
+    "Eastbound": "Towards Sheppard",
+    "Eastbound2": "Towards Toronto Zoo",
+    "Westbound": "Towards Kennedy Station",
+    "Westbound2": "Towards Kennedy Station",
+    "Eastbound3": "Towards Beechgrove via Lawrence"
+  },
+  "87": {
+    "Westbound": "Towards Broadview Station via East York Acres",
+    "Eastbound": "Towards Main Street Station via East York Acres"
+  },
+  "88": {
+    "Eastbound": "Towards Laird Station via Thorncliffe Park",
+    "Westbound": "Towards St Clair Station via Thorncliffe Park",
+    "Westbound2": "Towards St Clair Station",
+    "Eastbound2": "Towards Laird Station"
+  },
+  "89": {
+    "Northbound": "Towards Albion Rd",
+    "Southbound": "Towards Keele Station"
+  },
+  "90": {
+    "Northbound": "Towards Cedarvale Station",
+    "Southbound": "Towards St Clair West Station"
+  },
+  "91": {
+    "Northbound": "Towards York Mills",
+    "Southbound": "Towards Woodbine Station via Railside",
+    "Southbound2": "Towards Woodbine Station via Eglinton and Sunrise",
+    "Southbound3": "Towards Woodbine Station",
+    "Northbound2": "Towards York Mills via Railside",
+    "Southbound4": "Towards Woodbine Station",
+    "Northbound3": "Towards York Mills"
+  },
+  "92": {
+    "Northbound": "Towards Woodbine Station",
+    "Southbound": "Towards Lake Shore"
+  },
+  "93": {
+    "Southbound": "Towards Woodbine Station",
+    "Northbound": "Towards Parkview Hills"
+  },
+  "94": {
+    "Eastbound": "Towards Castle Frank Station",
+    "Westbound": "Towards Ossington Station"
+  },
+  "95": {
+    "Eastbound": "Towards U of T Scarborough",
+    "Eastbound2": "Towards Port Union",
+    "Westbound": "Towards York Mills Station",
+    "Westbound2": "Towards York Mills Station"
+  },
+  "96": {
+    "Eastbound": "Towards York Mills Station via Martin Grove and Westhumber",
+    "Westbound": "Towards Carrier Dr via John Garland and Westmore Dr",
+    "Westbound2": "Towards Humberline and Albion via Westhumber and Martin Grove",
+    "Eastbound2": "Towards York Mills Station via John Garland and Kipling",
+    "Eastbound3": "Towards York Mills Station via Martin Grove and Westhumber",
+    "Westbound3": "Towards Carrier Dr via Kipling and John Garland",
+    "Eastbound4": "Towards York Mills Station via John Garland and Kipling",
+    "Westbound4": "Towards Carrier Dr via Kipling and John Garland",
+    "Eastbound5": "Towards York Mills Station via John Garland and Kipling",
+    "Westbound5": "Towards Humberline and Albion via Westhumber and Martin Grove",
+    "Eastbound6": "Towards York Mills Station via John Garland and Kipling"
+  },
+  "97": {
+    "Northbound": "Towards Steeles via Yonge Blvd",
+    "Northbound2": "Towards Steeles",
+    "Northbound3": "Towards Eglinton Station",
+    "Southbound": "Towards Union Station",
+    "Southbound2": "Towards St Clair Station via Yonge Blvd",
+    "Southbound3": "Towards St Clair Station"
+  },
+  "98": {
+    "Eastbound": "Towards Steeles via Sheppard-Yonge Station",
+    "Westbound": "Towards Peckham via Sheppard-Yonge Station"
+  },
+  "99": {
+    "Southbound": "Towards Arrow Rd",
+    "Northbound": "Towards Jane"
+  },
+  "100": {
+    "Northbound": "Towards Don Mills & Wynford",
+    "Southbound": "Towards Broadview Station"
+  },
+  "101": {
+    "Southbound": "Towards Wilson Station via Stanley Greene and Downsview Park Station",
+    "Southbound2": "Towards Stanley Greene via Downsview Park Station",
+    "Northbound": "Towards Finch West Station via Downsview Park Station"
+  },
+  "102": {
+    "Southbound": "Towards Warden Station",
+    "Northbound": "Towards Major Mackenzie",
+    "Northbound2": "Towards Steeles via Dynamic Dr",
+    "Southbound2": "Towards Warden Station via Dynamic Dr"
+  },
+  "103": {
+    "Northbound": "Towards Doncliffe",
+    "Southbound": "Towards Eglinton Station"
+  },
+  "104": {
+    "Northbound": "Towards Sheppard West Station",
+    "Southbound": "Towards Wilson Station"
+  },
+  "105": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Sheppard West Station"
+  },
+  "106": {
+    "Eastbound": "Towards Sheppard West Station",
+    "Westbound": "Towards Pioneer Village Station"
+  },
+  "107": {
+    "Northbound": "Towards Finch West Station",
+    "Southbound": "Towards Sheppard West Station"
+  },
+  "108": {
+    "Eastbound": "Towards Sheppard West Station via Grandravine",
+    "Westbound": "Towards Pioneer Village Station via Arleta",
+    "Westbound2": "Towards Pioneer Village Station via Grandravine",
+    "Eastbound2": "Towards Sheppard West Station via Arleta"
+  },
+  "109": {
+    "Northbound": "Towards Neptune via Flemington",
+    "Southbound": "Towards Cedarvale Station via Varna",
+    "Southbound2": "Towards Cedarvale Station via Flemington",
+    "Northbound2": "Towards Neptune via Varna"
+  },
+  "110": {
+    "Northbound": "Towards Islington Station",
+    "Southbound": "Towards Kipling and Lake Shore",
+    "Northbound2": "Towards Islington Station via 30th Street and Horner",
+    "Northbound3": "Towards Islington Station via Browns Line and Horner",
+    "Southbound2": "Towards Long Branch via Horner and 30th Street",
+    "Southbound3": "Towards Long Branch via Horner and Browns Line"
+  },
+  "111": {
+    "Southbound": "Towards Kipling Station",
+    "Northbound": "Towards Eglinton"
+  },
+  "112": {
+    "Northbound": "Towards Disco Rd via Renforth Station",
+    "Southbound": "Towards Kipling Station via Renforth Station"
+  },
+  "113": {
+    "Eastbound": "Towards Kennedy Station",
+    "Westbound": "Towards Main Street Station"
+  },
+  "114": {
+    "Westbound": "Towards Union Station",
+    "Eastbound": "Towards Carlaw via Ookwemin Minising"
+  },
+  "115": {
+    "Westbound": "Towards York Mills Station",
+    "Eastbound": "Towards Leslie"
+  },
+  "116": {
+    "Westbound": "Towards Kennedy Station",
+    "Eastbound": "Towards Finch and Morningside"
+  },
+  "117": {
+    "Northbound": "Towards Warden Station",
+    "Southbound": "Towards Victoria Park Station"
+  },
+  "118": {
+    "Eastbound": "Towards Wilson Station via Tandridge",
+    "Westbound": "Towards Thistle Down via Tandridge",
+    "Westbound2": "Towards Thistle Down",
+    "Eastbound2": "Towards Wilson Station"
+  },
+  "119": {
+    "Westbound": "Towards Milvan via Torbarrie and Fenmar",
+    "Eastbound": "Towards Wilson Station via Torbarrie",
+    "Eastbound2": "Towards Wilson Station via Clayson",
+    "Westbound2": "Towards Milvan via Clayson and Fenmar"
+  },
+  "120": {
+    "Eastbound": "Towards Wilson Station",
+    "Westbound": "Towards Sheppard/Jane"
+  },
+  "121": {
+    "Eastbound": "Towards Hennick Bridgepoint Hospital",
+    "Westbound": "Towards Union Station"
+  },
+  "122": {
+    "Eastbound": "Towards Roywood via Lesmill",
+    "Westbound": "Towards York Mills Station"
+  },
+  "123": {
+    "Northbound": "Towards Kipling Station via North Queen and Shorncliffe",
+    "Southbound": "Towards Long Branch via Shorncliffe and North Queen",
+    "Northbound2": "Towards Kipling Station via East Mall and Shorncliffe",
+    "Southbound2": "Towards Long Branch via Shorncliffe and East Mall",
+    "Northbound3": "Towards Kipling Station via West Mall",
+    "Southbound3": "Towards Sherway Gardens via West Mall"
+  },
+  "124": {
+    "Westbound": "Towards Lawrence Station",
+    "Eastbound": "Towards Sunnybrook Hospital"
+  },
+  "125": {
+    "Westbound": "Towards Bathurst (Torresdale)",
+    "Eastbound": "Towards Finch Station"
+  },
+  "126": {
+    "Northbound": "Towards St Clair West Station",
+    "Southbound": "Towards Christie Station"
+  },
+  "127": {
+    "Westbound": "Towards St Clair & Old Weston Rd",
+    "Eastbound": "Towards Spadina Station"
+  },
+  "129": {
+    "Southbound": "Towards Kennedy Stn via Scarborough Centre Stn",
+    "Northbound": "Towards Major Mackenzie via Scarborough Centre Stn"
+  },
+  "130": {
+    "Northbound": "Towards Steeles via Maybrook",
+    "Northbound2": "Towards Steeles",
+    "Southbound": "Towards Scarborough Centre Stn via Maybrook",
+    "Southbound2": "Towards Scarborough Centre Stn"
+  },
+  "131": {
+    "Eastbound": "Towards Old Finch/Morningview via Scarborough Centre Stn",
+    "Westbound": "Towards Kennedy Stn via Scarborough Centre Stn",
+    "Westbound2": "Towards Kennedy Stn via Scarborough Centre Stn"
+  },
+  "132": {
+    "Westbound": "Towards Scarborough Centre Stn",
+    "Eastbound": "Towards McLevin & Hupfield"
+  },
+  "133": {
+    "Northbound": "Towards Morningside Heights via Scarborough Centre Stn and Centenary",
+    "Southbound": "Towards Kennedy Stn via Centenary and Scarborough Centre Stn"
+  },
+  "134": {
+    "Northbound": "Towards Finch via Centennial College And Crow Trail",
+    "Northbound2": "Towards McNicoll via Crow Trail",
+    "Northbound3": "Towards McNicoll via Tapscott",
+    "Northbound4": "Towards Finch via Centennial College And Tapscott",
+    "Southbound": "Towards Scarborough Centre Stn via Centennial College",
+    "Southbound2": "Towards Scarborough Centre Stn via Centennial College"
+  },
+  "135": {
+    "Westbound": "Towards Main Street Station",
+    "Eastbound": "Towards Warden Station"
+  },
+  "149": {
+    "Westbound": "Towards Kipling Station/Line 2 Accessibility Shuttle149 Etobicoke-Bloor towards Kipling Station/Line 2 Accessibility Shuttle149 Etobicoke-Bloor towards Kipling Station/Line 2 Accessibility Shuttle",
+    "Eastbound": "Towards High Park Station/Line 2 Accessibility Shuttle"
+  },
+  "154": {
+    "Westbound": "Towards Kennedy Station",
+    "Eastbound": "Towards U of T Scarborough"
+  },
+  "160": {
+    "Northbound": "Towards Centre Street",
+    "Southbound": "Towards Wilson Station"
+  },
+  "161": {
+    "Westbound": "Towards Mount Dennis Station",
+    "Eastbound": "Towards Ossington Station"
+  },
+  "162": {
+    "Westbound": "Towards Lawrence Station",
+    "Eastbound": "Towards Don Mills"
+  },
+  "164": {
+    "Eastbound": "Towards Cedarvale Station",
+    "Westbound": "Towards Mount Dennis Station"
+  },
+  "165": {
+    "Eastbound": "Towards York Mills Station",
+    "Westbound": "Towards Steeles"
+  },
+  "166": {
+    "Westbound": "Towards Milvan",
+    "Eastbound": "Towards Pioneer Village Station"
+  },
+  "167": {
+    "Southbound": "Towards Don Mills Station via Consumers Rd",
+    "Northbound": "Towards Steeles",
+    "Northbound2": "Towards Steeles via Consumers Rd",
+    "Southbound2": "Towards Don Mills Station"
+  },
+  "168": {
+    "Northbound": "Towards Mount Dennis Station",
+    "Southbound": "Towards Dundas West Station"
+  },
+  "169": {
+    "Eastbound": "Towards Scarborough Centre Stn via Van Horne",
+    "Westbound": "Towards Don Mills Station",
+    "Westbound2": "Towards Don Mills Station via Van Horne",
+    "Eastbound2": "Towards Scarborough Centre Stn"
+  },
+  "171": {
+    "Northbound": "Towards Industry Street via Mount Dennis Station",
+    "Southbound": "Towards Jane via Mount Dennis Station"
+  },
+  "184": {
+    "Westbound": "Towards De Havilland",
+    "Eastbound": "Towards Wilson Station"
+  },
+  "185": {
+    "Westbound": "Towards Sheppard-Yonge Station",
+    "Eastbound": "Towards Don Mills Station"
+  },
+  "189": {
+    "Westbound": "Towards Scarlett Rd",
+    "Eastbound": "Towards High Park Station via Keele Station"
+  },
+  "191": {
+    "Northbound": "Towards York Mills",
+    "Southbound": "Towards Don Mills & Wynford",
+    "Northbound2": "Towards York Mills",
+    "Southbound2": "Towards Don Mills & Wynford"
+  },
+  "300": {
+    "Westbound": "Towards Pearson Airport via Kipling Stn",
+    "Westbound2": "Towards West Mall",
+    "Eastbound": "Towards Kennedy Station",
+    "Westbound3": "Terminal 3 Only",
+    "Eastbound2": "Towards Kennedy Station via Kipling Stn"
+  },
+  "301": {
+    "Eastbound": "Towards Neville Park",
+    "Westbound": "Towards Parliament",
+    "Eastbound2": "Towards Broadview Station",
+    "Westbound2": "Towards Long Branch"
+  },
+  "302": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Victoria Park and Kingston Rd"
+  },
+  "304": {
+    "Eastbound": "Towards Distillery",
+    "Westbound": "Towards Dundas West Station",
+    "Eastbound2": "Towards Broadview and Queen"
+  },
+  "305": {
+    "Eastbound": "Towards Broadview Station",
+    "Westbound": "Towards Dundas West Station"
+  },
+  "306": {
+    "Westbound": "Towards High Park",
+    "Eastbound": "Towards Main Street Station"
+  },
+  "307": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Exhibition"
+  },
+  "310": {
+    "Southbound": "Towards Union Station",
+    "Northbound": "Towards Spadina Station"
+  },
+  "312": {
+    "Eastbound": "Towards St Clair Station",
+    "Westbound": "Towards Keele"
+  },
+  "315": {
+    "Eastbound": "Towards Royal York Station",
+    "Westbound": "Towards Long Branch via Sherway"
+  },
+  "320": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Queens Quay"
+  },
+  "322": {
+    "Westbound": "Towards Broadview Station via Cosburn",
+    "Eastbound": "Towards Victoria Park via Kingston Rd"
+  },
+  "324": {
+    "Northbound": "Towards Steeles via Sheppard and Warden",
+    "Southbound": "Towards Kingston Rd"
+  },
+  "325": {
+    "Southbound": "Towards Commissioners",
+    "Northbound": "Towards Steeles"
+  },
+  "329": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Exhibition (Princes' Gates)"
+  },
+  "332": {
+    "Westbound": "Towards Renforth and Pearson Airport",
+    "Westbound2": "Towards Eglinton Station",
+    "Eastbound": "Towards Eglinton Station"
+  },
+  "334": {
+    "Eastbound": "Towards Finch and Neilson via Morningside",
+    "Westbound": "Towards Eglinton Station"
+  },
+  "335": {
+    "Southbound": "Towards Jane Station",
+    "Northbound": "Towards York University"
+  },
+  "336": {
+    "Westbound": "Towards Woodbine Race Track",
+    "Eastbound": "Towards Yonge Street",
+    "Eastbound2": "Towards Yonge Street via Finch West Station"
+  },
+  "337": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Lake Shore"
+  },
+  "339": {
+    "Eastbound": "Towards Markham Rd",
+    "Westbound": "Towards Finch Station"
+  },
+  "340": {
+    "Eastbound": "Towards St Clair and Gunns",
+    "Westbound": "Towards Dundas West Stn"
+  },
+  "341": {
+    "Northbound": "Towards York University",
+    "Southbound": "Towards Keele Station"
+  },
+  "343": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Kennedy Station"
+  },
+  "352": {
+    "Westbound": "Towards Sunnybrook Hospital",
+    "Westbound2": "Towards Pearson Airport",
+    "Eastbound": "Towards Sunnybrook Hospital"
+  },
+  "353": {
+    "Eastbound": "Towards Staines",
+    "Westbound": "Towards York University"
+  },
+  "354": {
+    "Westbound": "Towards Eglinton Station",
+    "Eastbound": "Towards Starspray Blvd"
+  },
+  "363": {
+    "Northbound": "Towards Cedarvale Station",
+    "Southbound": "Towards Exhibition"
+  },
+  "365": {
+    "Southbound": "Towards Queens Quay and Sherbourne",
+    "Northbound": "Towards Castle Frank Station"
+  },
+  "384": {
+    "Westbound": "Towards Weston Rd",
+    "Eastbound": "Towards Sheppard-Yonge Station"
+  },
+  "385": {
+    "Westbound": "Towards Sheppard-Yonge Station",
+    "Eastbound": "Towards Rouge Hill GO Stn"
+  },
+  "386": {
+    "Eastbound": "Towards Sheppard",
+    "Westbound": "Towards Kennedy Station"
+  },
+  "395": {
+    "Eastbound": "Towards Rouge Hill GO Station",
+    "Westbound": "Towards York Mills Station"
+  },
+  "396": {
+    "Eastbound": "Towards York Mills Station",
+    "Westbound": "Towards Martin Grove and Steeles"
+  },
+  "501": {
+    "Westbound": "Towards Long Branch",
+    "Eastbound": "Towards Neville Park"
+  },
+  "503": {
+    "Eastbound": "Towards Victoria Park via Parliament and Queen",
+    "Westbound": "Towards York via Queen and Parliment"
+  },
+  "504": {
+    "Westbound": "Towards Dundas West Station",
+    "Eastbound": "Towards Broadview Station",
+    "Westbound2": "Towards Parliament",
+    "Eastbound2": "Towards Distillery"
+  },
+  "505": {
+    "Eastbound": "Towards Broadview Station",
+    "Westbound": "Towards Dundas West Station"
+  },
+  "506": {
+    "Eastbound": "Towards Main Street Station",
+    "Westbound": "Towards High Park"
+  },
+  "507": {
+    "Westbound": "Towards Long Branch",
+    "Eastbound": "Towards Humber"
+  },
+  "509": {
+    "Eastbound": "Towards Union Station",
+    "Westbound": "Towards Exhibition"
+  },
+  "510": {
+    "Northbound": "Towards Spadina Station",
+    "Southbound": "Towards Union Station"
+  },
+  "511": {
+    "Northbound": "Towards Bathurst Station",
+    "Southbound": "Towards Exhibition"
+  },
+  "512": {
+    "Eastbound": "Towards St Clair Station",
+    "Westbound": "Towards Keele"
+  },
+  "900": {
+    "Southbound": "Towards Kipling Station",
+    "Northbound": "Towards Kipling Station",
+    "Northbound2": "Towards Pearson Airport"
+  },
+  "902": {
+    "Northbound": "Towards Steeles Ave East via Centennial College",
+    "Southbound": "Towards Warden Station via Centennial College"
+  },
+  "903": {
+    "Southbound": "Towards Kennedy Stn via Scarborough Centre Stn",
+    "Northbound": "Towards Centennial College via Scarborough Centre Stn"
+  },
+  "904": {
+    "Northbound": "Towards Don Mills Station via Scarborough Centre Stn",
+    "Southbound": "Towards Kennedy Stn via Scarborough Centre Stn"
+  },
+  "905": {
+    "Westbound": "Towards Kennedy Station via U of T Scarborough",
+    "Westbound2": "Towards Kennedy Station",
+    "Eastbound": "Towards Conlins via U of T Scarborough"
+  },
+  "924": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Victoria Park Station"
+  },
+  "925": {
+    "Northbound": "Towards Steeles via Don Mills Station",
+    "Southbound": "Towards Broadview Station",
+    "Southbound2": "Towards Broadview Station via Don Mills Station"
+  },
+  "927": {
+    "Northbound": "Towards Humber College Station via Attwell",
+    "Northbound2": "Towards Steeles and Signal Hill via Royalcrest and Humber College Station",
+    "Northbound3": "Towards Steeles and Signal Hill via Humber College Station",
+    "Southbound": "Towards Kipling Station via Humber College Station",
+    "Southbound2": "Towards Kipling Station via Attwell",
+    "Southbound3": "Towards Kipling Station via Royalcrest and Humber College Station"
+  },
+  "929": {
+    "Northbound": "Towards Wilson Station",
+    "Southbound": "Towards Exhibition (Dufferin Gate)"
+  },
+  "935": {
+    "Northbound": "Towards Pioneer Village Station",
+    "Southbound": "Towards Jane Station"
+  },
+  "937": {
+    "Southbound": "Towards Islington Station",
+    "Northbound": "Towards Steeles"
+  },
+  "939": {
+    "Westbound": "Towards Finch Stn",
+    "Westbound2": "Towards Finch West Stn via Scarborough Centre Stn and Finch Stn",
+    "Eastbound": "Towards Morningside Heights",
+    "Eastbound2": "Towards Kennedy Stn via Finch Stn and Scarborough Centre Stn"
+  },
+  "941": {
+    "Southbound": "Towards Keele Station",
+    "Northbound": "Towards Finch West Station"
+  },
+  "944": {
+    "Southbound": "Towards Lake Shore",
+    "Northbound": "Towards Kipling Station"
+  },
+  "945": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Kipling Station"
+  },
+  "952": {
+    "Westbound": "Towards Pearson Airport",
+    "Westbound2": "Terminal 3 Only",
+    "Eastbound": "Towards Lawrence Station"
+  },
+  "953": {
+    "Eastbound": "Towards Staines Rd",
+    "Westbound": "Towards Finch Station"
+  },
+  "954": {
+    "Westbound": "Towards Kennedy Station",
+    "Eastbound": "Towards Starspray"
+  },
+  "960": {
+    "Eastbound": "Towards Finch Station via Pioneer Village Station",
+    "Westbound": "Towards Highway 27 via Pioneer Village Station"
+  },
+  "968": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Warden Station"
+  },
+  "984": {
+    "Westbound": "Towards Weston Rd",
+    "Eastbound": "Towards Sheppard-Yonge Station via Sheppard West Station"
+  },
+  "985": {
+    "Eastbound": "Towards Meadowvale",
+    "Westbound": "Towards Don Mills Station"
+  },
+  "986": {
+    "Westbound": "Towards Kennedy Station",
+    "Eastbound": "Towards Sheppard"
+  },
+  "989": {
+    "Northbound": "Towards Steeles",
+    "Southbound": "Towards Keele Station"
+  },
+  "995": {
+    "Eastbound": "Towards U of T Scarborough",
+    "Westbound": "Towards York Mills Station"
+  },
+  "996": {
+    "Westbound": "Towards Humberwood",
+    "Eastbound": "Towards Scarborough Centre Station",
+    "Eastbound2": "Towards Scarborough Centre Station"
+  }
+}

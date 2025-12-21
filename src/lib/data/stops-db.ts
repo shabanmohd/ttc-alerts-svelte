@@ -11,6 +11,7 @@
 import Dexie, { type Table } from 'dexie';
 
 import routeStopOrders from '$lib/data/ttc-route-stop-orders.json';
+import routeDirectionLabels from '$lib/data/ttc-direction-labels.json';
 
 // Stop data structure matching our transformed GTFS data
 export interface TTCStop {
@@ -314,6 +315,8 @@ export const DIRECTION_COLORS: Record<string, string> = {
  */
 export interface DirectionGroup {
 	direction: DirectionLabel;
+	/** User-friendly display label (e.g., "Towards Kennedy Station via Cedarvale") */
+	displayLabel?: string;
 	stops: TTCStop[];
 	colorClass: string;
 }
@@ -462,6 +465,9 @@ function getBusDirectionGroupsFromRouteOrders(
 	const groups: DirectionGroup[] = [];
 	const stopById = new Map(stops.map(s => [s.id, s]));
 	
+	// Get direction labels for this route (user-friendly names like "Towards Renforth Station")
+	const dirLabels = (routeDirectionLabels as Record<string, Record<string, string>>)[routeNumber] || {};
+	
 	// Process each direction in the route orders
 	for (const [direction, stopIds] of Object.entries(routeOrders)) {
 		const dirLabel = direction as DirectionLabel;
@@ -476,15 +482,32 @@ function getBusDirectionGroupsFromRouteOrders(
 		}
 		
 		if (dirStops.length > 0) {
+			// Get user-friendly display label (e.g., "Towards Renforth Station")
+			// Falls back to direction key if no label exists
+			const displayLabel = dirLabels[direction] || direction;
+			
 			groups.push({
 				direction: dirLabel,
+				displayLabel: displayLabel,
 				stops: dirStops, // Already in correct order from routeOrders
-				colorClass: DIRECTION_COLORS[dirLabel] || DIRECTION_COLORS[DIRECTION_LABELS.UNKNOWN]
+				colorClass: DIRECTION_COLORS[dirLabel] || getDirectionColorByName(dirLabel)
 			});
 		}
 	}
 	
 	return groups;
+}
+
+/**
+ * Get direction color based on the direction name (handles branch variants like "Westbound2")
+ */
+function getDirectionColorByName(dirLabel: string): string {
+	// Check if it starts with a cardinal direction
+	if (dirLabel.startsWith('Eastbound')) return DIRECTION_COLORS['Eastbound'];
+	if (dirLabel.startsWith('Westbound')) return DIRECTION_COLORS['Westbound'];
+	if (dirLabel.startsWith('Northbound')) return DIRECTION_COLORS['Northbound'];
+	if (dirLabel.startsWith('Southbound')) return DIRECTION_COLORS['Southbound'];
+	return DIRECTION_COLORS[DIRECTION_LABELS.UNKNOWN];
 }
 
 /**

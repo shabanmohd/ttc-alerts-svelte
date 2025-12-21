@@ -9,16 +9,26 @@
     CircleDot,
   } from "lucide-svelte";
 
-  // Props - now accepts string labels (destination-based like "Towards Kennedy Station")
+  /**
+   * Direction item for tabs - includes both internal key and display label
+   */
+  export interface DirectionItem {
+    /** Internal key (e.g., "Westbound", "Westbound2") - used for selection and keying */
+    key: string;
+    /** User-friendly display label (e.g., "Towards Renforth Station") */
+    label: string;
+  }
+
+  // Props - accepts array of DirectionItem objects with key and label
   let {
     directions = [],
     selected,
     onSelect,
     stopCounts = {} as Record<string, number>,
   }: {
-    directions: string[];
+    directions: DirectionItem[];
     selected: string;
-    onSelect: (direction: string) => void;
+    onSelect: (directionKey: string) => void;
     stopCounts?: Record<string, number>;
   } = $props();
 
@@ -108,17 +118,23 @@
   }
 
   /**
-   * Get color class for direction label
-   * Falls back to neutral color for destination-based labels
+   * Get color class for direction key
+   * Handles both standard directions and branch variants (e.g., "Westbound2")
    */
-  function getColorClass(direction: string): string {
+  function getColorClass(dirKey: string): string {
     // Check standard direction colors first
-    if (DIRECTION_COLORS[direction]) {
-      return DIRECTION_COLORS[direction];
+    if (DIRECTION_COLORS[dirKey]) {
+      return DIRECTION_COLORS[dirKey];
     }
 
+    // Handle branch variants (e.g., "Westbound2" -> use Westbound color)
+    if (dirKey.startsWith("Eastbound")) return DIRECTION_COLORS["Eastbound"];
+    if (dirKey.startsWith("Westbound")) return DIRECTION_COLORS["Westbound"];
+    if (dirKey.startsWith("Northbound")) return DIRECTION_COLORS["Northbound"];
+    if (dirKey.startsWith("Southbound")) return DIRECTION_COLORS["Southbound"];
+
     // For "Towards X" labels, use a neutral accent color
-    if (direction.startsWith("Towards ")) {
+    if (dirKey.startsWith("Towards ")) {
       return "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300";
     }
 
@@ -127,11 +143,11 @@
 </script>
 
 <div class="direction-tabs" role="tablist" aria-label="Route directions">
-  {#each directions as direction (direction)}
-    {@const Icon = getDirectionIcon(direction)}
-    {@const isSelected = selected === direction}
-    {@const colorClass = getColorClass(direction)}
-    {@const count = stopCounts[direction] || 0}
+  {#each directions as dir (dir.key)}
+    {@const Icon = getDirectionIcon(dir.label)}
+    {@const isSelected = selected === dir.key}
+    {@const colorClass = getColorClass(dir.key)}
+    {@const count = stopCounts[dir.key] || 0}
 
     <button
       type="button"
@@ -139,12 +155,12 @@
       class={cn("direction-tab", isSelected && "selected", colorClass)}
       class:selected={isSelected}
       aria-selected={isSelected}
-      onclick={() => onSelect(direction)}
+      onclick={() => onSelect(dir.key)}
     >
       <Icon class="tab-icon h-4 w-4" />
       <span class="tab-label">
-        <span class="full-label">{direction}</span>
-        <span class="short-label">{getShortLabel(direction)}</span>
+        <span class="full-label">{dir.label}</span>
+        <span class="short-label">{getShortLabel(dir.label)}</span>
       </span>
       {#if count > 0}
         <span class="stop-count">{count}</span>

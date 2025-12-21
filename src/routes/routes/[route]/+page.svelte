@@ -19,7 +19,7 @@
   import type { ThreadWithAlerts } from "$lib/types/database";
 
   // Import route stops components
-  import RouteDirectionTabs from "$lib/components/stops/RouteDirectionTabs.svelte";
+  import RouteDirectionTabs, { type DirectionItem } from "$lib/components/stops/RouteDirectionTabs.svelte";
   import RouteStopsList from "$lib/components/stops/RouteStopsList.svelte";
   import {
     initStopsDB,
@@ -122,38 +122,35 @@
     return labels;
   });
 
-  // Derived: map internal direction labels to user-friendly destination labels
-  // e.g., "Eastbound" -> "Towards Kennedy Station" for route 116
+  // Derived: map internal direction keys to user-friendly destination labels
+  // Now uses displayLabel from DirectionGroup (populated from ttc-direction-labels.json)
+  // Falls back to getRouteDirectionLabel for routes without NextBus data
   let directionDisplayLabels = $derived(() => {
-    const labels = directionLabels();
     const displayMap: Record<string, string> = {};
-    for (const label of labels) {
-      // For subway lines, keep the existing "Towards X" labels
-      if (label.startsWith("Towards ") || label === "All Stops") {
-        displayMap[label] = label;
+    for (const group of directionGroups) {
+      const key = group.direction;
+      // Use displayLabel from DirectionGroup if available
+      if (group.displayLabel) {
+        displayMap[key] = group.displayLabel;
+      } else if (key.startsWith("Towards ") || key === "All Stops") {
+        // Already a user-friendly label
+        displayMap[key] = key;
       } else {
-        // For bus/streetcar, convert "Eastbound" to "Towards Kennedy Station"
-        displayMap[label] = getRouteDirectionLabel(routeId, label);
+        // Fall back to headsigns-based lookup for standard directions
+        displayMap[key] = getRouteDirectionLabel(routeId, key);
       }
     }
     return displayMap;
   });
 
-  // Derived: display labels array for tabs (user-friendly names)
-  let displayLabels = $derived(() => {
-    const labels = directionLabels();
+  // Derived: direction items for tabs (includes both key and label)
+  let directionItems = $derived(() => {
+    const keys = directionLabels();
     const displayMap = directionDisplayLabels();
-    return labels.map((l) => displayMap[l] || l);
-  });
-
-  // Derived: reverse map from display label back to internal direction
-  let displayToDirection = $derived(() => {
-    const displayMap = directionDisplayLabels();
-    const reverse: Record<string, string> = {};
-    for (const [internal, display] of Object.entries(displayMap)) {
-      reverse[display] = internal;
-    }
-    return reverse;
+    return keys.map(key => ({
+      key,
+      label: displayMap[key] || key
+    } as DirectionItem));
   });
 
   // Derived: selected display label (for tabs)
@@ -168,13 +165,11 @@
     return directionGroups.filter((g) => labels.includes(g.direction));
   });
 
-  // Derived: stop counts per direction (keyed by display label for tabs)
+  // Derived: stop counts per direction (keyed by internal direction key)
   let stopCounts = $derived(() => {
     const counts: Record<string, number> = {};
-    const displayMap = directionDisplayLabels();
     for (const group of filteredDirectionGroups()) {
-      const displayLabel = displayMap[group.direction] || group.direction;
-      counts[displayLabel] = group.stops.length;
+      counts[group.direction] = group.stops.length;
     }
     return counts;
   });
@@ -220,13 +215,10 @@
   }
 
   /**
-   * Handle direction tab change (receives display label, converts to internal direction)
+   * Handle direction tab selection (receives internal direction key)
    */
-  function handleDirectionChange(displayLabel: string) {
-    // Convert display label back to internal direction
-    const reverseMap = displayToDirection();
-    const internalDirection = reverseMap[displayLabel] || displayLabel;
-    selectedDirection = internalDirection as DirectionLabel;
+  function handleDirectionSelect(directionKey: string) {
+    selectedDirection = directionKey as DirectionLabel;
     expandedStopId = null; // Collapse any expanded stop
   }
 
@@ -472,9 +464,9 @@
         <!-- Direction Tabs -->
         <div class="animate-fade-in">
           <RouteDirectionTabs
-            directions={displayLabels()}
-            selected={selectedDisplayLabel()}
-            onSelect={handleDirectionChange}
+            directions={directionItems()}
+            selected={selectedDirection}
+            onSelect={handleDirectionSelect}
             stopCounts={stopCounts()}
           />
         </div>
