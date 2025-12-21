@@ -294,16 +294,16 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
-| File                         | Status | Purpose                                                                     |
-| ---------------------------- | ------ | --------------------------------------------------------------------------- |
-| `transform-gtfs.js`          | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT             |
-| `generate-icons.js`          | ✅     | Generate PWA icons from source                                              |
-| `translate-i18n.cjs`         | ✅     | Sync i18n source files to translations folder, DeepL API                    |
-| `process-gtfs-schedules.ts`  | ✅     | Process TTC GTFS data to extract first departure times (AM + PM for 9xx)    |
-| `fetch-route-sequences.cjs`  | ✅     | Fetch sequential stop orders from NextBus API (210 routes)                  |
-| `fetch-route-branches.ts`    | ✅     | Fetch branch data from NextBus API (224 routes, direction/branch mapping)   |
-| `fix-route-stop-orders.cjs`  | ✅     | Convert route stop IDs from NextBus tags to GTFS stopIds (211 routes) 🆕    |
-| `fix-route-branches.cjs`     | ✅     | Convert branch stop IDs from NextBus tags to GTFS stopIds (211 routes) 🆕   |
+| File                        | Status | Purpose                                                                   |
+| --------------------------- | ------ | ------------------------------------------------------------------------- |
+| `transform-gtfs.js`         | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT           |
+| `generate-icons.js`         | ✅     | Generate PWA icons from source                                            |
+| `translate-i18n.cjs`        | ✅     | Sync i18n source files to translations folder, DeepL API                  |
+| `process-gtfs-schedules.ts` | ✅     | Process TTC GTFS data to extract first departure times (AM + PM for 9xx)  |
+| `fetch-route-sequences.cjs` | ✅     | Fetch sequential stop orders from NextBus API (210 routes)                |
+| `fetch-route-branches.ts`   | ✅     | Fetch branch data from NextBus API (224 routes, direction/branch mapping) |
+| `fix-route-stop-orders.cjs` | ✅     | Convert route stop IDs from NextBus tags to GTFS stopIds (211 routes) 🆕  |
+| `fix-route-branches.cjs`    | ✅     | Convert branch stop IDs from NextBus tags to GTFS stopIds (211 routes) 🆕 |
 
 ### Migrations (`supabase/migrations/`)
 
@@ -485,12 +485,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 The NextBus API uses **two different ID systems** for stops:
 
-| Field | Description | Example | Used By |
-|-------|-------------|---------|---------|
-| `tag` | NextBus internal identifier | `"14229"` | `direction[].stop[].tag` references |
-| `stopId` | GTFS standard identifier | `"14709"` | `ttc-stops.json`, IndexedDB lookups |
+| Field    | Description                 | Example   | Used By                             |
+| -------- | --------------------------- | --------- | ----------------------------------- |
+| `tag`    | NextBus internal identifier | `"14229"` | `direction[].stop[].tag` references |
+| `stopId` | GTFS standard identifier    | `"14709"` | `ttc-stops.json`, IndexedDB lookups |
 
 **Problem:** Original `fetch-route-sequences.cjs` and `fetch-route-branches.ts` saved stop lists using NextBus `tag` values, but `stops-db.ts` lookups use GTFS `stopId`. This caused:
+
 - "No stops found for route X" on all route detail pages
 - Branch switching not updating stops list
 
@@ -514,11 +515,13 @@ const gtfsStopId = tagToStopId.get(nextbusTag);
 | `fix-route-branches.cjs` | Convert `ttc-route-branches.json` branch.stops tags → stopIds | 211 |
 
 **Additional Fix:** Stop tags with `_ar` suffix (arrival markers) needed stripping in `stops-db.ts`:
+
 ```typescript
-const cleanStopId = stopId.replace(/_ar$/, '');
+const cleanStopId = stopId.replace(/_ar$/, "");
 ```
 
 **Data Files Updated (2025-01-15):**
+
 - `src/lib/data/ttc-route-stop-orders.json` - All 211 routes use GTFS stopIds
 - `static/data/ttc-route-stop-orders.json` - Copy in static folder
 - `src/lib/data/ttc-route-branches.json` - All branch stop lists use GTFS stopIds
@@ -611,6 +614,7 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 **Issue:** Route pages showing "No stops found for route X" and branch switching not updating stops.
 
 **Root Cause:** The NextBus API uses two different ID systems:
+
 - `tag` - Internal NextBus identifier used in direction/branch stop references
 - `stopId` - GTFS standard identifier used in our stops database
 
@@ -623,11 +627,13 @@ Original data scripts saved NextBus `tag` values, but `stops-db.ts` lookups expe
 | `fix-route-branches.cjs` | Convert branch stops from tags → stopIds | 211 |
 
 **Additional Fix:** Added `_ar` suffix (arrival markers) stripping in `stops-db.ts`:
+
 ```typescript
-const cleanStopId = stopId.replace(/_ar$/, '');
+const cleanStopId = stopId.replace(/_ar$/, "");
 ```
 
 **Files Updated:**
+
 - `src/lib/data/ttc-route-stop-orders.json` - All 211 routes converted
 - `static/data/ttc-route-stop-orders.json` - Static copy
 - `src/lib/data/ttc-route-branches.json` - All branch stops converted
@@ -635,6 +641,7 @@ const cleanStopId = stopId.replace(/_ar$/, '');
 - `src/lib/data/stops-db.ts` - Added `_ar` suffix cleanup
 
 **Verification:**
+
 - Route 116: Now shows 57 Eastbound + 50 Westbound = 107 stops
 - Route 32: Branch switching works (32: 45 stops, 32D: 25 stops)
 
