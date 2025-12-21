@@ -125,29 +125,38 @@
 
   // Derived: current stops for selected direction AND branch
   let currentStops = $derived(() => {
-    // If we have branch data and a selected branch, filter by branch stops
+    // First, get the base direction group
+    const group = directionGroups.find(
+      (g) => g.direction === selectedDirection
+    );
+
+    if (!group?.stops || group.stops.length === 0) {
+      return [];
+    }
+
+    // If we have branch data and a selected branch, try to filter by branch stops
     if (routeBranchData && selectedBranch) {
       const dirBranches =
         routeBranchData.directions[selectedDirection]?.branches;
       const branch = dirBranches?.find((b) => b.id === selectedBranch);
       if (branch) {
-        // Get all stops from directionGroups and filter to branch stops
-        const group = directionGroups.find(
-          (g) => g.direction === selectedDirection
+        // Branch stops array contains stop IDs - filter group stops by these IDs
+        const branchStopIds = new Set(branch.stops);
+        const filteredStops = group.stops.filter((s) =>
+          branchStopIds.has(s.id)
         );
-        if (group) {
-          // Branch stops array contains stop IDs - filter group stops by these IDs
-          const branchStopIds = new Set(branch.stops);
-          return group.stops.filter((s) => branchStopIds.has(s.id));
+
+        // If no stops matched (likely NextBus vs GTFS ID mismatch), fall back to all stops
+        if (filteredStops.length === 0) {
+          return group.stops;
         }
+
+        return filteredStops;
       }
     }
 
-    // Fallback: show all stops for direction
-    const group = directionGroups.find(
-      (g) => g.direction === selectedDirection
-    );
-    return group?.stops || [];
+    // Default: show all stops for direction
+    return group.stops;
   });
 
   // Derived: all stops (for map)
@@ -248,15 +257,33 @@
    * Load stops for current route
    */
   async function loadRouteStops() {
+    console.log("[DEBUG] loadRouteStops() called for route:", routeId);
     isLoadingStops = true;
     stopsError = null;
 
     try {
       // Initialize stops database
+      console.log("[DEBUG] Calling initStopsDB()...");
       await initStopsDB();
+      console.log("[DEBUG] initStopsDB() complete");
 
       // Get stops grouped by direction
+      console.log("[DEBUG] Calling getStopsByRouteGroupedByDirection()...");
       directionGroups = await getStopsByRouteGroupedByDirection(routeId);
+      console.log(
+        "[DEBUG] getStopsByRouteGroupedByDirection() returned:",
+        directionGroups.length,
+        "groups"
+      );
+      if (directionGroups.length > 0) {
+        console.log(
+          "[DEBUG] First group:",
+          directionGroups[0].direction,
+          "with",
+          directionGroups[0].stops.length,
+          "stops"
+        );
+      }
 
       // Load branch data for this route
       routeBranchData = getRouteBranches(routeId);

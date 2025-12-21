@@ -522,15 +522,24 @@ function getSubwayDirectionGroups(stops: TTCStop[], routeNumber: string): Direct
  * 1. Which stops belong to which direction
  * 2. The correct order of stops within each direction
  * 
- * Falls back to GTFS dir field and geographic sorting if no route stop orders exist.
+ * Falls back to GTFS dir field and geographic sorting if no route stop orders exist
+ * or if stop IDs don't match (NextBus vs GTFS ID mismatch).
  */
 function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): DirectionGroup[] {
 	// Check if we have authoritative route stop orders from NextBus API
 	const routeOrders = (routeStopOrders as Record<string, Record<string, string[]>>)[routeNumber];
 	
 	if (routeOrders && Object.keys(routeOrders).length > 0) {
-		// Use NextBus-derived stop orders as authoritative source
-		return getBusDirectionGroupsFromRouteOrders(stops, routeNumber, routeOrders);
+		// Try NextBus-derived stop orders as authoritative source
+		const groups = getBusDirectionGroupsFromRouteOrders(stops, routeNumber, routeOrders);
+		
+		// If no groups returned (stop IDs don't match), fall back to GTFS
+		if (groups.length === 0) {
+			console.log(`[stops-db] Route ${routeNumber}: NextBus stop IDs don't match GTFS, falling back to GTFS grouping`);
+			return getBusDirectionGroupsFromGTFS(stops, routeNumber);
+		}
+		
+		return groups;
 	}
 	
 	// Fall back to GTFS-based grouping for routes without NextBus data
@@ -566,7 +575,9 @@ function getBusDirectionGroupsFromRouteOrders(
 		
 		// Get stops in the exact order from routeOrders
 		for (const stopId of stopIds) {
-			const stop = stopById.get(stopId);
+			// Strip _ar suffix (arrival stop marker) when looking up stop
+			const cleanStopId = stopId.replace(/_ar$/, '');
+			const stop = stopById.get(cleanStopId);
 			if (stop) {
 				dirStops.push(stop);
 			}
