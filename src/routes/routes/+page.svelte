@@ -423,25 +423,23 @@
                   : category === "streetcar" || category === "night-streetcar"
                     ? "streetcar"
                     : "bus"}
-              <div
-                class="route-card flex items-center gap-1 p-2 rounded-md border bg-card hover:bg-accent transition-colors animate-fade-in"
+              <button
+                type="button"
+                onclick={() => handleRouteClick(route)}
+                class="route-card flex items-center gap-1 p-2 rounded-md border bg-card hover:bg-accent transition-colors animate-fade-in text-left"
                 style="animation-delay: {Math.min(i * 30, 150)}ms"
               >
-                <button
-                  type="button"
-                  onclick={() => handleRouteClick(route)}
-                  class="route-button flex items-center gap-2 text-left cursor-pointer"
-                >
+                <span class="flex items-center gap-2">
                   <RouteBadge {route} size="sm" />
                   <span class="text-sm">{name}</span>
-                </button>
+                </span>
                 <BookmarkRouteButton
                   {route}
                   {name}
                   type={routeType}
                   size="sm"
                 />
-              </div>
+              </button>
             {/each}
           </div>
         {/if}
@@ -494,20 +492,18 @@
 
         <div class="flex flex-wrap gap-2">
           {#each routes as { route, name }, i (route)}
-            <div
-              class="route-card flex items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent transition-colors animate-fade-in"
+            <button
+              type="button"
+              onclick={() => handleRouteClick(route)}
+              class="route-card flex items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent transition-colors animate-fade-in text-left"
               style="animation-delay: {Math.min(i * 20, 200)}ms"
             >
-              <button
-                type="button"
-                onclick={() => handleRouteClick(route)}
-                class="route-button flex items-center gap-2 text-left cursor-pointer"
-              >
+              <span class="flex items-center gap-2">
                 <RouteBadge {route} />
                 <span class="text-sm">{name}</span>
-              </button>
+              </span>
               <BookmarkRouteButton {route} {name} type={routeType} size="sm" />
-            </div>
+            </button>
           {/each}
         </div>
       </section>
@@ -525,6 +521,8 @@
   .route-card {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    background: none;
+    font: inherit;
   }
 
   .route-card:active {
@@ -532,17 +530,9 @@
     background-color: hsl(var(--accent));
   }
 
-  .route-button {
-    background: none;
-    border: none;
-    padding: 0;
-    font: inherit;
-  }
-
-  .route-button:focus-visible {
+  .route-card:focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
-    border-radius: var(--radius);
   }
 
   /* Touch feedback animation */
