@@ -149,20 +149,22 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Static (`static/`)
 
-| File                      | Status | Purpose                                                             |
-| ------------------------- | ------ | ------------------------------------------------------------------- |
-| `manifest.json`           | ✅     | PWA manifest (Version B: "TTC Alerts Beta")                         |
-| `sw.js`                   | ✅     | Service worker (Version B: beta cache prefix)                       |
-| `icons/*`                 | ✅     | All PWA icons (72-512px)                                            |
-| `data/ttc-stops.json`     | ✅     | TTC stops database (9,346 stops, 184 subway w/ sequence) 🆕 **V-B** |
-| `data/ttc-schedules.json` | ✅     | First departure schedules (weekday/sat/sun) 🆕 **V-B**              |
+| File                              | Status | Purpose                                                                         |
+| --------------------------------- | ------ | ------------------------------------------------------------------------------- |
+| `manifest.json`                   | ✅     | PWA manifest (Version B: "TTC Alerts Beta")                                     |
+| `sw.js`                           | ✅     | Service worker (Version B: beta cache prefix)                                   |
+| `icons/*`                         | ✅     | All PWA icons (72-512px)                                                        |
+| `data/ttc-stops.json`             | ✅     | TTC stops database (9,346 stops, 184 subway w/ sequence) 🆕 **V-B**             |
+| `data/ttc-route-stop-orders.json` | ✅     | Per-route ordered stop lists (210 routes, auto-generated from NextBus API) 🆕 **V-B** |
+| `data/ttc-schedules.json`         | ✅     | First departure schedules (weekday/sat/sun) 🆕 **V-B**                          |
 
 ### Data (`src/lib/data/`) 🆕 **Version B Only**
 
-| File             | Status | Purpose                                                           |
-| ---------------- | ------ | ----------------------------------------------------------------- |
-| `stops-db.ts`    | ✅     | IndexedDB layer with Dexie.js, GTFS direction/sequence for subway |
-| `route-names.ts` | ✅     | Comprehensive TTC route name lookup (220+ routes)                 |
+| File                         | Status | Purpose                                                                  |
+| ---------------------------- | ------ | ------------------------------------------------------------------------ |
+| `stops-db.ts`                | ✅     | IndexedDB layer with Dexie.js, GTFS direction/sequence for subway        |
+| `ttc-route-stop-orders.json` | ✅     | Route stop ordering (210 routes, auto-generated from NextBus API) 🆕 **V-B** |
+| `route-names.ts`             | ✅     | Comprehensive TTC route name lookup (220+ routes)                        |
 
 ### Stops Components (`src/lib/components/stops/`) 🆕 **Version B Only**
 
@@ -289,12 +291,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Scripts (`scripts/`) 🆕 **Version B Only**
 
-| File                        | Status | Purpose                                                                  |
-| --------------------------- | ------ | ------------------------------------------------------------------------ |
-| `transform-gtfs.js`         | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT          |
-| `generate-icons.js`         | ✅     | Generate PWA icons from source                                           |
-| `translate-i18n.cjs`        | ✅     | Sync i18n source files to translations folder, DeepL API                 |
-| `process-gtfs-schedules.ts` | ✅     | Process TTC GTFS data to extract first departure times (AM + PM for 9xx) |
+| File                         | Status | Purpose                                                                  |
+| ---------------------------- | ------ | ------------------------------------------------------------------------ |
+| `transform-gtfs.js`          | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT          |
+| `generate-icons.js`          | ✅     | Generate PWA icons from source                                           |
+| `translate-i18n.cjs`         | ✅     | Sync i18n source files to translations folder, DeepL API                 |
+| `process-gtfs-schedules.ts`  | ✅     | Process TTC GTFS data to extract first departure times (AM + PM for 9xx) |
+| `fetch-route-sequences.cjs`  | ✅     | Fetch sequential stop orders from NextBus API (210 routes) 🆕            |
 
 ### Migrations (`supabase/migrations/`)
 
@@ -333,6 +336,144 @@ Real-time Toronto Transit alerts with biometric authentication.
 | View preferences | ❌ No         |
 | Save preferences | ✅ Yes        |
 | "My Alerts" tab  | ✅ Yes        |
+
+---
+
+## External APIs
+
+### Currently Integrated
+
+| API                        | Endpoint                                                       | Purpose                                                          | Used By                                                |
+| -------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------ |
+| **TTC NextBus**            | `https://retro.umoiq.com/service/publicJSONFeed`               | Real-time bus/streetcar ETAs + route configuration               | `nextbus.ts`, `get-eta` Edge Function, stop sequencing |
+| **TTC NTAS**               | `https://ntas.ttc.ca/api/ntas/get-next-train-time`             | Real-time subway train arrivals                                  | `get-eta` Edge Function                                |
+| **TTC Live Alerts**        | `https://alerts.ttc.ca/api/alerts/live-alerts`                 | Official real-time service alerts (RSZ, resolution verification) | `poll-alerts` Edge Function                            |
+| **Bluesky Feed**           | `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed` | @ttcalerts.bsky.social service alerts (primary source)           | `poll-alerts` Edge Function                            |
+| **Environment Canada RSS** | `https://weather.gc.ca/rss/city/on-143_e.xml`                  | Toronto weather warnings                                         | `WeatherWarningBanner.svelte`                          |
+| **AllOrigins Proxy**       | `https://api.allorigins.win/raw?url=...`                       | CORS proxy fallback for weather                                  | `WeatherWarningBanner.svelte`                          |
+| **Cloudflare Turnstile**   | `challenges.cloudflare.com/turnstile/v0/api.js`                | Bot protection for forms                                         | `Turnstile.svelte`                                     |
+
+### TTC Live Alerts API
+
+**Endpoint:** `https://alerts.ttc.ca/api/alerts/live-alerts`
+
+**Current Usage in `poll-alerts`:**
+
+- ✅ **Sole source for RSZ alerts** - All BlueSky RSZ posts filtered; TTC API provides exact stop locations
+- ✅ **Cross-check resolution** - Verifies if routes are still impacted; auto-resolves threads when cleared
+- ✅ **Gap-filling** - Creates alerts for routes not yet posted by @ttcalerts
+
+**Response Structure:**
+
+```json
+{
+  "total": 20,
+  "lastUpdated": "2025-12-20T22:38:02.92Z",
+  "rszLastUpdated": "2025-12-19T07:11:18.413Z",
+  "routes": [
+    {
+      "id": "59204",
+      "alertType": "Planned",
+      "route": "1",
+      "routeType": "Subway",
+      "routeBranch": "",
+      "title": "Line 1 Yonge-University Regular service has resumed...",
+      "headerText": "...",
+      "description": "",
+      "direction": "Southbound",
+      "effect": "NO_EFFECT|SIGNIFICANT_DELAYS|...",
+      "effectDesc": "Regular service|Reduced Speed Zone|...",
+      "severity": "Critical|Minor",
+      "cause": "TECHNICAL_PROBLEM|MEDICAL_EMERGENCY|MAINTENANCE|OTHER_CAUSE",
+      "causeDescription": "Mechanical problem|Track issue|...",
+      "stopStart": "Davisville",
+      "stopEnd": "Davisville",
+      "stopIDList": ["Davisville"],
+      "activePeriod": { "start": "...", "end": "..." },
+      // RSZ-specific fields:
+      "rszLength": "152",
+      "distance": "891",
+      "trackPercent": "17",
+      "reducedSpeed": "25",
+      "averageSpeed": "32",
+      "targetRemoval": "Early 2026"
+    }
+  ]
+}
+```
+
+**Key Fields:**
+| Field | Description |
+|-------|-------------|
+| `route` | Route number (1, 2, 501, etc.) |
+| `routeType` | Subway, Streetcar, Bus |
+| `direction` | Northbound, Southbound, Eastbound, Westbound |
+| `effect` | NO_EFFECT, SIGNIFICANT_DELAYS, NO_SERVICE, etc. |
+| `effectDesc` | Human-readable effect description |
+| `severity` | Critical, Minor |
+| `cause` | TECHNICAL_PROBLEM, MEDICAL_EMERGENCY, MAINTENANCE, OTHER_CAUSE |
+| `stopStart`, `stopEnd` | Station/stop names for range |
+| `rszLength`, `reducedSpeed`, `targetRemoval` | RSZ-specific metrics |
+
+**Advantages over Bluesky:**
+
+- ✅ Structured JSON (no text parsing needed)
+- ✅ Official route/line identification
+- ✅ Direction, cause, effect pre-categorized
+- ✅ Station start/end information
+- ✅ RSZ metrics (speed %, distance, removal date)
+- ✅ Severity levels
+
+### TTC NextBus routeConfig API
+
+**Endpoint:** `https://retro.umoiq.com/service/publicJSONFeed?command=routeConfig&a=ttc&r={routeNumber}`
+
+**Purpose:** Provides **sequential stop ordering** for any TTC bus/streetcar route. Used to generate `ttc-route-stop-orders.json`.
+
+**Response Structure:**
+
+```json
+{
+  "route": {
+    "tag": "116",
+    "title": "116-Morningside",
+    "stop": [
+      {"tag": "14090", "stopId": "14559", "title": "Morningside Ave At Finch Ave East", "lat": "43.8195", "lon": "-79.2214"},
+      ...
+    ],
+    "direction": [
+      {
+        "tag": "116_1_116",
+        "name": "West",
+        "title": "West - 116 Morningside towards Kennedy Station",
+        "stop": [
+          {"tag": "14090"},
+          {"tag": "6149"},
+          ... // Ordered stop tags
+        ]
+      },
+      {
+        "tag": "116_0_116am*",
+        "name": "East",
+        "title": "East - 116 Morningside towards Finch and Morningside",
+        "stop": [...]
+      }
+    ]
+  }
+}
+```
+
+**Key Features:**
+| Field | Description |
+|-------|-------------|
+| `route.stop[]` | Master stop list with tag→stopId mapping |
+| `direction[].stop[]` | **Ordered** stop tags for each direction |
+| `direction[].name` | Direction name (West, East, North, South) |
+| `direction[].tag` | Unique direction identifier |
+
+**Validation:** Route 116 was validated on 2025-01-14 - NextBus API sequence matches manual override exactly (50 Westbound + 57 Eastbound stops).
+
+📚 **See also:** [`alert-categorization-and-threading.md`](alert-categorization-and-threading.md) for full alert source integration details.
 
 ---
 
