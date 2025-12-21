@@ -7,6 +7,7 @@
   import Header from "$lib/components/layout/Header.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
+  import RSZAlertCard from "$lib/components/alerts/RSZAlertCard.svelte";
   import BookmarkRouteButton from "$lib/components/alerts/BookmarkRouteButton.svelte";
   import { Button } from "$lib/components/ui/button";
   import { Skeleton } from "$lib/components/ui/skeleton";
@@ -79,6 +80,51 @@
     return false;
   }
 
+  /**
+   * Check if a thread is an RSZ (Reduced Speed Zone) alert
+   */
+  function isRSZAlert(thread: ThreadWithAlerts): boolean {
+    const alert = thread.latestAlert;
+    if (!alert) return false;
+
+    // RSZ alerts have effect SIGNIFICANT_DELAYS and raw_data with stopStart/stopEnd (TTC API source)
+    const rawData = alert.raw_data as Record<string, unknown> | null;
+    const isTTCApiRSZ =
+      alert.effect === "SIGNIFICANT_DELAYS" &&
+      rawData?.source === "ttc-api" &&
+      typeof rawData?.stopStart === "string" &&
+      typeof rawData?.stopEnd === "string";
+
+    // Also detect Bluesky-sourced RSZ alerts by text patterns
+    const headerText = (alert.header_text || "").toLowerCase();
+    const isBlueskyRSZ =
+      headerText.includes("slower than usual") ||
+      headerText.includes("reduced speed") ||
+      headerText.includes("move slower") ||
+      headerText.includes("running slower") ||
+      headerText.includes("slow zone");
+
+    return isTTCApiRSZ || isBlueskyRSZ;
+  }
+
+  /**
+   * Normalize route ID for comparison
+   * Extracts just the route number from strings like "44 Kipling" or "Line 1"
+   */
+  function normalizeRouteId(route: string): string {
+    // Handle subway lines (Line 1, Line 2, etc.)
+    if (route.toLowerCase().startsWith("line ")) {
+      return route.toLowerCase().trim();
+    }
+    // For bus/streetcar routes, extract just the number (e.g., "44 Kipling" → "44")
+    const match = route.match(/^(\d+)/);
+    if (match) {
+      return match[1]; // Return just the number
+    }
+    // Remove leading zeros and convert to lowercase for other formats
+    return route.replace(/^0+/, "").toLowerCase();
+  }
+
   // Filter alerts for this route (only active/unresolved alerts)
   let routeAlerts = $derived(
     $threadsWithAlerts.filter((thread) => {
@@ -95,12 +141,14 @@
 
       // Use exact match only - no substring matching to prevent route 11 matching 119/511
       return allRoutes.some(
-        (r) =>
-          r.replace(/^0+/, "").toLowerCase() ===
-          routeId.replace(/^0+/, "").toLowerCase()
+        (r) => normalizeRouteId(r) === normalizeRouteId(routeId)
       );
     })
   );
+
+  // Separate RSZ alerts from regular alerts
+  let rszAlerts = $derived(routeAlerts.filter(isRSZAlert));
+  let nonRSZAlerts = $derived(routeAlerts.filter((t) => !isRSZAlert(t)));
 
   // Stops state
   let directionGroups = $state<DirectionGroup[]>([]);
@@ -474,9 +522,15 @@
             </p>
           </div>
         {:else}
-          {#each routeAlerts as thread (thread.thread_id)}
+          <!-- Regular (non-RSZ) alerts -->
+          {#each nonRSZAlerts as thread (thread.thread_id)}
             <AlertCard {thread} />
           {/each}
+
+          <!-- RSZ alerts (grouped table display) -->
+          {#if rszAlerts.length > 0}
+            <RSZAlertCard threads={rszAlerts} />
+          {/if}
         {/if}
       </div>
     </section>

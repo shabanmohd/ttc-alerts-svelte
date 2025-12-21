@@ -32,6 +32,7 @@ export interface NextDepartureInfo {
   dayType: string;        // e.g., "weekday", "Saturday", "Sunday"
   isToday: boolean;       // Whether this departure is today or tomorrow
   tomorrowLabel?: string; // e.g., "Tomorrow (Saturday)"
+  nextWeekdayLabel?: string; // e.g., "Monday" - for express routes on weekends
   isPM?: boolean;         // Whether this is an evening/PM departure
   noWeekendService?: boolean; // Express routes don't run on weekends
 }
@@ -222,8 +223,27 @@ export function getNextScheduledDeparture(
   const routeSchedule = stopSchedules[routeId];
   if (!routeSchedule) return null;
   
-  // Express routes don't run on weekends - return special indicator
+  // Express routes don't run on weekends - show next weekday's first departure
   if (isExpressRoute(routeId) && (todayType === 'saturday' || todayType === 'sunday')) {
+    // Get the weekday first departure time
+    const weekdayFirst = routeSchedule['weekday'] || null;
+    if (weekdayFirst) {
+      // Calculate next Monday
+      const daysUntilMonday = todayType === 'saturday' ? 2 : 1;
+      const nextMonday = new Date(now);
+      nextMonday.setDate(nextMonday.getDate() + daysUntilMonday);
+      const mondayLabel = nextMonday.toLocaleDateString('en-US', { weekday: 'long' });
+      
+      return {
+        time: formatTo12Hour(weekdayFirst),
+        dayType: 'Weekday',
+        isToday: false,
+        noWeekendService: true,
+        nextWeekdayLabel: mondayLabel
+      };
+    }
+    
+    // Fallback if no weekday schedule exists
     return {
       time: '',
       dayType: '',

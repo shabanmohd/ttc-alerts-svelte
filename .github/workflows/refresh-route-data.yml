@@ -10,8 +10,8 @@ on:
       force_update:
         description: 'Force update even if no changes detected'
         required: false
-        default: 'false'
         type: boolean
+        default: false
 
 jobs:
   refresh-routes:

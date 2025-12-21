@@ -13,6 +13,7 @@
     onGetETA,
     expandedStopId = null,
     routeFilter,
+    showInlineETA = false,
   }: {
     stops: TTCStop[];
     direction: DirectionLabel;
@@ -20,6 +21,7 @@
     onGetETA?: (stopId: string) => void;
     expandedStopId?: string | null;
     routeFilter?: string;
+    showInlineETA?: boolean;
   } = $props();
 </script>
 
@@ -60,6 +62,7 @@
           isExpanded={expandedStopId === stop.id}
           {onGetETA}
           {routeFilter}
+          {showInlineETA}
         />
       </div>
     {/each}

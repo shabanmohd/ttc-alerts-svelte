@@ -110,8 +110,18 @@
   }
 
   // Helper to normalize route ID for comparison (remove leading zeros, lowercase)
+  // Also extracts just the route number from strings like "44 Kipling" or "Line 1"
   function normalizeRouteId(route: string): string {
-    // Remove leading zeros and convert to lowercase
+    // Handle subway lines (Line 1, Line 2, etc.)
+    if (route.toLowerCase().startsWith("line ")) {
+      return route.toLowerCase().trim();
+    }
+    // For bus/streetcar routes, extract just the number (e.g., "44 Kipling" → "44")
+    const match = route.match(/^(\d+)/);
+    if (match) {
+      return match[1]; // Return just the number
+    }
+    // Remove leading zeros and convert to lowercase for other formats
     return route.replace(/^0+/, "").toLowerCase();
   }
 

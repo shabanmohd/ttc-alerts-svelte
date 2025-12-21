@@ -189,25 +189,25 @@ export async function fetchAlerts(): Promise<void> {
     
     if (alertsError) throw alertsError;
     
-    // Step 1b: Also fetch accessibility alerts (elevator/escalator) with extended 30-day window
-    // These issues persist much longer than typical service disruptions
+    // Step 1b: Also fetch accessibility alerts (elevator/escalator) with extended 90-day window
+    // These issues persist much longer than typical service disruptions (some elevator outages last months)
     const { data: accessibilityAlerts, error: accessibilityError } = await supabase
       .from('alert_cache')
       .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
       .eq('effect', 'ACCESSIBILITY_ISSUE')
-      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
       .limit(50);
     
     if (accessibilityError) throw accessibilityError;
     
-    // Step 1c: Also fetch RSZ alerts with extended 30-day window
+    // Step 1c: Also fetch RSZ alerts with extended 90-day window
     // Reduced Speed Zones persist for weeks/months due to ongoing track work
     const { data: rszAlerts, error: rszError } = await supabase
       .from('alert_cache')
       .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
       .like('alert_id', 'ttc-RSZ-%')
-      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
       .limit(50);
     
@@ -234,12 +234,12 @@ export async function fetchAlerts(): Promise<void> {
     let allAlertsData: PartialAlert[] = mergedAlerts;
     
     if (threadIds.length > 0) {
-      // Fetch all alerts for the identified threads (up to 30 days to cover accessibility issues)
+      // Fetch all alerts for the identified threads (up to 90 days to cover accessibility issues)
       const { data: threadAlerts, error: threadAlertsError } = await supabase
         .from('alert_cache')
         .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
         .in('thread_id', threadIds)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false });
       
       if (threadAlertsError) throw threadAlertsError;

@@ -196,8 +196,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 **ETACard Features**:
 
-- **Live ETA Display**: Real-time predictions with live signal icon, route badge, direction/destination
-- **Scheduled First Bus**: For routes without live data, shows GTFS scheduled first bus times
+- **Live ETA Display**: Real-time predictions with green LiveSignalIcon, route badge, direction/destination
+- **isLive Check**: Properly checks `prediction.isLive` before showing live icon vs scheduled format
+- **Scheduled Format**: When `isLive: false`, shows time format (e.g., "12:43 PM") with amber "Scheduled" label
+- **Scheduled First Bus Section**: For routes without live data, shows GTFS scheduled first bus times
 - **Blue Visual Distinction**: Scheduled section has blue-tinted background to distinguish from live ETAs
 - **No Service Indicator**: Shows "No Service" for routes that don't run on current day (e.g., 939 on weekends)
 - **Day Type Header**: "Scheduled Next Bus · Weekday (Friday)" with current day name
@@ -307,11 +309,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### GitHub Workflows (`.github/workflows/`) 🆕 **Version B Only**
 
-| File                      | Status | Purpose                                                       |
-| ------------------------- | ------ | ------------------------------------------------------------- |
-| `refresh-route-data.yml`  | ✅     | Weekly automated refresh of route data from NextBus API 🆕    |
+| File                     | Status | Purpose                                                    |
+| ------------------------ | ------ | ---------------------------------------------------------- |
+| `refresh-route-data.yml` | ✅     | Weekly automated refresh of route data from NextBus API 🆕 |
 
 **Route Data Refresh Workflow:**
+
 - **Schedule:** Weekly (Sundays 2:00 AM UTC / Saturday 9:00 PM EST)
 - **Trigger:** Also manually triggerable via GitHub Actions UI
 - **Action:** Runs `fix-route-stop-orders.cjs` and `fix-route-branches.cjs`

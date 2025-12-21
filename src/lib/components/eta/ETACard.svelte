@@ -145,6 +145,26 @@
     return { direction: "", destination: cleaned };
   }
 
+  /**
+   * Convert minutes to arrival time in HH:MM AM/PM format
+   * Used for scheduled (non-live) predictions
+   */
+  function minutesToTimeObject(minutes: number): {
+    time: string;
+    period: string;
+  } {
+    const now = new Date();
+    const arrivalTime = new Date(now.getTime() + minutes * 60 * 1000);
+    const hours = arrivalTime.getHours();
+    const mins = arrivalTime.getMinutes();
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return {
+      time: `${displayHours}:${mins.toString().padStart(2, "0")}`,
+      period,
+    };
+  }
+
   function handleRemove() {
     savedStops.remove(eta.stopId);
   }
@@ -369,20 +389,6 @@
   {:else if sortedPredictions.length === 0}
     <!-- No Predictions - Show scheduled departures in full card style -->
     {@const emptyState = getEmptyStateMessage(isSubway, eta.stopId)}
-    {@const firstDepartureWithTime = [...scheduledDepartures.values()].find(
-      (d) => d !== null
-    )}
-    {@const dayName = new Date().toLocaleDateString("en-US", {
-      weekday: "long",
-    })}
-    {@const scheduleLabel =
-      firstDepartureWithTime?.dayType === "Weekday"
-        ? `Weekday (${dayName})`
-        : firstDepartureWithTime?.dayType === "Saturday"
-          ? "Saturday"
-          : firstDepartureWithTime?.dayType === "Sunday"
-            ? "Sunday"
-            : dayName}
 
     {#if scheduleLoaded && scheduledDepartures.size > 0}
       <!-- Show scheduled departures in same style as live ETA -->
@@ -395,7 +401,7 @@
             class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
           >
             <Calendar class="h-3.5 w-3.5" />
-            <span>Scheduled Next Bus · {scheduleLabel}</span>
+            <span>Scheduled Next Bus</span>
           </div>
         </div>
 
@@ -419,15 +425,22 @@
                   </div>
                 </div>
                 <!-- Row 2: Time (right aligned, matching live ETA style) -->
-                <div class="flex items-baseline justify-end gap-2 mt-2">
+                <div class="flex flex-col items-end mt-2">
                   {#if departure && departure.time}
                     <span
                       class="text-5xl font-bold text-foreground/70 tabular-nums"
                     >
                       {departure.time}
                     </span>
-                    {#if !departure.isToday}
-                      <span class="text-lg text-muted-foreground">(tmrw)</span>
+                    {#if departure.noWeekendService && departure.nextWeekdayLabel}
+                      <span class="text-sm text-muted-foreground"
+                        >{departure.nextWeekdayLabel}</span
+                      >
+                    {:else if !departure.isToday && departure.tomorrowLabel}
+                      <span class="text-sm text-muted-foreground"
+                        >{departure.tomorrowLabel.match(/\((.+)\)/)?.[1] ||
+                          "Tomorrow"}</span
+                      >
                     {/if}
                   {:else if departure?.noWeekendService}
                     <span
@@ -460,16 +473,21 @@
                   </div>
                 </div>
                 <!-- Right: Time -->
-                <div class="flex items-baseline gap-1 flex-shrink-0">
+                <div class="flex flex-col items-end flex-shrink-0">
                   {#if departure && departure.time}
                     <span
                       class="text-4xl font-bold text-foreground/70 tabular-nums"
                     >
                       {departure.time}
                     </span>
-                    {#if !departure.isToday}
-                      <span class="text-base text-muted-foreground ml-1"
-                        >(tmrw)</span
+                    {#if departure.noWeekendService && departure.nextWeekdayLabel}
+                      <span class="text-sm text-muted-foreground"
+                        >{departure.nextWeekdayLabel}</span
+                      >
+                    {:else if !departure.isToday && departure.tomorrowLabel}
+                      <span class="text-sm text-muted-foreground"
+                        >{departure.tomorrowLabel.match(/\((.+)\)/)?.[1] ||
+                          "Tomorrow"}</span
                       >
                     {/if}
                   {:else if departure?.noWeekendService}
@@ -570,21 +588,69 @@
             </div>
             <!-- Right: Arrival Times -->
             {#if prediction.arrivals.length > 0}
-              <div class="flex items-baseline gap-1 flex-shrink-0">
-                <span class="text-4xl font-bold text-foreground tabular-nums"
-                  >{primaryTime}</span
-                >
-                <LiveSignalIcon size="md" class="self-start mt-1" />
-                {#if secondaryTimes.length > 0}
-                  {#each secondaryTimes as time}
-                    <span class="text-base text-foreground/70 tabular-nums"
-                      >, {time}</span
+              {#if prediction.isLive}
+                <!-- Live GPS data: show minutes countdown with signal icon -->
+                <div class="flex items-baseline gap-1 flex-shrink-0">
+                  <span class="text-4xl font-bold text-foreground tabular-nums"
+                    >{primaryTime}</span
+                  >
+                  <LiveSignalIcon size="md" class="self-start mt-1" />
+                  {#if secondaryTimes.length > 0}
+                    {#each secondaryTimes as time}
+                      <span class="text-base text-foreground/70 tabular-nums"
+                        >, {time}</span
+                      >
+                      <LiveSignalIcon size="sm" class="self-center" />
+                    {/each}
+                  {/if}
+                  <span class="text-base text-foreground/70 ml-1">min</span>
+                </div>
+              {:else}
+                <!-- Scheduled: show times with AM/PM and label -->
+                {@const primaryTimeObj = minutesToTimeObject(primaryTime)}
+                {@const allTimeObjs = [
+                  primaryTimeObj,
+                  ...secondaryTimes.map((t) => minutesToTimeObject(t)),
+                ]}
+                {@const allSamePeriod = allTimeObjs.every(
+                  (t) => t.period === primaryTimeObj.period
+                )}
+                <div class="flex flex-col items-end flex-shrink-0">
+                  <div class="flex items-baseline gap-1">
+                    <span
+                      class="text-4xl font-bold text-foreground tabular-nums"
+                      >{primaryTimeObj.time}</span
                     >
-                    <LiveSignalIcon size="sm" class="self-center" />
-                  {/each}
-                {/if}
-                <span class="text-base text-foreground/70 ml-1">min</span>
-              </div>
+                    {#if !allSamePeriod}
+                      <span class="text-base text-muted-foreground"
+                        >{primaryTimeObj.period}</span
+                      >
+                    {/if}
+                    {#if secondaryTimes.length > 0}
+                      {#each secondaryTimes as time, i}
+                        {@const timeObj = allTimeObjs[i + 1]}
+                        <span class="text-base text-foreground/70 tabular-nums"
+                          >, {timeObj.time}</span
+                        >
+                        {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
+                          <span class="text-sm text-muted-foreground"
+                            >{timeObj.period}</span
+                          >
+                        {/if}
+                      {/each}
+                    {/if}
+                    {#if allSamePeriod}
+                      <span class="text-sm text-muted-foreground ml-0.5"
+                        >{primaryTimeObj.period}</span
+                      >
+                    {/if}
+                  </div>
+                  <span
+                    class="text-sm text-amber-600 dark:text-amber-400 font-medium"
+                    >Scheduled</span
+                  >
+                </div>
+              {/if}
             {:else}
               <span class="text-4xl font-bold text-muted-foreground/50">–</span>
             {/if}
@@ -613,20 +679,69 @@
             <!-- Row 2: ETA Times (right aligned) -->
             <div class="flex items-baseline justify-end gap-2 mt-2">
               {#if prediction.arrivals.length > 0}
-                <span class="text-5xl font-bold text-foreground tabular-nums"
-                  >{primaryTime}</span
-                >
-                <LiveSignalIcon size="lg" class="self-start mt-1.5" />
-                {#if secondaryTimes.length > 0}
-                  {#each secondaryTimes as time}
+                {#if prediction.isLive}
+                  <!-- Live GPS data: show minutes countdown with signal icon -->
+                  <span class="text-5xl font-bold text-foreground tabular-nums"
+                    >{primaryTime}</span
+                  >
+                  <LiveSignalIcon size="lg" class="self-start mt-1.5" />
+                  {#if secondaryTimes.length > 0}
+                    {#each secondaryTimes as time}
+                      <span
+                        class="text-3xl font-semibold text-muted-foreground tabular-nums"
+                        >, {time}</span
+                      >
+                      <LiveSignalIcon size="md" class="self-start mt-1" />
+                    {/each}
+                  {/if}
+                  <span class="text-lg text-muted-foreground ml-1">min</span>
+                {:else}
+                  <!-- Scheduled: show times with AM/PM and label -->
+                  {@const primaryTimeObj = minutesToTimeObject(primaryTime)}
+                  {@const allTimeObjs = [
+                    primaryTimeObj,
+                    ...secondaryTimes.map((t) => minutesToTimeObject(t)),
+                  ]}
+                  {@const allSamePeriod = allTimeObjs.every(
+                    (t) => t.period === primaryTimeObj.period
+                  )}
+                  <div class="flex flex-col items-end">
+                    <div class="flex items-baseline gap-1">
+                      <span
+                        class="text-4xl font-bold text-foreground tabular-nums"
+                        >{primaryTimeObj.time}</span
+                      >
+                      {#if !allSamePeriod}
+                        <span class="text-base text-muted-foreground"
+                          >{primaryTimeObj.period}</span
+                        >
+                      {/if}
+                      {#if secondaryTimes.length > 0}
+                        {#each secondaryTimes as time, i}
+                          {@const timeObj = allTimeObjs[i + 1]}
+                          <span
+                            class="text-2xl font-semibold text-muted-foreground tabular-nums"
+                            >, {timeObj.time}</span
+                          >
+                          {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
+                            <span class="text-sm text-muted-foreground"
+                              >{timeObj.period}</span
+                            >
+                          {/if}
+                        {/each}
+                      {/if}
+                      {#if allSamePeriod}
+                        <span class="text-sm text-muted-foreground ml-0.5"
+                          >{primaryTimeObj.period}</span
+                        >
+                      {/if}
+                    </div>
                     <span
-                      class="text-3xl font-semibold text-muted-foreground tabular-nums"
-                      >, {time}</span
+                      class="text-sm text-amber-600 dark:text-amber-400 font-medium"
+                      >Scheduled</span
                     >
-                    <LiveSignalIcon size="md" class="self-start mt-1" />
-                  {/each}
+                  </div>
                 {/if}
-                <span class="text-lg text-muted-foreground ml-1">min</span>
               {:else}
                 <span class="text-5xl font-bold text-muted-foreground/50"
                   >–</span
@@ -641,20 +756,6 @@
 
     <!-- Routes without real-time data - show scheduled times -->
     {#if scheduleLoaded && missingRoutesSchedule.size > 0}
-      {@const firstDepartureWithTime = [...missingRoutesSchedule.values()].find(
-        (d) => d !== null
-      )}
-      {@const dayName = new Date().toLocaleDateString("en-US", {
-        weekday: "long",
-      })}
-      {@const scheduleLabel =
-        firstDepartureWithTime?.dayType === "Weekday"
-          ? `Weekday (${dayName})`
-          : firstDepartureWithTime?.dayType === "Saturday"
-            ? "Saturday"
-            : firstDepartureWithTime?.dayType === "Sunday"
-              ? "Sunday"
-              : dayName}
       <div
         class="border-t border-blue-500/20 bg-blue-500/10 dark:bg-blue-950/30"
       >
@@ -666,7 +767,7 @@
             class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
           >
             <Calendar class="h-3.5 w-3.5" />
-            <span>Scheduled Next Bus · {scheduleLabel}</span>
+            <span>Scheduled Next Bus</span>
           </div>
         </div>
 
@@ -690,15 +791,22 @@
                   </div>
                 </div>
                 <!-- Row 2: Time (right aligned, matching live ETA style) -->
-                <div class="flex items-baseline justify-end gap-2 mt-2">
+                <div class="flex flex-col items-end mt-2">
                   {#if departure && departure.time}
                     <span
                       class="text-5xl font-bold text-foreground/70 tabular-nums"
                     >
                       {departure.time}
                     </span>
-                    {#if !departure.isToday}
-                      <span class="text-lg text-muted-foreground">(tmrw)</span>
+                    {#if departure.noWeekendService && departure.nextWeekdayLabel}
+                      <span class="text-sm text-muted-foreground"
+                        >{departure.nextWeekdayLabel}</span
+                      >
+                    {:else if !departure.isToday && departure.tomorrowLabel}
+                      <span class="text-sm text-muted-foreground"
+                        >{departure.tomorrowLabel.match(/\((.+)\)/)?.[1] ||
+                          "Tomorrow"}</span
+                      >
                     {/if}
                   {:else if departure?.noWeekendService}
                     <span
@@ -731,16 +839,21 @@
                   </div>
                 </div>
                 <!-- Right: Time -->
-                <div class="flex items-baseline gap-1 flex-shrink-0">
+                <div class="flex flex-col items-end flex-shrink-0">
                   {#if departure && departure.time}
                     <span
                       class="text-4xl font-bold text-foreground/70 tabular-nums"
                     >
                       {departure.time}
                     </span>
-                    {#if !departure.isToday}
-                      <span class="text-base text-muted-foreground ml-1"
-                        >(tmrw)</span
+                    {#if departure.noWeekendService && departure.nextWeekdayLabel}
+                      <span class="text-sm text-muted-foreground"
+                        >{departure.nextWeekdayLabel}</span
+                      >
+                    {:else if !departure.isToday && departure.tomorrowLabel}
+                      <span class="text-sm text-muted-foreground"
+                        >{departure.tomorrowLabel.match(/\((.+)\)/)?.[1] ||
+                          "Tomorrow"}</span
                       >
                     {/if}
                   {:else if departure?.noWeekendService}

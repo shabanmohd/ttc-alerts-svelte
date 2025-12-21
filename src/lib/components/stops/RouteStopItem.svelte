@@ -8,7 +8,13 @@
   } from "$lib/services/nextbus";
   import { fetchSubwayETA, isSubwayStop } from "$lib/services/subway-eta";
   import {
+    loadScheduleData,
+    getNextScheduledDeparture,
+    type NextDepartureInfo,
+  } from "$lib/services/schedule-lookup";
+  import {
     AlertCircle,
+    Calendar,
     ChevronDown,
     ChevronUp,
     Clock,
@@ -33,12 +39,14 @@
     routeFilter,
     isExpanded = false,
     onGetETA,
+    showInlineETA = false,
   }: {
     stop: TTCStop;
     index?: number;
     routeFilter?: string;
     isExpanded?: boolean;
     onGetETA?: (stopId: string) => void;
+    showInlineETA?: boolean;
   } = $props();
 
   // State
@@ -52,6 +60,10 @@
   let atMax = $state(false);
   let isSaved = $state(false);
 
+  // Scheduled departure fallback state
+  let scheduledDeparture = $state<NextDepartureInfo | null>(null);
+  let scheduleLoaded = $state(false);
+
   // Subscribe to saved stops to track if this stop is saved
   $effect(() => {
     const unsubscribe = savedStops.subscribe((stops) => {
@@ -63,6 +75,22 @@
   // Sync expanded state with prop (default collapsed)
   $effect(() => {
     expanded = isExpanded;
+  });
+
+  // Auto-fetch ETA on mount when showInlineETA is true
+  // Use staggered delay based on index to avoid API overload
+  $effect(() => {
+    if (showInlineETA && !lastFetched && !isLoadingETA) {
+      // Stagger requests: first 10 stops load quickly, rest load with longer delays
+      // Only auto-fetch first 20 stops to avoid too many API calls
+      if (index <= 20) {
+        const delay = index <= 5 ? index * 100 : 500 + (index - 5) * 200;
+        const timeoutId = setTimeout(() => {
+          fetchETAData();
+        }, delay);
+        return () => clearTimeout(timeoutId);
+      }
+    }
   });
 
   // Timer for updating relative time display
@@ -107,21 +135,31 @@
   }
 
   /**
-   * Fetch ETA for this stop (always fetches, used by toggle and refresh)
+   * Fetch ETA data without expanding the panel (for inline preview)
    */
-  async function handleGetETA() {
-    expanded = true;
+  async function fetchETAData() {
     isLoadingETA = true;
     etaError = null;
-
-    // Notify parent
-    onGetETA?.(stop.id);
+    scheduledDeparture = null;
+    scheduleLoaded = false;
 
     try {
+      // Debug: log stop type
+      const isSubway = isSubwayStop(stop.type);
+      console.log(
+        `[RouteStopItem] Stop ${stop.id} (${stop.name}): type=${stop.type}, isSubway=${isSubway}, routeFilter=${routeFilter}`
+      );
+
       // Use subway ETA service for subway stops, NextBus for surface vehicles
-      const response = isSubwayStop(stop.type)
+      const response = isSubway
         ? await fetchSubwayETA(stop.name, stop.id, routeFilter)
         : await fetchStopETA(stop.id);
+
+      // Debug: log the response
+      console.log(
+        `[RouteStopItem] Response for ${stop.id}:`,
+        JSON.stringify(response, null, 2)
+      );
 
       if (response.error) {
         etaError = response.error;
@@ -129,16 +167,67 @@
       } else {
         // Filter for specific route if provided (only for surface vehicles)
         etaPredictions =
-          routeFilter && !isSubwayStop(stop.type)
+          routeFilter && !isSubway
             ? filterPredictionsForRoute(response, routeFilter)
             : response.predictions;
         lastFetched = new Date();
+
+        // Debug: log predictions
+        console.log(
+          `[RouteStopItem] Predictions for ${stop.id}:`,
+          etaPredictions.map((p) => ({
+            route: p.route,
+            isLive: p.isLive,
+            arrivals: p.arrivals,
+          }))
+        );
+      }
+
+      // If no real-time predictions and we have a route filter, load scheduled departure
+      if (
+        etaPredictions.length === 0 &&
+        routeFilter &&
+        !isSubwayStop(stop.type)
+      ) {
+        await loadScheduleFallback();
       }
     } catch (error) {
       etaError = "Failed to fetch arrival times";
       etaPredictions = [];
+
+      // Try to load scheduled departure as fallback
+      if (routeFilter && !isSubwayStop(stop.type)) {
+        await loadScheduleFallback();
+      }
     } finally {
       isLoadingETA = false;
+    }
+  }
+
+  /**
+   * Fetch ETA for this stop (always fetches, used by toggle and refresh)
+   */
+  async function handleGetETA() {
+    expanded = true;
+    await fetchETAData();
+    // Notify parent
+    onGetETA?.(stop.id);
+  }
+
+  /**
+   * Load scheduled departure time as fallback when no real-time data
+   */
+  async function loadScheduleFallback() {
+    if (!routeFilter) return;
+
+    try {
+      await loadScheduleData();
+      const departure = getNextScheduledDeparture(stop.id, routeFilter);
+      scheduledDeparture = departure;
+      scheduleLoaded = true;
+    } catch (e) {
+      console.error("Failed to load schedule fallback:", e);
+      scheduleLoaded = true;
     }
   }
 
@@ -403,6 +492,35 @@
   }
 
   let formattedStop = $derived(formatStopName(stop.name));
+
+  // Inline ETA preview - get first prediction for this route
+  let inlinePreview = $derived.by(() => {
+    if (!showInlineETA || etaPredictions.length === 0) return null;
+
+    // Get the first prediction (filtered for route if routeFilter is set)
+    const prediction = etaPredictions[0];
+    if (!prediction || prediction.arrivals.length === 0) return null;
+
+    return {
+      arrivals: prediction.arrivals.slice(0, 3),
+      isLive: prediction.isLive,
+      scheduledTime: prediction.scheduledTime,
+    };
+  });
+
+  // Get scheduled preview for inline display
+  let scheduledPreview = $derived.by(() => {
+    if (!showInlineETA || inlinePreview) return null;
+    if (!scheduleLoaded || !scheduledDeparture?.time) return null;
+
+    return {
+      time: scheduledDeparture.time,
+      nextWeekdayLabel: scheduledDeparture.nextWeekdayLabel,
+      tomorrowLabel: scheduledDeparture.tomorrowLabel,
+      isToday: scheduledDeparture.isToday,
+      noWeekendService: scheduledDeparture.noWeekendService,
+    };
+  });
 </script>
 
 <div
@@ -443,9 +561,67 @@
       </div>
     </div>
 
+    <!-- Inline ETA Preview (when showInlineETA is true) -->
+    {#if showInlineETA}
+      <div class="inline-eta-preview">
+        {#if isLoadingETA}
+          <Loader2 class="h-4 w-4 animate-spin text-muted-foreground" />
+        {:else if inlinePreview}
+          <!-- Real-time or scheduled predictions -->
+          <div class="inline-eta-times">
+            {#if inlinePreview.isLive}
+              <!-- Live GPS data: show minutes -->
+              <span class="inline-eta-primary">{inlinePreview.arrivals[0]}</span
+              >
+              <LiveSignalIcon size="sm" />
+              {#if inlinePreview.arrivals.length > 1}
+                <span class="inline-eta-secondary"
+                  >, {inlinePreview.arrivals[1]}</span
+                >
+                <LiveSignalIcon size="sm" class="opacity-60" />
+              {/if}
+              {#if inlinePreview.arrivals.length > 2}
+                <span class="inline-eta-secondary"
+                  >, {inlinePreview.arrivals[2]}</span
+                >
+                <LiveSignalIcon size="sm" class="opacity-60" />
+              {/if}
+              <span class="inline-eta-unit">min</span>
+            {:else}
+              <!-- Scheduled: show times -->
+              {@const timeObj = minutesToTimeObject(inlinePreview.arrivals[0])}
+              <span class="inline-eta-scheduled">{timeObj.time}</span>
+              {#if inlinePreview.arrivals.length > 1}
+                {@const time2 = minutesToTimeObject(inlinePreview.arrivals[1])}
+                <span class="inline-eta-scheduled-secondary"
+                  >, {time2.time}</span
+                >
+              {/if}
+              <span class="inline-eta-period">{timeObj.period}</span>
+            {/if}
+          </div>
+        {:else if scheduledPreview}
+          <!-- Schedule fallback -->
+          <div class="inline-eta-times">
+            <span class="inline-eta-scheduled">{scheduledPreview.time}</span>
+            {#if scheduledPreview.noWeekendService && scheduledPreview.nextWeekdayLabel}
+              <span class="inline-eta-label"
+                >{scheduledPreview.nextWeekdayLabel}</span
+              >
+            {/if}
+          </div>
+        {:else if etaError}
+          <span class="inline-eta-error">—</span>
+        {:else}
+          <!-- No data yet -->
+          <span class="inline-eta-placeholder">—</span>
+        {/if}
+      </div>
+    {/if}
+
     <!-- Expand/collapse indicator -->
     <div class="expand-indicator" aria-hidden="true">
-      {#if isLoadingETA}
+      {#if isLoadingETA && !showInlineETA}
         <Loader2 class="h-4 w-4 animate-spin text-muted-foreground" />
       {:else if expanded}
         <ChevronUp class="h-4 w-4 text-muted-foreground" />
@@ -515,46 +691,89 @@
           </button>
         </div>
       {:else if etaPredictions.length === 0}
-        <!-- No Predictions -->
-        {@const emptyState = getEmptyStateMessage(
-          stop.type === "subway",
-          stop.id
-        )}
-        <div class="p-5 flex flex-col items-center gap-2 text-center">
-          {#if emptyState.icon === "moon"}
-            <Moon class="h-6 w-6 text-muted-foreground/50 mb-1" />
-          {:else if emptyState.icon === "alert"}
-            <AlertCircle class="h-6 w-6 text-muted-foreground/50 mb-1" />
-          {:else}
-            <Clock class="h-6 w-6 text-muted-foreground/50 mb-1" />
-          {/if}
-          <p class="text-sm font-medium text-muted-foreground">
-            {emptyState.title}
-          </p>
-          <p class="text-xs text-muted-foreground/70">{emptyState.subtitle}</p>
-          {#if emptyState.frequency}
-            <p class="text-xs text-muted-foreground/60 italic">
-              {emptyState.frequency}
+        <!-- No Predictions - Show scheduled fallback if available -->
+        {#if scheduleLoaded && scheduledDeparture && scheduledDeparture.time}
+          <!-- Scheduled departure fallback -->
+          <div class="bg-blue-500/10 dark:bg-blue-950/30">
+            <!-- Section Header -->
+            <div
+              class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20"
+            >
+              <div
+                class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
+              >
+                <Calendar class="h-3.5 w-3.5" />
+                <span>Scheduled Next Bus</span>
+              </div>
+            </div>
+            <!-- Scheduled time display -->
+            <div class="px-4 py-3 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <RouteBadge route={routeFilter || ""} size="lg" />
+              </div>
+              <div class="flex flex-col items-end">
+                <span
+                  class="text-4xl font-bold text-foreground/70 tabular-nums"
+                >
+                  {scheduledDeparture.time}
+                </span>
+                {#if scheduledDeparture.noWeekendService && scheduledDeparture.nextWeekdayLabel}
+                  <span class="text-sm text-muted-foreground"
+                    >{scheduledDeparture.nextWeekdayLabel}</span
+                  >
+                {:else if !scheduledDeparture.isToday && scheduledDeparture.tomorrowLabel}
+                  <span class="text-sm text-muted-foreground"
+                    >{scheduledDeparture.tomorrowLabel.match(/\((.+)\)/)?.[1] ||
+                      "Tomorrow"}</span
+                  >
+                {/if}
+              </div>
+            </div>
+          </div>
+        {:else}
+          <!-- No scheduled data - show empty state message -->
+          {@const emptyState = getEmptyStateMessage(
+            stop.type === "subway",
+            stop.id
+          )}
+          <div class="p-5 flex flex-col items-center gap-2 text-center">
+            {#if emptyState.icon === "moon"}
+              <Moon class="h-6 w-6 text-muted-foreground/50 mb-1" />
+            {:else if emptyState.icon === "alert"}
+              <AlertCircle class="h-6 w-6 text-muted-foreground/50 mb-1" />
+            {:else}
+              <Clock class="h-6 w-6 text-muted-foreground/50 mb-1" />
+            {/if}
+            <p class="text-sm font-medium text-muted-foreground">
+              {emptyState.title}
             </p>
-          {/if}
-          {#if emptyState.additionalInfo}
-            <p class="text-xs text-muted-foreground/60 italic">
-              {emptyState.additionalInfo}
+            <p class="text-xs text-muted-foreground/70">
+              {emptyState.subtitle}
             </p>
-          {/if}
-          <Button
-            variant="outline"
-            size="sm"
-            class="mt-2 gap-1.5"
-            onclick={refreshETA}
-            disabled={isLoadingETA}
-          >
-            <RefreshCw
-              class={cn("h-3.5 w-3.5", isLoadingETA && "animate-spin")}
-            />
-            <span>{isLoadingETA ? "Refreshing..." : "Refresh"}</span>
-          </Button>
-        </div>
+            {#if emptyState.frequency}
+              <p class="text-xs text-muted-foreground/60 italic">
+                {emptyState.frequency}
+              </p>
+            {/if}
+            {#if emptyState.additionalInfo}
+              <p class="text-xs text-muted-foreground/60 italic">
+                {emptyState.additionalInfo}
+              </p>
+            {/if}
+            <Button
+              variant="outline"
+              size="sm"
+              class="mt-2 gap-1.5"
+              onclick={refreshETA}
+              disabled={isLoadingETA}
+            >
+              <RefreshCw
+                class={cn("h-3.5 w-3.5", isLoadingETA && "animate-spin")}
+              />
+              <span>{isLoadingETA ? "Refreshing..." : "Refresh"}</span>
+            </Button>
+          </div>
+        {/if}
         <!-- Action bar for empty state -->
         <div class="action-bar">
           <button
@@ -654,38 +873,42 @@
                       {@const allSamePeriod = allTimeObjs.every(
                         (t) => t.period === primaryTimeObj.period
                       )}
-                      <span
-                        class="text-4xl font-bold text-foreground tabular-nums"
-                        >{primaryTimeObj.time}</span
-                      >
-                      {#if !allSamePeriod}
-                        <span class="text-base text-muted-foreground"
-                          >{primaryTimeObj.period}</span
-                        >
-                      {/if}
-                      {#if secondaryTimes.length > 0}
-                        {#each secondaryTimes as time, i}
-                          {@const timeObj = allTimeObjs[i + 1]}
+                      <div class="flex flex-col items-end">
+                        <div class="flex items-baseline gap-1">
                           <span
-                            class="text-2xl font-semibold text-muted-foreground tabular-nums"
-                            >, {timeObj.time}</span
+                            class="text-4xl font-bold text-foreground tabular-nums"
+                            >{primaryTimeObj.time}</span
                           >
-                          {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
-                            <span class="text-sm text-muted-foreground"
-                              >{timeObj.period}</span
+                          {#if !allSamePeriod}
+                            <span class="text-base text-muted-foreground"
+                              >{primaryTimeObj.period}</span
                             >
                           {/if}
-                        {/each}
-                      {/if}
-                      {#if allSamePeriod}
-                        <span class="text-sm text-muted-foreground ml-0.5"
-                          >{primaryTimeObj.period}</span
+                          {#if secondaryTimes.length > 0}
+                            {#each secondaryTimes as time, i}
+                              {@const timeObj = allTimeObjs[i + 1]}
+                              <span
+                                class="text-2xl font-semibold text-muted-foreground tabular-nums"
+                                >, {timeObj.time}</span
+                              >
+                              {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
+                                <span class="text-sm text-muted-foreground"
+                                  >{timeObj.period}</span
+                                >
+                              {/if}
+                            {/each}
+                          {/if}
+                          {#if allSamePeriod}
+                            <span class="text-sm text-muted-foreground ml-0.5"
+                              >{primaryTimeObj.period}</span
+                            >
+                          {/if}
+                        </div>
+                        <span
+                          class="text-sm text-amber-600 dark:text-amber-400 font-medium"
+                          >Scheduled</span
                         >
-                      {/if}
-                      <span
-                        class="text-[10px] text-amber-600 dark:text-amber-400 ml-2 self-end mb-1.5 font-medium"
-                        >Scheduled</span
-                      >
+                      </div>
                     {/if}
                   {:else}
                     <span class="text-5xl font-bold text-muted-foreground/50"
@@ -744,38 +967,42 @@
                       {@const allSamePeriod = allTimeObjs.every(
                         (t) => t.period === primaryTimeObj.period
                       )}
-                      <span
-                        class="text-3xl font-bold text-foreground tabular-nums"
-                        >{primaryTimeObj.time}</span
-                      >
-                      {#if !allSamePeriod}
-                        <span class="text-xs text-foreground/70"
-                          >{primaryTimeObj.period}</span
-                        >
-                      {/if}
-                      {#if secondaryTimes.length > 0}
-                        {#each secondaryTimes as time, i}
-                          {@const timeObj = allTimeObjs[i + 1]}
+                      <div class="flex flex-col items-end">
+                        <div class="flex items-baseline gap-1">
                           <span
-                            class="text-base text-foreground/70 tabular-nums"
-                            >, {timeObj.time}</span
+                            class="text-3xl font-bold text-foreground tabular-nums"
+                            >{primaryTimeObj.time}</span
                           >
-                          {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
+                          {#if !allSamePeriod}
                             <span class="text-xs text-foreground/70"
-                              >{timeObj.period}</span
+                              >{primaryTimeObj.period}</span
                             >
                           {/if}
-                        {/each}
-                      {/if}
-                      {#if allSamePeriod}
-                        <span class="text-sm text-foreground/70 ml-0.5"
-                          >{primaryTimeObj.period}</span
+                          {#if secondaryTimes.length > 0}
+                            {#each secondaryTimes as time, i}
+                              {@const timeObj = allTimeObjs[i + 1]}
+                              <span
+                                class="text-base text-foreground/70 tabular-nums"
+                                >, {timeObj.time}</span
+                              >
+                              {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
+                                <span class="text-xs text-foreground/70"
+                                  >{timeObj.period}</span
+                                >
+                              {/if}
+                            {/each}
+                          {/if}
+                          {#if allSamePeriod}
+                            <span class="text-sm text-foreground/70 ml-0.5"
+                              >{primaryTimeObj.period}</span
+                            >
+                          {/if}
+                        </div>
+                        <span
+                          class="text-sm text-amber-600 dark:text-amber-400 font-medium"
+                          >Scheduled</span
                         >
-                      {/if}
-                      <span
-                        class="text-[10px] text-amber-600 dark:text-amber-400 ml-2 self-end mb-0.5 font-medium"
-                        >Scheduled</span
-                      >
+                      </div>
                     {/if}
                   </div>
                 {:else}
@@ -1050,5 +1277,72 @@
     100% {
       transform: scale(1);
     }
+  }
+
+  /* Inline ETA Preview styles */
+  .inline-eta-preview {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+
+  .inline-eta-times {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  .inline-eta-primary {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inline-eta-secondary {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inline-eta-unit {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    margin-left: 0.125rem;
+  }
+
+  .inline-eta-scheduled {
+    font-size: 1rem;
+    font-weight: 600;
+    color: hsl(var(--foreground) / 0.7);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inline-eta-scheduled-secondary {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inline-eta-period {
+    font-size: 0.625rem;
+    color: hsl(var(--muted-foreground));
+    margin-left: 0.125rem;
+  }
+
+  .inline-eta-label {
+    font-size: 0.625rem;
+    color: hsl(var(--muted-foreground));
+    margin-left: 0.25rem;
+  }
+
+  .inline-eta-error,
+  .inline-eta-placeholder {
+    font-size: 1rem;
+    color: hsl(var(--muted-foreground) / 0.5);
   }
 </style>
