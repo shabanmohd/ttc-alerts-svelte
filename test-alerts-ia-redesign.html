@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TTC Alerts - Mobile-First IA Redesign</title>
+  
+  <!-- Lexend Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Lexend', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: {
+              DEFAULT: 'hsl(var(--primary))',
+              foreground: 'hsl(var(--primary-foreground))',
+            },
+            secondary: {
+              DEFAULT: 'hsl(var(--secondary))',
+              foreground: 'hsl(var(--secondary-foreground))',
+            },
+            destructive: {
+              DEFAULT: 'hsl(var(--destructive))',
+              foreground: 'hsl(var(--destructive-foreground))',
+            },
+            muted: {
+              DEFAULT: 'hsl(var(--muted))',
+              foreground: 'hsl(var(--muted-foreground))',
+            },
+            accent: {
+              DEFAULT: 'hsl(var(--accent))',
+              foreground: 'hsl(var(--accent-foreground))',
+            },
+            card: {
+              DEFAULT: 'hsl(var(--card))',
+              foreground: 'hsl(var(--card-foreground))',
+            },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
+  
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 240 10% 3.9%;
+      --primary: 240 5.9% 10%;
+      --primary-foreground: 0 0% 98%;
+      --secondary: 240 4.8% 95.9%;
+      --secondary-foreground: 240 5.9% 10%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --accent: 240 4.8% 95.9%;
+      --accent-foreground: 240 5.9% 10%;
+      --destructive: 0 72% 51%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 5.9% 90%;
+      --input: 240 5.9% 90%;
+      --ring: 240 5.9% 10%;
+      --radius: 0.5rem;
+    }
+    
+    .dark {
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 240 10% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 240 5.9% 10%;
+      --secondary: 240 3.7% 15.9%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --input: 240 3.7% 15.9%;
+      --ring: 240 4.9% 83.9%;
+    }
+    
+    body {
+      font-family: 'Lexend', system-ui, sans-serif;
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      letter-spacing: -0.01em;
+    }
+    
+    /* TTC Colors */
+    .route-line-1 { background: #ffc524; color: #000; }
+    .route-line-2 { background: #00853f; color: #fff; }
+    .route-line-4 { background: #a12f7d; color: #fff; }
+    .route-line-6 { background: #808285; color: #fff; }
+    .route-bus { background: #c8102e; color: #fff; }
+    .route-streetcar { background: #c8102e; color: #fff; }
+    .route-express { background: #00853f; color: #fff; }
+    .route-night { background: #003da5; color: #fff; }
+    
+    /* Status Colors */
+    .status-ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .dark .status-ok { background: rgba(34, 197, 94, 0.15); color: #86efac; border-color: rgba(34, 197, 94, 0.3); }
+    
+    .status-delay { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .dark .status-delay { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border-color: rgba(245, 158, 11, 0.3); }
+    
+    .status-disruption { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .dark .status-disruption { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
+    
+    .status-scheduled { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    .dark .status-scheduled { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3); }
+    
+    /* Category Badges */
+    .category-disruptions { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .category-delays { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .category-elevators { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+    
+    /* Alert Status Badges */
+    .badge-disruption { background: #fee2e2; color: #991b1b; }
+    .dark .badge-disruption { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+    
+    .badge-detour { background: #ffedd5; color: #9a3412; }
+    .dark .badge-detour { background: rgba(249, 115, 22, 0.15); color: #fdba74; }
+    
+    .badge-delay { background: #fef3c7; color: #92400e; }
+    .dark .badge-delay { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
+    
+    .badge-slowzone { background: #fef9c3; color: #854d0e; }
+    .dark .badge-slowzone { background: rgba(234, 179, 8, 0.15); color: #fde047; }
+    
+    .badge-elevator { background: #f3e8ff; color: #7e22ce; }
+    .dark .badge-elevator { background: rgba(168, 85, 247, 0.15); color: #c4b5fd; }
+    
+    .badge-resolved { background: #d1fae5; color: #065f46; }
+    .dark .badge-resolved { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+    
+    /* Primary Tabs */
+    .primary-tabs {
+      display: flex;
+      gap: 0.25rem;
+      padding: 0.25rem;
+      background: hsl(var(--muted));
+      border-radius: 0.5rem;
+    }
+    
+    .primary-tab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 0.375rem;
+      transition: all 0.15s;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      color: hsl(var(--muted-foreground));
+    }
+    
+    .primary-tab:hover {
+      color: hsl(var(--foreground));
+    }
+    
+    .primary-tab.active {
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .primary-tab .count {
+      font-size: 0.75rem;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      background: hsl(var(--muted));
+    }
+    
+    .primary-tab.active .count {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+    }
+    
+    /* Category Filter */
+    .category-filters {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      scrollbar-width: none;
+    }
+    
+    .category-filters::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .category-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 0.875rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border-radius: 9999px;
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--background));
+      color: hsl(var(--muted-foreground));
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .category-btn:hover {
+      border-color: hsl(var(--foreground) / 0.3);
+      color: hsl(var(--foreground));
+    }
+    
+    .category-btn.active {
+      border-color: hsl(var(--foreground));
+      color: hsl(var(--foreground));
+      background: hsl(var(--accent));
+    }
+    
+    .category-btn .dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 9999px;
+    }
+    
+    .category-btn .count {
+      font-size: 0.6875rem;
+      padding: 0.0625rem 0.375rem;
+      border-radius: 9999px;
+      background: hsl(var(--muted));
+    }
+    
+    /* Subway Overview */
+    .subway-overview {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    
+    .subway-overview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    
+    .subway-overview-header:hover {
+      background: hsl(var(--accent));
+    }
+    
+    .subway-overview-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+    
+    .subway-lines-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      padding: 0 1rem 1rem;
+    }
+    
+    .subway-line-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.75rem 0.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid hsl(var(--border));
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .subway-line-card:hover {
+      border-color: hsl(var(--foreground) / 0.3);
+    }
+    
+    .subway-line-card.has-issue {
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+    
+    .line-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.75rem;
+      height: 1.75rem;
+      padding: 0 0.5rem;
+      font-weight: 700;
+      font-size: 0.875rem;
+      border-radius: 0.25rem;
+    }
+    
+    .line-name {
+      font-size: 0.6875rem;
+      color: hsl(var(--muted-foreground));
+      text-align: center;
+    }
+    
+    .line-status {
+      font-size: 0.625rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    /* Alert Card */
+    .alert-card {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    
+    .alert-card-content {
+      padding: 1rem;
+    }
+    
+    .alert-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .alert-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+    }
+    
+    .route-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.625rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 0.25rem;
+      white-space: nowrap;
+    }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.1875rem 0.5rem;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      border-radius: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+    
+    .alert-timestamp {
+      font-size: 0.75rem;
+      color: hsl(var(--muted-foreground));
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    
+    .alert-title {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      line-height: 1.4;
+      margin-bottom: 0.25rem;
+    }
+    
+    .alert-description {
+      font-size: 0.8125rem;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.5;
+    }
+    
+    /* My Routes Filter */
+    .my-routes-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.875rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border-radius: 0.5rem;
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--background));
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .my-routes-toggle:hover {
+      border-color: hsl(var(--foreground) / 0.3);
+    }
+    
+    .my-routes-toggle.active {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      border-color: hsl(var(--primary));
+    }
+    
+    /* Recently Resolved Section */
+    .resolved-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid hsl(var(--border));
+    }
+    
+    .resolved-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+    }
+    
+    .resolved-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+    }
+    
+    .resolved-alerts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .resolved-alert {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: hsl(var(--muted) / 0.5);
+      border-radius: 0.5rem;
+    }
+    
+    .resolved-alert .route-badge {
+      flex-shrink: 0;
+    }
+    
+    .resolved-alert-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .resolved-alert-title {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .resolved-alert-time {
+      font-size: 0.6875rem;
+      color: hsl(var(--muted-foreground));
+    }
+    
+    /* Header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+    
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+    
+    /* Container */
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    
+    /* Comparison Layout */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      padding: 1rem;
+    }
+    
+    @media (max-width: 1024px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .comparison-section {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    
+    .comparison-header {
+      padding: 1rem;
+      border-bottom: 1px solid hsl(var(--border));
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .comparison-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    
+    .comparison-header .badge {
+      font-size: 0.6875rem;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+    }
+    
+    .comparison-content {
+      padding: 1rem;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .section-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Earlier updates toggle */
+    .earlier-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 0.75rem;
+      color: hsl(var(--muted-foreground));
+      background: hsl(var(--muted) / 0.5);
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    
+    .earlier-toggle:hover {
+      background: hsl(var(--muted));
+    }
+    
+    /* Utility */
+    .hidden { display: none !important; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-3 { margin-bottom: 0.75rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-2 { margin-top: 0.5rem; }
+  </style>
+</head>
+<body class="min-h-screen">
+  
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="page-title">
+      <span class="text-2xl">🚇</span>
+      <span>TTC Alerts IA Redesign</span>
+    </div>
+    <button id="theme-toggle" class="p-2 rounded-md hover:bg-[hsl(var(--accent))] transition-colors">
+      <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+      <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+    </button>
+  </header>
+  
+  <!-- Comparison Grid -->
+  <div class="comparison-grid">
+    
+    <!-- CURRENT DESIGN -->
+    <div class="comparison-section">
+      <div class="comparison-header">
+        <h2>Current Design</h2>
+        <span class="badge bg-[hsl(var(--muted))]">Before</span>
+      </div>
+      <div class="comparison-content space-y-4">
+        
+        <!-- Current: Top-level tabs -->
+        <div>
+          <div class="section-label">Top-Level Tabs (3)</div>
+          <div class="primary-tabs">
+            <button class="primary-tab active">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+              Active
+              <span class="count">23</span>
+            </button>
+            <button class="primary-tab">
+              <i data-lucide="check-circle" class="w-4 h-4"></i>
+              Resolved
+              <span class="count">26</span>
+            </button>
+            <button class="primary-tab">
+              <i data-lucide="calendar" class="w-4 h-4"></i>
+              Scheduled
+            </button>
+          </div>
+        </div>
+        
+        <!-- Current: Subway status (always visible) -->
+        <div>
+          <div class="section-label">Subway Status (Always Visible)</div>
+          <div class="subway-lines-grid">
+            <div class="subway-line-card has-issue">
+              <span class="line-badge route-line-1">1</span>
+              <span class="line-name">Line 1</span>
+              <span class="line-status text-red-500"><i data-lucide="alert-circle" class="w-3 h-3"></i> Delay</span>
+            </div>
+            <div class="subway-line-card has-issue">
+              <span class="line-badge route-line-2">2</span>
+              <span class="line-name">Line 2</span>
+              <span class="line-status text-red-500"><i data-lucide="alert-circle" class="w-3 h-3"></i> Delay</span>
+            </div>
+            <div class="subway-line-card">
+              <span class="line-badge route-line-4">4</span>
+              <span class="line-name">Line 4</span>
+              <span class="line-status text-green-500"><i data-lucide="check" class="w-3 h-3"></i> Normal</span>
+            </div>
+            <div class="subway-line-card">
+              <span class="line-badge route-line-6">6</span>
+              <span class="line-name">Line 6</span>
+              <span class="line-status text-green-500"><i data-lucide="check" class="w-3 h-3"></i> Normal</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Current: Secondary filter (Active tab only) -->
+        <div>
+          <div class="section-label">Secondary Filter (Vague Labels)</div>
+          <div class="category-filters">
+            <button class="category-btn active">
+              <i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i>
+              Major
+              <span class="count">4</span>
+            </button>
+            <button class="category-btn">
+              <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+              Minor
+              <span class="count">12</span>
+            </button>
+            <button class="category-btn">
+              <i data-lucide="accessibility" class="w-3.5 h-3.5"></i>
+              Accessibility
+              <span class="count">7</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Current: Alert list -->
+        <div>
+          <div class="section-label">Alert Cards (Standard)</div>
+          <div class="space-y-3">
+            <div class="alert-card">
+              <div class="alert-card-content">
+                <div class="alert-card-header">
+                  <div class="alert-badges">
+                    <span class="route-badge route-bus">34A</span>
+                    <span class="status-badge badge-detour">DETOUR</span>
+                  </div>
+                  <span class="alert-timestamp">2 hours ago</span>
+                </div>
+                <p class="alert-title">34A Eglinton East: Detour via Don Mills Rd, Wynford Dr, Wynford Dr and Eglinton Ave W due to a collision.</p>
+              </div>
+            </div>
+            
+            <div class="alert-card">
+              <div class="alert-card-content">
+                <div class="alert-card-header">
+                  <div class="alert-badges">
+                    <span class="route-badge route-streetcar">505</span>
+                    <span class="status-badge badge-detour">DETOUR</span>
+                  </div>
+                  <span class="alert-timestamp">5 hours ago</span>
+                </div>
+                <p class="alert-title">505 Dundas: Detour westbound via Spadina Ave, College St and Bathurst St due to Parade.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Current Issues highlighted -->
+        <div class="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+          <div class="section-label text-red-400">Issues</div>
+          <ul class="text-xs text-red-300 space-y-1">
+            <li>• Dual navigation (top tabs + category filter)</li>
+            <li>• "Major" and "Minor" are vague labels</li>
+            <li>• Subway status always visible (takes space)</li>
+            <li>• Resolved alerts in separate tab (hidden)</li>
+            <li>• No "My Routes" quick filter</li>
+            <li>• RSZ alerts use different component</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- PROPOSED REDESIGN -->
+    <div class="comparison-section">
+      <div class="comparison-header">
+        <h2>Proposed Redesign</h2>
+        <span class="badge bg-green-500/20 text-green-400">After</span>
+      </div>
+      <div class="comparison-content space-y-4">
+        
+        <!-- Proposed: Simplified top-level tabs -->
+        <div>
+          <div class="section-label">Simplified Tabs (2)</div>
+          <div class="primary-tabs">
+            <button class="primary-tab active">
+              <i data-lucide="zap" class="w-4 h-4"></i>
+              Now
+              <span class="count">23</span>
+            </button>
+            <button class="primary-tab">
+              <i data-lucide="calendar" class="w-4 h-4"></i>
+              Planned
+              <span class="count">6</span>
+            </button>
+          </div>
+          <p class="text-xs text-green-400 mt-2">✓ "Active" → "Now" (clearer urgency)</p>
+          <p class="text-xs text-green-400">✓ "Resolved" moved to bottom section</p>
+        </div>
+        
+        <!-- Proposed: Collapsible subway overview -->
+        <div>
+          <div class="section-label">Collapsible Subway Overview</div>
+          <div class="subway-overview">
+            <div class="subway-overview-header" onclick="toggleSubway()">
+              <div class="subway-overview-title">
+                <i data-lucide="train-front" class="w-4 h-4"></i>
+                <span>Subway Status</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">2 issues</span>
+              </div>
+              <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" id="subway-chevron"></i>
+            </div>
+            <div id="subway-content">
+              <div class="subway-lines-grid">
+                <div class="subway-line-card has-issue" onclick="filterByLine(1)">
+                  <span class="line-badge route-line-1">1</span>
+                  <span class="line-name">Line 1</span>
+                  <span class="line-status text-red-500"><i data-lucide="alert-circle" class="w-3 h-3"></i> Delay</span>
+                </div>
+                <div class="subway-line-card has-issue" onclick="filterByLine(2)">
+                  <span class="line-badge route-line-2">2</span>
+                  <span class="line-name">Line 2</span>
+                  <span class="line-status text-red-500"><i data-lucide="alert-circle" class="w-3 h-3"></i> Delay</span>
+                </div>
+                <div class="subway-line-card">
+                  <span class="line-badge route-line-4">4</span>
+                  <span class="line-name">Line 4</span>
+                  <span class="line-status text-green-500"><i data-lucide="check" class="w-3 h-3"></i> OK</span>
+                </div>
+                <div class="subway-line-card">
+                  <span class="line-badge route-line-6">6</span>
+                  <span class="line-name">Line 6</span>
+                  <span class="line-status text-green-500"><i data-lucide="check" class="w-3 h-3"></i> OK</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-green-400 mt-2">✓ Collapsible to save space</p>
+          <p class="text-xs text-green-400">✓ Click line to filter alerts</p>
+        </div>
+        
+        <!-- Proposed: User-centric category labels + My Routes -->
+        <div>
+          <div class="section-label">User-Centric Categories + My Routes</div>
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <button class="my-routes-toggle" onclick="toggleMyRoutes(this)">
+              <i data-lucide="star" class="w-3.5 h-3.5"></i>
+              My Routes
+            </button>
+          </div>
+          <div class="category-filters">
+            <button class="category-btn active">
+              <span class="dot bg-red-500"></span>
+              Disruptions
+              <span class="count">4</span>
+            </button>
+            <button class="category-btn">
+              <span class="dot bg-amber-500"></span>
+              Delays
+              <span class="count">12</span>
+            </button>
+            <button class="category-btn">
+              <span class="dot bg-purple-500"></span>
+              Elevators
+              <span class="count">7</span>
+            </button>
+          </div>
+          <p class="text-xs text-green-400 mt-2">✓ "Major" → "Disruptions" (service stopped/rerouted)</p>
+          <p class="text-xs text-green-400">✓ "Minor" → "Delays" (includes slow zones)</p>
+          <p class="text-xs text-green-400">✓ "Accessibility" → "Elevators" (clearer)</p>
+          <p class="text-xs text-green-400">✓ "My Routes" filter for saved preferences</p>
+        </div>
+        
+        <!-- Proposed: Alert cards with consistent display -->
+        <div>
+          <div class="section-label">Unified Alert Cards</div>
+          <div class="space-y-3">
+            <div class="alert-card">
+              <div class="alert-card-content">
+                <div class="alert-card-header">
+                  <div class="alert-badges">
+                    <span class="route-badge route-bus">34A</span>
+                    <span class="status-badge badge-detour">DETOUR</span>
+                  </div>
+                  <span class="alert-timestamp">2h ago</span>
+                </div>
+                <p class="alert-title">34A Eglinton East: Detour via Don Mills Rd and Wynford Dr due to collision</p>
+              </div>
+              <button class="earlier-toggle" onclick="toggleEarlier(this)">
+                <span>2 earlier updates</span>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+            
+            <!-- RSZ now as regular card -->
+            <div class="alert-card">
+              <div class="alert-card-content">
+                <div class="alert-card-header">
+                  <div class="alert-badges">
+                    <span class="route-badge route-streetcar">501</span>
+                    <span class="status-badge badge-slowzone">SLOW ZONE</span>
+                  </div>
+                  <span class="alert-timestamp">6h ago</span>
+                </div>
+                <p class="alert-title">501 Queen: Slower than usual between Roncesvalles and Dufferin due to track work</p>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-green-400 mt-2">✓ RSZ alerts now use same card format</p>
+          <p class="text-xs text-green-400">✓ "Slow Zone" badge instead of separate table</p>
+        </div>
+        
+        <!-- Proposed: Recently resolved section -->
+        <div class="resolved-section">
+          <div class="resolved-header" onclick="toggleResolved()">
+            <div class="resolved-title">
+              <i data-lucide="check-circle" class="w-4 h-4"></i>
+              <span>Recently Resolved</span>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">5</span>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" id="resolved-chevron"></i>
+          </div>
+          <div class="resolved-alerts" id="resolved-content">
+            <div class="resolved-alert">
+              <span class="route-badge route-bus">85</span>
+              <div class="resolved-alert-info">
+                <p class="resolved-alert-title">85 Sheppard East: Service resumed</p>
+                <p class="resolved-alert-time">Resolved 30 min ago</p>
+              </div>
+            </div>
+            <div class="resolved-alert">
+              <span class="route-badge route-line-1">1</span>
+              <div class="resolved-alert-info">
+                <p class="resolved-alert-title">Line 1: Normal service restored</p>
+                <p class="resolved-alert-time">Resolved 1 hour ago</p>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-green-400 mt-2">✓ Resolved alerts visible without changing tabs</p>
+          <p class="text-xs text-green-400">✓ Collapsible to reduce clutter</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Summary Section -->
+  <div class="container mt-4 mb-8">
+    <div class="comparison-section">
+      <div class="comparison-header">
+        <h2>Summary of Changes</h2>
+      </div>
+      <div class="comparison-content">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold text-sm mb-3 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs">1</span>
+              Tab Simplification
+            </h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-start gap-2">
+                <span class="text-red-400 text-xs mt-0.5">OLD:</span>
+                <span class="text-muted-foreground">Active | Resolved | Scheduled (3 tabs)</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-green-400 text-xs mt-0.5">NEW:</span>
+                <span>Now | Planned (2 tabs)</span>
+              </div>
+              <p class="text-xs text-muted-foreground mt-2">
+                "Now" creates urgency. "Resolved" becomes a collapsible section at bottom—users can see what just got fixed without losing context of current alerts.
+              </p>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-sm mb-3 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs">2</span>
+              Category Relabeling
+            </h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center gap-2">
+                <span class="text-red-400 text-xs">OLD:</span>
+                <span class="text-muted-foreground">Major → Minor → Accessibility</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-green-400 text-xs">NEW:</span>
+                <span>Disruptions → Delays → Elevators</span>
+              </div>
+              <p class="text-xs text-muted-foreground mt-2">
+                Transit riders think in outcomes: "Is service stopped?" (Disruptions), "Will I be late?" (Delays), "Can I use the elevator?" (Elevators).
+              </p>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-sm mb-3 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs">3</span>
+              Collapsible Subway Status
+            </h3>
+            <p class="text-sm text-muted-foreground">
+              Subway status grid remains visible at a glance but can be collapsed once seen. Clicking a line with issues filters/scrolls to those alerts—creating an interactive bridge between overview and details.
+            </p>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-sm mb-3 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs">4</span>
+              My Routes Quick Filter
+            </h3>
+            <p class="text-sm text-muted-foreground">
+              One-tap toggle to show only alerts for saved routes. No need to navigate to "My Alerts" tab—personalization available instantly in the main view for logged-in users.
+            </p>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-sm mb-3 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs">5</span>
+              Unified Alert Display
+            </h3>
+            <p class="text-sm text-muted-foreground">
+              RSZ (Reduced Speed Zone) alerts now use the same card component with a "Slow Zone" badge instead of a separate accordion table. Consistent mental model across all alert types.
+            </p>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-sm mb-3 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs">6</span>
+              Recently Resolved Section
+            </h3>
+            <p class="text-sm text-muted-foreground">
+              Resolved alerts appear at the bottom of "Now" tab as a collapsible section. Users can quickly check "what just got fixed" without leaving current context or switching tabs.
+            </p>
+          </div>
+        </div>
+        
+        <!-- Mental Model Comparison -->
+        <div class="mt-6 p-4 rounded-lg bg-[hsl(var(--muted))]">
+          <h3 class="font-semibold text-sm mb-3">User Mental Model Alignment</h3>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p class="text-xs font-semibold text-muted-foreground mb-2">Transit User Questions:</p>
+              <ul class="space-y-1 text-muted-foreground">
+                <li>"Is my route running?"</li>
+                <li>"How late will I be?"</li>
+                <li>"Is the elevator working?"</li>
+                <li>"Any weekend closures?"</li>
+                <li>"What just got fixed?"</li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-green-400 mb-2">New IA Answers:</p>
+              <ul class="space-y-1">
+                <li>→ "Disruptions" category</li>
+                <li>→ "Delays" category</li>
+                <li>→ "Elevators" category</li>
+                <li>→ "Planned" tab</li>
+                <li>→ "Recently Resolved" section</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+    
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+    });
+    
+    // Toggle subway overview
+    function toggleSubway() {
+      const content = document.getElementById('subway-content');
+      const chevron = document.getElementById('subway-chevron');
+      content.classList.toggle('hidden');
+      chevron.style.transform = content.classList.contains('hidden') ? 'rotate(-90deg)' : '';
+    }
+    
+    // Toggle resolved section
+    function toggleResolved() {
+      const content = document.getElementById('resolved-content');
+      const chevron = document.getElementById('resolved-chevron');
+      content.classList.toggle('hidden');
+      chevron.style.transform = content.classList.contains('hidden') ? 'rotate(-90deg)' : '';
+    }
+    
+    // Toggle My Routes
+    function toggleMyRoutes(btn) {
+      btn.classList.toggle('active');
+    }
+    
+    // Toggle earlier updates
+    function toggleEarlier(btn) {
+      btn.querySelector('i').style.transform = btn.querySelector('i').style.transform ? '' : 'rotate(180deg)';
+    }
+    
+    // Filter by line (demo)
+    function filterByLine(line) {
+      alert(`Filter alerts for Line ${line} (demo)`);
+    }
+    
+    // Tab switching (demo)
+    document.querySelectorAll('.primary-tab').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        const parent = e.target.closest('.primary-tabs');
+        parent.querySelectorAll('.primary-tab').forEach(t => t.classList.remove('active'));
+        e.target.closest('.primary-tab').classList.add('active');
+      });
+    });
+    
+    // Category filter switching (demo)
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const parent = e.target.closest('.category-filters');
+        parent.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        e.target.closest('.category-btn').classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

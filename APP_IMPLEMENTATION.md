@@ -114,6 +114,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `+layout.svelte`                  | ✅     | App layout, auth init, dialogs                                |
 | `+page.svelte`                    | ✅     | Homepage with alert tabs + ETA                                |
 | `alerts/+page.svelte`             | ✅     | Alerts page with tabs, subway status grid, accordion sections |
+| `alerts-v3/+page.svelte`          | 🆕     | Redesigned alerts page - improved IA, Now/Planned tabs        |
 | `alerts-archive/+page.svelte.bak` | 📦     | Archived original alerts page                                 |
 | `preferences/+page.svelte`        | ✅     | Route/mode preferences                                        |
 | `settings/+page.svelte`           | ✅     | Settings with stops, routes, prefs, location 🆕 **B**         |
@@ -121,19 +122,29 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `routes/[route]/+page.svelte`     | ✅     | Route detail page with active alerts (filtered from resolved) |
 | `auth/callback/+page.svelte`      | ✅     | Auth callback handler                                         |
 
+### Alerts V3 Components (`src/routes/alerts-v3/`)
+
+| File                      | Status | Purpose                                                        |
+| ------------------------- | ------ | -------------------------------------------------------------- |
+| `+page.svelte`            | 🆕     | Main page: Now/Planned tabs, max-width 576px centered layout   |
+| `SubwayStatusBar.svelte`  | 🆕     | 4-col subway status grid (2x2 mobile) - matches production CSS |
+| `CategoryFilterV3.svelte` | 🆕     | Pill-based filter (Disruptions/Delays/Elevators) with counts   |
+| `PlannedContent.svelte`   | 🆕     | Sub-tabs for Closures/Route Changes                            |
+| `ResolvedSection.svelte`  | 🆕     | Collapsible recently resolved section (always visible)         |
+
 ### Backend (`supabase/`)
 
-| File                                    | Status | Purpose                                                     |
-| --------------------------------------- | ------ | ----------------------------------------------------------- |
-| `functions/_shared/auth-utils.ts`       | ✅     | CORS + Supabase client factory                              |
-| `functions/auth-register/index.ts`      | ✅     | User registration + recovery codes (uses Supabase Auth)     |
-| `functions/auth-challenge/index.ts`     | ✅     | Generate WebAuthn challenge                                 |
-| `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                           |
-| `functions/auth-session/index.ts`       | ✅     | Validate existing session                                   |
-| `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                  |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v56: hidden stale alerts)    |
-| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                                 |
-| `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B**   |
+| File                                    | Status | Purpose                                                   |
+| --------------------------------------- | ------ | --------------------------------------------------------- |
+| `functions/_shared/auth-utils.ts`       | ✅     | CORS + Supabase client factory                            |
+| `functions/auth-register/index.ts`      | ✅     | User registration + recovery codes (uses Supabase Auth)   |
+| `functions/auth-challenge/index.ts`     | ✅     | Generate WebAuthn challenge                               |
+| `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                         |
+| `functions/auth-session/index.ts`       | ✅     | Validate existing session                                 |
+| `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v56: hidden stale alerts)      |
+| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                               |
+| `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B** |
 
 ### Database (EXISTING in Supabase)
 
@@ -624,6 +635,35 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Jan 18, 2025 - Alerts V3: Improved Information Architecture
+
+**Purpose:** Redesigned alerts page at `/alerts-v3` with improved information hierarchy and user experience.
+
+**Key Changes:**
+
+| Feature                 | Before (alerts/)                   | After (alerts-v3/)                     |
+| ----------------------- | ---------------------------------- | -------------------------------------- |
+| Primary Navigation      | All/My Routes/Scheduled tabs       | Now/Planned tabs                       |
+| Subway Status           | Grid at top of content             | Same compact grid (production CSS)     |
+| Active Alert Filtering  | Severity accordion (Major/Minor)   | Pill-based filters (Disruptions/etc.)  |
+| Planned Content         | Scheduled tab with all closures    | Sub-tabs: Closures / Route Changes     |
+| Recently Resolved       | Hidden in accordion                | Always visible section at bottom       |
+| Layout                  | Full width                         | Centered 576px max-width               |
+
+**Components Created:**
+
+- `SubwayStatusBar.svelte` - Exact copy of production CSS, 4-col desktop / 2x2 mobile
+- `CategoryFilterV3.svelte` - Color-coded pill filters with counts
+- `PlannedContent.svelte` - Closures vs Route Changes sub-tabs
+- `ResolvedSection.svelte` - Always-visible recently resolved section
+
+**Design Decisions:**
+
+1. **Now/Planned split** - Clearer mental model (what's happening vs what's coming)
+2. **Pill-based filters** - More compact than accordion, shows counts at a glance
+3. **Recently Resolved always visible** - Users can see what just cleared
+4. **Centered narrow layout** - Better readability, matches design system
+
 ### Jan 15, 2025 - NextBus Tag → GTFS StopId Conversion (Critical Fix)
 
 **Issue:** Route pages showing "No stops found for route X" and branch switching not updating stops.
@@ -786,6 +826,7 @@ const cleanStopId = stopId.replace(/_ar$/, "");
 **Solution:** Added `is_hidden` flag to hide stale alerts immediately while giving Bluesky 6 hours to post SERVICE_RESUMED.
 
 **Behavior:**
+
 1. Alert appears in TTC API → shows in **Active** tab
 2. TTC clears alert without SERVICE_RESUMED → **hidden immediately** (not in Active or Resolved)
 3. Within 6 hours:
@@ -793,6 +834,7 @@ const cleanStopId = stopId.replace(/_ar$/, "");
    - If no SERVICE_RESUMED after 6h → **deleted permanently**
 
 **Files Updated:**
+
 - `supabase/functions/poll-alerts/index.ts` - v56: is_hidden flag, 6h delete
 - `src/routes/alerts/+page.svelte` - Filter `is_hidden` threads from display
 - `src/lib/stores/alerts.ts` - Add `is_hidden` to SELECT query

@@ -193,29 +193,45 @@ CREATE INDEX idx_incident_threads_is_hidden ON incident_threads(is_hidden);
 
 ```typescript
 if (!isStillActive) {
-  const hasServiceResumed = (thread.categories || []).includes('SERVICE_RESUMED');
+  const hasServiceResumed = (thread.categories || []).includes(
+    "SERVICE_RESUMED"
+  );
   if (hasServiceResumed) {
     // Thread has SERVICE_RESUMED - mark as resolved and unhide
-    await supabase.from('incident_threads').update({ 
-      is_resolved: true, 
-      is_hidden: false, 
-      resolved_at: now.toISOString(), 
-      updated_at: now.toISOString() 
-    }).eq('thread_id', thread.thread_id);
+    await supabase
+      .from("incident_threads")
+      .update({
+        is_resolved: true,
+        is_hidden: false,
+        resolved_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      })
+      .eq("thread_id", thread.thread_id);
   } else {
     // Thread cleared from TTC API without SERVICE_RESUMED - hide immediately
-    const threadAge = now.getTime() - new Date(thread.updated_at || thread.created_at).getTime();
+    const threadAge =
+      now.getTime() -
+      new Date(thread.updated_at || thread.created_at).getTime();
     const sixHoursMs = 6 * 60 * 60 * 1000;
     if (threadAge > sixHoursMs) {
       // Delete the thread and its alerts - stale and won't get SERVICE_RESUMED
-      await supabase.from('alert_cache').delete().eq('thread_id', thread.thread_id);
-      await supabase.from('incident_threads').delete().eq('thread_id', thread.thread_id);
+      await supabase
+        .from("alert_cache")
+        .delete()
+        .eq("thread_id", thread.thread_id);
+      await supabase
+        .from("incident_threads")
+        .delete()
+        .eq("thread_id", thread.thread_id);
     } else {
       // Hide the thread immediately (will be deleted later or shown if SERVICE_RESUMED arrives)
-      await supabase.from('incident_threads').update({ 
-        is_hidden: true, 
-        updated_at: now.toISOString() 
-      }).eq('thread_id', thread.thread_id);
+      await supabase
+        .from("incident_threads")
+        .update({
+          is_hidden: true,
+          updated_at: now.toISOString(),
+        })
+        .eq("thread_id", thread.thread_id);
     }
   }
 }
@@ -233,12 +249,12 @@ let allThreads = $derived(() => {
 
 **State Transitions:**
 
-| State | Active Tab | Resolved Tab | Notes |
-|-------|------------|--------------|-------|
-| Active (in TTC API) | ✅ Visible | ❌ Hidden | Normal active alert |
-| Hidden (stale, no SERVICE_RESUMED) | ❌ Hidden | ❌ Hidden | Waiting up to 6h for Bluesky |
-| Resolved (has SERVICE_RESUMED) | ❌ Hidden | ✅ Visible | Proper resolution with SERVICE_RESUMED |
-| Deleted (6h passed, no SERVICE_RESUMED) | ❌ Gone | ❌ Gone | Cleaned up silently |
+| State                                   | Active Tab | Resolved Tab | Notes                                  |
+| --------------------------------------- | ---------- | ------------ | -------------------------------------- |
+| Active (in TTC API)                     | ✅ Visible | ❌ Hidden    | Normal active alert                    |
+| Hidden (stale, no SERVICE_RESUMED)      | ❌ Hidden  | ❌ Hidden    | Waiting up to 6h for Bluesky           |
+| Resolved (has SERVICE_RESUMED)          | ❌ Hidden  | ✅ Visible   | Proper resolution with SERVICE_RESUMED |
+| Deleted (6h passed, no SERVICE_RESUMED) | ❌ Gone    | ❌ Gone      | Cleaned up silently                    |
 
 ### RSZ (Reduced Speed Zone) Handling (v48)
 

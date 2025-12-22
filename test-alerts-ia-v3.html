@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TTC Alerts IA v3 - Mobile + Desktop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root { --bg: 0 0% 100%; --fg: 240 10% 4%; --card: 0 0% 100%; --muted: 240 5% 96%; --muted-fg: 240 4% 46%; --border: 240 6% 90%; }
+    .dark { --bg: 240 10% 4%; --fg: 0 0% 98%; --card: 240 10% 6%; --muted: 240 4% 16%; --muted-fg: 240 5% 65%; --border: 240 4% 20%; }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Lexend', system-ui, sans-serif; background: hsl(var(--bg)); color: hsl(var(--fg)); }
+    
+    /* Route Colors */
+    .line-1 { background: #ffc524; color: #000; }
+    .line-2 { background: #00853f; color: #fff; }
+    .line-4 { background: #a12f7d; color: #fff; }
+    .line-6 { background: #808285; color: #fff; }
+    .route-bus { background: #c8102e; color: #fff; }
+    .route-streetcar { background: #c8102e; color: #fff; }
+    
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.5rem; font-size: 0.625rem; font-weight: 600; border-radius: 0.25rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    .badge-detour { background: rgba(249,115,22,0.15); color: #fb923c; }
+    .badge-delay { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .badge-slowzone { background: rgba(234,179,8,0.12); color: #facc15; border: 1px dashed rgba(234,179,8,0.4); }
+    .badge-disruption { background: rgba(239,68,68,0.15); color: #f87171; }
+    .badge-planned { background: rgba(59,130,246,0.15); color: #93c5fd; }
+    .badge-route-change { background: rgba(6,182,212,0.15); color: #67e8f9; }
+    
+    /* Direction badges for RSZ table */
+    .dir-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 90px; padding: 0.25rem 0.5rem; font-size: 0.625rem; font-weight: 700; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .dir-nb { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .dir-sb { background: rgba(244,63,94,0.15); color: #fb7185; border: 1px solid rgba(244,63,94,0.3); }
+    .dir-eb { background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); }
+    .dir-wb { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+    
+    /* Layout */
+    .view-toggle { display: flex; gap: 0.5rem; padding: 1rem; background: hsl(var(--card)); border-bottom: 1px solid hsl(var(--border)); position: sticky; top: 0; z-index: 100; }
+    .view-btn { padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; border-radius: 0.5rem; border: 1px solid hsl(var(--border)); background: transparent; color: hsl(var(--muted-fg)); cursor: pointer; }
+    .view-btn.active { background: hsl(var(--fg)); color: hsl(var(--bg)); border-color: hsl(var(--fg)); }
+    
+    .mobile-frame { max-width: 390px; margin: 0 auto; background: hsl(var(--bg)); min-height: 100vh; border-left: 1px solid hsl(var(--border)); border-right: 1px solid hsl(var(--border)); }
+    .desktop-frame { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    
+    /* Sidebar */
+    .sidebar { background: hsl(var(--card)); border-right: 1px solid hsl(var(--border)); padding: 1rem 0; }
+    .sidebar-logo { display: flex; align-items: center; gap: 0.5rem; padding: 0 1rem 1rem; font-weight: 600; font-size: 1.125rem; border-bottom: 1px solid hsl(var(--border)); margin-bottom: 0.5rem; }
+    .sidebar-nav { padding: 0.5rem; }
+    .sidebar-item { display: flex; align-items: center; gap: 0.625rem; padding: 0.625rem 0.75rem; font-size: 0.875rem; font-weight: 500; border-radius: 0.5rem; color: hsl(var(--muted-fg)); cursor: pointer; transition: all 0.15s; }
+    .sidebar-item:hover { background: hsl(var(--muted)); color: hsl(var(--fg)); }
+    .sidebar-item.active { background: hsl(var(--muted)); color: hsl(var(--fg)); }
+    .sidebar-item i { width: 1.25rem; height: 1.25rem; }
+    
+    /* Header */
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--bg)); position: sticky; top: 0; z-index: 50; }
+    .header-title { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 1.125rem; }
+    
+    /* Tabs */
+    .tabs-container { padding: 0.75rem 1rem; border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--bg)); position: sticky; top: 53px; z-index: 40; }
+    .tabs { display: flex; gap: 0.25rem; padding: 0.25rem; background: hsl(var(--muted)); border-radius: 0.625rem; }
+    .tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 0.5rem; font-size: 0.875rem; font-weight: 500; border-radius: 0.5rem; background: transparent; border: none; color: hsl(var(--muted-fg)); cursor: pointer; }
+    .tab.active { background: hsl(var(--bg)); color: hsl(var(--fg)); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .tab .count { font-size: 0.6875rem; font-weight: 600; padding: 0.125rem 0.4rem; border-radius: 9999px; background: hsl(var(--muted)); }
+    .tab.active .count { background: hsl(var(--fg)); color: hsl(var(--bg)); }
+    
+    /* Subway bar */
+    .subway-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: hsl(var(--muted)/0.5); border-bottom: 1px solid hsl(var(--border)); overflow-x: auto; }
+    .subway-bar::-webkit-scrollbar { display: none; }
+    .subway-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-fg)); white-space: nowrap; }
+    .subway-chip { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem 0.25rem 0.375rem; border-radius: 9999px; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); font-size: 0.75rem; cursor: pointer; }
+    .subway-chip.issue { border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.08); }
+    .line-dot { width: 1.125rem; height: 1.125rem; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: 700; }
+    
+    /* Category filters */
+    .filters { display: flex; gap: 0.5rem; padding: 0.75rem 1rem; border-bottom: 1px solid hsl(var(--border)); overflow-x: auto; }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter-btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.625rem 1rem; font-size: 0.8125rem; font-weight: 500; border-radius: 9999px; border: 1px solid hsl(var(--border)); background: transparent; color: hsl(var(--muted-fg)); white-space: nowrap; cursor: pointer; }
+    .filter-btn.active { border-color: hsl(var(--fg)); color: hsl(var(--fg)); background: hsl(var(--muted)); }
+    .filter-btn .dot { width: 0.5rem; height: 0.5rem; border-radius: 9999px; }
+    .filter-btn .count { font-size: 0.6875rem; padding: 0.0625rem 0.375rem; border-radius: 9999px; background: hsl(var(--muted)); }
+    
+    /* Content */
+    .content { padding: 0.75rem 1rem; padding-bottom: 5rem; }
+    .desktop-frame .content { padding-bottom: 2rem; }
+    
+    /* Alert card */
+    .alert-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 0.75rem; overflow: hidden; margin-bottom: 0.75rem; }
+    .alert-body { padding: 1rem; }
+    .alert-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .alert-badges { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+    .route-badge { display: inline-flex; padding: 0.25rem 0.625rem; font-size: 0.75rem; font-weight: 600; border-radius: 0.25rem; }
+    .alert-time { font-size: 0.6875rem; color: hsl(var(--muted-fg)); white-space: nowrap; }
+    .alert-title { font-size: 0.9375rem; font-weight: 500; line-height: 1.45; }
+    .alert-desc { font-size: 0.8125rem; color: hsl(var(--muted-fg)); line-height: 1.5; margin-top: 0.375rem; }
+    
+    /* RSZ Table Style (Current) */
+    .rsz-card { background: hsl(var(--card)); border: 2px solid hsl(var(--border)); border-radius: 0.75rem; overflow: hidden; margin-bottom: 0.75rem; }
+    .rsz-top-bar { height: 4px; }
+    .rsz-header { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; cursor: pointer; }
+    .rsz-header:hover { background: hsl(var(--muted)/0.3); }
+    .rsz-left { display: flex; align-items: center; gap: 0.625rem; }
+    .rsz-line-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem; font-size: 1rem; font-weight: 700; border-radius: 0.375rem; }
+    .rsz-info { display: flex; flex-direction: column; gap: 0.125rem; }
+    .rsz-line-name { font-size: 0.9375rem; font-weight: 600; }
+    .rsz-label { font-size: 0.6875rem; font-weight: 500; color: #ca8a04; text-transform: uppercase; letter-spacing: 0.04em; }
+    .dark .rsz-label { color: #facc15; }
+    .rsz-right { display: flex; align-items: center; gap: 0.5rem; color: hsl(var(--muted-fg)); font-size: 0.75rem; }
+    .rsz-table { padding: 0.75rem 1rem 1rem; border-top: 1px solid hsl(var(--border)); }
+    .rsz-table-header { display: grid; grid-template-columns: 100px 1fr; gap: 0.75rem; padding: 0.375rem 0.5rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-fg)); border-bottom: 1px solid hsl(var(--border)/0.5); }
+    .rsz-row { display: grid; grid-template-columns: 100px 1fr; gap: 0.75rem; padding: 0.5rem 0.5rem; font-size: 0.875rem; border-bottom: 1px solid hsl(var(--border)/0.3); align-items: center; }
+    .rsz-row:last-child { border-bottom: none; }
+    .rsz-stations { font-weight: 500; }
+    
+    /* RSZ Inline Style (New) */
+    .rsz-indicator { display: flex; align-items: center; gap: 0.375rem; margin-top: 0.5rem; padding: 0.5rem 0.625rem; background: rgba(234,179,8,0.08); border: 1px dashed rgba(234,179,8,0.3); border-radius: 0.5rem; font-size: 0.75rem; }
+    .rsz-indicator .icon { color: #facc15; }
+    
+    /* Planned subtabs */
+    .subtabs { display: flex; gap: 0.5rem; padding: 0.75rem 1rem; border-bottom: 1px solid hsl(var(--border)); overflow-x: auto; }
+    .subtabs::-webkit-scrollbar { display: none; }
+    .subtab { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; font-size: 0.8125rem; font-weight: 500; border-radius: 0.5rem; border: 1px solid hsl(var(--border)); background: transparent; color: hsl(var(--muted-fg)); white-space: nowrap; cursor: pointer; }
+    .subtab.active { background: hsl(var(--muted)); border-color: hsl(var(--fg)/0.3); color: hsl(var(--fg)); }
+    .subtab .count { font-size: 0.625rem; padding: 0.125rem 0.375rem; border-radius: 9999px; background: hsl(var(--muted)); }
+    
+    /* Planned card */
+    .planned-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem; }
+    .planned-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.625rem; }
+    .planned-dates { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: hsl(var(--muted-fg)); margin-bottom: 0.5rem; }
+    .planned-title { font-size: 0.9375rem; font-weight: 500; line-height: 1.45; margin-bottom: 0.375rem; }
+    .planned-desc { font-size: 0.8125rem; color: hsl(var(--muted-fg)); line-height: 1.5; }
+    .planned-link { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; font-weight: 500; color: #3b82f6; margin-top: 0.625rem; }
+    
+    /* Section divider */
+    .divider { display: flex; align-items: center; gap: 0.5rem; margin: 1rem 0 0.75rem; }
+    .divider-line { flex: 1; height: 1px; background: hsl(var(--border)); }
+    .divider-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-fg)); }
+    
+    /* Resolved section */
+    .resolved { margin-top: 1rem; border-top: 1px solid hsl(var(--border)); padding-top: 1rem; }
+    .resolved-header { display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 0; cursor: pointer; }
+    .resolved-title { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; font-weight: 500; color: hsl(var(--muted-fg)); }
+    .resolved-count { font-size: 0.625rem; font-weight: 600; padding: 0.125rem 0.4rem; border-radius: 9999px; background: rgba(34,197,94,0.15); color: #86efac; }
+    .resolved-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .resolved-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: hsl(var(--muted)/0.5); border-radius: 0.5rem; }
+    .resolved-info { flex: 1; min-width: 0; }
+    .resolved-item-title { font-size: 0.8125rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .resolved-item-time { font-size: 0.6875rem; color: hsl(var(--muted-fg)); }
+    
+    /* Bottom nav */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 0.5rem 0; padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); background: hsl(var(--card)); border-top: 1px solid hsl(var(--border)); z-index: 50; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; padding: 0.375rem 1rem; font-size: 0.625rem; font-weight: 500; color: hsl(var(--muted-fg)); background: none; border: none; cursor: pointer; }
+    .nav-item.active { color: hsl(var(--fg)); }
+    .nav-item i { width: 1.25rem; height: 1.25rem; }
+    
+    /* Comparison section */
+    .comparison { padding: 2rem 1rem; max-width: 900px; margin: 0 auto; }
+    .comparison h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
+    .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 768px) { .comparison-grid { grid-template-columns: 1fr; } }
+    .comparison-box { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 0.75rem; padding: 1rem; }
+    .comparison-box h3 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    .comparison-box p { font-size: 0.8125rem; color: hsl(var(--muted-fg)); line-height: 1.5; }
+    
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- View Toggle -->
+<div class="view-toggle">
+  <button class="view-btn active" onclick="setView('mobile')">📱 Mobile</button>
+  <button class="view-btn" onclick="setView('desktop')">🖥️ Desktop</button>
+  <button class="view-btn" onclick="setView('rsz')">🔍 RSZ Comparison</button>
+  <button id="theme-btn" class="view-btn" onclick="toggleTheme()">🌙 Dark</button>
+</div>
+
+<!-- ========== MOBILE VIEW ========== -->
+<div id="mobile-view" class="mobile-frame">
+  <header class="header">
+    <div class="header-title"><span>🚇</span><span>Service Alerts</span></div>
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      <span style="font-size:0.75rem;color:hsl(var(--muted-fg))">2m ago</span>
+      <button style="padding:0.5rem;border-radius:0.5rem;border:none;background:transparent;cursor:pointer"><i data-lucide="refresh-cw" style="width:1rem;height:1rem"></i></button>
+    </div>
+  </header>
+  
+  <div class="tabs-container">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('now')"><i data-lucide="zap" style="width:1rem;height:1rem"></i>Now<span class="count">23</span></button>
+      <button class="tab" onclick="switchTab('planned')"><i data-lucide="calendar" style="width:1rem;height:1rem"></i>Planned<span class="count">8</span></button>
+    </div>
+  </div>
+  
+  <div id="now-tab">
+    <div class="subway-bar">
+      <span class="subway-label">Subway</span>
+      <button class="subway-chip issue"><span class="line-dot line-1">1</span><i data-lucide="alert-circle" style="width:0.875rem;height:0.875rem;color:#f87171"></i></button>
+      <button class="subway-chip issue"><span class="line-dot line-2">2</span><i data-lucide="alert-circle" style="width:0.875rem;height:0.875rem;color:#f87171"></i></button>
+      <button class="subway-chip"><span class="line-dot line-4">4</span><i data-lucide="check" style="width:0.875rem;height:0.875rem;color:#4ade80"></i></button>
+      <button class="subway-chip"><span class="line-dot line-6">6</span><i data-lucide="check" style="width:0.875rem;height:0.875rem;color:#4ade80"></i></button>
+    </div>
+    
+    <div class="filters">
+      <button class="filter-btn active"><span class="dot" style="background:#ef4444"></span>Disruptions<span class="count">4</span></button>
+      <button class="filter-btn"><span class="dot" style="background:#fbbf24"></span>Delays<span class="count">12</span></button>
+      <button class="filter-btn"><span class="dot" style="background:#a855f7"></span>Elevators<span class="count">7</span></button>
+    </div>
+    
+    <div class="content">
+      <div class="alert-card">
+        <div class="alert-body">
+          <div class="alert-header">
+            <div class="alert-badges"><span class="route-badge route-bus">34A</span><span class="badge badge-detour">Detour</span></div>
+            <span class="alert-time">2h ago</span>
+          </div>
+          <p class="alert-title">34A Eglinton East: Detour via Don Mills Rd, Wynford Dr due to collision</p>
+          <p class="alert-desc">Eastbound buses diverting. Expected to resume by 4:00 PM.</p>
+        </div>
+      </div>
+      
+      <div class="alert-card">
+        <div class="alert-body">
+          <div class="alert-header">
+            <div class="alert-badges"><span class="route-badge line-1">Line 1</span><span class="badge badge-disruption">No Service</span></div>
+            <span class="alert-time">45m ago</span>
+          </div>
+          <p class="alert-title">Line 1: No subway service between Eglinton and Sheppard-Yonge</p>
+          <p class="alert-desc">Shuttle buses running. Use Line 2 as alternate route.</p>
+        </div>
+      </div>
+      
+      <div class="divider"><span class="divider-line"></span><span class="divider-label">Delays & Slow Zones</span><span class="divider-line"></span></div>
+      
+      <div class="alert-card">
+        <div class="alert-body">
+          <div class="alert-header">
+            <div class="alert-badges"><span class="route-badge line-2">Line 2</span><span class="badge badge-delay">Delay</span></div>
+            <span class="alert-time">1h ago</span>
+          </div>
+          <p class="alert-title">Line 2: Delays of up to 10 minutes in both directions</p>
+          <p class="alert-desc">Due to earlier signal problem at Pape station.</p>
+        </div>
+      </div>
+      
+      <!-- RSZ as card (new integrated style) -->
+      <div class="alert-card">
+        <div class="alert-body">
+          <div class="alert-header">
+            <div class="alert-badges"><span class="route-badge route-streetcar">501</span><span class="badge badge-slowzone"><i data-lucide="gauge" style="width:0.75rem;height:0.75rem"></i>Slow Zone</span></div>
+            <span class="alert-time">6h ago</span>
+          </div>
+          <p class="alert-title">501 Queen: Slower than usual between Roncesvalles and Dufferin</p>
+          <div class="rsz-indicator">
+            <i data-lucide="construction" style="width:0.875rem;height:0.875rem" class="icon"></i>
+            <span>Track maintenance — expect 5-8 min added travel time</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="resolved">
+        <div class="resolved-header">
+          <div class="resolved-title"><i data-lucide="check-circle" style="width:1rem;height:1rem;color:#4ade80"></i>Recently Resolved<span class="resolved-count">5</span></div>
+          <i data-lucide="chevron-down" style="width:1rem;height:1rem;color:hsl(var(--muted-fg))"></i>
+        </div>
+        <div class="resolved-list">
+          <div class="resolved-item"><span class="route-badge route-bus">85</span><div class="resolved-info"><p class="resolved-item-title">85 Sheppard East: Service resumed</p><p class="resolved-item-time">Resolved 30 min ago</p></div></div>
+          <div class="resolved-item"><span class="route-badge route-bus">39</span><div class="resolved-info"><p class="resolved-item-title">39 Finch East: Normal service</p><p class="resolved-item-time">Resolved 1 hour ago</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="planned-tab" class="hidden">
+    <div class="subtabs">
+      <button class="subtab active" onclick="setPlannedTab('closures')"><i data-lucide="x-circle" style="width:1rem;height:1rem"></i>Closures<span class="count">5</span></button>
+      <button class="subtab" onclick="setPlannedTab('changes')"><i data-lucide="git-branch" style="width:1rem;height:1rem"></i>Route Changes<span class="count">3</span></button>
+    </div>
+    <div class="content" id="closures-tab">
+      <div class="divider"><span class="divider-line"></span><span class="divider-label">This Weekend</span><span class="divider-line"></span></div>
+      <div class="planned-card">
+        <div class="planned-header"><span class="route-badge line-1">Line 1</span><span class="badge badge-planned">Weekend Closure</span></div>
+        <div class="planned-dates"><i data-lucide="calendar" style="width:0.875rem;height:0.875rem"></i>Sat Dec 21 – Sun Dec 22</div>
+        <p class="planned-title">No subway service: Eglinton to Sheppard-Yonge stations</p>
+        <p class="planned-desc">Shuttle buses will operate. Use Line 2 via Yonge-Bloor as alternate.</p>
+        <a href="#" class="planned-link">More info<i data-lucide="external-link" style="width:0.75rem;height:0.75rem"></i></a>
+      </div>
+    </div>
+    <div class="content hidden" id="changes-tab">
+      <div class="divider"><span class="divider-line"></span><span class="divider-label">Active Route Changes</span><span class="divider-line"></span></div>
+      <div class="planned-card">
+        <div class="planned-header"><span class="route-badge route-streetcar">501</span><span class="badge badge-route-change">Route Change</span></div>
+        <div class="planned-dates"><i data-lucide="calendar" style="width:0.875rem;height:0.875rem"></i>Dec 15 – Jan 15, 2026</div>
+        <p class="planned-title">501 Queen: Diverting via King St between Spadina and Parliament</p>
+        <p class="planned-desc">Due to Queen St construction. Temporary stops on King St.</p>
+        <a href="#" class="planned-link">View affected stops<i data-lucide="external-link" style="width:0.75rem;height:0.75rem"></i></a>
+      </div>
+    </div>
+  </div>
+  
+  <nav class="bottom-nav">
+    <button class="nav-item active"><i data-lucide="alert-triangle"></i><span>Alerts</span></button>
+    <button class="nav-item"><i data-lucide="map-pin"></i><span>My Routes</span></button>
+    <button class="nav-item"><i data-lucide="settings"></i><span>Settings</span></button>
+  </nav>
+</div>
+
+<!-- ========== DESKTOP VIEW ========== -->
+<div id="desktop-view" class="desktop-frame hidden">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><span>🚇</span>TTC Alerts</div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-item active"><i data-lucide="alert-triangle"></i>Service Alerts</div>
+      <div class="sidebar-item"><i data-lucide="map-pin"></i>My Routes</div>
+      <div class="sidebar-item"><i data-lucide="settings"></i>Settings</div>
+    </nav>
+  </aside>
+  <main style="overflow-y:auto">
+    <header class="header">
+      <div class="header-title">Service Alerts</div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span style="font-size:0.8125rem;color:hsl(var(--muted-fg))">Updated 2 min ago</span>
+        <button style="padding:0.5rem 1rem;border-radius:0.5rem;border:1px solid hsl(var(--border));background:transparent;cursor:pointer;display:flex;align-items:center;gap:0.5rem;font-size:0.875rem"><i data-lucide="refresh-cw" style="width:1rem;height:1rem"></i>Refresh</button>
+      </div>
+    </header>
+    
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:1.5rem;padding:1.5rem">
+      <!-- Main content -->
+      <div>
+        <div class="tabs" style="margin-bottom:1rem">
+          <button class="tab active"><i data-lucide="zap" style="width:1rem;height:1rem"></i>Now<span class="count">23</span></button>
+          <button class="tab"><i data-lucide="calendar" style="width:1rem;height:1rem"></i>Planned<span class="count">8</span></button>
+        </div>
+        
+        <div class="filters" style="padding:0;margin-bottom:1rem;border:none">
+          <button class="filter-btn active"><span class="dot" style="background:#ef4444"></span>Disruptions<span class="count">4</span></button>
+          <button class="filter-btn"><span class="dot" style="background:#fbbf24"></span>Delays<span class="count">12</span></button>
+          <button class="filter-btn"><span class="dot" style="background:#a855f7"></span>Elevators<span class="count">7</span></button>
+        </div>
+        
+        <div class="alert-card">
+          <div class="alert-body">
+            <div class="alert-header">
+              <div class="alert-badges"><span class="route-badge route-bus">34A</span><span class="badge badge-detour">Detour</span></div>
+              <span class="alert-time">2h ago</span>
+            </div>
+            <p class="alert-title">34A Eglinton East: Detour via Don Mills Rd, Wynford Dr due to collision</p>
+            <p class="alert-desc">Eastbound buses diverting. Expected to resume by 4:00 PM.</p>
+          </div>
+        </div>
+        
+        <div class="alert-card">
+          <div class="alert-body">
+            <div class="alert-header">
+              <div class="alert-badges"><span class="route-badge line-1">Line 1</span><span class="badge badge-disruption">No Service</span></div>
+              <span class="alert-time">45m ago</span>
+            </div>
+            <p class="alert-title">Line 1: No subway service between Eglinton and Sheppard-Yonge</p>
+            <p class="alert-desc">Shuttle buses running. Use Line 2 as alternate route.</p>
+          </div>
+        </div>
+        
+        <div class="alert-card">
+          <div class="alert-body">
+            <div class="alert-header">
+              <div class="alert-badges"><span class="route-badge line-2">Line 2</span><span class="badge badge-delay">Delay</span></div>
+              <span class="alert-time">1h ago</span>
+            </div>
+            <p class="alert-title">Line 2: Delays of up to 10 minutes in both directions</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Sidebar: Subway + Resolved -->
+      <div>
+        <div style="background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:0.75rem;padding:1rem;margin-bottom:1rem">
+          <h3 style="font-size:0.8125rem;font-weight:600;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem"><i data-lucide="train-front" style="width:1rem;height:1rem"></i>Subway Status</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+            <div style="padding:0.75rem;border:1px solid rgba(239,68,68,0.3);border-radius:0.5rem;background:rgba(239,68,68,0.05);text-align:center">
+              <span class="line-dot line-1" style="width:1.5rem;height:1.5rem;margin:0 auto 0.25rem;font-size:0.75rem">1</span>
+              <p style="font-size:0.6875rem;color:#f87171">Delay</p>
+            </div>
+            <div style="padding:0.75rem;border:1px solid rgba(239,68,68,0.3);border-radius:0.5rem;background:rgba(239,68,68,0.05);text-align:center">
+              <span class="line-dot line-2" style="width:1.5rem;height:1.5rem;margin:0 auto 0.25rem;font-size:0.75rem">2</span>
+              <p style="font-size:0.6875rem;color:#f87171">Delay</p>
+            </div>
+            <div style="padding:0.75rem;border:1px solid hsl(var(--border));border-radius:0.5rem;text-align:center">
+              <span class="line-dot line-4" style="width:1.5rem;height:1.5rem;margin:0 auto 0.25rem;font-size:0.75rem">4</span>
+              <p style="font-size:0.6875rem;color:#4ade80">Normal</p>
+            </div>
+            <div style="padding:0.75rem;border:1px solid hsl(var(--border));border-radius:0.5rem;text-align:center">
+              <span class="line-dot line-6" style="width:1.5rem;height:1.5rem;margin:0 auto 0.25rem;font-size:0.75rem">6</span>
+              <p style="font-size:0.6875rem;color:#4ade80">Normal</p>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:0.75rem;padding:1rem">
+          <h3 style="font-size:0.8125rem;font-weight:600;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem"><i data-lucide="check-circle" style="width:1rem;height:1rem;color:#4ade80"></i>Recently Resolved</h3>
+          <div class="resolved-list">
+            <div class="resolved-item"><span class="route-badge route-bus">85</span><div class="resolved-info"><p class="resolved-item-title">85 Sheppard East</p><p class="resolved-item-time">30 min ago</p></div></div>
+            <div class="resolved-item"><span class="route-badge route-bus">39</span><div class="resolved-info"><p class="resolved-item-title">39 Finch East</p><p class="resolved-item-time">1 hour ago</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ========== RSZ COMPARISON ========== -->
+<div id="rsz-view" class="comparison hidden">
+  <h2>RSZ Display: Table vs Card</h2>
+  <div class="comparison-grid">
+    <div class="comparison-box">
+      <h3>✅ Current: Accordion Table</h3>
+      <p style="margin-bottom:1rem">Groups all RSZ by line with direction badges. Better for scanning multiple zones at once.</p>
+      
+      <!-- RSZ Table Style -->
+      <div class="rsz-card">
+        <div class="rsz-top-bar" style="background:#ffc524"></div>
+        <div class="rsz-header">
+          <div class="rsz-left">
+            <span class="rsz-line-badge line-1">1</span>
+            <div class="rsz-info"><span class="rsz-line-name">Line 1</span><span class="rsz-label">Reduced Speed Zone</span></div>
+          </div>
+          <div class="rsz-right">3 zones<i data-lucide="chevron-down" style="width:1rem;height:1rem"></i></div>
+        </div>
+        <div class="rsz-table">
+          <div class="rsz-table-header"><div>Direction</div><div>Stations</div></div>
+          <div class="rsz-row"><span class="dir-badge dir-nb">Northbound</span><span class="rsz-stations">Bloor → Eglinton</span></div>
+          <div class="rsz-row"><span class="dir-badge dir-sb">Southbound</span><span class="rsz-stations">St Clair → College</span></div>
+          <div class="rsz-row"><span class="dir-badge dir-nb">Northbound</span><span class="rsz-stations">Dundas → Queen</span></div>
+        </div>
+      </div>
+      
+      <div style="margin-top:1rem;padding:0.75rem;background:rgba(34,197,94,0.1);border-radius:0.5rem;font-size:0.8125rem">
+        <strong style="color:#4ade80">Pros:</strong> Easy to scan all zones for a line. Direction badges are color-coded. Shows count upfront.
+      </div>
+    </div>
+    
+    <div class="comparison-box">
+      <h3>🔄 Alternative: Inline Cards</h3>
+      <p style="margin-bottom:1rem">Each RSZ as separate card mixed with delays. Consistent card format but harder to scan.</p>
+      
+      <div class="alert-card">
+        <div class="alert-body">
+          <div class="alert-header">
+            <div class="alert-badges"><span class="route-badge line-1">Line 1</span><span class="badge badge-slowzone"><i data-lucide="gauge" style="width:0.75rem;height:0.75rem"></i>Slow Zone</span></div>
+            <span class="alert-time">6h</span>
+          </div>
+          <p class="alert-title">Line 1 NB: Slower between Bloor and Eglinton</p>
+          <div class="rsz-indicator"><i data-lucide="construction" style="width:0.875rem;height:0.875rem" class="icon"></i>Track work — 3-5 min added</div>
+        </div>
+      </div>
+      
+      <div class="alert-card">
+        <div class="alert-body">
+          <div class="alert-header">
+            <div class="alert-badges"><span class="route-badge line-1">Line 1</span><span class="badge badge-slowzone"><i data-lucide="gauge" style="width:0.75rem;height:0.75rem"></i>Slow Zone</span></div>
+            <span class="alert-time">6h</span>
+          </div>
+          <p class="alert-title">Line 1 SB: Slower between St Clair and College</p>
+          <div class="rsz-indicator"><i data-lucide="construction" style="width:0.875rem;height:0.875rem" class="icon"></i>Track work — 3-5 min added</div>
+        </div>
+      </div>
+      
+      <div style="margin-top:1rem;padding:0.75rem;background:rgba(245,158,11,0.1);border-radius:0.5rem;font-size:0.8125rem">
+        <strong style="color:#fbbf24">Cons:</strong> Multiple cards for same line. Harder to see total zones. More scrolling on mobile.
+      </div>
+    </div>
+  </div>
+  
+  <div style="margin-top:1.5rem;padding:1rem;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:0.75rem">
+    <h3 style="font-size:0.9375rem;font-weight:600;margin-bottom:0.5rem">💡 Recommendation</h3>
+    <p style="font-size:0.875rem;color:hsl(var(--muted-fg));line-height:1.6">
+      <strong>Keep the accordion table for RSZ.</strong> It's more scannable when there are multiple slow zones (common for subway lines). The direction color-coding helps riders quickly find their direction. The "X zones" count in the header is useful at-a-glance info.
+    </p>
+    <p style="font-size:0.875rem;color:hsl(var(--muted-fg));line-height:1.6;margin-top:0.5rem">
+      Move RSZ to the <strong>"Delays"</strong> category (not Major/Minor) since it answers "Will I be late?" — but keep the distinct table UI.
+    </p>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+  
+  function setView(view) {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[onclick="setView('${view}')"]`).classList.add('active');
+    document.getElementById('mobile-view').classList.toggle('hidden', view !== 'mobile');
+    document.getElementById('desktop-view').classList.toggle('hidden', view !== 'desktop');
+    document.getElementById('rsz-view').classList.toggle('hidden', view !== 'rsz');
+  }
+  
+  function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    document.getElementById('theme-btn').textContent = document.documentElement.classList.contains('dark') ? '🌙 Dark' : '☀️ Light';
+  }
+  
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.closest('.tab').classList.add('active');
+    document.getElementById('now-tab').classList.toggle('hidden', tab !== 'now');
+    document.getElementById('planned-tab').classList.toggle('hidden', tab !== 'planned');
+  }
+  
+  function setPlannedTab(tab) {
+    document.querySelectorAll('.subtab').forEach(t => t.classList.remove('active'));
+    event.target.closest('.subtab').classList.add('active');
+    document.getElementById('closures-tab').classList.toggle('hidden', tab !== 'closures');
+    document.getElementById('changes-tab').classList.toggle('hidden', tab !== 'changes');
+  }
+</script>
+</body>
+</html>
