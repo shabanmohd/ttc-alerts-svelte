@@ -131,7 +131,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                           |
 | `functions/auth-session/index.ts`       | ✅     | Validate existing session                                   |
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                  |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v50: subway route deduplication) |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v56: hidden stale alerts)    |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                                 |
 | `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B**   |
 
@@ -140,7 +140,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | Table                  | Rows | Purpose                                                  |
 | ---------------------- | ---- | -------------------------------------------------------- |
 | `alert_cache`          | 600+ | Alerts from Bluesky (header_text, categories, is_latest) |
-| `incident_threads`     | 255K | Grouped alert threads (title, is_resolved)               |
+| `incident_threads`     | 255K | Grouped alert threads (title, is_resolved, is_hidden)    |
 | `planned_maintenance`  | 9    | Scheduled maintenance                                    |
 | `user_profiles`        | -    | User display_name, linked to auth.users                  |
 | `webauthn_credentials` | -    | Public keys (credential_id as PK)                        |
@@ -591,7 +591,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 | auth-verify        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`        |
 | auth-session       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`       |
 | auth-recover       | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`       |
-| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v50)  |
+| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v56)  |
 | get-eta            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`            |
 | scrape-maintenance | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance` |
 | submit-feedback    | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/submit-feedback`    |
@@ -778,6 +778,26 @@ const cleanStopId = stopId.replace(/_ar$/, "");
 **Files Updated:**
 
 - `src/routes/alerts/+page.svelte` - Added ACCESSIBILITY severity filter to resolvedAlerts
+
+### Jun 19, 2025 - Hidden Stale Alerts (poll-alerts v56)
+
+**Problem:** Alerts cleared from TTC API without SERVICE_RESUMED from Bluesky incorrectly showed in Resolved tab, or cluttered Active tab while waiting for SERVICE_RESUMED.
+
+**Solution:** Added `is_hidden` flag to hide stale alerts immediately while giving Bluesky 6 hours to post SERVICE_RESUMED.
+
+**Behavior:**
+1. Alert appears in TTC API → shows in **Active** tab
+2. TTC clears alert without SERVICE_RESUMED → **hidden immediately** (not in Active or Resolved)
+3. Within 6 hours:
+   - If Bluesky posts SERVICE_RESUMED → **unhidden, appears in Resolved tab** ✅
+   - If no SERVICE_RESUMED after 6h → **deleted permanently**
+
+**Files Updated:**
+- `supabase/functions/poll-alerts/index.ts` - v56: is_hidden flag, 6h delete
+- `src/routes/alerts/+page.svelte` - Filter `is_hidden` threads from display
+- `src/lib/stores/alerts.ts` - Add `is_hidden` to SELECT query
+- `src/lib/types/database.ts` - Add `is_hidden` to Thread type
+- Database migration: `add_is_hidden_to_incident_threads`
 
 ### Dec 16, 2025 - Fix Duplicate Route Badges for Subway Lines
 

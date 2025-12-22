@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 11.1  
-**Date:** June 17, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v51 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view)  
+**Version:** 12.0  
+**Date:** June 19, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v56 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -164,6 +164,81 @@ const posts = (bskyData.feed || []).sort(
   continue;
 }
 ```
+
+### Hidden Stale Alerts (v56)
+
+**Problem:** When TTC API clears an alert but Bluesky hasn't posted SERVICE_RESUMED yet, we had two bad options:
+
+1. Mark thread as resolved → DETOUR alerts appear in Resolved tab without SERVICE_RESUMED
+2. Keep thread active → Stale alerts stay in Active tab indefinitely
+
+**Solution (v56):** Add `is_hidden` flag to hide stale threads from frontend while waiting for Bluesky SERVICE_RESUMED.
+
+**Database Schema:**
+
+```sql
+ALTER TABLE incident_threads ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE;
+CREATE INDEX idx_incident_threads_is_hidden ON incident_threads(is_hidden);
+```
+
+**Key Behaviors:**
+
+1. **Immediate hiding** - When TTC clears an alert without SERVICE_RESUMED, set `is_hidden = true` immediately
+2. **6-hour grace period** - Hidden threads kept for 6 hours to allow Bluesky SERVICE_RESUMED to arrive
+3. **Auto-delete after 6h** - If no SERVICE_RESUMED arrives within 6 hours, delete thread and alerts
+4. **Unhide on SERVICE_RESUMED** - When Bluesky posts SERVICE_RESUMED, set `is_hidden = false` and `is_resolved = true`
+5. **Frontend filtering** - Hidden threads excluded from both Active and Resolved tabs
+
+**Code (poll-alerts v56):**
+
+```typescript
+if (!isStillActive) {
+  const hasServiceResumed = (thread.categories || []).includes('SERVICE_RESUMED');
+  if (hasServiceResumed) {
+    // Thread has SERVICE_RESUMED - mark as resolved and unhide
+    await supabase.from('incident_threads').update({ 
+      is_resolved: true, 
+      is_hidden: false, 
+      resolved_at: now.toISOString(), 
+      updated_at: now.toISOString() 
+    }).eq('thread_id', thread.thread_id);
+  } else {
+    // Thread cleared from TTC API without SERVICE_RESUMED - hide immediately
+    const threadAge = now.getTime() - new Date(thread.updated_at || thread.created_at).getTime();
+    const sixHoursMs = 6 * 60 * 60 * 1000;
+    if (threadAge > sixHoursMs) {
+      // Delete the thread and its alerts - stale and won't get SERVICE_RESUMED
+      await supabase.from('alert_cache').delete().eq('thread_id', thread.thread_id);
+      await supabase.from('incident_threads').delete().eq('thread_id', thread.thread_id);
+    } else {
+      // Hide the thread immediately (will be deleted later or shown if SERVICE_RESUMED arrives)
+      await supabase.from('incident_threads').update({ 
+        is_hidden: true, 
+        updated_at: now.toISOString() 
+      }).eq('thread_id', thread.thread_id);
+    }
+  }
+}
+```
+
+**Frontend Filter:**
+
+```typescript
+// Combine real alerts with demo alerts (filter out hidden threads)
+let allThreads = $derived(() => {
+  const visibleThreads = $threadsWithAlerts.filter((t) => !t.is_hidden);
+  return visibleThreads;
+});
+```
+
+**State Transitions:**
+
+| State | Active Tab | Resolved Tab | Notes |
+|-------|------------|--------------|-------|
+| Active (in TTC API) | ✅ Visible | ❌ Hidden | Normal active alert |
+| Hidden (stale, no SERVICE_RESUMED) | ❌ Hidden | ❌ Hidden | Waiting up to 6h for Bluesky |
+| Resolved (has SERVICE_RESUMED) | ❌ Hidden | ✅ Visible | Proper resolution with SERVICE_RESUMED |
+| Deleted (6h passed, no SERVICE_RESUMED) | ❌ Gone | ❌ Gone | Cleaned up silently |
 
 ### RSZ (Reduced Speed Zone) Handling (v48)
 
