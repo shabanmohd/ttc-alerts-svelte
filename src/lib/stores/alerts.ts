@@ -254,7 +254,7 @@ export async function fetchAlerts(): Promise<void> {
     if (threadIds.length > 0) {
       const { data, error: threadsError } = await supabase
         .from('incident_threads')
-        .select('thread_id, title, categories, affected_routes, is_resolved, created_at, updated_at')
+        .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, created_at, updated_at')
         .in('thread_id', threadIds);
       
       if (threadsError) throw threadsError;

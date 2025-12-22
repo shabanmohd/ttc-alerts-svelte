@@ -1,9 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// v53: Improved auto-resolve logic - track disruption routes separately from RSZ routes
-// This prevents RSZ alerts from blocking auto-resolve of disruption threads on the same line
-const FUNCTION_VERSION = 53;
+// v56: Added is_hidden flag for stale alerts - hide immediately, delete after 6 hours
+// Alerts cleared from TTC API without SERVICE_RESUMED are hidden until Bluesky posts or 6h passes
+const FUNCTION_VERSION = 56;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -235,7 +235,7 @@ serve(async (req) => {
         }
         
         // Auto-resolve NON-RSZ threads not in TTC API
-        const { data: unresolvedThreads } = await supabase.from('incident_threads').select('thread_id, title, affected_routes, categories').eq('is_resolved', false);
+        const { data: unresolvedThreads } = await supabase.from('incident_threads').select('thread_id, title, affected_routes, categories, updated_at, created_at, is_hidden').eq('is_resolved', false);
         if (unresolvedThreads) {
           // Count existing accessibility threads for safeguard
           const accessibilityThreadCount = unresolvedThreads.filter(t => (t.categories || []).includes('ACCESSIBILITY')).length;
@@ -277,8 +277,26 @@ serve(async (req) => {
               return false;
             });
             if (!isStillActive) {
-              await supabase.from('incident_threads').update({ is_resolved: true, resolved_at: now.toISOString(), updated_at: now.toISOString() }).eq('thread_id', thread.thread_id);
-              ttcApiResolvedCount++;
+              const hasServiceResumed = (thread.categories || []).includes('SERVICE_RESUMED');
+              if (hasServiceResumed) {
+                // Thread has SERVICE_RESUMED - mark as resolved and unhide
+                await supabase.from('incident_threads').update({ is_resolved: true, is_hidden: false, resolved_at: now.toISOString(), updated_at: now.toISOString() }).eq('thread_id', thread.thread_id);
+                ttcApiResolvedCount++;
+              } else {
+                // Thread cleared from TTC API without SERVICE_RESUMED from Bluesky
+                // Hide it immediately, delete after 6 hours
+                const threadAge = now.getTime() - new Date(thread.updated_at || thread.created_at || now).getTime();
+                const sixHoursMs = 6 * 60 * 60 * 1000;
+                if (threadAge > sixHoursMs) {
+                  // Delete the thread and its alerts - they're stale and won't get SERVICE_RESUMED
+                  await supabase.from('alert_cache').delete().eq('thread_id', thread.thread_id);
+                  await supabase.from('incident_threads').delete().eq('thread_id', thread.thread_id);
+                  ttcApiResolvedCount++;
+                } else {
+                  // Hide the thread immediately (will be deleted later or shown if SERVICE_RESUMED arrives)
+                  await supabase.from('incident_threads').update({ is_hidden: true, updated_at: now.toISOString() }).eq('thread_id', thread.thread_id);
+                }
+              }
             }
           }
         }
@@ -418,7 +436,7 @@ serve(async (req) => {
         const mergedCats = [...new Set([...existingCats, category])];
         const updates: any = { updated_at: new Date().toISOString(), affected_routes: mergedRoutes, categories: mergedCats };
         if (category !== 'SERVICE_RESUMED') updates.title = text.split('\n')[0].substring(0, 200);
-        if (category === 'SERVICE_RESUMED') { updates.is_resolved = true; updates.resolved_at = new Date().toISOString(); }
+        if (category === 'SERVICE_RESUMED') { updates.is_resolved = true; updates.is_hidden = false; updates.resolved_at = new Date().toISOString(); }
         await supabase.from('incident_threads').update(updates).eq('thread_id', matchedThread.thread_id);
         updatedThreads++;
       } else if (category === 'SERVICE_RESUMED') {

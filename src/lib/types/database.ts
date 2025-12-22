@@ -41,6 +41,7 @@ export interface Database {
           affected_routes: string[] | null;
           categories: string[] | null;
           is_resolved: boolean | null;
+          is_hidden: boolean | null;
           resolved_at: string | null;
           created_at: string;
           updated_at: string;

@@ -470,12 +470,14 @@
     );
   }
 
-  // Combine real alerts with demo alerts
+  // Combine real alerts with demo alerts (filter out hidden threads)
   let allThreads = $derived(() => {
+    // Filter out hidden threads (alerts cleared from TTC API without SERVICE_RESUMED)
+    const visibleThreads = $threadsWithAlerts.filter((t) => !t.is_hidden);
     if (DEMO_MODE) {
-      return [...$threadsWithAlerts, ...demoAlerts];
+      return [...visibleThreads, ...demoAlerts];
     }
-    return $threadsWithAlerts;
+    return visibleThreads;
   });
 
   // Helper: get human-readable status text from alert effect
