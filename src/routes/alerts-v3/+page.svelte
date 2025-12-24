@@ -101,6 +101,31 @@
     }
   }
 
+  // Helper: Check if a thread is an RSZ (Reduced Speed Zone) alert
+  function isRSZAlert(thread: ThreadWithAlerts): boolean {
+    const alert = thread.latestAlert;
+    if (!alert) return false;
+
+    // RSZ alerts have effect SIGNIFICANT_DELAYS and raw_data with stopStart/stopEnd (TTC API source)
+    const rawData = alert.raw_data as Record<string, unknown> | null;
+    const isTTCApiRSZ =
+      alert.effect === "SIGNIFICANT_DELAYS" &&
+      rawData?.source === "ttc-api" &&
+      typeof rawData?.stopStart === "string" &&
+      typeof rawData?.stopEnd === "string";
+
+    // Also detect Bluesky-sourced RSZ alerts by text patterns
+    const headerText = (alert.header_text || "").toLowerCase();
+    const isBlueskyRSZ =
+      headerText.includes("slower than usual") ||
+      headerText.includes("reduced speed") ||
+      headerText.includes("move slower") ||
+      headerText.includes("running slower") ||
+      headerText.includes("slow zone");
+
+    return isTTCApiRSZ || isBlueskyRSZ;
+  }
+
   // Filter threads by category
   function filterByCategory(threads: ThreadWithAlerts[]): ThreadWithAlerts[] {
     const targetSeverity = mapCategoryToSeverity(selectedCategory);
@@ -116,24 +141,21 @@
   }
 
   // Get active alerts (not resolved, not hidden)
+  // For delays tab, exclude RSZ alerts (they're shown separately via RSZAlertCard)
   let activeAlerts = $derived.by(() => {
     const active = $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden);
-    return filterByCategory(active);
+    const filtered = filterByCategory(active);
+    // When on delays tab, exclude RSZ alerts (they render separately)
+    if (selectedCategory === "delays") {
+      return filtered.filter((t) => !isRSZAlert(t));
+    }
+    return filtered;
   });
 
-  // Get RSZ alerts (for delays tab)
+  // Get RSZ alerts (for delays tab) - using same isRSZAlert helper
   let rszAlerts = $derived.by(() => {
     if (selectedCategory !== "delays") return [];
-    return $threadsWithAlerts.filter((t) => {
-      const header = t.latestAlert?.header_text?.toLowerCase() || "";
-      return (
-        !t.is_resolved &&
-        !t.is_hidden &&
-        (header.includes("slower than usual") ||
-          header.includes("slow zone") ||
-          header.includes("reduced speed"))
-      );
-    });
+    return $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden && isRSZAlert(t));
   });
 
   // Get recently resolved alerts (last 4 hours) - show all categories
