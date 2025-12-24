@@ -30,6 +30,8 @@
         return "status-badge-planned";
       case "SCHEDULED_CLOSURE":
         return "status-badge-scheduled";
+      case "TEMPORARY_ROUTE_CHANGE":
+        return "status-badge-route-change";
       case "BUS":
         return "bg-secondary text-secondary-foreground";
       case "STREETCAR":
@@ -58,6 +60,7 @@
       PLANNED: "status.planned",
       PLANNED_CLOSURE: "status.planned",
       SCHEDULED_CLOSURE: "status.scheduledClosure",
+      TEMPORARY_ROUTE_CHANGE: "status.temporaryRouteChange",
       ACCESSIBILITY: "status.accessibility",
       BUS: "routes.bus",
       STREETCAR: "routes.streetcar",

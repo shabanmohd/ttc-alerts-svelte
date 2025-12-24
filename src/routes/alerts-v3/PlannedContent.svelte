@@ -3,7 +3,10 @@
   import ClosuresView from "$lib/components/alerts/ClosuresView.svelte";
   import RouteChangesView from "$lib/components/alerts/RouteChangesView.svelte";
   import { maintenanceItems } from "$lib/stores/alerts";
-  import { routeChangesCount, loadRouteChanges } from "$lib/stores/route-changes";
+  import {
+    routeChangesCount,
+    loadRouteChanges,
+  } from "$lib/stores/route-changes";
   import type { PlannedMaintenance } from "$lib/types/database";
   import { onMount } from "svelte";
 
@@ -189,5 +192,4 @@
     background-color: hsl(262 83% 68%);
     color: hsl(0 0% 10%);
   }
-
 </style>

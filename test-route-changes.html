@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Route Changes Card Design Test</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root { 
+      --bg: 0 0% 100%; 
+      --fg: 240 10% 4%; 
+      --card: 0 0% 100%; 
+      --muted: 240 5% 96%; 
+      --muted-fg: 240 4% 46%; 
+      --border: 240 6% 90%; 
+      --primary: 212 100% 48%;
+    }
+    .dark { 
+      --bg: 240 10% 4%; 
+      --fg: 0 0% 98%; 
+      --card: 240 10% 6%; 
+      --muted: 240 4% 16%; 
+      --muted-fg: 240 5% 65%; 
+      --border: 240 4% 20%;
+      --primary: 213 94% 68%;
+    }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Lexend', system-ui, sans-serif; background: hsl(var(--bg)); color: hsl(var(--fg)); padding: 1rem; }
+    
+    /* Route Colors */
+    .route-badge { 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center;
+      min-width: 2.5rem;
+      height: 2.5rem;
+      padding: 0.25rem 0.5rem; 
+      font-size: 1rem; 
+      font-weight: 700; 
+      border-radius: 0.375rem; 
+      background: #c8102e;
+      color: #fff;
+    }
+    .route-badge.subway-1 { background: #ffc524; color: #000; }
+    .route-badge.subway-2 { background: #00853f; color: #fff; }
+    .route-badge.subway-4 { background: #a12f7d; color: #fff; }
+    .route-badge.streetcar { background: #dc241f; color: #fff; }
+    
+    /* Status Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.125rem 0.5rem;
+      font-size: 0.625rem;
+      font-weight: 600;
+      border-radius: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    /* Scheduled Closure badge - Orange for subway closures */
+    .status-badge-scheduled {
+      background: rgba(249, 115, 22, 0.15);
+      color: #fb923c;
+    }
+    .dark .status-badge-scheduled {
+      background: rgba(251, 146, 60, 0.15);
+      color: #fdba74;
+    }
+    
+    /* Temporary Route Change badge - Purple for route changes */
+    .status-badge-route-change {
+      background: rgba(147, 51, 234, 0.15);
+      color: hsl(262 83% 50%);
+    }
+    .dark .status-badge-route-change {
+      background: rgba(168, 85, 247, 0.15);
+      color: hsl(262 83% 68%);
+    }
+    
+    /* Alert Card */
+    .alert-card { 
+      background: hsl(var(--card)); 
+      border: 1px solid hsl(var(--border)); 
+      border-radius: 0.75rem; 
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      gap: 0.75rem;
+    }
+    
+    .alert-card:hover {
+      border-color: hsl(262 83% 58% / 0.4);
+    }
+    
+    .alert-badge-col {
+      width: 3.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.375rem;
+      flex-shrink: 0;
+    }
+    
+    .alert-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .alert-header { 
+      display: flex; 
+      align-items: center;
+      justify-content: space-between; 
+      gap: 0.5rem; 
+      margin-bottom: 0.375rem; 
+    }
+    
+    .alert-time { 
+      font-size: 0.6875rem; 
+      color: hsl(var(--muted-fg)); 
+      white-space: nowrap; 
+    }
+    
+    .alert-title { 
+      font-size: 0.875rem; 
+      font-weight: 500; 
+      line-height: 1.45; 
+      margin: 0 0 0.25rem 0;
+    }
+    
+    .alert-desc { 
+      font-size: 0.8125rem; 
+      color: hsl(var(--muted-fg)); 
+      line-height: 1.4;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+    
+    .alert-desc svg {
+      width: 0.875rem;
+      height: 0.875rem;
+      flex-shrink: 0;
+    }
+    
+    .alert-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: hsl(var(--primary));
+      margin-top: 0.5rem;
+      text-decoration: none;
+    }
+    
+    .alert-link:hover {
+      text-decoration: underline;
+    }
+    
+    .alert-link svg {
+      width: 0.75rem;
+      height: 0.75rem;
+    }
+    
+    /* View toggle */
+    .view-toggle { 
+      display: flex; 
+      gap: 0.5rem; 
+      padding: 1rem; 
+      background: hsl(var(--card)); 
+      border-radius: 0.75rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid hsl(var(--border));
+    }
+    .view-btn { 
+      padding: 0.5rem 1rem; 
+      font-size: 0.875rem; 
+      font-weight: 500; 
+      border-radius: 0.5rem; 
+      border: 1px solid hsl(var(--border)); 
+      background: transparent; 
+      color: hsl(var(--muted-fg)); 
+      cursor: pointer; 
+    }
+    .view-btn.active { 
+      background: hsl(var(--fg)); 
+      color: hsl(var(--bg)); 
+      border-color: hsl(var(--fg)); 
+    }
+    
+    /* Section headers */
+    .section-header {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .section-header:first-child {
+      margin-top: 0;
+    }
+    
+    /* Mobile frame */
+    .mobile-frame { 
+      max-width: 390px; 
+      margin: 0 auto; 
+      background: hsl(var(--bg)); 
+      min-height: 100vh; 
+      border: 1px solid hsl(var(--border)); 
+      border-radius: 1rem;
+      padding: 1rem;
+    }
+    
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem;
+      text-align: center;
+      color: hsl(var(--muted-fg));
+      border: 1px solid hsl(142 76% 36% / 0.25);
+      border-radius: 0.75rem;
+      background-color: hsl(142 76% 36% / 0.08);
+    }
+    
+    .empty-state-icon {
+      width: 4rem;
+      height: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: hsl(142 76% 36% / 0.1);
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+      color: hsl(142 76% 36%);
+    }
+    
+    .dark .empty-state {
+      border-color: hsl(142 70% 45% / 0.25);
+      background-color: hsl(142 70% 45% / 0.08);
+    }
+    
+    .dark .empty-state-icon {
+      background-color: hsl(142 70% 45% / 0.15);
+      color: hsl(142 70% 45%);
+    }
+    
+    .empty-state-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: hsl(var(--fg));
+      margin: 0 0 0.25rem 0;
+    }
+    
+    .empty-state-desc {
+      font-size: 0.875rem;
+      margin: 0;
+      max-width: 280px;
+    }
+    
+    /* Comparison layout */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    @media (max-width: 768px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .comparison-box {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+    
+    .comparison-box h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+    
+    /* View all link */
+    .view-all-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: hsl(262 83% 50%);
+      text-decoration: none;
+    }
+    
+    .dark .view-all-link {
+      color: hsl(262 83% 68%);
+    }
+    
+    .view-all-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<!-- View Toggle -->
+<div class="view-toggle">
+  <button class="view-btn active" onclick="setView('comparison')">🔄 Compare Old vs New</button>
+  <button class="view-btn" onclick="setView('mobile')">📱 Mobile Preview</button>
+  <button id="theme-btn" class="view-btn" onclick="toggleTheme()">🌙 Dark</button>
+</div>
+
+<!-- ========== COMPARISON VIEW ========== -->
+<div id="comparison-view" class="comparison-grid">
+  
+  <!-- OLD DESIGN (Current) -->
+  <div class="comparison-box">
+    <h3>❌ Current Design (Simple Cards)</h3>
+    
+    <!-- Current simple card style -->
+    <div style="padding: 1rem; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 0.75rem; margin-bottom: 0.75rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+        <div style="display: flex; gap: 0.375rem; align-items: center;">
+          <span class="route-badge" style="min-width: auto; height: auto; padding: 0.125rem 0.375rem; font-size: 0.75rem;">501</span>
+          <span class="route-badge" style="min-width: auto; height: auto; padding: 0.125rem 0.375rem; font-size: 0.75rem;">301</span>
+          <span style="font-size: 0.75rem; color: hsl(var(--muted-fg));">Queen</span>
+        </div>
+        <i data-lucide="external-link" style="width: 1rem; height: 1rem; color: hsl(var(--muted-fg)); opacity: 0.5;"></i>
+      </div>
+      <p style="font-size: 0.9375rem; font-weight: 500; margin: 0 0 0.5rem 0; line-height: 1.4;">
+        501 Queen Detour: Service changes starting December 15, 2025
+      </p>
+      <div style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: hsl(var(--muted-fg));">
+        <i data-lucide="calendar" style="width: 0.875rem; height: 0.875rem;"></i>
+        <span>Dec 15 to Jan 5</span>
+      </div>
+    </div>
+    
+    <div style="padding: 1rem; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 0.75rem; margin-bottom: 0.75rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+        <div style="display: flex; gap: 0.375rem; align-items: center;">
+          <span class="route-badge" style="min-width: auto; height: auto; padding: 0.125rem 0.375rem; font-size: 0.75rem;">52</span>
+          <span style="font-size: 0.75rem; color: hsl(var(--muted-fg));">Lawrence West</span>
+        </div>
+        <i data-lucide="external-link" style="width: 1rem; height: 1rem; color: hsl(var(--muted-fg)); opacity: 0.5;"></i>
+      </div>
+      <p style="font-size: 0.9375rem; font-weight: 500; margin: 0 0 0.5rem 0; line-height: 1.4;">
+        52 Lawrence West: Major service change for construction
+      </p>
+      <div style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: hsl(var(--muted-fg));">
+        <i data-lucide="calendar" style="width: 0.875rem; height: 0.875rem;"></i>
+        <span>Starting as early as Jan 10</span>
+      </div>
+    </div>
+    
+    <p style="font-size: 0.8125rem; color: hsl(var(--muted-fg)); margin-top: 1rem; padding: 0.75rem; background: hsl(var(--muted)); border-radius: 0.5rem;">
+      ⚠️ Issues: No clear status badge, small route badges, hard to scan quickly, no visual hierarchy
+    </p>
+  </div>
+  
+  <!-- NEW DESIGN (AlertCard Style) -->
+  <div class="comparison-box">
+    <h3>✅ New Design (AlertCard Style)</h3>
+    
+    <!-- New AlertCard style with large badge on left -->
+    <article class="alert-card">
+      <div class="alert-badge-col">
+        <span class="route-badge streetcar">501</span>
+      </div>
+      <div class="alert-content">
+        <div class="alert-header">
+          <span class="status-badge status-badge-route-change">Temporary Route Change</span>
+          <span class="alert-time">Dec 15</span>
+        </div>
+        <p class="alert-title">Queen: Service changes during construction</p>
+        <p class="alert-desc">
+          <i data-lucide="calendar"></i>
+          Dec 15 – Jan 5
+        </p>
+        <a href="#" class="alert-link">
+          More details <i data-lucide="external-link"></i>
+        </a>
+      </div>
+    </article>
+    
+    <article class="alert-card">
+      <div class="alert-badge-col">
+        <span class="route-badge">52</span>
+      </div>
+      <div class="alert-content">
+        <div class="alert-header">
+          <span class="status-badge status-badge-route-change">Temporary Route Change</span>
+          <span class="alert-time">Jan 10</span>
+        </div>
+        <p class="alert-title">Lawrence West: Major service change for construction</p>
+        <p class="alert-desc">
+          <i data-lucide="calendar"></i>
+          Starting as early as Jan 10
+        </p>
+        <a href="#" class="alert-link">
+          More details <i data-lucide="external-link"></i>
+        </a>
+      </div>
+    </article>
+    
+    <article class="alert-card">
+      <div class="alert-badge-col">
+        <span class="route-badge">85</span>
+      </div>
+      <div class="alert-content">
+        <div class="alert-header">
+          <span class="status-badge status-badge-route-change">Temporary Route Change</span>
+          <span class="alert-time">Ongoing</span>
+        </div>
+        <p class="alert-title">Sheppard East: Route change at Victoria Park area</p>
+        <p class="alert-desc">
+          <i data-lucide="calendar"></i>
+          Until further notice
+        </p>
+        <a href="#" class="alert-link">
+          More details <i data-lucide="external-link"></i>
+        </a>
+      </div>
+    </article>
+    
+    <a href="https://www.ttc.ca/service-advisories/Service-Changes" target="_blank" class="view-all-link">
+      View all on TTC.ca <i data-lucide="arrow-right"></i>
+    </a>
+    
+    <p style="font-size: 0.8125rem; color: hsl(142 76% 36%); margin-top: 1rem; padding: 0.75rem; background: hsl(142 76% 36% / 0.1); border-radius: 0.5rem; border: 1px solid hsl(142 76% 36% / 0.2);">
+      ✓ Large route badge on left for quick scanning<br>
+      ✓ Clear "Temporary Route Change" status badge<br>
+      ✓ Visual hierarchy matching AlertCard<br>
+      ✓ Date info with calendar icon<br>
+      ✓ Clickable link to full details
+    </p>
+  </div>
+</div>
+
+<!-- ========== SCHEDULED CLOSURES (for reference) ========== -->
+<div style="max-width: 500px; margin: 2rem auto 0;">
+  <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">📅 For Reference: Scheduled Closures (AlertCard Style)</h2>
+  
+  <article class="alert-card">
+    <div class="alert-badge-col">
+      <span class="route-badge subway-1" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Line 1</span>
+    </div>
+    <div class="alert-content">
+      <div class="alert-header">
+        <span class="status-badge status-badge-scheduled">Scheduled Closure</span>
+        <span class="alert-time">Dec 20</span>
+      </div>
+      <p class="alert-title">St George to Finch</p>
+      <p class="alert-desc">
+        Dec 20 – Dec 22 from 11:00 PM
+      </p>
+      <a href="#" class="alert-link">
+        More details <i data-lucide="external-link"></i>
+      </a>
+    </div>
+  </article>
+</div>
+
+<!-- ========== MOBILE VIEW ========== -->
+<div id="mobile-view" class="mobile-frame" style="display: none;">
+  <h2 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Route Changes</h2>
+  
+  <article class="alert-card">
+    <div class="alert-badge-col">
+      <span class="route-badge streetcar">501</span>
+    </div>
+    <div class="alert-content">
+      <div class="alert-header">
+        <span class="status-badge status-badge-route-change">Temporary Route Change</span>
+        <span class="alert-time">Dec 15</span>
+      </div>
+      <p class="alert-title">Queen: Service changes during construction</p>
+      <p class="alert-desc">
+        <i data-lucide="calendar"></i>
+        Dec 15 – Jan 5
+      </p>
+      <a href="#" class="alert-link">
+        More details <i data-lucide="external-link"></i>
+      </a>
+    </div>
+  </article>
+  
+  <article class="alert-card">
+    <div class="alert-badge-col">
+      <span class="route-badge">52</span>
+    </div>
+    <div class="alert-content">
+      <div class="alert-header">
+        <span class="status-badge status-badge-route-change">Temporary Route Change</span>
+        <span class="alert-time">Jan 10</span>
+      </div>
+      <p class="alert-title">Lawrence West: Major service change for construction</p>
+      <p class="alert-desc">
+        <i data-lucide="calendar"></i>
+        Starting as early as Jan 10
+      </p>
+      <a href="#" class="alert-link">
+        More details <i data-lucide="external-link"></i>
+      </a>
+    </div>
+  </article>
+  
+  <article class="alert-card">
+    <div class="alert-badge-col">
+      <span class="route-badge">85</span>
+    </div>
+    <div class="alert-content">
+      <div class="alert-header">
+        <span class="status-badge status-badge-route-change">Temporary Route Change</span>
+        <span class="alert-time">Ongoing</span>
+      </div>
+      <p class="alert-title">Sheppard East: Route change at Victoria Park area</p>
+      <p class="alert-desc">
+        <i data-lucide="calendar"></i>
+        Until further notice
+      </p>
+      <a href="#" class="alert-link">
+        More details <i data-lucide="external-link"></i>
+      </a>
+    </div>
+  </article>
+  
+  <a href="https://www.ttc.ca/service-advisories/Service-Changes" target="_blank" class="view-all-link">
+    View all on TTC.ca <i data-lucide="arrow-right"></i>
+  </a>
+  
+  <!-- Empty State -->
+  <div style="margin-top: 2rem;">
+    <h3 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem; color: hsl(var(--muted-fg));">Empty State Preview:</h3>
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i data-lucide="check-circle" style="width: 2rem; height: 2rem;"></i>
+      </div>
+      <h3 class="empty-state-title">No scheduled route changes</h3>
+      <p class="empty-state-desc">All bus and streetcar routes are operating normally.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize Lucide icons
+  lucide.createIcons();
+  
+  function setView(view) {
+    const comparisonView = document.getElementById('comparison-view');
+    const mobileView = document.getElementById('mobile-view');
+    const buttons = document.querySelectorAll('.view-btn');
+    
+    // Reset all buttons
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    if (view === 'comparison') {
+      comparisonView.style.display = 'grid';
+      mobileView.style.display = 'none';
+      buttons[0].classList.add('active');
+    } else if (view === 'mobile') {
+      comparisonView.style.display = 'none';
+      mobileView.style.display = 'block';
+      buttons[1].classList.add('active');
+    }
+  }
+  
+  function toggleTheme() {
+    const html = document.documentElement;
+    const btn = document.getElementById('theme-btn');
+    
+    if (html.classList.contains('dark')) {
+      html.classList.remove('dark');
+      btn.textContent = '☀️ Light';
+    } else {
+      html.classList.add('dark');
+      btn.textContent = '🌙 Dark';
+    }
+  }
+</script>
+
+</body>
+</html>

@@ -125,13 +125,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Alerts V3 Components (`src/routes/alerts-v3/`)
 
-| File                      | Status | Purpose                                                                 |
-| ------------------------- | ------ | ----------------------------------------------------------------------- |
-| `+page.svelte`            | 🆕     | Main page: Now/Scheduled tabs with icons (Zap/Calendar), 576px layout   |
-| `SubwayStatusBar.svelte`  | 🆕     | 4-col subway status grid (2x2 mobile) - matches production CSS          |
-| `CategoryFilterV3.svelte` | 🆕     | Compact pill filter (Disruptions & Delays/Slow Zones/Elevators)         |
-| `PlannedContent.svelte`   | 🆕     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)  |
-| `ResolvedSection.svelte`  | 🆕     | Collapsible recently resolved section (SERVICE_RESUMED only)            |
+| File                      | Status | Purpose                                                                |
+| ------------------------- | ------ | ---------------------------------------------------------------------- |
+| `+page.svelte`            | 🆕     | Main page: Now/Scheduled tabs with icons (Zap/Calendar), 576px layout  |
+| `SubwayStatusBar.svelte`  | 🆕     | 4-col subway status grid (2x2 mobile) - matches production CSS         |
+| `CategoryFilterV3.svelte` | 🆕     | Compact pill filter (Disruptions & Delays/Slow Zones/Elevators)        |
+| `PlannedContent.svelte`   | 🆕     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API) |
+| `ResolvedSection.svelte`  | 🆕     | Collapsible recently resolved section (SERVICE_RESUMED only)           |
 
 ### Backend (`supabase/`)
 

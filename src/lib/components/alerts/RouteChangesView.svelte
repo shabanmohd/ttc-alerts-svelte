@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { _ } from "svelte-i18n";
-  import { CheckCircle, ExternalLink, Calendar, Clock, ArrowRight } from "lucide-svelte";
+  import { CheckCircle, ExternalLink, Calendar, ArrowRight } from "lucide-svelte";
   import RouteBadge from "./RouteBadge.svelte";
+  import StatusBadge from "./StatusBadge.svelte";
   import {
     routeChanges,
     routeChangesLoading,
@@ -38,7 +39,6 @@
    */
   function formatTime(timeStr: string | null): string {
     if (!timeStr) return "";
-    // Already in format like "11:30 PM"
     return timeStr;
   }
 
@@ -71,7 +71,22 @@
       parts.push(`to ${endStr}`);
     }
 
+    // If no dates at all, return "Ongoing"
+    if (parts.length === 0) {
+      return "Ongoing";
+    }
+
     return parts.join(" ");
+  }
+
+  /**
+   * Get the short date for timestamp display (top right corner)
+   */
+  function getTimestampDate(change: RouteChange): string {
+    if (change.startDate) {
+      return formatDateShort(change.startDate);
+    }
+    return "Ongoing";
   }
 
   /**
@@ -92,14 +107,14 @@
   <!-- Loading state -->
   <div class="loading-state">
     <div class="loading-spinner"></div>
-    <p class="loading-text">Loading route changes...</p>
+    <p class="loading-text">{$_("common.loading")}</p>
   </div>
 {:else if $routeChangesError}
   <!-- Error state -->
   <div class="error-state">
     <p class="error-text">{$routeChangesError}</p>
     <button class="retry-button" onclick={() => loadRouteChanges(true)}>
-      Try Again
+      {$_("common.tryAgain")}
     </button>
   </div>
 {:else if totalCount === 0}
@@ -108,44 +123,58 @@
     <div class="empty-state-icon success">
       <CheckCircle class="h-8 w-8" />
     </div>
-    <h3 class="empty-state-title">No scheduled route changes</h3>
+    <h3 class="empty-state-title">{$_("routeChanges.noChanges")}</h3>
     <p class="empty-state-description">
-      All bus and streetcar routes are operating normally.
+      {$_("routeChanges.operatingNormally")}
     </p>
   </div>
 {:else}
   <!-- Route Changes List -->
   <div class="route-changes-list">
-    {#each $routeChanges as change (change.id)}
+    {#each $routeChanges as change, i (change.id)}
       <a
         href={change.url}
         target="_blank"
         rel="noopener noreferrer"
-        class="route-change-card"
+        class="alert-card animate-fade-in-up"
+        style="animation-delay: {Math.min(i * 50, 300)}ms"
       >
-        <!-- Header with route badges -->
-        <div class="card-header">
-          <div class="route-badges">
-            {#each change.routes as route}
-              <RouteBadge {route} size="sm" />
-            {/each}
-            {#if change.routeName}
-              <span class="route-name">{formatRouteName(change.routeName)}</span>
-            {/if}
-          </div>
-          <ExternalLink class="icon-external" />
+        <!-- Badge on left - fixed width for uniform alignment -->
+        <div class="badge-column">
+          {#if change.routes.length > 0}
+            <RouteBadge route={change.routes[0]} size="lg" />
+          {/if}
         </div>
 
-        <!-- Title/Description -->
-        <p class="card-title">{change.title}</p>
-
-        <!-- Date/Time info -->
-        {#if change.startDate || change.endDate}
-          <div class="card-date">
-            <Calendar class="icon-calendar" />
-            <span class="date-text">{getDateDisplay(change)}</span>
+        <!-- Status + Description on right -->
+        <div class="content-column">
+          <div class="card-header">
+            <StatusBadge category="TEMPORARY_ROUTE_CHANGE" />
+            <time class="card-timestamp">{getTimestampDate(change)}</time>
           </div>
-        {/if}
+
+          <!-- Title: Route name + description -->
+          <p class="card-title">
+            {#if change.routeName}
+              {formatRouteName(change.routeName)}: {change.title}
+            {:else}
+              {change.title}
+            {/if}
+          </p>
+
+          <!-- Date info -->
+          {#if change.startDate || change.endDate}
+            <p class="card-date">
+              <Calendar class="h-3.5 w-3.5 flex-shrink-0" />
+              <span>{getDateDisplay(change)}</span>
+            </p>
+          {/if}
+
+          <!-- Link indicator -->
+          <span class="card-link">
+            {$_("common.moreDetails")} <ExternalLink class="h-3 w-3" />
+          </span>
+        </div>
       </a>
     {/each}
   </div>
@@ -157,8 +186,8 @@
     rel="noopener noreferrer"
     class="view-all-link"
   >
-    View all on TTC.ca
-    <ArrowRight class="icon-arrow" />
+    {$_("routeChanges.viewAllOnTtc")}
+    <ArrowRight class="h-4 w-4" />
   </a>
 {/if}
 
@@ -290,9 +319,10 @@
     gap: 0.75rem;
   }
 
-  /* Route change card */
-  .route-change-card {
-    display: block;
+  /* Alert Card (matching AlertCard.svelte style) */
+  .alert-card {
+    display: flex;
+    gap: 0.75rem;
     padding: 1rem;
     background-color: hsl(var(--card));
     border: 1px solid hsl(var(--border));
@@ -302,61 +332,52 @@
     transition: all 0.15s ease;
   }
 
-  .route-change-card:hover {
+  .alert-card:hover {
     border-color: hsl(262 83% 58% / 0.4);
     box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.08);
   }
 
-  :global(.dark) .route-change-card:hover {
+  :global(.dark) .alert-card:hover {
     border-color: hsl(262 83% 68% / 0.4);
     background-color: hsl(var(--card) / 0.8);
+  }
+
+  /* Badge column - fixed width like AlertCard */
+  .badge-column {
+    width: 5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  /* Content column */
+  .content-column {
+    flex: 1;
+    min-width: 0;
   }
 
   .card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+    margin-bottom: 0.375rem;
   }
 
-  .route-badges {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.375rem;
-  }
-
-  .route-name {
-    font-size: 0.75rem;
-    font-weight: 500;
+  .card-timestamp {
+    font-size: 0.6875rem;
     color: hsl(var(--muted-foreground));
-    text-transform: capitalize;
-  }
-
-  .card-header :global(.icon-external) {
-    width: 1rem;
-    height: 1rem;
-    color: hsl(var(--muted-foreground));
-    flex-shrink: 0;
-    opacity: 0.5;
-  }
-
-  .route-change-card:hover :global(.icon-external) {
-    opacity: 1;
-    color: hsl(262 83% 58%);
-  }
-
-  :global(.dark) .route-change-card:hover :global(.icon-external) {
-    color: hsl(262 83% 68%);
+    white-space: nowrap;
   }
 
   .card-title {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     font-weight: 500;
+    line-height: 1.45;
+    margin: 0 0 0.375rem 0;
     color: hsl(var(--foreground));
-    margin: 0 0 0.5rem 0;
-    line-height: 1.4;
   }
 
   .card-date {
@@ -365,16 +386,21 @@
     gap: 0.375rem;
     font-size: 0.8125rem;
     color: hsl(var(--muted-foreground));
-  }
-
-  .card-date :global(.icon-calendar) {
-    width: 0.875rem;
-    height: 0.875rem;
-    flex-shrink: 0;
-  }
-
-  .date-text {
+    margin: 0 0 0.375rem 0;
     line-height: 1.3;
+  }
+
+  .card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: hsl(var(--primary));
+  }
+
+  .alert-card:hover .card-link {
+    text-decoration: underline;
   }
 
   /* View all link */
@@ -398,8 +424,19 @@
     text-decoration: underline;
   }
 
-  .view-all-link :global(.icon-arrow) {
-    width: 1rem;
-    height: 1rem;
+  /* Animation */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.3s ease-out forwards;
   }
 </style>
