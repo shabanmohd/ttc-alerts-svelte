@@ -80,6 +80,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/BookmarkRouteButton.svelte`   | ✅     | Save route button with feedback animation 🆕 **B**            |
 | `components/alerts/CategoryFilter.svelte`        | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA  |
 | `components/alerts/ClosuresView.svelte`          | ✅     | Scheduled tab with closure type badges (nightly/weekend)      |
+| `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes from TTC.ca - scannable cards w/ links 🆕 **B** |
 | `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                       |
 | `components/alerts/MaintenanceWidget.svelte`     | ✅     | Scheduled maintenance display                                 |
 | `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with responsive route badge tabs                |
@@ -124,13 +125,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Alerts V3 Components (`src/routes/alerts-v3/`)
 
-| File                      | Status | Purpose                                                             |
-| ------------------------- | ------ | ------------------------------------------------------------------- |
-| `+page.svelte`            | 🆕     | Main page: Now/Planned tabs with icons (Zap/Calendar), 576px layout |
-| `SubwayStatusBar.svelte`  | 🆕     | 4-col subway status grid (2x2 mobile) - matches production CSS      |
-| `CategoryFilterV3.svelte` | 🆕     | Compact pill filter (Disruptions/Delays/Elevators) with counts      |
-| `PlannedContent.svelte`   | 🆕     | Sub-tabs for Closures (Construction)/Route Changes (GitBranch)      |
-| `ResolvedSection.svelte`  | 🆕     | Collapsible recently resolved section (always visible)              |
+| File                      | Status | Purpose                                                                 |
+| ------------------------- | ------ | ----------------------------------------------------------------------- |
+| `+page.svelte`            | 🆕     | Main page: Now/Scheduled tabs with icons (Zap/Calendar), 576px layout   |
+| `SubwayStatusBar.svelte`  | 🆕     | 4-col subway status grid (2x2 mobile) - matches production CSS          |
+| `CategoryFilterV3.svelte` | 🆕     | Compact pill filter (Disruptions & Delays/Slow Zones/Elevators)         |
+| `PlannedContent.svelte`   | 🆕     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)  |
+| `ResolvedSection.svelte`  | 🆕     | Collapsible recently resolved section (SERVICE_RESUMED only)            |
 
 ### Backend (`supabase/`)
 
@@ -263,6 +264,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `savedStops.ts`       | ✅     | Saved stops (IndexedDB storage)                                       | **B**   |
 | `savedRoutes.ts`      | ✅     | Saved routes (IndexedDB storage)                                      | **B**   |
 | `eta.ts`              | ✅     | ETA state with auto-refresh, subway detection via route name patterns | **B**   |
+| `route-changes.ts`    | ✅     | TTC service changes from ttc.ca (route detours, construction)         | **B**   |
 
 ### Services (`src/lib/services/`)
 
@@ -271,6 +273,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `webauthn.ts`        | ✅     | WebAuthn browser API wrapper                                           | A & B   |
 | `storage.ts`         | ✅     | IndexedDB storage for stops, routes, preferences                       | **B**   |
 | `schedule-lookup.ts` | ✅     | GTFS schedule lookup with holiday detection, first bus times, day type | **B**   |
+| `route-changes.ts`   | ✅     | Fetch TTC service changes from ttc.ca API (route detours, closures)    | **B**   |
 
 **Schedule Lookup Features (`schedule-lookup.ts`)**:
 
