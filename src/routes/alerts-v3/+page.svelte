@@ -408,15 +408,13 @@
               <AlertCard {thread} />
             {/each}
           </div>
-        {:else}
+        {:else if selectedCategory !== "delays"}
           <div class="empty-state">
             <div class="empty-icon">✓</div>
             <h3>All Clear</h3>
             <p>
               {#if selectedCategory === "disruptions"}
                 No active service disruptions
-              {:else if selectedCategory === "delays"}
-                No delays or slow zones reported
               {:else}
                 All elevators and escalators operational
               {/if}

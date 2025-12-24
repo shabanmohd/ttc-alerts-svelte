@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { CalendarDays, Construction, GitBranch, CheckCircle } from "lucide-svelte";
+  import {
+    CalendarDays,
+    Construction,
+    GitBranch,
+    CheckCircle,
+  } from "lucide-svelte";
   import type { PlannedMaintenance } from "$lib/types/database";
 
   let { maintenance }: { maintenance: PlannedMaintenance[] } = $props();
@@ -148,7 +153,9 @@
         <CheckCircle class="icon" />
       </div>
       <h3 class="empty-state-title">No planned closures</h3>
-      <p class="empty-state-description">No scheduled subway closures at this time.</p>
+      <p class="empty-state-description">
+        No scheduled subway closures at this time.
+      </p>
     </div>
   {/if}
 {:else}
@@ -158,7 +165,9 @@
       <GitBranch class="icon" />
     </div>
     <h3 class="empty-state-title">No route changes</h3>
-    <p class="empty-state-description">No route changes planned at this time.</p>
+    <p class="empty-state-description">
+      No route changes planned at this time.
+    </p>
   </div>
 {/if}
 
