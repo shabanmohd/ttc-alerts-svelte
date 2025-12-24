@@ -207,24 +207,21 @@
   });
 
   // Get recently resolved alerts (last 6 hours) - only show under Disruptions tab
-  // Exclude accessibility and RSZ alerts (they're deleted when resolved, shouldn't appear in Resolved section)
+  // ONLY show alerts that have SERVICE_RESUMED category (properly threaded with Bluesky confirmation)
+  // Exclude hidden, accessibility and RSZ alerts
   let recentlyResolved = $derived.by(() => {
     // Only show resolved section in disruptions tab
     if (selectedCategory !== "disruptions") return [];
 
     const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
     return $threadsWithAlerts.filter((t) => {
-      if (!t.is_resolved || !t.resolved_at) return false;
+      // Must be resolved and not hidden
+      if (!t.is_resolved || t.is_hidden || !t.resolved_at) return false;
       if (new Date(t.resolved_at).getTime() < sixHoursAgo) return false;
 
-      // Exclude accessibility alerts from resolved section
+      // MUST have SERVICE_RESUMED category (properly confirmed by Bluesky)
       const categories = (t.categories as string[]) || [];
-      const severity = getSeverityCategory(
-        categories,
-        t.latestAlert?.effect ?? undefined,
-        t.latestAlert?.header_text ?? undefined
-      );
-      if (severity === "ACCESSIBILITY") return false;
+      if (!categories.includes("SERVICE_RESUMED")) return false;
 
       // Exclude RSZ alerts
       if (isRSZAlert(t)) return false;
