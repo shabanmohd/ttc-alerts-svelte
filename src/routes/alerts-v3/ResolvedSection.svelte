@@ -53,18 +53,18 @@
   .header-icon {
     display: flex;
     align-items: center;
-    width: 1rem;
-    height: 1rem;
+    width: 1.125rem;
+    height: 1.125rem;
     color: hsl(142 71% 45%);
   }
 
   .header-icon :global(svg) {
-    width: 1rem;
-    height: 1rem;
+    width: 1.125rem;
+    height: 1.125rem;
   }
 
   .header-title {
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 500;
   }
 
@@ -72,10 +72,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.25rem;
-    height: 1.25rem;
-    padding: 0 0.375rem;
-    font-size: 0.6875rem;
+    min-width: 1.375rem;
+    height: 1.375rem;
+    padding: 0 0.4375rem;
+    font-size: 0.75rem;
     font-weight: 600;
     background-color: hsl(142 71% 45% / 0.15);
     color: hsl(142 71% 35%);
@@ -83,7 +83,7 @@
   }
 
   .header-none {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     color: hsl(var(--muted-foreground) / 0.6);
   }
 
