@@ -70,12 +70,12 @@
     thread: ThreadWithAlerts
   ): "slowzone" | "delay" | "disruption" | "scheduled" {
     if (!thread?.latestAlert?.effect) return "disruption";
-    
+
     // Check if this is an RSZ (slow zone) alert first
     if (isRSZAlert(thread)) {
       return "slowzone";
     }
-    
+
     const effect = thread.latestAlert.effect.toUpperCase();
 
     if (effect.includes("DELAY") || effect.includes("SIGNIFICANT_DELAYS"))
@@ -303,7 +303,9 @@
       const alertCount = allAlerts.length + (hasMaintenance ? 1 : 0);
 
       // Get unique alert types for display (e.g., ["disruption", "slowzone"])
-      const alertTypes = new Set<"slowzone" | "delay" | "disruption" | "scheduled">();
+      const alertTypes = new Set<
+        "slowzone" | "delay" | "disruption" | "scheduled"
+      >();
       for (const alert of allAlerts) {
         alertTypes.add(getAlertStatusType(alert));
       }
@@ -313,14 +315,16 @@
       }
 
       // Convert to array in priority order (disruption > delay > scheduled > slowzone)
-      const uniqueTypes: ("slowzone" | "delay" | "disruption" | "scheduled")[] = [];
+      const uniqueTypes: ("slowzone" | "delay" | "disruption" | "scheduled")[] =
+        [];
       if (alertTypes.has("disruption")) uniqueTypes.push("disruption");
       if (alertTypes.has("delay")) uniqueTypes.push("delay");
       if (alertTypes.has("scheduled")) uniqueTypes.push("scheduled");
       if (alertTypes.has("slowzone")) uniqueTypes.push("slowzone");
 
       // Determine primary status (most severe)
-      let status: "ok" | "slowzone" | "delay" | "disruption" | "scheduled" = "ok";
+      let status: "ok" | "slowzone" | "delay" | "disruption" | "scheduled" =
+        "ok";
       if (alertTypes.has("disruption")) status = "disruption";
       else if (alertTypes.has("delay")) status = "delay";
       else if (alertTypes.has("scheduled")) status = "scheduled";
@@ -379,7 +383,6 @@
       >
         <Calendar class="h-4 w-4" />
         Scheduled
-        Planned
       </button>
     </div>
 

@@ -74,7 +74,8 @@
                   <span class="status-text status-delay-text">Delay</span>
                 {:else if type === "slowzone"}
                   <Gauge class="w-4 h-4 status-slowzone-icon" />
-                  <span class="status-text status-slowzone-text">Slow Zone</span>
+                  <span class="status-text status-slowzone-text">Slow Zone</span
+                  >
                 {:else if type === "scheduled"}
                   <Calendar
                     class="w-4 h-4 status-scheduled-icon flex-shrink-0"
