@@ -191,16 +191,16 @@
     return $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden && isRSZAlert(t));
   });
 
-  // Get recently resolved alerts (last 4 hours) - only show under Disruptions tab
+  // Get recently resolved alerts (last 6 hours) - only show under Disruptions tab
   // Exclude accessibility and RSZ alerts (they're deleted when resolved, shouldn't appear in Resolved section)
   let recentlyResolved = $derived.by(() => {
     // Only show resolved section in disruptions tab
     if (selectedCategory !== "disruptions") return [];
     
-    const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
+    const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
     return $threadsWithAlerts.filter((t) => {
       if (!t.is_resolved || !t.resolved_at) return false;
-      if (new Date(t.resolved_at).getTime() < fourHoursAgo) return false;
+      if (new Date(t.resolved_at).getTime() < sixHoursAgo) return false;
       
       // Exclude accessibility alerts from resolved section
       const categories = (t.categories as string[]) || [];

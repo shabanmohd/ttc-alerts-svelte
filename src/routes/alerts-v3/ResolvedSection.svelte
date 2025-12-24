@@ -1,66 +1,28 @@
 <script lang="ts">
-  import { ChevronDown, CheckCircle } from "lucide-svelte";
+  import { CheckCircle } from "lucide-svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
-  import { cn } from "$lib/utils";
   import type { ThreadWithAlerts } from "$lib/types/database";
 
   let { alerts }: { alerts: ThreadWithAlerts[] } = $props();
-
-  // Collapsed state
-  let isExpanded = $state(false);
-
-  /**
-   * Format relative time since resolution.
-   */
-  function getRelativeTime(dateStr: string): string {
-    const resolved = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - resolved.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 60) {
-      return `${diffMins}m ago`;
-    }
-
-    const diffHours = Math.floor(diffMins / 60);
-    return `${diffHours}h ago`;
-  }
 </script>
 
 <section class="resolved-section">
-  <button
-    class="resolved-header"
-    onclick={() => (isExpanded = !isExpanded)}
-    aria-expanded={isExpanded}
-    aria-controls="resolved-content"
-    disabled={alerts.length === 0}
-  >
+  <div class="resolved-header">
     <div class="header-left">
       <span class="header-icon"><CheckCircle /></span>
       <span class="header-title">Recently Resolved</span>
       {#if alerts.length > 0}
         <span class="header-count">{alerts.length}</span>
       {:else}
-        <span class="header-none">None in last 4h</span>
+        <span class="header-none">None in last 6 hours</span>
       {/if}
     </div>
-    {#if alerts.length > 0}
-      <span class={cn("chevron", isExpanded && "rotated")}><ChevronDown /></span
-      >
-    {/if}
-  </button>
+  </div>
 
-  {#if isExpanded && alerts.length > 0}
+  {#if alerts.length > 0}
     <div id="resolved-content" class="resolved-content">
       {#each alerts as thread (thread.thread_id)}
-        <div class="resolved-item">
-          <AlertCard {thread} />
-          {#if thread.resolved_at}
-            <span class="resolved-time"
-              >Resolved {getRelativeTime(thread.resolved_at)}</span
-            >
-          {/if}
-        </div>
+        <AlertCard {thread} />
       {/each}
     </div>
   {/if}
@@ -79,15 +41,7 @@
     justify-content: space-between;
     width: 100%;
     padding: 0.75rem 0;
-    background: transparent;
-    border: none;
-    cursor: pointer;
     color: hsl(var(--muted-foreground));
-    transition: color 0.15s ease;
-  }
-
-  .resolved-header:hover {
-    color: hsl(var(--foreground));
   }
 
   .header-left {
@@ -133,34 +87,9 @@
     color: hsl(var(--muted-foreground) / 0.6);
   }
 
-  .resolved-header:disabled {
-    cursor: default;
-  }
-
-  .resolved-header:disabled:hover {
-    color: hsl(var(--muted-foreground));
-  }
-
   :global(.dark) .header-count {
     background-color: hsl(142 71% 45% / 0.2);
     color: hsl(142 71% 55%);
-  }
-
-  .chevron {
-    display: flex;
-    align-items: center;
-    width: 1.25rem;
-    height: 1.25rem;
-    transition: transform 0.2s ease;
-  }
-
-  .chevron :global(svg) {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-
-  .chevron.rotated {
-    transform: rotate(180deg);
   }
 
   .resolved-content {
@@ -168,21 +97,5 @@
     flex-direction: column;
     gap: 0.75rem;
     padding-top: 0.5rem;
-  }
-
-  .resolved-item {
-    position: relative;
-  }
-
-  .resolved-item :global(.alert-card) {
-    opacity: 0.7;
-  }
-
-  .resolved-time {
-    display: block;
-    margin-top: 0.25rem;
-    font-size: 0.75rem;
-    color: hsl(142 71% 45%);
-    text-align: right;
   }
 </style>
