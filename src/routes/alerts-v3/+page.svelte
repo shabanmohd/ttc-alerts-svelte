@@ -63,28 +63,61 @@
     },
   ];
 
-  // Get subway status for each line
-  function getSubwayStatus(lineId: string): "normal" | "delayed" | "disrupted" {
-    const lineAlerts = $threadsWithAlerts.filter((t) => {
-      const routes = t.affected_routes || [];
-      return routes.includes(lineId) && !t.is_resolved && !t.is_hidden;
+  // Get subway status for each line - matching production behavior
+  // Returns status type based on most severe alert, plus uniqueTypes for compound display
+  function getAlertStatusType(
+    thread: ThreadWithAlerts
+  ): "delay" | "disruption" | "scheduled" {
+    if (!thread?.latestAlert?.effect) return "disruption";
+    const effect = thread.latestAlert.effect.toUpperCase();
+
+    if (effect.includes("DELAY") || effect.includes("SIGNIFICANT_DELAYS"))
+      return "delay";
+
+    if (effect.includes("SCHEDULED") || effect.includes("CLOSURE"))
+      return "scheduled";
+
+    return "disruption";
+  }
+
+  // Get ALL active alerts for a specific subway line
+  function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
+    const active = $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden);
+    return active.filter((thread) => {
+      const routes = thread.affected_routes || [];
+      // Check if any route matches this line
+      return routes.some((r) => {
+        if (r === lineId) return true;
+        // Handle "Line 1" vs "1" format
+        const routeNum = r.match(/^(\d+)/)?.[1];
+        const lineNum = lineId.match(/\d+/)?.[0];
+        return routeNum === lineNum;
+      });
     });
+  }
 
-    if (lineAlerts.length === 0) return "normal";
-
-    // Check for major disruptions
-    const hasMajor = lineAlerts.some((t) => {
-      const categories = (t.categories as string[]) || [];
-      const severity = getSeverityCategory(
-        categories,
-        t.latestAlert?.effect ?? undefined,
-        t.latestAlert?.header_text ?? undefined
-      );
-      return severity === "MAJOR";
+  // Get active maintenance happening now for a specific line
+  function getActiveMaintenanceForLine(lineId: string): boolean {
+    const lineNum = lineId.match(/\d+/)?.[0];
+    return $maintenanceItems.some((item) => {
+      const matchesLine = item.routes.some((r: string) => {
+        if (r === lineId) return true;
+        const routeNum = r.match(/^(\d+)/)?.[1];
+        return routeNum === lineNum;
+      });
+      // Check if maintenance is happening now
+      if (!matchesLine) return false;
+      const now = new Date();
+      // If item has periods, check if any are active now
+      if ((item as any).periods?.length > 0) {
+        return (item as any).periods.some((p: { start: string; end: string }) => {
+          const start = new Date(p.start);
+          const end = new Date(p.end);
+          return now >= start && now <= end;
+        });
+      }
+      return false;
     });
-
-    if (hasMajor) return "disrupted";
-    return "delayed";
   }
 
   // Map our new categories to severity categories
@@ -204,12 +237,44 @@
     };
   });
 
-  // Get subway status for all lines
+  // Get subway status for all lines - matching production behavior
   let subwayStatuses = $derived.by(() => {
-    return SUBWAY_LINES.map((line) => ({
-      ...line,
-      status: getSubwayStatus(line.id),
-    }));
+    return SUBWAY_LINES.map((line) => {
+      const allAlerts = getAllAlertsForLine(line.id);
+      const hasMaintenance = getActiveMaintenanceForLine(line.id);
+
+      // Count total issues: alerts + active maintenance
+      const alertCount = allAlerts.length + (hasMaintenance ? 1 : 0);
+
+      // Get unique alert types for display (e.g., ["disruption", "delay"])
+      const alertTypes = new Set<"delay" | "disruption" | "scheduled">();
+      for (const alert of allAlerts) {
+        alertTypes.add(getAlertStatusType(alert));
+      }
+      // Add scheduled if there's active maintenance
+      if (hasMaintenance) {
+        alertTypes.add("scheduled");
+      }
+
+      // Convert to array in priority order (disruption > delay > scheduled)
+      const uniqueTypes: ("delay" | "disruption" | "scheduled")[] = [];
+      if (alertTypes.has("disruption")) uniqueTypes.push("disruption");
+      if (alertTypes.has("delay")) uniqueTypes.push("delay");
+      if (alertTypes.has("scheduled")) uniqueTypes.push("scheduled");
+
+      // Determine primary status (most severe)
+      let status: "ok" | "delay" | "disruption" | "scheduled" = "ok";
+      if (alertTypes.has("disruption")) status = "disruption";
+      else if (alertTypes.has("delay")) status = "delay";
+      else if (alertTypes.has("scheduled")) status = "scheduled";
+
+      return {
+        ...line,
+        status,
+        uniqueTypes,
+        alertCount,
+      };
+    });
   });
 
   onMount(() => {

@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { AlertCircle, CheckCircle } from "lucide-svelte";
+  import { AlertCircle, CheckCircle, Calendar } from "lucide-svelte";
+
+  type StatusType = "delay" | "disruption" | "scheduled";
 
   interface SubwayLine {
     id: string;
@@ -7,10 +9,24 @@
     shortName: string;
     color: string;
     textColor: string;
-    status: "normal" | "delayed" | "disrupted";
+    status: "ok" | "delay" | "disruption" | "scheduled";
+    uniqueTypes: StatusType[];
+    alertCount: number;
   }
 
   let { lines }: { lines: SubwayLine[] } = $props();
+
+  // Helper: get display name for status type
+  function getStatusTypeName(type: StatusType): string {
+    switch (type) {
+      case "delay":
+        return "Delay";
+      case "disruption":
+        return "Disruption";
+      case "scheduled":
+        return "Scheduled";
+    }
+  }
 </script>
 
 <!-- Subway Status Grid - matching production exactly -->
@@ -18,13 +34,14 @@
   {#each lines as line (line.id)}
     <div
       class="subway-status-card"
-      class:status-ok={line.status === "normal"}
-      class:status-delay={line.status === "delayed"}
-      class:status-disruption={line.status === "disrupted"}
+      class:status-ok={line.status === "ok"}
+      class:status-delay={line.status === "delay"}
+      class:status-disruption={line.status === "disruption"}
+      class:status-scheduled={line.status === "scheduled"}
       role="status"
-      aria-label="{line.name}: {line.status === 'normal'
+      aria-label="{line.name}: {line.status === 'ok'
         ? 'Normal service'
-        : line.status}"
+        : `${line.alertCount} issue${line.alertCount > 1 ? 's' : ''}: ${line.uniqueTypes.map((t) => getStatusTypeName(t)).join(', ')}`}"
     >
       <div class="subway-status-header">
         <span
@@ -36,15 +53,27 @@
         <span class="subway-line-name">{line.name}</span>
       </div>
       <div class="subway-status-indicator">
-        {#if line.status === "normal"}
+        {#if line.status === "ok"}
           <CheckCircle class="w-4 h-4 status-ok-icon" />
           <span class="status-text status-ok-text">Normal service</span>
-        {:else if line.status === "delayed"}
-          <AlertCircle class="w-4 h-4 status-delay-icon" />
-          <span class="status-text status-delay-text">Delay</span>
         {:else}
-          <AlertCircle class="w-4 h-4 status-disruption-icon" />
-          <span class="status-text status-disruption-text">Disrupted</span>
+          <!-- Show all unique issue types with icons -->
+          <div class="multi-status-container">
+            {#each line.uniqueTypes as type}
+              <div class="status-type-item status-type-{type}">
+                {#if type === "disruption"}
+                  <AlertCircle class="w-4 h-4 status-disruption-icon" />
+                  <span class="status-text status-disruption-text">Disruption</span>
+                {:else if type === "delay"}
+                  <AlertCircle class="w-4 h-4 status-delay-icon" />
+                  <span class="status-text status-delay-text">Delay</span>
+                {:else if type === "scheduled"}
+                  <Calendar class="w-4 h-4 status-scheduled-icon flex-shrink-0" />
+                  <span class="status-text status-scheduled-text">Scheduled</span>
+                {/if}
+              </div>
+            {/each}
+          </div>
         {/if}
       </div>
     </div>
@@ -169,6 +198,46 @@
 
   .status-disruption-text {
     color: hsl(0 72% 30%);
+  }
+
+  /* Scheduled status */
+  .subway-status-card.status-scheduled {
+    border-color: hsl(213 94% 50% / 0.4);
+    background-color: hsl(213 94% 96%);
+  }
+
+  :global(.dark) .subway-status-card.status-scheduled {
+    background-color: hsl(213 94% 50% / 0.15);
+  }
+
+  :global(.status-scheduled-icon) {
+    color: hsl(213 94% 35%) !important;
+  }
+
+  .status-scheduled-text {
+    color: hsl(213 94% 35%);
+  }
+
+  :global(.dark .status-scheduled-icon),
+  :global(.dark) .status-scheduled-text {
+    color: hsl(213 94% 70%) !important;
+  }
+
+  /* Multi-status container for compound statuses */
+  .multi-status-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .status-type-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .status-type-item :global(svg) {
+    flex-shrink: 0;
   }
 
   /* Dark mode */
