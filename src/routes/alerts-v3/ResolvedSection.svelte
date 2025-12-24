@@ -41,7 +41,6 @@
     justify-content: space-between;
     width: 100%;
     padding: 0.75rem 0;
-    color: hsl(var(--muted-foreground));
   }
 
   .header-left {
@@ -65,7 +64,8 @@
 
   .header-title {
     font-size: 0.9375rem;
-    font-weight: 500;
+    font-weight: 600;
+    color: hsl(var(--foreground));
   }
 
   .header-count {
