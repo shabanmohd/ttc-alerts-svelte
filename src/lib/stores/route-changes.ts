@@ -2,9 +2,10 @@
  * Store for TTC route changes data
  *
  * Fetches and caches route changes from the TTC website.
+ * Polling strategy: Same as maintenance (5 minute intervals, visibility-aware)
  */
 
-import { writable, derived } from "svelte/store";
+import { writable, derived, get } from "svelte/store";
 import {
   fetchRouteChanges,
   isRouteChangeActive,
@@ -25,15 +26,19 @@ export const routeChanges = derived(routeChangesInternal, ($changes) =>
   $changes.filter(isRouteChangeActive)
 );
 
-// Track if we've already fetched
+// Track if we've already fetched (for initial load optimization)
 let hasFetched = false;
 
 /**
  * Load route changes from TTC website
+ * @param force - Force refresh even if already fetched
  */
 export async function loadRouteChanges(force = false): Promise<void> {
-  // Don't refetch unless forced
+  // Don't refetch unless forced (allows initial load optimization)
   if (hasFetched && !force) return;
+
+  // Don't start another fetch if already loading
+  if (get(routeChangesLoading)) return;
 
   routeChangesLoading.set(true);
   routeChangesError.set(null);

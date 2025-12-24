@@ -80,7 +80,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/BookmarkRouteButton.svelte`   | ✅     | Save route button with feedback animation 🆕 **B**            |
 | `components/alerts/CategoryFilter.svelte`        | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA  |
 | `components/alerts/ClosuresView.svelte`          | ✅     | Scheduled tab with closure type badges (nightly/weekend)      |
-| `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes from TTC.ca - scannable cards w/ links 🆕 **B** |
+| `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes cards: badges + route name inline, 5-min polling 🆕 **B** |
 | `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                       |
 | `components/alerts/MaintenanceWidget.svelte`     | ✅     | Scheduled maintenance display                                 |
 | `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with responsive route badge tabs                |
@@ -264,7 +264,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `savedStops.ts`       | ✅     | Saved stops (IndexedDB storage)                                       | **B**   |
 | `savedRoutes.ts`      | ✅     | Saved routes (IndexedDB storage)                                      | **B**   |
 | `eta.ts`              | ✅     | ETA state with auto-refresh, subway detection via route name patterns | **B**   |
-| `route-changes.ts`    | ✅     | TTC service changes from ttc.ca (route detours, construction)         | **B**   |
+| `route-changes.ts`    | ✅     | TTC service changes from ttc.ca (5-min polling, visibility-aware)     | **B**   |
 
 ### Services (`src/lib/services/`)
 
@@ -274,6 +274,14 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `storage.ts`         | ✅     | IndexedDB storage for stops, routes, preferences                       | **B**   |
 | `schedule-lookup.ts` | ✅     | GTFS schedule lookup with holiday detection, first bus times, day type | **B**   |
 | `route-changes.ts`   | ✅     | Fetch TTC service changes from ttc.ca API (route detours, closures)    | **B**   |
+
+**Route Changes Polling Strategy (`route-changes.ts` store)**:
+
+- **Initial fetch**: On component mount
+- **Polling interval**: Every 5 minutes (same as maintenance)
+- **Visibility-aware**: Only polls when browser tab is visible
+- **Data source**: TTC.ca Sitecore SXA API (not our Supabase database)
+- **Deduplication**: Skips fetch if already loading
 
 **Schedule Lookup Features (`schedule-lookup.ts`)**:
 

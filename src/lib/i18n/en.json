@@ -186,6 +186,12 @@
     "fromTime": "from {time}",
     "inEffect": "Scheduled closure in effect"
   },
+  "routeChanges": {
+    "title": "Route Changes",
+    "noChanges": "No Route Changes",
+    "operatingNormally": "All TTC routes are operating on their regular paths.",
+    "viewAllOnTtc": "View all on TTC.ca"
+  },
   "maintenance": {
     "title": "Planned Subway Closures",
     "upcoming": "{count} upcoming",

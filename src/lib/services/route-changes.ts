@@ -81,14 +81,25 @@ function parseRouteChangeHtml(html: string): {
     startDate = dateTimeParts.date;
     startTime = dateTimeParts.time;
   } else {
-    // Try to find date without the specific class (fallback)
+    // Fallback: When "starting as early as" label exists, date is after the label wrapper
+    // HTML structure: </span></span>November 22, 2025<span
     const fallbackDateMatch = html.match(
-      /<span class="sa-start-date-label-wrapper"><\/span>([^<]+)<span/
+      /<span class="sa-start-date-label-wrapper">.*?<\/span><\/span>([^<]+)<span/
     );
     if (fallbackDateMatch) {
       const dateTimeParts = parseDateTime(fallbackDateMatch[1].trim());
       startDate = dateTimeParts.date;
       startTime = dateTimeParts.time;
+    } else {
+      // Another fallback: empty wrapper followed by date
+      const emptyWrapperMatch = html.match(
+        /<span class="sa-start-date-label-wrapper"><\/span>([^<]+)<span/
+      );
+      if (emptyWrapperMatch) {
+        const dateTimeParts = parseDateTime(emptyWrapperMatch[1].trim());
+        startDate = dateTimeParts.date;
+        startTime = dateTimeParts.time;
+      }
     }
   }
 

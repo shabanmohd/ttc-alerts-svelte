@@ -1,92 +1,101 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { _ } from "svelte-i18n";
-  import { CheckCircle, ExternalLink, Calendar, ArrowRight } from "lucide-svelte";
+  import { CheckCircle, ExternalLink, Calendar } from "lucide-svelte";
   import RouteBadge from "./RouteBadge.svelte";
-  import StatusBadge from "./StatusBadge.svelte";
   import {
     routeChanges,
     routeChangesLoading,
     routeChangesError,
     loadRouteChanges,
   } from "$lib/stores/route-changes";
+  import { isVisible } from "$lib/stores/visibility";
   import type { RouteChange } from "$lib/services/route-changes";
 
-  // Load route changes on mount
+  // Polling interval (5 minutes - same as maintenance)
+  const POLLING_INTERVAL = 300_000;
+  
+  // Track polling interval ID
+  let pollingInterval: ReturnType<typeof setInterval> | null = null;
+
+  // Load route changes on mount and set up polling
   onMount(() => {
+    // Initial fetch
     loadRouteChanges();
+    
+    // Set up polling interval (every 5 minutes)
+    pollingInterval = setInterval(() => {
+      // Only poll when tab is visible
+      if ($isVisible) {
+        loadRouteChanges(true); // Force refresh
+      }
+    }, POLLING_INTERVAL);
+  });
+
+  // Clean up polling on destroy
+  onDestroy(() => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
   });
 
   /**
-   * Format a date string like "December 31, 2025" to a shorter form.
+   * Format a date for full display with time
    */
-  function formatDateShort(dateStr: string | null): string {
+  function formatFullDate(dateStr: string | null, timeStr: string | null): string {
     if (!dateStr) return "";
 
-    // Try to parse the date
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) {
-      // If parsing fails, return the original
       return dateStr;
     }
 
-    // Format as "Dec 31"
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    // Format as "December 31, 2025"
+    let formatted = date.toLocaleDateString("en-US", { 
+      month: "long", 
+      day: "numeric", 
+      year: "numeric" 
+    });
+
+    // Add time if present (e.g., "- 11:30 PM")
+    if (timeStr) {
+      formatted += ` - ${timeStr}`;
+    }
+
+    return formatted;
   }
 
   /**
-   * Format time for display
-   */
-  function formatTime(timeStr: string | null): string {
-    if (!timeStr) return "";
-    return timeStr;
-  }
-
-  /**
-   * Get the display date range for a route change
+   * Get the display date range for a route change (full format)
    */
   function getDateDisplay(change: RouteChange): string {
     const parts: string[] = [];
 
-    // Add start date label if present (e.g., "starting as early as")
-    if (change.startDateLabel) {
-      parts.push(change.startDateLabel);
+    // Only add start date label if we also have an actual date
+    if (change.startDateLabel && change.startDate) {
+      // Capitalize first letter
+      const label = change.startDateLabel.charAt(0).toUpperCase() + change.startDateLabel.slice(1);
+      parts.push(label);
     }
 
-    // Add start date
+    // Add start date with time
     if (change.startDate) {
-      let startStr = formatDateShort(change.startDate);
-      if (change.startTime) {
-        startStr += ` at ${formatTime(change.startTime)}`;
-      }
-      parts.push(startStr);
+      parts.push(formatFullDate(change.startDate, change.startTime));
     }
 
     // Add end date if present
     if (change.endDate) {
-      let endStr = formatDateShort(change.endDate);
-      if (change.endTime) {
-        endStr += ` at ${formatTime(change.endTime)}`;
-      }
-      parts.push(`to ${endStr}`);
+      parts.push("to");
+      parts.push(formatFullDate(change.endDate, change.endTime));
     }
 
-    // If no dates at all, return "Ongoing"
+    // If no dates at all, return empty (don't show calendar row)
     if (parts.length === 0) {
-      return "Ongoing";
+      return "";
     }
 
     return parts.join(" ");
-  }
-
-  /**
-   * Get the short date for timestamp display (top right corner)
-   */
-  function getTimestampDate(change: RouteChange): string {
-    if (change.startDate) {
-      return formatDateShort(change.startDate);
-    }
-    return "Ongoing";
   }
 
   /**
@@ -132,63 +141,45 @@
   <!-- Route Changes List -->
   <div class="route-changes-list">
     {#each $routeChanges as change, i (change.id)}
-      <a
-        href={change.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="alert-card animate-fade-in-up"
+      <div
+        class="route-change-card animate-fade-in-up"
         style="animation-delay: {Math.min(i * 50, 300)}ms"
       >
-        <!-- Badge on left - fixed width for uniform alignment -->
-        <div class="badge-column">
-          {#if change.routes.length > 0}
-            <RouteBadge route={change.routes[0]} size="lg" />
-          {/if}
-        </div>
-
-        <!-- Status + Description on right -->
-        <div class="content-column">
-          <div class="card-header">
-            <StatusBadge category="TEMPORARY_ROUTE_CHANGE" />
-            <time class="card-timestamp">{getTimestampDate(change)}</time>
+        <!-- Header: Route badges + Route name -->
+        <div class="route-change-header">
+          <div class="route-badges">
+            {#each change.routes as route}
+              <RouteBadge {route} size="lg" />
+            {/each}
           </div>
-
-          <!-- Title: Route name + description -->
-          <p class="card-title">
-            {#if change.routeName}
-              {formatRouteName(change.routeName)}: {change.title}
-            {:else}
-              {change.title}
-            {/if}
-          </p>
-
-          <!-- Date info -->
-          {#if change.startDate || change.endDate}
-            <p class="card-date">
-              <Calendar class="h-3.5 w-3.5 flex-shrink-0" />
-              <span>{getDateDisplay(change)}</span>
-            </p>
+          {#if change.routeName}
+            <span class="route-name">{formatRouteName(change.routeName)}</span>
           {/if}
-
-          <!-- Link indicator -->
-          <span class="card-link">
-            {$_("common.moreDetails")} <ExternalLink class="h-3 w-3" />
-          </span>
         </div>
-      </a>
+
+        <!-- Title/Description -->
+        <p class="card-title">{change.title}</p>
+
+        <!-- Date info with full format -->
+        {#if getDateDisplay(change)}
+          <p class="card-date">
+            <Calendar class="date-icon" />
+            <span>{getDateDisplay(change)}</span>
+          </p>
+        {/if}
+
+        <!-- Link indicator - only this is clickable -->
+        <a
+          href={change.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="card-link"
+        >
+          {$_("common.moreDetails")} <ExternalLink class="link-icon" />
+        </a>
+      </div>
     {/each}
   </div>
-
-  <!-- Footer link to TTC page -->
-  <a
-    href="https://www.ttc.ca/service-advisories/Service-Changes"
-    target="_blank"
-    rel="noopener noreferrer"
-    class="view-all-link"
-  >
-    {$_("routeChanges.viewAllOnTtc")}
-    <ArrowRight class="h-4 w-4" />
-  </a>
 {/if}
 
 <style>
@@ -319,109 +310,85 @@
     gap: 0.75rem;
   }
 
-  /* Alert Card (matching AlertCard.svelte style) */
-  .alert-card {
-    display: flex;
-    gap: 0.75rem;
-    padding: 1rem;
+  /* Route change card - vertical layout (not clickable) */
+  .route-change-card {
+    display: block;
+    padding: 0.875rem;
     background-color: hsl(var(--card));
     border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
-    text-decoration: none;
     color: inherit;
-    transition: all 0.15s ease;
   }
 
-  .alert-card:hover {
-    border-color: hsl(262 83% 58% / 0.4);
-    box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.08);
-  }
-
-  :global(.dark) .alert-card:hover {
-    border-color: hsl(262 83% 68% / 0.4);
-    background-color: hsl(var(--card) / 0.8);
-  }
-
-  /* Badge column - fixed width like AlertCard */
-  .badge-column {
-    width: 5rem;
+  /* Card header - badges + route name on same row (left-aligned) */
+  .route-change-header {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
+    justify-content: flex-start;
     gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .route-badges {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
     flex-shrink: 0;
   }
 
-  /* Content column */
-  .content-column {
-    flex: 1;
-    min-width: 0;
+  .route-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
   }
 
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin-bottom: 0.375rem;
-  }
-
-  .card-timestamp {
-    font-size: 0.6875rem;
-    color: hsl(var(--muted-foreground));
-    white-space: nowrap;
-  }
-
+  /* Card title */
   .card-title {
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 500;
-    line-height: 1.45;
+    line-height: 1.4;
     margin: 0 0 0.375rem 0;
     color: hsl(var(--foreground));
   }
 
+  /* Card date */
   .card-date {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.375rem;
     font-size: 0.8125rem;
     color: hsl(var(--muted-foreground));
-    margin: 0 0 0.375rem 0;
-    line-height: 1.3;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.35;
   }
 
+  .card-date :global(.date-icon) {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+
+  /* Card link - the only clickable element */
   .card-link {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: hsl(var(--primary));
-  }
-
-  .alert-card:hover .card-link {
-    text-decoration: underline;
-  }
-
-  /* View all link */
-  .view-all-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    margin-top: 1rem;
     font-size: 0.875rem;
     font-weight: 500;
-    color: hsl(262 83% 50%);
+    color: hsl(var(--primary));
     text-decoration: none;
-    transition: color 0.15s ease;
   }
 
-  :global(.dark) .view-all-link {
-    color: hsl(262 83% 68%);
-  }
-
-  .view-all-link:hover {
+  .card-link:hover {
     text-decoration: underline;
+  }
+
+  .card-link :global(.link-icon) {
+    width: 0.875rem;
+    height: 0.875rem;
   }
 
   /* Animation */

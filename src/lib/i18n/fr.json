@@ -186,6 +186,12 @@
     "noClosuresForFilter": "Pas de fermeture ce week-end",
     "tryOtherFilter": "Essayez le filtre \"Tous\" pour voir toutes les fermetures programmées."
   },
+  "routeChanges": {
+    "title": "Changements de parcours",
+    "noChanges": "Aucun changement de parcours",
+    "operatingNormally": "Toutes les routes de la TTC fonctionnent sur leurs trajets habituels.",
+    "viewAllOnTtc": "Voir tout sur TTC.ca"
+  },
   "maintenance": {
     "title": "Fermetures planifiées du métro",
     "upcoming": "{count} à venir",
