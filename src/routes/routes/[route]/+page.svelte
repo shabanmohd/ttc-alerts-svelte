@@ -15,6 +15,7 @@
     threadsWithAlerts,
     isLoading,
     fetchAlerts,
+    getSeverityCategory,
   } from "$lib/stores/alerts";
   import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import type { ThreadWithAlerts } from "$lib/types/database";
@@ -125,11 +126,25 @@
     return route.replace(/^0+/, "").toLowerCase();
   }
 
-  // Filter alerts for this route (only active/unresolved alerts)
+  // Filter alerts for this route (only active/unresolved MAJOR disruption alerts)
+  // Excludes: resolved/resumed, accessibility (elevator/escalator), RSZ (shown separately)
   let routeAlerts = $derived(
     $threadsWithAlerts.filter((thread) => {
       // First, skip resolved/resumed alerts
       if (isResolved(thread)) return false;
+
+      // Skip accessibility alerts (elevator/escalator) - not route disruptions
+      const categories = Array.isArray(thread.categories) ? thread.categories : [];
+      const alertCategories = Array.isArray(thread.latestAlert?.categories) 
+        ? thread.latestAlert.categories 
+        : [];
+      const allCategories = [...new Set([...categories, ...alertCategories])];
+      const severity = getSeverityCategory(
+        allCategories,
+        thread.latestAlert?.effect ?? undefined,
+        thread.latestAlert?.header_text ?? undefined
+      );
+      if (severity === 'ACCESSIBILITY') return false;
 
       const threadRoutes = Array.isArray(thread.affected_routes)
         ? thread.affected_routes
