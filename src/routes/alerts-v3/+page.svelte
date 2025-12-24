@@ -437,8 +437,8 @@
         {/if}
       {/if}
     {:else}
-      <!-- Planned content -->
-      <PlannedContent maintenance={$maintenanceItems} />
+      <!-- Scheduled content - closures and route changes -->
+      <PlannedContent />
     {/if}
   </div>
 </main>
