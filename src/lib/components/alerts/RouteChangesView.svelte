@@ -14,7 +14,7 @@
 
   // Polling interval (5 minutes - same as maintenance)
   const POLLING_INTERVAL = 300_000;
-  
+
   // Track polling interval ID
   let pollingInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -22,7 +22,7 @@
   onMount(() => {
     // Initial fetch
     loadRouteChanges();
-    
+
     // Set up polling interval (every 5 minutes)
     pollingInterval = setInterval(() => {
       // Only poll when tab is visible
@@ -43,7 +43,10 @@
   /**
    * Format a date for full display with time
    */
-  function formatFullDate(dateStr: string | null, timeStr: string | null): string {
+  function formatFullDate(
+    dateStr: string | null,
+    timeStr: string | null
+  ): string {
     if (!dateStr) return "";
 
     const date = new Date(dateStr);
@@ -52,10 +55,10 @@
     }
 
     // Format as "December 31, 2025"
-    let formatted = date.toLocaleDateString("en-US", { 
-      month: "long", 
-      day: "numeric", 
-      year: "numeric" 
+    let formatted = date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
     });
 
     // Add time if present (e.g., "- 11:30 PM")
@@ -75,7 +78,9 @@
     // Only add start date label if we also have an actual date
     if (change.startDateLabel && change.startDate) {
       // Capitalize first letter
-      const label = change.startDateLabel.charAt(0).toUpperCase() + change.startDateLabel.slice(1);
+      const label =
+        change.startDateLabel.charAt(0).toUpperCase() +
+        change.startDateLabel.slice(1);
       parts.push(label);
     }
 
@@ -175,7 +180,8 @@
           rel="noopener noreferrer"
           class="card-link"
         >
-          {$_("common.moreDetails")} <ExternalLink class="link-icon" />
+          {$_("common.moreDetails")}
+          <ExternalLink class="link-icon" />
         </a>
       </div>
     {/each}

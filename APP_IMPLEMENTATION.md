@@ -72,41 +72,41 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Frontend (`src/lib/`)
 
-| File                                             | Status | Purpose                                                       |
-| ------------------------------------------------ | ------ | ------------------------------------------------------------- |
-| `components/alerts/AccessibilityBadge.svelte`    | ✅     | Wheelchair icon badge for elevator/escalator alerts 🆕        |
-| `components/alerts/AlertCard.svelte`             | ✅     | Alert cards w/ accessibility badge, route deduplication (v50) |
-| `components/alerts/RSZAlertCard.svelte`          | ✅     | Reduced Speed Zone alerts - grouped table display 🆕          |
-| `components/alerts/BookmarkRouteButton.svelte`   | ✅     | Save route button with feedback animation 🆕 **B**            |
-| `components/alerts/CategoryFilter.svelte`        | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA  |
-| `components/alerts/ClosuresView.svelte`          | ✅     | Scheduled tab with closure type badges (nightly/weekend)      |
+| File                                             | Status | Purpose                                                                 |
+| ------------------------------------------------ | ------ | ----------------------------------------------------------------------- |
+| `components/alerts/AccessibilityBadge.svelte`    | ✅     | Wheelchair icon badge for elevator/escalator alerts 🆕                  |
+| `components/alerts/AlertCard.svelte`             | ✅     | Alert cards w/ accessibility badge, route deduplication (v50)           |
+| `components/alerts/RSZAlertCard.svelte`          | ✅     | Reduced Speed Zone alerts - grouped table display 🆕                    |
+| `components/alerts/BookmarkRouteButton.svelte`   | ✅     | Save route button with feedback animation 🆕 **B**                      |
+| `components/alerts/CategoryFilter.svelte`        | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA            |
+| `components/alerts/ClosuresView.svelte`          | ✅     | Scheduled tab with closure type badges (nightly/weekend)                |
 | `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes cards: badges + route name inline, 5-min polling 🆕 **B** |
-| `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                       |
-| `components/alerts/MaintenanceWidget.svelte`     | ✅     | Scheduled maintenance display                                 |
-| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with responsive route badge tabs                |
-| `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                 |
-| `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)              |
-| `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile           |
-| `components/dialogs/AboutDialog.svelte`          | ✅     | App info, version, links                                      |
-| `components/dialogs/ReportIssueDialog.svelte`    | ✅     | Bug/issue report form with Turnstile + Resend                 |
-| `components/dialogs/FeatureRequestDialog.svelte` | ✅     | Feature suggestion form with Turnstile + Resend               |
-| `components/dialogs/InstallPWADialog.svelte`     | ✅     | PWA install prompt                                            |
-| `components/layout/Header.svelte`                | ✅     | App header - language toggle, hamburger menu w/ iOS safe area |
-| `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header         |
-| `components/layout/Sidebar.svelte`               | ✅     | Desktop sidebar - nav + footer links (no How to Use)          |
-| `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom         |
-| `components/ui/*`                                | ✅     | shadcn-svelte base components                                 |
-| `components/ui/turnstile/`                       | ✅     | Cloudflare Turnstile captcha component                        |
-| `services/webauthn.ts`                           | ✅     | WebAuthn browser API wrapper                                  |
-| `stores/alerts.ts`                               | ✅     | Alerts state + 30-day accessibility query window              |
-| `stores/auth.ts`                                 | ✅     | Custom WebAuthn auth store                                    |
-| `stores/dialogs.ts`                              | ✅     | Shared dialog state (hamburger menu → dialogs)                |
-| `stores/preferences.ts`                          | ✅     | User preferences state                                        |
-| `types/auth.ts`                                  | ✅     | Auth TypeScript types                                         |
-| `types/database.ts`                              | ✅     | Database types (JSONB fields)                                 |
-| `supabase.ts`                                    | ✅     | Supabase client config                                        |
-| `utils.ts`                                       | ✅     | Utility functions                                             |
-| `utils/ttc-service-info.ts`                      | ✅     | TTC service hours, holidays, suspended lines 🆕 **B**         |
+| `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                                 |
+| `components/alerts/MaintenanceWidget.svelte`     | ✅     | Scheduled maintenance display                                           |
+| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with responsive route badge tabs                          |
+| `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                           |
+| `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                        |
+| `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile                     |
+| `components/dialogs/AboutDialog.svelte`          | ✅     | App info, version, links                                                |
+| `components/dialogs/ReportIssueDialog.svelte`    | ✅     | Bug/issue report form with Turnstile + Resend                           |
+| `components/dialogs/FeatureRequestDialog.svelte` | ✅     | Feature suggestion form with Turnstile + Resend                         |
+| `components/dialogs/InstallPWADialog.svelte`     | ✅     | PWA install prompt                                                      |
+| `components/layout/Header.svelte`                | ✅     | App header - language toggle, hamburger menu w/ iOS safe area           |
+| `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header                   |
+| `components/layout/Sidebar.svelte`               | ✅     | Desktop sidebar - nav + footer links (no How to Use)                    |
+| `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom                   |
+| `components/ui/*`                                | ✅     | shadcn-svelte base components                                           |
+| `components/ui/turnstile/`                       | ✅     | Cloudflare Turnstile captcha component                                  |
+| `services/webauthn.ts`                           | ✅     | WebAuthn browser API wrapper                                            |
+| `stores/alerts.ts`                               | ✅     | Alerts state + 30-day accessibility query window                        |
+| `stores/auth.ts`                                 | ✅     | Custom WebAuthn auth store                                              |
+| `stores/dialogs.ts`                              | ✅     | Shared dialog state (hamburger menu → dialogs)                          |
+| `stores/preferences.ts`                          | ✅     | User preferences state                                                  |
+| `types/auth.ts`                                  | ✅     | Auth TypeScript types                                                   |
+| `types/database.ts`                              | ✅     | Database types (JSONB fields)                                           |
+| `supabase.ts`                                    | ✅     | Supabase client config                                                  |
+| `utils.ts`                                       | ✅     | Utility functions                                                       |
+| `utils/ttc-service-info.ts`                      | ✅     | TTC service hours, holidays, suspended lines 🆕 **B**                   |
 
 ### Pages (`src/routes/`)
 

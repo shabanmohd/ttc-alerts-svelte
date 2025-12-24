@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import { onMount } from "svelte";
-  import { Zap, Calendar } from "lucide-svelte";
+  import { Zap, Calendar, CheckCircle } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
   import RSZAlertCard from "$lib/components/alerts/RSZAlertCard.svelte";
@@ -419,11 +419,13 @@
           </div>
         {:else if selectedCategory !== "delays"}
           <div class="empty-state">
-            <div class="empty-icon">✓</div>
+            <div class="empty-icon">
+              <CheckCircle class="h-8 w-8" />
+            </div>
             <h3>All Clear</h3>
             <p>
               {#if selectedCategory === "disruptions"}
-                No active service disruptions
+                No active service disruptions and delays at this time
               {:else}
                 All elevators and escalators operational
               {/if}
@@ -553,20 +555,25 @@
   }
 
   .empty-icon {
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 4rem;
+    height: 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
     background-color: hsl(142 71% 45% / 0.15);
-    color: hsl(142 71% 35%);
     border-radius: 9999px;
     margin-bottom: 1rem;
   }
 
+  .empty-icon :global(svg) {
+    color: hsl(142 71% 35%);
+  }
+
   :global(.dark) .empty-icon {
     background-color: hsl(142 71% 45% / 0.2);
+  }
+
+  :global(.dark) .empty-icon :global(svg) {
     color: hsl(142 71% 55%);
   }
 
