@@ -1,9 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// v56: Added is_hidden flag for stale alerts - hide immediately, delete after 6 hours
-// Alerts cleared from TTC API without SERVICE_RESUMED are hidden until Bluesky posts or 6h passes
-const FUNCTION_VERSION = 56;
+// v60: Elevator/Accessibility alerts now properly reconciled with TTC API
+// - Track active accessibility alert IDs and delete stale ones (like RSZ)
+// - Fixes issue where elevator alerts weren't being removed when cleared from API
+const FUNCTION_VERSION = 60;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -87,6 +88,13 @@ function categorizeAlert(text: string): { category: string; priority: number } {
 
 function extractRouteNumber(route: string): string { return route.match(/^(\d+)/)?.[1] || route; }
 
+// Extract route with branch letter preserved (e.g., "40B Junction" → "40B", "40 Junction" → "40")
+// Used for exact matching - branches should NOT be merged into same thread
+function extractRouteWithBranch(route: string): string { 
+  const match = route.match(/^(\d+[A-Z]?)/i);
+  return match ? match[1].toUpperCase() : route;
+}
+
 function extractStationName(text: string): string | null {
   const lower = text.toLowerCase();
   const m = lower.match(/(?:at|from|to|between|near)\s+([a-z]+(?:\s+[a-z]+)?)\s+station/i) || lower.match(/([a-z]+(?:\s+[a-z]+)?)\s+station/i);
@@ -167,9 +175,11 @@ serve(async (req) => {
     const now = new Date();
     let ttcApiResolvedCount = 0, ttcApiError: string | null = null, ttcApiAlerts: any[] = [];
     let rszDeletedCount = 0;
+    let accessibilityDeletedCount = 0;
     
-    // Track active RSZ alerts from TTC API for cleanup
+    // Track active RSZ and Accessibility alerts from TTC API for cleanup
     const activeRszAlertIds = new Set<string>();
+    const activeAccessibilityAlertIds = new Set<string>();
     
     // Fetch TTC Live API
     try {
@@ -210,7 +220,15 @@ serve(async (req) => {
           }
         }
         if (ttcData.accessibility?.length) {
-          for (const a of ttcData.accessibility) { if (a.effect === 'ACCESSIBILITY_ISSUE' && a.headerText) ttcApiAlerts.push(a); }
+          for (const a of ttcData.accessibility) { 
+            if (a.effect === 'ACCESSIBILITY_ISSUE' && a.headerText) {
+              ttcApiAlerts.push(a);
+              // Track active accessibility alert IDs for cleanup
+              if (a.id) {
+                activeAccessibilityAlertIds.add(`ttc-ACCESSIBILITY_ISSUE-${a.id}`);
+              }
+            }
+          }
         }
         
         // DELETE stale RSZ alerts not in TTC API (instead of marking resolved)
@@ -234,34 +252,42 @@ serve(async (req) => {
           }
         }
         
-        // Auto-resolve NON-RSZ threads not in TTC API
+        // DELETE stale Accessibility/Elevator alerts not in TTC API
+        // Elevator alerts should be deleted (not marked resolved) when cleared from API
+        // This ensures elevator counts exactly match TTC website
+        if (activeAccessibilityAlertIds.size > 0) {
+          const { data: existingAccessibilityAlerts } = await supabase.from('alert_cache').select('alert_id, thread_id').like('alert_id', 'ttc-ACCESSIBILITY_ISSUE-%');
+          if (existingAccessibilityAlerts) {
+            for (const accAlert of existingAccessibilityAlerts) {
+              if (!activeAccessibilityAlertIds.has(accAlert.alert_id)) {
+                // Delete the accessibility alert
+                await supabase.from('alert_cache').delete().eq('alert_id', accAlert.alert_id);
+                accessibilityDeletedCount++;
+                
+                // If thread has no more alerts, delete the thread too
+                if (accAlert.thread_id) {
+                  const { count } = await supabase.from('alert_cache').select('alert_id', { count: 'exact', head: true }).eq('thread_id', accAlert.thread_id);
+                  if (count === 0) {
+                    await supabase.from('incident_threads').delete().eq('thread_id', accAlert.thread_id);
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        // Auto-resolve NON-RSZ, NON-ACCESSIBILITY threads not in TTC API
         const { data: unresolvedThreads } = await supabase.from('incident_threads').select('thread_id, title, affected_routes, categories, updated_at, created_at, is_hidden').eq('is_resolved', false);
         if (unresolvedThreads) {
-          // Count existing accessibility threads for safeguard
-          const accessibilityThreadCount = unresolvedThreads.filter(t => (t.categories || []).includes('ACCESSIBILITY')).length;
-          const apiAccessibilityCount = ttcData.accessibility?.length || 0;
-          
-          // Safeguard: Skip accessibility auto-resolve if API returned empty/missing accessibility data
-          // but we have existing accessibility threads (likely API glitch)
-          const skipAccessibilityResolve = accessibilityThreadCount > 0 && apiAccessibilityCount === 0;
-          
           for (const thread of unresolvedThreads) {
             // Skip RSZ threads - they are handled by deletion above
             const isRszThread = (thread.title || '').toLowerCase().includes('slower than usual');
             if (isRszThread) continue;
             
+            // Skip ACCESSIBILITY threads - they are handled by deletion above
+            if ((thread.categories || []).includes('ACCESSIBILITY')) continue;
+            
             const threadRoutes = thread.affected_routes || [];
-            if ((thread.categories || []).includes('ACCESSIBILITY')) {
-              // Skip if safeguard triggered (API returned empty accessibility data)
-              if (skipAccessibilityResolve) continue;
-              
-              const stillActive = ttcData.accessibility?.some((acc: any) => threadRoutes.some((r: string) => (acc.headerText || '').toLowerCase().includes(r.toLowerCase()))) ?? false;
-              if (!stillActive) {
-                await supabase.from('incident_threads').update({ is_resolved: true, resolved_at: now.toISOString(), updated_at: now.toISOString() }).eq('thread_id', thread.thread_id);
-                ttcApiResolvedCount++;
-              }
-              continue;
-            }
             
             // For disruption threads (non-accessibility, non-RSZ), check against activeDisruptionRoutes
             // This ensures disruption threads auto-resolve even if RSZ alerts exist on the same line
@@ -393,18 +419,39 @@ serve(async (req) => {
         }
       }
 
-      // Priority 3: Similarity matching
+      // Priority 3: Similarity matching - use EXACT route with branch (40 vs 40B are DIFFERENT)
       if (!matchedThread && routes.length > 0) {
-        const alertBaseRoutes = routes.map(extractRouteNumber);
+        // For route matching, use exact branch letters (40B ≠ 40)
+        const alertExactRoutes = routes.map(extractRouteWithBranch);
+        const alertBaseRoutes = routes.map(extractRouteNumber); // Keep for subway lines
         for (const thread of candidateThreads || []) {
           const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
           if (!threadRoutes.length) continue;
           // Skip RSZ threads for non-RSZ alerts (RSZ threads have "slower than usual" in title)
           const isRszThread = (thread.title || '').toLowerCase().includes('slower than usual');
           if (isRszThread && !text.toLowerCase().includes('slower than usual')) continue;
+          
+          // Use exact branch matching for bus routes (40B must match 40B, not 40)
+          // But for subway lines (Line 1, Line 2), use base number matching
+          const threadExactRoutes = threadRoutes.map(extractRouteWithBranch);
           const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
-          const allMatch = alertBaseRoutes.every(ab => threadBaseRoutes.includes(ab));
-          const hasOverlap = alertBaseRoutes.some(ab => threadBaseRoutes.includes(ab));
+          
+          // Check if alert has subway lines - they can match on base number
+          const alertHasSubway = routes.some(r => r.toLowerCase().startsWith('line'));
+          const threadHasSubway = threadRoutes.some((r: string) => r.toLowerCase().startsWith('line'));
+          
+          let hasOverlap: boolean;
+          if (alertHasSubway || threadHasSubway) {
+            // Subway lines: use base number matching
+            hasOverlap = alertBaseRoutes.some(ab => threadBaseRoutes.includes(ab));
+          } else {
+            // Bus routes: use exact branch matching (40B ≠ 40)
+            hasOverlap = alertExactRoutes.some(ae => threadExactRoutes.includes(ae));
+          }
+          
+          const allMatch = category === 'SERVICE_RESUMED' 
+            ? alertBaseRoutes.every(ab => threadBaseRoutes.includes(ab))
+            : hasOverlap;
           const routeOk = category === 'SERVICE_RESUMED' ? allMatch : hasOverlap;
           if (!routeOk) continue;
           const sim = enhancedSimilarity(text, thread.title || '');
@@ -418,12 +465,26 @@ serve(async (req) => {
         }
       }
 
-      // Validate route overlap
+      // Validate route overlap - use exact branch matching for bus routes
       if (matchedThread && !matchedViaReply) {
-        const alertBaseRoutes = routes.map(extractRouteNumber);
         const threadRoutes = Array.isArray(matchedThread.affected_routes) ? matchedThread.affected_routes : [];
-        const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
-        if (!alertBaseRoutes.some(b => threadBaseRoutes.includes(b)) && routes.length > 0 && threadRoutes.length > 0) matchedThread = null;
+        const alertHasSubway = routes.some(r => r.toLowerCase().startsWith('line'));
+        const threadHasSubway = threadRoutes.some((r: string) => r.toLowerCase().startsWith('line'));
+        
+        let hasValidOverlap: boolean;
+        if (alertHasSubway || threadHasSubway) {
+          // Subway: use base number matching
+          const alertBaseRoutes = routes.map(extractRouteNumber);
+          const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
+          hasValidOverlap = alertBaseRoutes.some(b => threadBaseRoutes.includes(b));
+        } else {
+          // Bus: use exact branch matching
+          const alertExactRoutes = routes.map(extractRouteWithBranch);
+          const threadExactRoutes = threadRoutes.map(extractRouteWithBranch);
+          hasValidOverlap = alertExactRoutes.some(ae => threadExactRoutes.includes(ae));
+        }
+        
+        if (!hasValidOverlap && routes.length > 0 && threadRoutes.length > 0) matchedThread = null;
       }
       
       if (matchedThread) {
@@ -454,11 +515,24 @@ serve(async (req) => {
         if (threadError) {
           let joined = false;
           if (routes.length > 0) {
-            const alertBaseRoutes = routes.map(extractRouteNumber);
+            // Use exact branch matching for race condition fallback
+            const alertExactRoutes = routes.map(extractRouteWithBranch);
+            const alertHasSubway = routes.some(r => r.toLowerCase().startsWith('line'));
             const { data: recent } = await supabase.from('incident_threads').select('*').gte('created_at', new Date(Date.now() - 5000).toISOString());
             for (const rt of recent || []) {
               const rRoutes = Array.isArray(rt.affected_routes) ? rt.affected_routes : [];
-              if (rRoutes.length && alertBaseRoutes.some(b => rRoutes.map(extractRouteNumber).includes(b))) {
+              if (!rRoutes.length) continue;
+              
+              const threadHasSubway = rRoutes.some((r: string) => r.toLowerCase().startsWith('line'));
+              let hasMatch: boolean;
+              if (alertHasSubway || threadHasSubway) {
+                const alertBaseRoutes = routes.map(extractRouteNumber);
+                hasMatch = alertBaseRoutes.some(b => rRoutes.map(extractRouteNumber).includes(b));
+              } else {
+                hasMatch = alertExactRoutes.some(ae => rRoutes.map(extractRouteWithBranch).includes(ae));
+              }
+              
+              if (hasMatch) {
                 await supabase.from('alert_cache').update({ thread_id: rt.thread_id }).eq('alert_id', newAlert.alert_id);
                 alertToThreadMap.set(alertId, rt.thread_id);
                 await supabase.from('incident_threads').update({ affected_routes: [...new Set([...rRoutes, ...routes])], updated_at: new Date().toISOString() }).eq('thread_id', rt.thread_id);
@@ -489,17 +563,33 @@ serve(async (req) => {
     if (ttcApiAlerts.length > 0) {
       const { data: activeBlueskyThreads } = await supabase.from('incident_threads').select('affected_routes').eq('is_resolved', false);
       const blueskyActiveRoutes = new Set<string>();
-      for (const t of activeBlueskyThreads || []) { for (const r of t.affected_routes || []) { blueskyActiveRoutes.add(r); const b = extractRouteNumber(r); if (b) blueskyActiveRoutes.add(b); } }
+      const blueskyActiveExactRoutes = new Set<string>(); // Track exact routes with branch letters
+      for (const t of activeBlueskyThreads || []) { 
+        for (const r of t.affected_routes || []) { 
+          blueskyActiveRoutes.add(r); 
+          const b = extractRouteNumber(r); 
+          if (b) blueskyActiveRoutes.add(b);
+          const exact = extractRouteWithBranch(r);
+          if (exact) blueskyActiveExactRoutes.add(exact);
+        } 
+      }
 
       for (const ttcAlert of ttcApiAlerts) {
         const routeStr = ttcAlert.route?.toString() || '';
         const routeParts = routeStr.split(',').map((r: string) => r.trim()).filter(Boolean);
         const primaryRoute = routeParts[0] || routeStr;
         const routeBase = extractRouteNumber(primaryRoute);
+        const routeExact = extractRouteWithBranch(primaryRoute); // e.g., "40B" stays as "40B"
         const isAccessibility = ttcAlert.effect === 'ACCESSIBILITY_ISSUE';
         const isRSZ = ttcAlert.effect === 'SIGNIFICANT_DELAYS';
+        const isSubway = /^[1-4]$/.test(primaryRoute);
         
-        if (!isAccessibility && !isRSZ && (blueskyActiveRoutes.has(primaryRoute) || blueskyActiveRoutes.has(routeBase))) continue;
+        // For bus routes, check exact match (40B ≠ 40). For subways, check base number.
+        const alreadyHasThread = isSubway 
+          ? (blueskyActiveRoutes.has(primaryRoute) || blueskyActiveRoutes.has(routeBase))
+          : blueskyActiveExactRoutes.has(routeExact);
+        
+        if (!isAccessibility && !isRSZ && alreadyHasThread) continue;
         
         let ttcAlertId: string;
         if (isRSZ && ttcAlert.stopStart && ttcAlert.stopEnd) {
@@ -563,7 +653,7 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, newAlerts, updatedThreads, ttcApiResolvedCount, ttcApiNewAlerts, skippedRszAlerts, skippedOrphanedServiceResumed, rszDeletedCount, ttcApiError, version: FUNCTION_VERSION, timestamp: new Date().toISOString() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true, newAlerts, updatedThreads, ttcApiResolvedCount, ttcApiNewAlerts, skippedRszAlerts, skippedOrphanedServiceResumed, rszDeletedCount, accessibilityDeletedCount, ttcApiError, version: FUNCTION_VERSION, timestamp: new Date().toISOString() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message, version: FUNCTION_VERSION }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
