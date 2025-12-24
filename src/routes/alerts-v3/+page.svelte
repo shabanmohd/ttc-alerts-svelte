@@ -68,8 +68,14 @@
   // Returns status type based on most severe alert, plus uniqueTypes for compound display
   function getAlertStatusType(
     thread: ThreadWithAlerts
-  ): "delay" | "disruption" | "scheduled" {
+  ): "slowzone" | "delay" | "disruption" | "scheduled" {
     if (!thread?.latestAlert?.effect) return "disruption";
+    
+    // Check if this is an RSZ (slow zone) alert first
+    if (isRSZAlert(thread)) {
+      return "slowzone";
+    }
+    
     const effect = thread.latestAlert.effect.toUpperCase();
 
     if (effect.includes("DELAY") || effect.includes("SIGNIFICANT_DELAYS"))
@@ -296,8 +302,8 @@
       // Count total issues: alerts + active maintenance
       const alertCount = allAlerts.length + (hasMaintenance ? 1 : 0);
 
-      // Get unique alert types for display (e.g., ["disruption", "delay"])
-      const alertTypes = new Set<"delay" | "disruption" | "scheduled">();
+      // Get unique alert types for display (e.g., ["disruption", "slowzone"])
+      const alertTypes = new Set<"slowzone" | "delay" | "disruption" | "scheduled">();
       for (const alert of allAlerts) {
         alertTypes.add(getAlertStatusType(alert));
       }
@@ -306,17 +312,19 @@
         alertTypes.add("scheduled");
       }
 
-      // Convert to array in priority order (disruption > delay > scheduled)
-      const uniqueTypes: ("delay" | "disruption" | "scheduled")[] = [];
+      // Convert to array in priority order (disruption > delay > scheduled > slowzone)
+      const uniqueTypes: ("slowzone" | "delay" | "disruption" | "scheduled")[] = [];
       if (alertTypes.has("disruption")) uniqueTypes.push("disruption");
       if (alertTypes.has("delay")) uniqueTypes.push("delay");
       if (alertTypes.has("scheduled")) uniqueTypes.push("scheduled");
+      if (alertTypes.has("slowzone")) uniqueTypes.push("slowzone");
 
       // Determine primary status (most severe)
-      let status: "ok" | "delay" | "disruption" | "scheduled" = "ok";
+      let status: "ok" | "slowzone" | "delay" | "disruption" | "scheduled" = "ok";
       if (alertTypes.has("disruption")) status = "disruption";
       else if (alertTypes.has("delay")) status = "delay";
       else if (alertTypes.has("scheduled")) status = "scheduled";
+      else if (alertTypes.has("slowzone")) status = "slowzone";
 
       return {
         ...line,

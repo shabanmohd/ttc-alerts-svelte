@@ -560,15 +560,20 @@ Compact pill-based filter with consistent sizing. Used in alerts-v3 page.
 | `border-radius` | `9999px` (full pill) |
 | Icon size       | `0.875rem` (14px)    |
 
-**Color Accents:**
+**Category Filters:**
 
-| Category      | Light Mode            | Dark Mode             |
-| ------------- | --------------------- | --------------------- |
-| Disruptions   | `hsl(0 72% 45%)`      | `hsl(0 85% 65%)`      |
-| Delays        | `hsl(38 92% 45%)`     | `hsl(38 95% 60%)`     |
-| Elevators     | `hsl(217 91% 50%)`    | `hsl(217 91% 70%)`    |
-| Closures      | `hsl(25 95% 45%)` 🆕  | `hsl(25 95% 60%)` 🆕  |
-| Route Changes | `hsl(262 83% 50%)` 🆕 | `hsl(262 83% 68%)` 🆕 |
+| Category             | Icon            | Color (Light)         | Color (Dark)          |
+| -------------------- | --------------- | --------------------- | --------------------- |
+| Disruptions & Delays | `TriangleAlert` | `hsl(0 72% 45%)`      | `hsl(0 85% 65%)`      |
+| Slow Zones           | `Gauge`         | `hsl(45 93% 35%)`     | `hsl(45 93% 57%)`     |
+| Elevators            | `Accessibility` | `hsl(217 91% 50%)`    | `hsl(217 91% 70%)`    |
+
+**Planned Tab Sub-filters:**
+
+| Category      | Icon           | Color (Light)         | Color (Dark)          |
+| ------------- | -------------- | --------------------- | --------------------- |
+| Closures      | `Construction` | `hsl(25 95% 45%)`     | `hsl(25 95% 60%)`     |
+| Route Changes | `Workflow`     | `hsl(262 83% 50%)`    | `hsl(262 83% 68%)`    |
 
 **Tab Icons:**
 
@@ -576,8 +581,6 @@ Compact pill-based filter with consistent sizing. Used in alerts-v3 page.
 | ------------- | -------------- | ---------------------------- |
 | Now tab       | `Zap`          | Lightning bolt for real-time |
 | Planned tab   | `Calendar`     | Calendar for scheduled       |
-| Closures      | `Construction` | Construction sign            |
-| Route Changes | `GitBranch`    | Branch path for diversions   |
 
 ### Toast Notifications (Sonner)
 
@@ -1132,19 +1135,28 @@ The Subway Status Cards display the current service status for each subway line 
 | Line name text    | `.subway-line-name`  | `1rem` (16px)     | 600    |
 | Status text       | `.status-text`       | `0.75rem` (12px)  | 500    |
 
-#### Status States
+#### Status States & Priority
 
-| Status         | Background Color | Icon Color | Text                |
-| -------------- | ---------------- | ---------- | ------------------- |
-| **ok**         | Card default     | Green      | "Normal Service"    |
-| **delay**      | Amber tint       | Amber      | Alert status text   |
-| **disruption** | Red tint         | Red        | Alert status text   |
-| **scheduled**  | Blue tint        | Blue       | "Scheduled Closure" |
+Status priority determines card background color when multiple statuses are present:
+
+| Priority | Status       | Icon          | Background Color | Text            |
+| -------- | ------------ | ------------- | ---------------- | --------------- |
+| 1        | **disruption** | `OctagonX`    | Red tint         | "Disruption"    |
+| 2        | **delay**      | `Clock`       | Orange tint      | "Delay"         |
+| 3        | **scheduled**  | `Calendar`    | Blue tint        | "Scheduled"     |
+| 4        | **slowzone**   | `Gauge`       | Amber tint       | "Slow Zone"     |
+| -        | **ok**         | `CheckCircle` | Green tint       | "Normal service"|
 
 #### CSS Classes
 
 ```css
 .subway-status-card                    /* Card container */
+.subway-status-card.status-ok          /* Normal service - green */
+.subway-status-card.status-disruption  /* Disruption - red */
+.subway-status-card.status-delay       /* Delay - orange */
+.subway-status-card.status-scheduled   /* Scheduled - blue */
+.subway-status-card.status-slowzone    /* Slow Zone - amber */
+```
 /* Card container */
 /* Card container */
 /* Card container */

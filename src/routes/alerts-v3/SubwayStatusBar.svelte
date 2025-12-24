@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { AlertCircle, CheckCircle, Calendar } from "lucide-svelte";
+  import { OctagonX, Clock, CheckCircle, Calendar, Gauge } from "lucide-svelte";
 
-  type StatusType = "delay" | "disruption" | "scheduled";
+  type StatusType = "slowzone" | "delay" | "disruption" | "scheduled";
 
   interface SubwayLine {
     id: string;
@@ -9,7 +9,7 @@
     shortName: string;
     color: string;
     textColor: string;
-    status: "ok" | "delay" | "disruption" | "scheduled";
+    status: "ok" | "slowzone" | "delay" | "disruption" | "scheduled";
     uniqueTypes: StatusType[];
     alertCount: number;
   }
@@ -19,6 +19,8 @@
   // Helper: get display name for status type
   function getStatusTypeName(type: StatusType): string {
     switch (type) {
+      case "slowzone":
+        return "Slow Zone";
       case "delay":
         return "Delay";
       case "disruption":
@@ -35,6 +37,7 @@
     <div
       class="subway-status-card"
       class:status-ok={line.status === "ok"}
+      class:status-slowzone={line.status === "slowzone"}
       class:status-delay={line.status === "delay"}
       class:status-disruption={line.status === "disruption"}
       class:status-scheduled={line.status === "scheduled"}
@@ -62,13 +65,16 @@
             {#each line.uniqueTypes as type}
               <div class="status-type-item status-type-{type}">
                 {#if type === "disruption"}
-                  <AlertCircle class="w-4 h-4 status-disruption-icon" />
+                  <OctagonX class="w-4 h-4 status-disruption-icon" />
                   <span class="status-text status-disruption-text"
                     >Disruption</span
                   >
                 {:else if type === "delay"}
-                  <AlertCircle class="w-4 h-4 status-delay-icon" />
+                  <Clock class="w-4 h-4 status-delay-icon" />
                   <span class="status-text status-delay-text">Delay</span>
+                {:else if type === "slowzone"}
+                  <Gauge class="w-4 h-4 status-slowzone-icon" />
+                  <span class="status-text status-slowzone-text">Slow Zone</span>
                 {:else if type === "scheduled"}
                   <Calendar
                     class="w-4 h-4 status-scheduled-icon flex-shrink-0"
@@ -135,6 +141,16 @@
     background-color: hsl(38 92% 50% / 0.25);
   }
 
+  /* Slow Zone status - amber/orange to match the filter pill */
+  .subway-status-card.status-slowzone {
+    border-color: hsl(45 93% 47% / 0.5);
+    background-color: hsl(45 93% 95%);
+  }
+
+  :global(.dark) .subway-status-card.status-slowzone {
+    background-color: hsl(45 93% 50% / 0.2);
+  }
+
   :global(.dark) .subway-status-card.status-disruption {
     background-color: hsl(0 63% 31% / 0.25);
   }
@@ -189,6 +205,10 @@
     color: hsl(28 90% 25%) !important;
   }
 
+  :global(.status-slowzone-icon) {
+    color: hsl(45 93% 30%) !important;
+  }
+
   :global(.status-disruption-icon) {
     color: hsl(0 72% 30%) !important;
   }
@@ -200,6 +220,10 @@
 
   .status-delay-text {
     color: hsl(28 90% 25%);
+  }
+
+  .status-slowzone-text {
+    color: hsl(45 93% 30%);
   }
 
   .status-disruption-text {
@@ -258,6 +282,11 @@
   :global(.dark .status-delay-icon),
   :global(.dark) .status-delay-text {
     color: hsl(43 96% 70%) !important;
+  }
+
+  :global(.dark .status-slowzone-icon),
+  :global(.dark) .status-slowzone-text {
+    color: hsl(45 93% 60%) !important;
   }
 
   :global(.dark .status-disruption-icon),

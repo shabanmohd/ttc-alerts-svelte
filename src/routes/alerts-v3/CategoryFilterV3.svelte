@@ -1,13 +1,13 @@
 <script lang="ts">
   import { cn } from "$lib/utils";
-  import { AlertOctagon, Clock, Accessibility } from "lucide-svelte";
+  import { TriangleAlert, Gauge, Accessibility } from "lucide-svelte";
 
   type Category = "disruptions" | "delays" | "elevators";
 
   interface CategoryConfig {
     id: Category;
     label: string;
-    icon: typeof AlertOctagon;
+    icon: typeof TriangleAlert;
     ariaLabel: string;
   }
 
@@ -24,15 +24,15 @@
   const categories: CategoryConfig[] = [
     {
       id: "disruptions",
-      label: "Disruptions",
-      icon: AlertOctagon,
-      ariaLabel: "Show service disruptions",
+      label: "Disruptions & Delays",
+      icon: TriangleAlert,
+      ariaLabel: "Show service disruptions and delays",
     },
     {
       id: "delays",
-      label: "Delays",
-      icon: Clock,
-      ariaLabel: "Show delays and slow zones",
+      label: "Slow Zones",
+      icon: Gauge,
+      ariaLabel: "Show subway slow zones",
     },
     {
       id: "elevators",
@@ -127,7 +127,7 @@
     background-color: hsl(0 85% 65% / 0.15);
   }
 
-  /* Delays - Amber accent */
+  /* Slow Zones - Amber accent */
   .category-pill.delays.active {
     color: hsl(45 93% 35%);
     border-color: hsl(45 93% 47% / 0.3);

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subway Status Cards - All States</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 240 10% 3.9%;
+      --muted: 240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --border: 240 5.9% 90%;
+    }
+
+    .dark {
+      --background: 240 10% 3.9%;
+      --foreground: 0 0% 98%;
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --border: 240 3.7% 15.9%;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      padding: 2rem;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .dark body {
+      background-color: hsl(var(--background));
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 1.125rem;
+      margin: 2rem 0 1rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .toggle-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .toggle-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid hsl(var(--border));
+      border-radius: 0.5rem;
+      background: hsl(var(--muted));
+      color: hsl(var(--foreground));
+      cursor: pointer;
+    }
+
+    /* Subway Status Grid */
+    .subway-status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      max-width: 600px;
+    }
+
+    @media (min-width: 640px) {
+      .subway-status-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .subway-status-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid hsl(var(--border));
+      background-color: hsl(var(--muted));
+      transition: all 0.2s ease;
+    }
+
+    /* Status variants */
+    .subway-status-card.status-ok {
+      border-color: hsl(142.1 71.8% 45.3% / 0.4);
+      background-color: hsl(142.1 70.6% 95%);
+    }
+
+    .dark .subway-status-card.status-ok {
+      background-color: hsl(142.1 70.6% 45.3% / 0.15);
+    }
+
+    .subway-status-card.status-delay {
+      border-color: hsl(38 92% 50% / 0.5);
+      background-color: hsl(38 92% 95%);
+    }
+
+    .dark .subway-status-card.status-delay {
+      background-color: hsl(38 92% 50% / 0.25);
+    }
+
+    .subway-status-card.status-slowzone {
+      border-color: hsl(45 93% 47% / 0.5);
+      background-color: hsl(45 93% 95%);
+    }
+
+    .dark .subway-status-card.status-slowzone {
+      background-color: hsl(45 93% 50% / 0.2);
+    }
+
+    .subway-status-card.status-disruption {
+      border-color: hsl(0 72% 51% / 0.4);
+      background-color: hsl(0 72% 96%);
+    }
+
+    .dark .subway-status-card.status-disruption {
+      background-color: hsl(0 63% 31% / 0.25);
+    }
+
+    .subway-status-card.status-scheduled {
+      border-color: hsl(213 94% 50% / 0.4);
+      background-color: hsl(213 94% 96%);
+    }
+
+    .dark .subway-status-card.status-scheduled {
+      background-color: hsl(213 94% 50% / 0.15);
+    }
+
+    .subway-status-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .subway-line-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.75rem;
+      height: 1.75rem;
+      padding: 0 0.375rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+    }
+
+    .subway-line-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .subway-status-indicator {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.375rem;
+    }
+
+    .subway-status-indicator svg {
+      flex-shrink: 0;
+      width: 1rem;
+      height: 1rem;
+      margin-top: 0.125rem;
+    }
+
+    .status-text {
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* Status icon and text colors - Light mode */
+    .status-ok-icon { color: hsl(142.1 71.8% 29.2%); }
+    .status-ok-text { color: hsl(142.1 71.8% 29.2%); }
+
+    .status-delay-icon { color: hsl(28 90% 25%); }
+    .status-delay-text { color: hsl(28 90% 25%); }
+
+    .status-slowzone-icon { color: hsl(45 93% 30%); }
+    .status-slowzone-text { color: hsl(45 93% 30%); }
+
+    .status-disruption-icon { color: hsl(0 72% 30%); }
+    .status-disruption-text { color: hsl(0 72% 30%); }
+
+    .status-scheduled-icon { color: hsl(213 94% 35%); }
+    .status-scheduled-text { color: hsl(213 94% 35%); }
+
+    /* Dark mode colors */
+    .dark .status-ok-icon, .dark .status-ok-text { color: hsl(142.1 70.6% 45.3%); }
+    .dark .status-delay-icon, .dark .status-delay-text { color: hsl(43 96% 70%); }
+    .dark .status-slowzone-icon, .dark .status-slowzone-text { color: hsl(45 93% 60%); }
+    .dark .status-disruption-icon, .dark .status-disruption-text { color: hsl(0 91% 75%); }
+    .dark .status-scheduled-icon, .dark .status-scheduled-text { color: hsl(213 94% 70%); }
+
+    /* Multi-status container */
+    .multi-status-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .status-type-item {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    /* Icon legend */
+    .icon-legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+      padding: 1rem;
+      background: hsl(var(--muted));
+      border-radius: 0.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .legend-item svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    .legend-label {
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="toggle-container">
+    <button class="toggle-btn" onclick="document.documentElement.classList.toggle('dark')">
+      Toggle Dark Mode
+    </button>
+  </div>
+
+  <h1>🚇 Subway Status Cards - All States</h1>
+
+  <h2>Single Status States</h2>
+  <div class="subway-status-grid">
+    <!-- Normal Service -->
+    <div class="subway-status-card status-ok">
+      <div class="subway-status-header">
+        <span class="subway-line-badge" style="background-color: #FFCD00; color: #000000;">1</span>
+        <span class="subway-line-name">Line 1</span>
+      </div>
+      <div class="subway-status-indicator">
+        <i data-lucide="circle-check" class="status-ok-icon"></i>
+        <span class="status-text status-ok-text">Normal service</span>
+      </div>
+    </div>
+
+    <!-- Delay -->
+    <div class="subway-status-card status-delay">
+      <div class="subway-status-header">
+        <span class="subway-line-badge" style="background-color: #00A94F; color: #ffffff;">2</span>
+        <span class="subway-line-name">Line 2</span>
+      </div>
+      <div class="subway-status-indicator">
+        <i data-lucide="clock" class="status-delay-icon"></i>
+        <span class="status-text status-delay-text">Delay</span>
+      </div>
+    </div>
+
+    <!-- Slow Zone -->
+    <div class="subway-status-card status-slowzone">
+      <div class="subway-status-header">
+        <span class="subway-line-badge" style="background-color: #0077C8; color: #ffffff;">4</span>
+        <span class="subway-line-name">Line 4</span>
+      </div>
+      <div class="subway-status-indicator">
+        <i data-lucide="gauge" class="status-slowzone-icon"></i>
+        <span class="status-text status-slowzone-text">Slow Zone</span>
+      </div>
+    </div>
+
+    <!-- Disruption -->
+    <div class="subway-status-card status-disruption">
+      <div class="subway-status-header">
+        <span class="subway-line-badge" style="background-color: #A8518A; color: #ffffff;">5</span>
+        <span class="subway-line-name">Line 5</span>
+      </div>
+      <div class="subway-status-indicator">
+        <i data-lucide="octagon-x" class="status-disruption-icon"></i>
+        <span class="status-text status-disruption-text">Disruption</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Scheduled Maintenance</h2>
+  <div class="subway-status-grid">
+    <div class="subway-status-card status-scheduled">
+      <div class="subway-status-header">
+        <span class="subway-line-badge" style="background-color: #808285; color: #ffffff;">6</span>
+        <span class="subway-line-name">Line 6</span>
+      </div>
+      <div class="subway-status-indicator">
+        <i data-lucide="calendar" class="status-scheduled-icon"></i>
+        <span class="status-text status-scheduled-text">Scheduled</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Multiple Status States (Compound)</h2>
+  <div class="subway-status-grid">
+    <!-- Disruption + Delay -->
+    <div class="subway-status-card status-disruption">
+      <div class="subway-status-header">
+        <span class="subway-line-badge" style="background-color: #FFCD00; color: #000000;">1</span>
+        <span class="subway-line-name">Line 1</span>
+      </div>
+      <div class="subway-status-indicator">
+        <div class="multi-status-container">
+          <div class="status-type-item">
+            <i data-lucide="octagon-x" class="status-disruption-icon"></i>
+            <span class="status-text status-disruption-text">Disruption</span>
+          </div>
+          <div class="status-type-item">
+            <i data-lucide="clock" class="status-delay-icon"></i>
+            <span class="status-text status-delay-text">Delay</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delay + Slow Zone -->
+    <div class="subway-status-card status-delay">
+      <div class="subway-status-header">
+        <span class="subway-line-badge" style="background-color: #00A94F; color: #ffffff;">2</span>
+        <span class="subway-line-name">Line 2</span>
+      </div>
+      <div class="subway-status-indicator">
+        <div class="multi-status-container">
+          <div class="status-type-item">
+            <i data-lucide="clock" class="status-delay-icon"></i>
+            <span class="status-text status-delay-text">Delay</span>
+          </div>
+          <div class="status-type-item">
+            <i data-lucide="gauge" class="status-slowzone-icon"></i>
+            <span class="status-text status-slowzone-text">Slow Zone</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slow Zone + Scheduled -->
+    <div class="subway-status-card status-slowzone">
+      <div class="subway-status-header">
+        <span class="subway-line-badge" style="background-color: #0077C8; color: #ffffff;">4</span>
+        <span class="subway-line-name">Line 4</span>
+      </div>
+      <div class="subway-status-indicator">
+        <div class="multi-status-container">
+          <div class="status-type-item">
+            <i data-lucide="gauge" class="status-slowzone-icon"></i>
+            <span class="status-text status-slowzone-text">Slow Zone</span>
+          </div>
+          <div class="status-type-item">
+            <i data-lucide="calendar" class="status-scheduled-icon"></i>
+            <span class="status-text status-scheduled-text">Scheduled</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All statuses -->
+    <div class="subway-status-card status-disruption">
+      <div class="subway-status-header">
+        <span class="subway-line-badge" style="background-color: #A8518A; color: #ffffff;">5</span>
+        <span class="subway-line-name">Line 5</span>
+      </div>
+      <div class="subway-status-indicator">
+        <div class="multi-status-container">
+          <div class="status-type-item">
+            <i data-lucide="octagon-x" class="status-disruption-icon"></i>
+            <span class="status-text status-disruption-text">Disruption</span>
+          </div>
+          <div class="status-type-item">
+            <i data-lucide="clock" class="status-delay-icon"></i>
+            <span class="status-text status-delay-text">Delay</span>
+          </div>
+          <div class="status-type-item">
+            <i data-lucide="gauge" class="status-slowzone-icon"></i>
+            <span class="status-text status-slowzone-text">Slow Zone</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Icon Legend</h2>
+  <div class="icon-legend">
+    <div class="legend-item">
+      <i data-lucide="circle-check" class="status-ok-icon"></i>
+      <span class="legend-label"><strong>CheckCircle</strong> - Normal</span>
+    </div>
+    <div class="legend-item">
+      <i data-lucide="octagon-x" class="status-disruption-icon"></i>
+      <span class="legend-label"><strong>OctagonX</strong> - Disruption</span>
+    </div>
+    <div class="legend-item">
+      <i data-lucide="clock" class="status-delay-icon"></i>
+      <span class="legend-label"><strong>Clock</strong> - Delay</span>
+    </div>
+    <div class="legend-item">
+      <i data-lucide="gauge" class="status-slowzone-icon"></i>
+      <span class="legend-label"><strong>Gauge</strong> - Slow Zone</span>
+    </div>
+    <div class="legend-item">
+      <i data-lucide="calendar" class="status-scheduled-icon"></i>
+      <span class="legend-label"><strong>Calendar</strong> - Scheduled</span>
+    </div>
+    <div class="legend-item">
+      <i data-lucide="triangle-alert" style="color: hsl(0 72% 50%);"></i>
+      <span class="legend-label"><strong>TriangleAlert</strong> - Filter Pill</span>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

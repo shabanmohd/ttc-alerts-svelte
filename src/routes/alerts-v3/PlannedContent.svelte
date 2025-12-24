@@ -240,11 +240,6 @@
     line-height: 1;
   }
 
-  .sub-tab-icon :global(svg) {
-    width: 1rem;
-    height: 1rem;
-  }
-
   .sub-tab-count {
     display: inline-flex;
     align-items: center;
