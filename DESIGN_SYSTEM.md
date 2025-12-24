@@ -577,10 +577,10 @@ Compact pill-based filter with consistent sizing. Used in alerts-v3 page.
 
 **Tab Icons:**
 
-| Tab           | Icon           | Description                  |
-| ------------- | -------------- | ---------------------------- |
-| Now tab       | `Zap`          | Lightning bolt for real-time |
-| Planned tab   | `Calendar`     | Calendar for scheduled       |
+| Tab            | Icon           | Description                    |
+| -------------- | -------------- | ------------------------------ |
+| Now tab        | `Zap`          | Lightning bolt for real-time   |
+| Scheduled tab  | `Calendar`     | Calendar for scheduled events  |
 
 ### Toast Notifications (Sonner)
 

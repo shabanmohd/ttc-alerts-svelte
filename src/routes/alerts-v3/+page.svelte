@@ -358,7 +358,7 @@
       <SubwayStatusBar lines={subwayStatuses} />
     </div>
 
-    <!-- Primary tabs: Now | Planned -->
+    <!-- Primary tabs: Now | Scheduled -->
     <div class="primary-tabs" role="tablist" aria-label="Alert timing">
       <button
         class="primary-tab"
@@ -378,6 +378,7 @@
         onclick={() => (activeTab = "planned")}
       >
         <Calendar class="h-4 w-4" />
+        Scheduled
         Planned
       </button>
     </div>
