@@ -191,12 +191,35 @@
     return $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden && isRSZAlert(t));
   });
 
-  // Get recently resolved alerts (last 4 hours) - show all categories
+  // Get recently resolved alerts (last 4 hours) - only show under Disruptions tab
+  // Exclude accessibility and RSZ alerts (they're deleted when resolved, shouldn't appear in Resolved section)
   let recentlyResolved = $derived.by(() => {
+    // Only show resolved section in disruptions tab
+    if (selectedCategory !== "disruptions") return [];
+    
     const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
     return $threadsWithAlerts.filter((t) => {
       if (!t.is_resolved || !t.resolved_at) return false;
-      return new Date(t.resolved_at).getTime() > fourHoursAgo;
+      if (new Date(t.resolved_at).getTime() < fourHoursAgo) return false;
+      
+      // Exclude accessibility alerts from resolved section
+      const categories = (t.categories as string[]) || [];
+      const severity = getSeverityCategory(
+        categories,
+        t.latestAlert?.effect ?? undefined,
+        t.latestAlert?.header_text ?? undefined
+      );
+      if (severity === "ACCESSIBILITY") return false;
+      
+      // Exclude RSZ alerts
+      if (isRSZAlert(t)) return false;
+      
+      // Exclude orphaned SERVICE_RESUMED (no preceding DELAY/DISRUPTION)
+      const onlyServiceResumed = categories.length === 1 && categories[0] === "SERVICE_RESUMED";
+      const singleAlertThread = (t.alerts?.length || 0) === 1;
+      if (onlyServiceResumed && singleAlertThread) return false;
+      
+      return true;
     });
   });
 
@@ -372,8 +395,10 @@
           </div>
         {/if}
 
-        <!-- Recently resolved section - always show header -->
-        <ResolvedSection alerts={recentlyResolved} />
+        <!-- Recently resolved section - only show under Disruptions tab -->
+        {#if selectedCategory === "disruptions"}
+          <ResolvedSection alerts={recentlyResolved} />
+        {/if}
       {/if}
     {:else}
       <!-- Planned content -->

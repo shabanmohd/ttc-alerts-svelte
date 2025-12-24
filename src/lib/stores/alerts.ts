@@ -254,11 +254,45 @@ export async function fetchAlerts(): Promise<void> {
     if (threadIds.length > 0) {
       const { data, error: threadsError } = await supabase
         .from('incident_threads')
-        .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, created_at, updated_at')
+        .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at')
         .in('thread_id', threadIds);
       
       if (threadsError) throw threadsError;
       threadsData = data || [];
+    }
+    
+    // Step 4: Fetch recently resolved threads (last 12 hours) that may not have alerts in 24h window
+    // This ensures resolved alerts show up in the "Recently Resolved" section
+    const { data: recentlyResolvedThreads, error: resolvedError } = await supabase
+      .from('incident_threads')
+      .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at')
+      .eq('is_resolved', true)
+      .gte('resolved_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
+      .order('resolved_at', { ascending: false })
+      .limit(50);
+    
+    if (resolvedError) throw resolvedError;
+    
+    // Merge resolved threads with existing threads (deduplicate by thread_id)
+    const existingThreadIds = new Set(threadsData.map(t => t.thread_id));
+    const newResolvedThreads = (recentlyResolvedThreads || []).filter(t => !existingThreadIds.has(t.thread_id));
+    threadsData = [...threadsData, ...newResolvedThreads];
+    
+    // Fetch alerts for newly added resolved threads
+    if (newResolvedThreads.length > 0) {
+      const resolvedThreadIds = newResolvedThreads.map(t => t.thread_id);
+      const { data: resolvedAlerts, error: resolvedAlertsError } = await supabase
+        .from('alert_cache')
+        .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
+        .in('thread_id', resolvedThreadIds)
+        .order('created_at', { ascending: false });
+      
+      if (resolvedAlertsError) throw resolvedAlertsError;
+      
+      // Merge with existing alerts (deduplicate by alert_id)
+      const existingAlertIds = new Set(allAlertsData.map(a => a.alert_id));
+      const newAlerts = (resolvedAlerts || []).filter(a => !existingAlertIds.has(a.alert_id)) as PartialAlert[];
+      allAlertsData = [...allAlertsData, ...newAlerts];
     }
     
     threads.set(threadsData);
