@@ -63,13 +63,19 @@
               <div class="status-type-item status-type-{type}">
                 {#if type === "disruption"}
                   <AlertCircle class="w-4 h-4 status-disruption-icon" />
-                  <span class="status-text status-disruption-text">Disruption</span>
+                  <span class="status-text status-disruption-text"
+                    >Disruption</span
+                  >
                 {:else if type === "delay"}
                   <AlertCircle class="w-4 h-4 status-delay-icon" />
                   <span class="status-text status-delay-text">Delay</span>
                 {:else if type === "scheduled"}
-                  <Calendar class="w-4 h-4 status-scheduled-icon flex-shrink-0" />
-                  <span class="status-text status-scheduled-text">Scheduled</span>
+                  <Calendar
+                    class="w-4 h-4 status-scheduled-icon flex-shrink-0"
+                  />
+                  <span class="status-text status-scheduled-text"
+                    >Scheduled</span
+                  >
                 {/if}
               </div>
             {/each}

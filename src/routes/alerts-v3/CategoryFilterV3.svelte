@@ -45,6 +45,11 @@
   function handleSelect(category: Category) {
     onSelect(category);
   }
+
+  // Debug: log counts when they change
+  $effect(() => {
+    console.log("CategoryFilterV3 counts:", counts);
+  });
 </script>
 
 <div class="category-filter" role="tablist" aria-label="Filter by category">
@@ -83,7 +88,7 @@
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.5rem 0.875rem;
+    padding: 0.4rem 0.75rem;
     font-size: 0.8125rem;
     font-weight: 500;
     color: hsl(var(--muted-foreground));
@@ -148,9 +153,9 @@
     background-color: hsl(217 91% 70% / 0.15);
   }
 
-  .pill-icon {
-    width: 1rem;
-    height: 1rem;
+  .category-pill :global(.pill-icon) {
+    width: 0.875rem;
+    height: 0.875rem;
     flex-shrink: 0;
   }
 
@@ -162,22 +167,44 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.25rem;
-    height: 1.25rem;
-    padding: 0 0.375rem;
-    font-size: 0.6875rem;
+    min-width: 1.125rem;
+    height: 1.125rem;
+    padding: 0 0.25rem;
+    font-size: 0.625rem;
     font-weight: 600;
     background-color: hsl(var(--muted-foreground) / 0.15);
     border-radius: 9999px;
     margin-left: 0.125rem;
   }
 
-  .category-pill.active .pill-count {
-    background-color: currentColor;
-    color: hsl(var(--background));
+  /* Active state - category-specific colors */
+  .category-pill.disruptions.active .pill-count {
+    background-color: hsl(0 72% 45%);
+    color: white;
   }
 
-  :global(.dark) .category-pill.active .pill-count {
+  .category-pill.delays.active .pill-count {
+    background-color: hsl(45 93% 35%);
+    color: white;
+  }
+
+  .category-pill.elevators.active .pill-count {
+    background-color: hsl(217 91% 45%);
+    color: white;
+  }
+
+  :global(.dark) .category-pill.disruptions.active .pill-count {
+    background-color: hsl(0 85% 65%);
+    color: hsl(0 0% 10%);
+  }
+
+  :global(.dark) .category-pill.delays.active .pill-count {
+    background-color: hsl(45 93% 57%);
+    color: hsl(0 0% 10%);
+  }
+
+  :global(.dark) .category-pill.elevators.active .pill-count {
+    background-color: hsl(217 91% 70%);
     color: hsl(0 0% 10%);
   }
 </style>

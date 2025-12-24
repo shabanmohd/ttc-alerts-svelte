@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CalendarDays, Construction, ArrowRightLeft } from "lucide-svelte";
+  import { CalendarDays, Construction, GitBranch, CheckCircle } from "lucide-svelte";
   import type { PlannedMaintenance } from "$lib/types/database";
 
   let { maintenance }: { maintenance: PlannedMaintenance[] } = $props();
@@ -73,27 +73,27 @@
 <!-- Sub-tabs: Closures | Route Changes -->
 <div class="sub-tabs" role="tablist" aria-label="Planned alert types">
   <button
-    class="sub-tab"
+    class="sub-tab closures"
     class:active={activeSubTab === "closures"}
     role="tab"
     aria-selected={activeSubTab === "closures"}
     onclick={() => (activeSubTab = "closures")}
   >
-    <span class="sub-tab-icon"><Construction /></span>
-    <span>Closures</span>
+    <Construction class="sub-tab-icon" aria-hidden="true" />
+    <span class="sub-tab-label">Closures</span>
     {#if closures.length > 0}
       <span class="sub-tab-count">{closures.length}</span>
     {/if}
   </button>
   <button
-    class="sub-tab"
+    class="sub-tab changes"
     class:active={activeSubTab === "changes"}
     role="tab"
     aria-selected={activeSubTab === "changes"}
     onclick={() => (activeSubTab = "changes")}
   >
-    <span class="sub-tab-icon"><ArrowRightLeft /></span>
-    <span>Route Changes</span>
+    <GitBranch class="sub-tab-icon" aria-hidden="true" />
+    <span class="sub-tab-label">Route Changes</span>
     {#if routeChanges.length > 0}
       <span class="sub-tab-count">{routeChanges.length}</span>
     {/if}
@@ -143,64 +143,92 @@
       {/each}
     </div>
   {:else}
-    <div class="empty-state">
-      <div class="empty-icon">
-        <CalendarDays class="icon" />
+    <div class="empty-state success">
+      <div class="empty-state-icon success">
+        <CheckCircle class="icon" />
       </div>
-      <h3>No Planned Closures</h3>
-      <p>No upcoming subway closures scheduled</p>
+      <h3 class="empty-state-title">No planned closures</h3>
+      <p class="empty-state-description">No scheduled subway closures at this time.</p>
     </div>
   {/if}
 {:else}
   <!-- Route Changes tab -->
   <div class="empty-state">
-    <div class="empty-icon changes">
-      <ArrowRightLeft class="icon" />
+    <div class="empty-state-icon">
+      <GitBranch class="icon" />
     </div>
-    <h3>Coming Soon</h3>
-    <p>Temporary route changes and detours will appear here</p>
+    <h3 class="empty-state-title">No route changes</h3>
+    <p class="empty-state-description">No route changes planned at this time.</p>
   </div>
 {/if}
 
 <style>
-  /* Sub-tabs */
+  /* Sub-tabs - pill style matching CategoryFilterV3 */
   .sub-tabs {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
   }
 
   .sub-tab {
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.5rem 0.875rem;
+    padding: 0.4rem 0.75rem;
     font-size: 0.8125rem;
     font-weight: 500;
     color: hsl(var(--muted-foreground));
-    background-color: transparent;
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
+    background-color: hsl(var(--muted));
+    border: 1px solid transparent;
+    border-radius: 9999px;
     cursor: pointer;
     transition: all 0.15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .sub-tab:hover:not(.active) {
     color: hsl(var(--foreground));
-    background-color: hsl(var(--muted) / 0.5);
+    background-color: hsl(var(--muted-foreground) / 0.15);
   }
 
-  .sub-tab.active {
-    color: hsl(var(--foreground));
-    background-color: hsl(var(--muted));
-    border-color: hsl(var(--border));
+  /* Closures - Orange accent (construction) */
+  .sub-tab.closures.active {
+    color: hsl(25 95% 45%);
+    border-color: hsl(25 95% 53% / 0.3);
+    background-color: hsl(25 95% 53% / 0.1);
   }
 
-  .sub-tab-icon {
-    display: flex;
-    align-items: center;
-    width: 1rem;
-    height: 1rem;
+  :global(.dark) .sub-tab.closures.active {
+    color: hsl(25 95% 60%);
+    border-color: hsl(25 95% 60% / 0.3);
+    background-color: hsl(25 95% 60% / 0.15);
+  }
+
+  /* Route Changes - Purple accent */
+  .sub-tab.changes.active {
+    color: hsl(262 83% 50%);
+    border-color: hsl(262 83% 58% / 0.3);
+    background-color: hsl(262 83% 58% / 0.1);
+  }
+
+  :global(.dark) .sub-tab.changes.active {
+    color: hsl(262 83% 68%);
+    border-color: hsl(262 83% 68% / 0.3);
+    background-color: hsl(262 83% 68% / 0.15);
+  }
+
+  .sub-tab :global(.sub-tab-icon) {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .sub-tab-label {
+    line-height: 1;
   }
 
   .sub-tab-icon :global(svg) {
@@ -212,17 +240,35 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.125rem;
-    height: 1.125rem;
-    padding: 0 0.25rem;
-    font-size: 0.625rem;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.375rem;
+    font-size: 0.6875rem;
     font-weight: 600;
     background-color: hsl(var(--muted-foreground) / 0.15);
     border-radius: 9999px;
+    margin-left: 0.125rem;
   }
 
-  .sub-tab.active .sub-tab-count {
-    background-color: hsl(var(--foreground) / 0.15);
+  /* Active state counts */
+  .sub-tab.closures.active .sub-tab-count {
+    background-color: hsl(25 95% 45%);
+    color: white;
+  }
+
+  :global(.dark) .sub-tab.closures.active .sub-tab-count {
+    background-color: hsl(25 95% 60%);
+    color: hsl(0 0% 10%);
+  }
+
+  .sub-tab.changes.active .sub-tab-count {
+    background-color: hsl(262 83% 50%);
+    color: white;
+  }
+
+  :global(.dark) .sub-tab.changes.active .sub-tab-count {
+    background-color: hsl(262 83% 68%);
+    color: hsl(0 0% 10%);
   }
 
   /* Closures list */
@@ -344,7 +390,7 @@
     text-decoration: underline;
   }
 
-  /* Empty state */
+  /* Empty state - follows design system */
   .empty-state {
     display: flex;
     flex-direction: column;
@@ -353,11 +399,29 @@
     padding: 3rem 1.5rem;
     text-align: center;
     color: hsl(var(--muted-foreground));
+    border: 1px dashed hsl(var(--border));
+    border-radius: 0.75rem;
+    background-color: hsl(var(--muted) / 0.3);
   }
 
-  .empty-icon {
-    width: 3.5rem;
-    height: 3.5rem;
+  :global(.dark) .empty-state:not(.success) {
+    background-color: hsl(var(--muted) / 0.2);
+  }
+
+  .empty-state.success {
+    border-style: solid;
+    border-color: hsl(142 76% 36% / 0.25);
+    background-color: hsl(142 76% 36% / 0.08);
+  }
+
+  :global(.dark) .empty-state.success {
+    border-color: hsl(142 70% 45% / 0.25);
+    background-color: hsl(142 70% 45% / 0.08);
+  }
+
+  .empty-state-icon {
+    width: 4rem;
+    height: 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -366,29 +430,38 @@
     margin-bottom: 1rem;
   }
 
-  .empty-icon.changes {
-    background-color: hsl(217 91% 60% / 0.15);
+  .empty-state-icon.success {
+    background-color: hsl(142 76% 36% / 0.1);
   }
 
-  .empty-icon :global(.icon) {
-    width: 1.5rem;
-    height: 1.5rem;
+  :global(.dark) .empty-state-icon.success {
+    background-color: hsl(142 70% 45% / 0.15);
+  }
+
+  .empty-state-icon :global(.icon) {
+    width: 2rem;
+    height: 2rem;
     color: hsl(var(--muted-foreground));
   }
 
-  .empty-icon.changes :global(.icon) {
-    color: hsl(217 91% 60%);
+  .empty-state-icon.success :global(.icon) {
+    color: hsl(142 76% 36%);
   }
 
-  .empty-state h3 {
+  :global(.dark) .empty-state-icon.success :global(.icon) {
+    color: hsl(142 70% 45%);
+  }
+
+  .empty-state-title {
     font-size: 1.125rem;
     font-weight: 600;
     color: hsl(var(--foreground));
     margin: 0 0 0.25rem 0;
   }
 
-  .empty-state p {
+  .empty-state-description {
     font-size: 0.875rem;
     margin: 0;
+    max-width: 280px;
   }
 </style>

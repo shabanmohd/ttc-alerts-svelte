@@ -1,6 +1,7 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import { onMount } from "svelte";
+  import { Zap, Calendar } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
   import RSZAlertCard from "$lib/components/alerts/RSZAlertCard.svelte";
@@ -82,7 +83,9 @@
 
   // Get ALL active alerts for a specific subway line
   function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
-    const active = $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden);
+    const active = $threadsWithAlerts.filter(
+      (t) => !t.is_resolved && !t.is_hidden
+    );
     return active.filter((thread) => {
       const routes = thread.affected_routes || [];
       // Check if any route matches this line
@@ -110,11 +113,13 @@
       const now = new Date();
       // If item has periods, check if any are active now
       if ((item as any).periods?.length > 0) {
-        return (item as any).periods.some((p: { start: string; end: string }) => {
-          const start = new Date(p.start);
-          const end = new Date(p.end);
-          return now >= start && now <= end;
-        });
+        return (item as any).periods.some(
+          (p: { start: string; end: string }) => {
+            const start = new Date(p.start);
+            const end = new Date(p.end);
+            return now >= start && now <= end;
+          }
+        );
       }
       return false;
     });
@@ -176,7 +181,9 @@
   // Get active alerts (not resolved, not hidden)
   // For delays tab, exclude RSZ alerts (they're shown separately via RSZAlertCard)
   let activeAlerts = $derived.by(() => {
-    const active = $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden);
+    const active = $threadsWithAlerts.filter(
+      (t) => !t.is_resolved && !t.is_hidden
+    );
     const filtered = filterByCategory(active);
     // When on delays tab, exclude RSZ alerts (they render separately)
     if (selectedCategory === "delays") {
@@ -188,7 +195,9 @@
   // Get RSZ alerts (for delays tab) - using same isRSZAlert helper
   let rszAlerts = $derived.by(() => {
     if (selectedCategory !== "delays") return [];
-    return $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden && isRSZAlert(t));
+    return $threadsWithAlerts.filter(
+      (t) => !t.is_resolved && !t.is_hidden && isRSZAlert(t)
+    );
   });
 
   // Get recently resolved alerts (last 6 hours) - only show under Disruptions tab
@@ -196,12 +205,12 @@
   let recentlyResolved = $derived.by(() => {
     // Only show resolved section in disruptions tab
     if (selectedCategory !== "disruptions") return [];
-    
+
     const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
     return $threadsWithAlerts.filter((t) => {
       if (!t.is_resolved || !t.resolved_at) return false;
       if (new Date(t.resolved_at).getTime() < sixHoursAgo) return false;
-      
+
       // Exclude accessibility alerts from resolved section
       const categories = (t.categories as string[]) || [];
       const severity = getSeverityCategory(
@@ -210,22 +219,40 @@
         t.latestAlert?.header_text ?? undefined
       );
       if (severity === "ACCESSIBILITY") return false;
-      
+
       // Exclude RSZ alerts
       if (isRSZAlert(t)) return false;
-      
+
       // Exclude orphaned SERVICE_RESUMED (no preceding DELAY/DISRUPTION)
-      const onlyServiceResumed = categories.length === 1 && categories[0] === "SERVICE_RESUMED";
+      const onlyServiceResumed =
+        categories.length === 1 && categories[0] === "SERVICE_RESUMED";
       const singleAlertThread = (t.alerts?.length || 0) === 1;
       if (onlyServiceResumed && singleAlertThread) return false;
-      
+
       return true;
     });
   });
 
   // Count alerts by category
   let categoryCounts = $derived.by(() => {
-    const active = $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden);
+    const active = $threadsWithAlerts.filter(
+      (t) => !t.is_resolved && !t.is_hidden
+    );
+
+    // Debug: log all active threads to understand categorization
+    console.log("=== DEBUG: Active threads ===");
+    active.forEach((t) => {
+      const categories = (t.categories as string[]) || [];
+      const severity = getSeverityCategory(
+        categories,
+        t.latestAlert?.effect ?? undefined,
+        t.latestAlert?.header_text ?? undefined
+      );
+      console.log(
+        `Thread: ${t.title?.slice(0, 50)}... | Categories: ${categories.join(",")} | Effect: ${t.latestAlert?.effect} | Severity: ${severity}`
+      );
+    });
+
     return {
       disruptions: active.filter((t) => {
         const categories = (t.categories as string[]) || [];
@@ -332,6 +359,7 @@
         aria-selected={activeTab === "now"}
         onclick={() => (activeTab = "now")}
       >
+        <Zap class="h-4 w-4" />
         Now
       </button>
       <button
@@ -341,6 +369,7 @@
         aria-selected={activeTab === "planned"}
         onclick={() => (activeTab = "planned")}
       >
+        <Calendar class="h-4 w-4" />
         Planned
       </button>
     </div>
@@ -454,6 +483,10 @@
 
   .primary-tab {
     flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
     padding: 0.625rem 1rem;
     font-size: 0.9375rem;
     font-weight: 600;

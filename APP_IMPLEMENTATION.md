@@ -124,13 +124,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Alerts V3 Components (`src/routes/alerts-v3/`)
 
-| File                      | Status | Purpose                                                        |
-| ------------------------- | ------ | -------------------------------------------------------------- |
-| `+page.svelte`            | 🆕     | Main page: Now/Planned tabs, max-width 576px centered layout   |
-| `SubwayStatusBar.svelte`  | 🆕     | 4-col subway status grid (2x2 mobile) - matches production CSS |
-| `CategoryFilterV3.svelte` | 🆕     | Pill-based filter (Disruptions/Delays/Elevators) with counts   |
-| `PlannedContent.svelte`   | 🆕     | Sub-tabs for Closures/Route Changes                            |
-| `ResolvedSection.svelte`  | 🆕     | Collapsible recently resolved section (always visible)         |
+| File                      | Status | Purpose                                                             |
+| ------------------------- | ------ | ------------------------------------------------------------------- |
+| `+page.svelte`            | 🆕     | Main page: Now/Planned tabs with icons (Zap/Calendar), 576px layout |
+| `SubwayStatusBar.svelte`  | 🆕     | 4-col subway status grid (2x2 mobile) - matches production CSS      |
+| `CategoryFilterV3.svelte` | 🆕     | Compact pill filter (Disruptions/Delays/Elevators) with counts      |
+| `PlannedContent.svelte`   | 🆕     | Sub-tabs for Closures (Construction)/Route Changes (GitBranch)      |
+| `ResolvedSection.svelte`  | 🆕     | Collapsible recently resolved section (always visible)              |
 
 ### Backend (`supabase/`)
 
@@ -641,14 +641,14 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 **Key Changes:**
 
-| Feature                 | Before (alerts/)                   | After (alerts-v3/)                     |
-| ----------------------- | ---------------------------------- | -------------------------------------- |
-| Primary Navigation      | All/My Routes/Scheduled tabs       | Now/Planned tabs                       |
-| Subway Status           | Grid at top of content             | Same compact grid (production CSS)     |
-| Active Alert Filtering  | Severity accordion (Major/Minor)   | Pill-based filters (Disruptions/etc.)  |
-| Planned Content         | Scheduled tab with all closures    | Sub-tabs: Closures / Route Changes     |
-| Recently Resolved       | Hidden in accordion                | Always visible section at bottom       |
-| Layout                  | Full width                         | Centered 576px max-width               |
+| Feature                | Before (alerts/)                 | After (alerts-v3/)                    |
+| ---------------------- | -------------------------------- | ------------------------------------- |
+| Primary Navigation     | All/My Routes/Scheduled tabs     | Now/Planned tabs                      |
+| Subway Status          | Grid at top of content           | Same compact grid (production CSS)    |
+| Active Alert Filtering | Severity accordion (Major/Minor) | Pill-based filters (Disruptions/etc.) |
+| Planned Content        | Scheduled tab with all closures  | Sub-tabs: Closures / Route Changes    |
+| Recently Resolved      | Hidden in accordion              | Always visible section at bottom      |
+| Layout                 | Full width                       | Centered 576px max-width              |
 
 **Components Created:**
 

@@ -545,6 +545,40 @@ Three-tab severity filter (ALL tab removed). WCAG AA compliant colors.
 - Minor: `Clock`
 - Accessibility: `Accessibility` (wheelchair)
 
+### Category Filter Pills (Alerts V3)
+
+Compact pill-based filter with consistent sizing. Used in alerts-v3 page.
+
+**Pill Sizing:**
+
+| Property        | Value                |
+| --------------- | -------------------- |
+| `padding`       | `0.4rem 0.75rem`     |
+| `font-size`     | `0.8125rem` (13px)   |
+| `font-weight`   | `500`                |
+| `gap`           | `0.375rem`           |
+| `border-radius` | `9999px` (full pill) |
+| Icon size       | `0.875rem` (14px)    |
+
+**Color Accents:**
+
+| Category        | Light Mode              | Dark Mode               |
+| --------------- | ----------------------- | ----------------------- |
+| Disruptions     | `hsl(0 72% 45%)`        | `hsl(0 85% 65%)`        |
+| Delays          | `hsl(38 92% 45%)`       | `hsl(38 95% 60%)`       |
+| Elevators       | `hsl(217 91% 50%)`      | `hsl(217 91% 70%)`      |
+| Closures        | `hsl(25 95% 45%)` 🆕    | `hsl(25 95% 60%)` 🆕    |
+| Route Changes   | `hsl(262 83% 50%)` 🆕   | `hsl(262 83% 68%)` 🆕   |
+
+**Tab Icons:**
+
+| Tab             | Icon          | Description                  |
+| --------------- | ------------- | ---------------------------- |
+| Now tab         | `Zap`         | Lightning bolt for real-time |
+| Planned tab     | `Calendar`    | Calendar for scheduled       |
+| Closures        | `Construction`| Construction sign            |
+| Route Changes   | `GitBranch`   | Branch path for diversions   |
+
 ### Toast Notifications (Sonner)
 
 Toast notifications use svelte-sonner with dark solid backgrounds for high contrast.
@@ -936,6 +970,7 @@ Empty states are displayed when content is not available or when filters produce
 | ----------------------------------- | --------------- | -------------------------- | ------- |
 | Scheduled closures - none           | `CheckCircle`   | "No planned closures"      | Success |
 | Scheduled closures - weekend filter | `CalendarDays`  | "No closures this weekend" | Default |
+| Route changes - none                | `GitBranch`     | "No route changes"         | Default |
 | Active alerts - all clear           | `CheckCircle`   | "All Clear!"               | Success |
 | Active alerts - no major            | `AlertTriangle` | "No major alerts"          | Default |
 | Active alerts - no minor            | `Clock`         | "No minor alerts"          | Default |

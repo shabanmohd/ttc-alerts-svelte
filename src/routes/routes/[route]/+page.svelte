@@ -3,7 +3,13 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
-  import { ArrowLeft, Bell, CheckCircle, MapPin, Loader2 } from "lucide-svelte";
+  import {
+    ArrowLeft,
+    AlertOctagon,
+    CheckCircle,
+    MapPin,
+    Loader2,
+  } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
@@ -127,16 +133,21 @@
   }
 
   // Filter alerts for this route (only active/unresolved MAJOR disruption alerts)
-  // Excludes: resolved/resumed, accessibility (elevator/escalator), RSZ (shown separately)
+  // Excludes: resolved/resumed, hidden, accessibility (elevator/escalator), RSZ (shown separately)
   let routeAlerts = $derived(
     $threadsWithAlerts.filter((thread) => {
       // First, skip resolved/resumed alerts
       if (isResolved(thread)) return false;
 
+      // Skip hidden alerts (same as alerts-v3 page behavior)
+      if (thread.is_hidden) return false;
+
       // Skip accessibility alerts (elevator/escalator) - not route disruptions
-      const categories = Array.isArray(thread.categories) ? thread.categories : [];
-      const alertCategories = Array.isArray(thread.latestAlert?.categories) 
-        ? thread.latestAlert.categories 
+      const categories = Array.isArray(thread.categories)
+        ? thread.categories
+        : [];
+      const alertCategories = Array.isArray(thread.latestAlert?.categories)
+        ? thread.latestAlert.categories
         : [];
       const allCategories = [...new Set([...categories, ...alertCategories])];
       const severity = getSeverityCategory(
@@ -144,7 +155,7 @@
         thread.latestAlert?.effect ?? undefined,
         thread.latestAlert?.header_text ?? undefined
       );
-      if (severity === 'ACCESSIBILITY') return false;
+      if (severity === "ACCESSIBILITY") return false;
 
       const threadRoutes = Array.isArray(thread.affected_routes)
         ? thread.affected_routes
@@ -503,7 +514,7 @@
   {#if !isNotOperational}
     <section class="mt-6">
       <h2 class="section-title">
-        <Bell class="h-4 w-4" />
+        <AlertOctagon class="h-4 w-4" />
         {$_("routes.activeAlerts")}
       </h2>
 

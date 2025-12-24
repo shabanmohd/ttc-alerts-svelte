@@ -95,7 +95,7 @@ export function getSeverityCategory(categories: string[], effect?: string, heade
   // Check for major disruptions (closures, detours, no service, shuttles, delays)
   // Note: Regular delays are now MAJOR (not MINOR) - only RSZ is MINOR
   const majorEffects = ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'MODIFIED_SERVICE', 'SCHEDULED_CLOSURE', 'SIGNIFICANT_DELAYS', 'DELAY'];
-  const majorCategories = ['SERVICE_DISRUPTION', 'DISRUPTION', 'CLOSURE', 'SCHEDULED_CLOSURE', 'DETOUR', 'SHUTTLE', 'DELAY'];
+  const majorCategories = ['SERVICE_DISRUPTION', 'DISRUPTION', 'DIVERSION', 'CLOSURE', 'SCHEDULED_CLOSURE', 'DETOUR', 'SHUTTLE', 'DELAY'];
   
   if (
     majorEffects.some(e => upperEffect.includes(e)) ||

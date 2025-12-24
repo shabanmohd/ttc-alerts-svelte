@@ -220,8 +220,8 @@
     "saveToMyRoutes": "Save to My Routes",
     "savedToMyRoutes": "Saved to My Routes",
     "backToRoutes": "Back to Routes",
-    "activeAlerts": "Active Alerts",
-    "noActiveAlerts": "No active alerts",
+    "activeAlerts": "Route Disruptions",
+    "noActiveAlerts": "No active disruptions",
     "serviceRunningNormally": "Service is running normally on {route}",
     "stopsAndETA": "Stops & Live ETA",
     "realtimePredictions": "Real-time arrival predictions"
