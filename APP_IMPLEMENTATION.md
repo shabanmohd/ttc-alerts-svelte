@@ -114,8 +114,8 @@ Real-time Toronto Transit alerts with biometric authentication.
 | --------------------------------- | ------ | ------------------------------------------------------------- |
 | `+layout.svelte`                  | ✅     | App layout, auth init, dialogs                                |
 | `+page.svelte`                    | ✅     | Homepage with alert tabs + ETA                                |
-| `alerts/+page.svelte`             | ✅     | Alerts page with tabs, subway status grid, accordion sections |
-| `alerts-v3/+page.svelte`          | 🆕     | Redesigned alerts page - improved IA, Now/Planned tabs        |
+| `alerts/+page.svelte`             | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3)     |
+| `alerts-v3/+page.svelte`          | 📦     | Legacy alerts page (old design, kept for reference)           |
 | `alerts-archive/+page.svelte.bak` | 📦     | Archived original alerts page                                 |
 | `preferences/+page.svelte`        | ✅     | Route/mode preferences                                        |
 | `settings/+page.svelte`           | ✅     | Settings with stops, routes, prefs, location 🆕 **B**         |
@@ -123,15 +123,15 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `routes/[route]/+page.svelte`     | ✅     | Route detail page with active alerts (filtered from resolved) |
 | `auth/callback/+page.svelte`      | ✅     | Auth callback handler                                         |
 
-### Alerts V3 Components (`src/routes/alerts-v3/`)
+### Alerts Components (`src/routes/alerts/`)
 
 | File                      | Status | Purpose                                                                |
 | ------------------------- | ------ | ---------------------------------------------------------------------- |
-| `+page.svelte`            | 🆕     | Main page: Now/Scheduled tabs with icons (Zap/Calendar), 576px layout  |
-| `SubwayStatusBar.svelte`  | 🆕     | 4-col subway status grid (2x2 mobile) - matches production CSS         |
-| `CategoryFilterV3.svelte` | 🆕     | Compact pill filter (Disruptions & Delays/Slow Zones/Elevators)        |
-| `PlannedContent.svelte`   | 🆕     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API) |
-| `ResolvedSection.svelte`  | 🆕     | Collapsible recently resolved section (SERVICE_RESUMED only)           |
+| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs with icons (Zap/Calendar), 576px layout  |
+| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile) - matches production CSS         |
+| `CategoryFilterV3.svelte` | ✅     | Compact pill filter (Disruptions & Delays/Slow Zones/Elevators)        |
+| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API) |
+| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)           |
 
 ### Backend (`supabase/`)
 
@@ -646,13 +646,13 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
-### Jan 18, 2025 - Alerts V3: Improved Information Architecture
+### Jan 18, 2025 - Alerts V3: Now Live at /alerts
 
-**Purpose:** Redesigned alerts page at `/alerts-v3` with improved information hierarchy and user experience.
+**Purpose:** The redesigned alerts page is now live at `/alerts` (previously at `/alerts-v3`). The old design has been moved to `/alerts-v3` for reference.
 
 **Key Changes:**
 
-| Feature                | Before (alerts/)                 | After (alerts-v3/)                    |
+| Feature                | Before (old /alerts)             | After (new /alerts)                   |
 | ---------------------- | -------------------------------- | ------------------------------------- |
 | Primary Navigation     | All/My Routes/Scheduled tabs     | Now/Planned tabs                      |
 | Subway Status          | Grid at top of content           | Same compact grid (production CSS)    |
@@ -661,7 +661,7 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 | Recently Resolved      | Hidden in accordion              | Always visible section at bottom      |
 | Layout                 | Full width                       | Centered 576px max-width              |
 
-**Components Created:**
+**Components (now at `src/routes/alerts/`):**
 
 - `SubwayStatusBar.svelte` - Exact copy of production CSS, 4-col desktop / 2x2 mobile
 - `CategoryFilterV3.svelte` - Color-coded pill filters with counts
