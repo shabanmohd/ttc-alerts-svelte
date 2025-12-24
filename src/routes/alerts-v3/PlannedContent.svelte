@@ -152,7 +152,7 @@
       <div class="empty-state-icon success">
         <CheckCircle class="icon" />
       </div>
-      <h3 class="empty-state-title">No planned closures</h3>
+      <h3 class="empty-state-title">No scheduled closures</h3>
       <p class="empty-state-description">
         No scheduled subway closures at this time.
       </p>
@@ -166,7 +166,7 @@
     </div>
     <h3 class="empty-state-title">No route changes</h3>
     <p class="empty-state-description">
-      No route changes planned at this time.
+      No scheduled route changes at this time.
     </p>
   </div>
 {/if}
