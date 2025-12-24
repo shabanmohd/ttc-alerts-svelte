@@ -67,7 +67,7 @@
   function getSubwayStatus(lineId: string): "normal" | "delayed" | "disrupted" {
     const lineAlerts = $threadsWithAlerts.filter((t) => {
       const routes = t.affected_routes || [];
-      return routes.includes(lineId) && !t.is_resolved;
+      return routes.includes(lineId) && !t.is_resolved && !t.is_hidden;
     });
 
     if (lineAlerts.length === 0) return "normal";
@@ -115,9 +115,9 @@
     });
   }
 
-  // Get active alerts (not resolved)
+  // Get active alerts (not resolved, not hidden)
   let activeAlerts = $derived.by(() => {
-    const active = $threadsWithAlerts.filter((t) => !t.is_resolved);
+    const active = $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden);
     return filterByCategory(active);
   });
 
@@ -128,6 +128,7 @@
       const header = t.latestAlert?.header_text?.toLowerCase() || "";
       return (
         !t.is_resolved &&
+        !t.is_hidden &&
         (header.includes("slower than usual") ||
           header.includes("slow zone") ||
           header.includes("reduced speed"))
@@ -146,7 +147,7 @@
 
   // Count alerts by category
   let categoryCounts = $derived.by(() => {
-    const active = $threadsWithAlerts.filter((t) => !t.is_resolved);
+    const active = $threadsWithAlerts.filter((t) => !t.is_resolved && !t.is_hidden);
     return {
       disruptions: active.filter((t) => {
         const categories = (t.categories as string[]) || [];
