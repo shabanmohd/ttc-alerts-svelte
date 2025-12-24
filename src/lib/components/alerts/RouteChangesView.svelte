@@ -1,0 +1,405 @@
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { _ } from "svelte-i18n";
+  import { CheckCircle, ExternalLink, Calendar, Clock, ArrowRight } from "lucide-svelte";
+  import RouteBadge from "./RouteBadge.svelte";
+  import {
+    routeChanges,
+    routeChangesLoading,
+    routeChangesError,
+    loadRouteChanges,
+  } from "$lib/stores/route-changes";
+  import type { RouteChange } from "$lib/services/route-changes";
+
+  // Load route changes on mount
+  onMount(() => {
+    loadRouteChanges();
+  });
+
+  /**
+   * Format a date string like "December 31, 2025" to a shorter form.
+   */
+  function formatDateShort(dateStr: string | null): string {
+    if (!dateStr) return "";
+
+    // Try to parse the date
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      // If parsing fails, return the original
+      return dateStr;
+    }
+
+    // Format as "Dec 31"
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+
+  /**
+   * Format time for display
+   */
+  function formatTime(timeStr: string | null): string {
+    if (!timeStr) return "";
+    // Already in format like "11:30 PM"
+    return timeStr;
+  }
+
+  /**
+   * Get the display date range for a route change
+   */
+  function getDateDisplay(change: RouteChange): string {
+    const parts: string[] = [];
+
+    // Add start date label if present (e.g., "starting as early as")
+    if (change.startDateLabel) {
+      parts.push(change.startDateLabel);
+    }
+
+    // Add start date
+    if (change.startDate) {
+      let startStr = formatDateShort(change.startDate);
+      if (change.startTime) {
+        startStr += ` at ${formatTime(change.startTime)}`;
+      }
+      parts.push(startStr);
+    }
+
+    // Add end date if present
+    if (change.endDate) {
+      let endStr = formatDateShort(change.endDate);
+      if (change.endTime) {
+        endStr += ` at ${formatTime(change.endTime)}`;
+      }
+      parts.push(`to ${endStr}`);
+    }
+
+    return parts.join(" ");
+  }
+
+  /**
+   * Capitalize first letter of each word
+   */
+  function formatRouteName(name: string): string {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  }
+
+  const totalCount = $derived($routeChanges.length);
+</script>
+
+{#if $routeChangesLoading}
+  <!-- Loading state -->
+  <div class="loading-state">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Loading route changes...</p>
+  </div>
+{:else if $routeChangesError}
+  <!-- Error state -->
+  <div class="error-state">
+    <p class="error-text">{$routeChangesError}</p>
+    <button class="retry-button" onclick={() => loadRouteChanges(true)}>
+      Try Again
+    </button>
+  </div>
+{:else if totalCount === 0}
+  <!-- Empty state -->
+  <div class="empty-state success">
+    <div class="empty-state-icon success">
+      <CheckCircle class="h-8 w-8" />
+    </div>
+    <h3 class="empty-state-title">No scheduled route changes</h3>
+    <p class="empty-state-description">
+      All bus and streetcar routes are operating normally.
+    </p>
+  </div>
+{:else}
+  <!-- Route Changes List -->
+  <div class="route-changes-list">
+    {#each $routeChanges as change (change.id)}
+      <a
+        href={change.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="route-change-card"
+      >
+        <!-- Header with route badges -->
+        <div class="card-header">
+          <div class="route-badges">
+            {#each change.routes as route}
+              <RouteBadge {route} size="sm" />
+            {/each}
+            {#if change.routeName}
+              <span class="route-name">{formatRouteName(change.routeName)}</span>
+            {/if}
+          </div>
+          <ExternalLink class="icon-external" />
+        </div>
+
+        <!-- Title/Description -->
+        <p class="card-title">{change.title}</p>
+
+        <!-- Date/Time info -->
+        {#if change.startDate || change.endDate}
+          <div class="card-date">
+            <Calendar class="icon-calendar" />
+            <span class="date-text">{getDateDisplay(change)}</span>
+          </div>
+        {/if}
+      </a>
+    {/each}
+  </div>
+
+  <!-- Footer link to TTC page -->
+  <a
+    href="https://www.ttc.ca/service-advisories/Service-Changes"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="view-all-link"
+  >
+    View all on TTC.ca
+    <ArrowRight class="icon-arrow" />
+  </a>
+{/if}
+
+<style>
+  /* Loading state */
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .loading-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid hsl(var(--muted));
+    border-top-color: hsl(var(--primary));
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .loading-text {
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  /* Error state */
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .error-text {
+    font-size: 0.875rem;
+    color: hsl(0 84% 60%);
+    margin: 0;
+  }
+
+  .retry-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--primary));
+    background: transparent;
+    border: 1px solid hsl(var(--primary));
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .retry-button:hover {
+    background: hsl(var(--primary) / 0.1);
+  }
+
+  /* Empty state */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(142 76% 36% / 0.25);
+    border-radius: 0.75rem;
+    background-color: hsl(142 76% 36% / 0.08);
+  }
+
+  :global(.dark) .empty-state.success {
+    border-color: hsl(142 70% 45% / 0.25);
+    background-color: hsl(142 70% 45% / 0.08);
+  }
+
+  .empty-state-icon {
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: hsl(142 76% 36% / 0.1);
+    border-radius: 9999px;
+    margin-bottom: 1rem;
+  }
+
+  :global(.dark) .empty-state-icon.success {
+    background-color: hsl(142 70% 45% / 0.15);
+  }
+
+  .empty-state-icon :global(svg) {
+    color: hsl(142 76% 36%);
+  }
+
+  :global(.dark) .empty-state-icon.success :global(svg) {
+    color: hsl(142 70% 45%);
+  }
+
+  .empty-state-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin: 0 0 0.25rem 0;
+  }
+
+  .empty-state-description {
+    font-size: 0.875rem;
+    margin: 0;
+    max-width: 280px;
+  }
+
+  /* Route changes list */
+  .route-changes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Route change card */
+  .route-change-card {
+    display: block;
+    padding: 1rem;
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.15s ease;
+  }
+
+  .route-change-card:hover {
+    border-color: hsl(262 83% 58% / 0.4);
+    box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.08);
+  }
+
+  :global(.dark) .route-change-card:hover {
+    border-color: hsl(262 83% 68% / 0.4);
+    background-color: hsl(var(--card) / 0.8);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .route-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .route-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    text-transform: capitalize;
+  }
+
+  .card-header :global(.icon-external) {
+    width: 1rem;
+    height: 1rem;
+    color: hsl(var(--muted-foreground));
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+
+  .route-change-card:hover :global(.icon-external) {
+    opacity: 1;
+    color: hsl(262 83% 58%);
+  }
+
+  :global(.dark) .route-change-card:hover :global(.icon-external) {
+    color: hsl(262 83% 68%);
+  }
+
+  .card-title {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    margin: 0 0 0.5rem 0;
+    line-height: 1.4;
+  }
+
+  .card-date {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .card-date :global(.icon-calendar) {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .date-text {
+    line-height: 1.3;
+  }
+
+  /* View all link */
+  .view-all-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(262 83% 50%);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  :global(.dark) .view-all-link {
+    color: hsl(262 83% 68%);
+  }
+
+  .view-all-link:hover {
+    text-decoration: underline;
+  }
+
+  .view-all-link :global(.icon-arrow) {
+    width: 1rem;
+    height: 1rem;
+  }
+</style>

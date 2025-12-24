@@ -1,11 +1,20 @@
 <script lang="ts">
   import { Construction, GitBranch } from "lucide-svelte";
   import ClosuresView from "$lib/components/alerts/ClosuresView.svelte";
+  import RouteChangesView from "$lib/components/alerts/RouteChangesView.svelte";
   import { maintenanceItems } from "$lib/stores/alerts";
+  import { routeChangesCount, loadRouteChanges } from "$lib/stores/route-changes";
   import type { PlannedMaintenance } from "$lib/types/database";
+  import { onMount } from "svelte";
 
   // Sub-tab state
   let activeSubTab: "closures" | "changes" = $state("closures");
+
+  // Load route changes when switching to that tab or on mount
+  onMount(() => {
+    // Preload route changes in background
+    loadRouteChanges();
+  });
 
   // Helper to check if maintenance should show in scheduled view
   function shouldShowInScheduled(item: PlannedMaintenance): boolean {
@@ -37,9 +46,6 @@
         m.routes.some((r) => r.toLowerCase().includes("line"))
     ).length
   );
-
-  // Route changes (placeholder - would need different data source)
-  let routeChangesCount = $derived(0);
 </script>
 
 <!-- Sub-tabs: Closures | Route Changes -->
@@ -66,8 +72,8 @@
   >
     <GitBranch class="sub-tab-icon" aria-hidden="true" />
     <span class="sub-tab-label">Route Changes</span>
-    {#if routeChangesCount > 0}
-      <span class="sub-tab-count">{routeChangesCount}</span>
+    {#if $routeChangesCount > 0}
+      <span class="sub-tab-count">{$routeChangesCount}</span>
     {/if}
   </button>
 </div>
@@ -76,16 +82,8 @@
   <!-- Reuse ClosuresView component for consistent display with old alerts page -->
   <ClosuresView />
 {:else}
-  <!-- Route Changes tab -->
-  <div class="empty-state">
-    <div class="empty-state-icon">
-      <GitBranch class="icon" />
-    </div>
-    <h3 class="empty-state-title">No route changes</h3>
-    <p class="empty-state-description">
-      No scheduled route changes at this time.
-    </p>
-  </div>
+  <!-- Route Changes - fetched from TTC website -->
+  <RouteChangesView />
 {/if}
 
 <style>
@@ -192,51 +190,4 @@
     color: hsl(0 0% 10%);
   }
 
-  /* Empty state - follows design system */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1.5rem;
-    text-align: center;
-    color: hsl(var(--muted-foreground));
-    border: 1px dashed hsl(var(--border));
-    border-radius: 0.75rem;
-    background-color: hsl(var(--muted) / 0.3);
-  }
-
-  :global(.dark) .empty-state {
-    background-color: hsl(var(--muted) / 0.2);
-  }
-
-  .empty-state-icon {
-    width: 4rem;
-    height: 4rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: hsl(var(--muted));
-    border-radius: 9999px;
-    margin-bottom: 1rem;
-  }
-
-  .empty-state-icon :global(.icon) {
-    width: 2rem;
-    height: 2rem;
-    color: hsl(var(--muted-foreground));
-  }
-
-  .empty-state-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: hsl(var(--foreground));
-    margin: 0 0 0.25rem 0;
-  }
-
-  .empty-state-description {
-    font-size: 0.875rem;
-    margin: 0;
-    max-width: 280px;
-  }
 </style>
