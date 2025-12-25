@@ -50,6 +50,16 @@
     { route: "512", name: "St Clair", category: "streetcar" },
   ];
 
+  // Blue Night Streetcars (300-series streetcars)
+  const NIGHT_STREETCAR_ROUTES = [
+    { route: "301", name: "Queen Night", category: "night-streetcar" },
+    { route: "304", name: "King Night", category: "night-streetcar" },
+    { route: "305", name: "Dundas Night", category: "night-streetcar" },
+    { route: "306", name: "Carlton Night", category: "night-streetcar" },
+    { route: "310", name: "Spadina Night", category: "night-streetcar" },
+    { route: "312", name: "St Clair Night", category: "night-streetcar" },
+  ];
+
   const EXPRESS_ROUTES = [
     { route: "900", name: "Airport Express", category: "express" },
     { route: "902", name: "Markham Rd Express", category: "express" },
@@ -266,6 +276,7 @@
   const ALL_ROUTES: RouteInfo[] = [
     ...SUBWAY_LINES,
     ...STREETCAR_ROUTES,
+    ...NIGHT_STREETCAR_ROUTES,
     ...EXPRESS_ROUTES,
     ...BUS_ROUTES,
     ...NIGHT_ROUTES,
