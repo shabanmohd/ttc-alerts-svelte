@@ -54,7 +54,7 @@
     <div class="space-y-2">
       {#each stops.slice(0, maxDisplay) as stop, i (stop.id)}
         <div
-          class="group flex w-full items-start gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors animate-fade-in-up"
+          class="group flex w-full items-start gap-3 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors animate-fade-in-up cursor-pointer"
           style="animation-delay: {i * 60}ms"
         >
           <button

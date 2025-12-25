@@ -441,7 +441,7 @@
               href={(displayAlert as { url?: string }).url}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-xs text-primary hover:underline mt-1.5 inline-flex items-center gap-1"
+              class="text-xs text-primary underline mt-1.5 inline-flex items-center gap-1"
             >
               More details <ExternalLink class="h-3 w-3" aria-hidden="true" />
             </a>

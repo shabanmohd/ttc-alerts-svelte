@@ -68,8 +68,8 @@
             <span class="font-bold">1</span>
           </div>
           <div>
-            <h3 class="font-semibold text-sm">{$_("help.step1Title")}</h3>
-            <p class="text-xs text-muted-foreground mt-1">
+            <h3 class="font-semibold">{$_("help.step1Title")}</h3>
+            <p class="text-sm text-muted-foreground mt-1">
               {$_("help.step1Desc")}
             </p>
           </div>
@@ -83,8 +83,8 @@
             <span class="font-bold">2</span>
           </div>
           <div>
-            <h3 class="font-semibold text-sm">{$_("help.step2Title")}</h3>
-            <p class="text-xs text-muted-foreground mt-1">
+            <h3 class="font-semibold">{$_("help.step2Title")}</h3>
+            <p class="text-sm text-muted-foreground mt-1">
               {$_("help.step2Desc")}
             </p>
           </div>
@@ -98,8 +98,8 @@
             <span class="font-bold">3</span>
           </div>
           <div>
-            <h3 class="font-semibold text-sm">{$_("help.step3Title")}</h3>
-            <p class="text-xs text-muted-foreground mt-1">
+            <h3 class="font-semibold">{$_("help.step3Title")}</h3>
+            <p class="text-sm text-muted-foreground mt-1">
               {$_("help.step3Desc")}
             </p>
           </div>
@@ -113,8 +113,8 @@
             <span class="font-bold">4</span>
           </div>
           <div>
-            <h3 class="font-semibold text-sm">{$_("help.step4Title")}</h3>
-            <p class="text-xs text-muted-foreground mt-1">
+            <h3 class="font-semibold">{$_("help.step4Title")}</h3>
+            <p class="text-sm text-muted-foreground mt-1">
               {$_("help.step4Desc")}
             </p>
           </div>

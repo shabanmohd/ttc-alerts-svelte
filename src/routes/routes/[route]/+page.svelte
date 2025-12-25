@@ -1137,17 +1137,18 @@
             The Eglinton Crosstown LRT (Line 5) is currently under construction
             and not yet open to the public.
           </p>
-          <p class="text-xs text-muted-foreground mt-2">
+          <p class="text-sm text-muted-foreground mt-2">
             Stop data and real-time arrivals will be available once the line
             opens.
           </p>
           <a
             href="https://www.metrolinx.com/en/projects-and-programs/eglinton-crosstown-lrt"
             target="_blank"
-            rel="noopener"
-            class="text-xs text-primary hover:underline mt-3"
+            rel="noopener noreferrer"
+            class="text-sm text-primary underline mt-3 inline-flex items-center gap-1"
           >
-            Learn more at Metrolinx →
+            Learn more at Metrolinx
+            <ExternalLink class="h-3 w-3" />
           </a>
         </div>
       {:else if isLoadingStops}
@@ -1185,7 +1186,7 @@
             <p class="text-sm text-muted-foreground font-medium">
               🚧 Under Construction
             </p>
-            <p class="text-xs text-muted-foreground mt-1">
+            <p class="text-sm text-muted-foreground mt-1">
               The Eglinton Crosstown LRT (Line 5) is currently under
               construction
             </p>
@@ -1193,7 +1194,7 @@
             <p class="text-sm text-muted-foreground">
               Subway stations not available in stop database
             </p>
-            <p class="text-xs text-muted-foreground mt-1">
+            <p class="text-sm text-muted-foreground mt-1">
               Use TTC real-time displays at stations for arrival times
             </p>
           {:else}
@@ -1464,11 +1465,11 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: hsl(var(--primary));
-    text-decoration: none;
+    text-decoration: underline;
   }
 
   .card-link:hover {
-    text-decoration: underline;
+    opacity: 0.9;
   }
 
   .card-link :global(.link-icon) {

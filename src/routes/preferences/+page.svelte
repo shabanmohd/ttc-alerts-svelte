@@ -903,14 +903,14 @@
         <HelpCircle class="h-5 w-5 opacity-70" aria-hidden="true" />
         <div class="text-left">
           <div class="font-medium">How to Use</div>
-          <div class="text-xs text-muted-foreground">Step-by-step guide</div>
+          <div class="text-sm text-muted-foreground">Step-by-step guide</div>
         </div>
       </Button>
       <Button variant="ghost" class="w-full justify-start gap-3">
         <Bug class="h-5 w-5 opacity-70" aria-hidden="true" />
         <div class="text-left">
           <div class="font-medium">Report a Bug</div>
-          <div class="text-xs text-muted-foreground">
+          <div class="text-sm text-muted-foreground">
             Something not working?
           </div>
         </div>
@@ -919,14 +919,14 @@
         <Lightbulb class="h-5 w-5 opacity-70" aria-hidden="true" />
         <div class="text-left">
           <div class="font-medium">Request a Feature</div>
-          <div class="text-xs text-muted-foreground">Have an idea?</div>
+          <div class="text-sm text-muted-foreground">Have an idea?</div>
         </div>
       </Button>
       <Button variant="ghost" class="w-full justify-start gap-3">
         <Info class="h-5 w-5 opacity-70" aria-hidden="true" />
         <div class="text-left">
           <div class="font-medium">About</div>
-          <div class="text-xs text-muted-foreground">Version & credits</div>
+          <div class="text-sm text-muted-foreground">Version & credits</div>
         </div>
       </Button>
     </Card.Content>
@@ -959,9 +959,9 @@
               role="radio"
               aria-checked={isSelected}
               aria-label="{option.name} text size"
-              class="flex-1 h-12 px-3 rounded-xl transition-all font-semibold flex items-center justify-between {isSelected
+              class="flex-1 h-12 px-3 rounded-xl transition-all font-semibold flex items-center justify-between cursor-pointer {isSelected
                 ? 'border-2'
-                : 'border border-input hover:bg-accent/50'}"
+                : 'border border-input hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
               style={isSelected ? "border-color: hsl(var(--foreground));" : ""}
               onclick={() => accessibility.setTextScale(option.scale)}
             >
@@ -1003,7 +1003,7 @@
             <Zap class="h-4 w-4" />
             Reduce Motion
           </span>
-          <p id="reduce-motion-desc" class="text-xs text-muted-foreground">
+          <p id="reduce-motion-desc" class="text-sm text-muted-foreground">
             Minimize animations and transitions
           </p>
         </div>
@@ -1025,7 +1025,7 @@
             <CloudSun class="h-4 w-4" />
             Weather Warnings
           </span>
-          <p id="weather-warnings-desc" class="text-xs text-muted-foreground">
+          <p id="weather-warnings-desc" class="text-sm text-muted-foreground">
             Show transit-relevant weather alerts on homepage
           </p>
         </div>

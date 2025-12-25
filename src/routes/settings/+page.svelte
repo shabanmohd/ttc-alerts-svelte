@@ -19,6 +19,7 @@
     MapPinned,
     ExternalLink,
     Database,
+    ChevronLeft,
   } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -253,6 +254,14 @@
 <main class="content-area pb-24">
   <!-- Page Header -->
   <div class="mb-6">
+    <Button
+      variant="ghost"
+      onclick={() => history.back()}
+      class="mb-4 -ml-2 gap-1 text-muted-foreground"
+    >
+      <ChevronLeft class="h-4 w-4" />
+      {$_("common.back")}
+    </Button>
     <h1
       class="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2"
     >
@@ -407,10 +416,10 @@
         </legend>
         <div class="flex gap-2">
           <button
-            class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {$localPreferences.language ===
+            class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 cursor-pointer {$localPreferences.language ===
             'en'
               ? 'border-2'
-              : 'border border-input hover:bg-accent/50'}"
+              : 'border border-input hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
             style={$localPreferences.language === "en"
               ? "border-color: hsl(var(--foreground));"
               : ""}
@@ -431,10 +440,10 @@
             <span>English</span>
           </button>
           <button
-            class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {$localPreferences.language ===
+            class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 cursor-pointer {$localPreferences.language ===
             'fr'
               ? 'border-2'
-              : 'border border-input hover:bg-accent/50'}"
+              : 'border border-input hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
             style={$localPreferences.language === "fr"
               ? "border-color: hsl(var(--foreground));"
               : ""}
@@ -467,9 +476,9 @@
           {#each [{ value: "light" as const, labelKey: "theme.light" }, { value: "dark" as const, labelKey: "theme.dark" }, { value: "system" as const, labelKey: "theme.system" }] as option}
             {@const isSelected = $localPreferences.theme === option.value}
             <button
-              class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {isSelected
+              class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 cursor-pointer {isSelected
                 ? 'border-2'
-                : 'border border-input hover:bg-accent/50'}"
+                : 'border border-input hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
               style={isSelected ? "border-color: hsl(var(--foreground));" : ""}
               onclick={() => handleThemeChange(option.value)}
             >
@@ -504,7 +513,7 @@
             <CirclePause class="h-4 w-4" />
             {$_("settings.reduceMotion")}
           </span>
-          <p id="reduce-motion-desc" class="text-xs text-muted-foreground">
+          <p id="reduce-motion-desc" class="text-sm text-muted-foreground">
             {$_("settings.minimizeAnimations")}
           </p>
         </div>
@@ -526,7 +535,7 @@
             <MapPinned class="h-4 w-4" />
             {$_("settings.locationAccess")}
           </span>
-          <p id="location-desc" class="text-xs text-muted-foreground">
+          <p id="location-desc" class="text-sm text-muted-foreground">
             {#if locationPermission === "granted"}
               {$_("settings.locationEnabled")}
             {:else if locationPermission === "denied"}
@@ -539,7 +548,7 @@
           </p>
         </div>
         {#if locationPermission === "unsupported"}
-          <span class="text-xs text-muted-foreground px-2 py-1 rounded bg-muted"
+          <span class="text-sm text-muted-foreground px-2 py-1 rounded bg-muted"
             >{$_("settings.unavailable")}</span
           >
         {:else}
@@ -589,14 +598,14 @@
     <Card.Content class="space-y-3">
       <Button
         variant="outline"
-        class="w-full gap-2 hover:bg-destructive/10"
+        class="w-full gap-2 hover:bg-red-500/15 dark:hover:bg-red-500/25"
         style="border-color: hsl(var(--destructive)); color: hsl(var(--destructive));"
         onclick={handleClearAllData}
       >
         <Trash2 class="h-4 w-4" />
         {$_("settings.clearAllData")}
       </Button>
-      <p class="text-xs text-muted-foreground text-center">
+      <p class="text-sm text-muted-foreground text-center">
         {$_("settings.clearAllDataDesc")}
       </p>
     </Card.Content>

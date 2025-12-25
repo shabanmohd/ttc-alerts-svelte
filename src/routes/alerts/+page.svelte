@@ -10,6 +10,7 @@
     CheckCircle,
     RefreshCw,
     AlertTriangle,
+    ExternalLink,
   } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
@@ -603,6 +604,7 @@
           rel="noopener noreferrer"
         >
           TTC Reduced Speed Zones
+          <ExternalLink class="h-3 w-3" />
         </a>
       {:else if activeTab === "planned" && scheduledSubtab === "changes"}
         <a
@@ -611,6 +613,7 @@
           rel="noopener noreferrer"
         >
           TTC Service Changes
+          <ExternalLink class="h-3 w-3" />
         </a>
       {:else if activeTab === "planned" && scheduledSubtab === "closures"}
         <a
@@ -619,6 +622,7 @@
           rel="noopener noreferrer"
         >
           TTC Subway Service Advisories
+          <ExternalLink class="h-3 w-3" />
         </a>
       {:else}
         <a
@@ -627,6 +631,7 @@
           rel="noopener noreferrer"
         >
           TTC Service Alerts
+          <ExternalLink class="h-3 w-3" />
         </a>
       {/if}
     </div>
@@ -841,11 +846,15 @@
 
   .ttc-attribution a {
     color: hsl(var(--primary));
-    text-decoration: none;
+    text-decoration: underline;
     font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
   }
 
   .ttc-attribution a:hover {
     text-decoration: underline;
+    opacity: 0.9;
   }
 </style>

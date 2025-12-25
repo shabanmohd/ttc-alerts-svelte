@@ -405,11 +405,11 @@
     gap: 0.25rem;
     font-size: 0.75rem;
     color: hsl(var(--primary));
-    text-decoration: none;
+    text-decoration: underline;
   }
 
   .maintenance-item-link:hover {
-    text-decoration: underline;
+    opacity: 0.9;
   }
 
   /* Dark mode adjustments */

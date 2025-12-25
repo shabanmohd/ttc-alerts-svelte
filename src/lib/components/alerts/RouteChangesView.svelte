@@ -398,11 +398,11 @@
     font-size: 0.75rem;
     font-weight: 500;
     color: hsl(var(--primary));
-    text-decoration: none;
+    text-decoration: underline;
   }
 
   .card-link:hover {
-    text-decoration: underline;
+    opacity: 0.9;
   }
 
   .card-link :global(.link-icon) {

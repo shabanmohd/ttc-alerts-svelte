@@ -714,7 +714,7 @@
     "subtitle": "En savoir plus sur Alertes TTC et ses sources de données.",
     "tagline": "Alertes de transport en temps réel pour Toronto",
     "aboutDeveloper": "À propos du développeur",
-    "developerBio": "Alertes TTC est un projet personnel créé par un usager du transport en commun de Toronto qui voulait une meilleure façon de rester informé des perturbations de service. L'appli est gratuite et continuellement améliorée grâce aux commentaires des utilisateurs.",
+    "developerBio": "Alertes TTC est un projet personnel créé par un usager du transport en commun de Toronto, ingénieur devenu designer UX. L'objectif est de créer une application gratuite et continuellement améliorée grâce aux commentaires des utilisateurs.",
     "dataSources": "Sources de données",
     "dataSourcesDesc": "Alertes TTC utilise des données ouvertes et des API publiques.",
     "sourceTTC": "Alertes de service TTC",
@@ -733,9 +733,6 @@
     "privacyLocationControl": "Vous pouvez activer ou désactiver l'accès à la localisation à tout moment dans les paramètres de votre appareil ou dans la page Paramètres de l'application.",
     "privacyStorage": "Stockage local",
     "privacyStorageDetails": "Vos préférences, favoris et arrêts favoris sont stockés localement sur votre appareil. Aucun compte n'est requis et aucune donnée personnelle n'est collectée ou transmise.",
-    "openSource": "Code source ouvert",
-    "openSourceDesc": "Construit avec des technologies open source modernes.",
-    "licenseInfo": "Alertes TTC est construit avec des logiciels open source. Consultez le dépôt du projet pour les informations de licence complètes.",
     "madeWith": "Fait avec",
     "inToronto": "à Toronto"
   },

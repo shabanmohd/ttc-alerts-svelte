@@ -43,11 +43,11 @@
 
 /* Dark Mode */
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
+  --background: 240 6% 10%;
+  --foreground: 0 0% 93%;
+  --primary: 0 0% 93%;
   --secondary: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 71%;
+  --muted-foreground: 240 5% 65%;
   --border: 240 3.7% 20%;
 }
 ```
@@ -198,6 +198,103 @@ box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15);
 /* Selection ring (route badges) */
 box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
 ```
+
+---
+
+## 5a. Interactive States
+
+### ⚠️ Important: Hover State Visibility
+
+The theme uses a neutral color palette where `--primary`, `--secondary`, `--muted`, and `--accent` all have similar lightness values (~95.9% in light mode). This means **theme-based hover classes like `hover:bg-muted`, `hover:bg-accent`, or `hover:bg-accent/50` are nearly invisible**.
+
+**Always use explicit zinc colors for hover states:**
+
+```css
+/* ✅ CORRECT - Visible hover */
+hover:bg-zinc-100 dark:hover:bg-zinc-800
+
+/* ❌ WRONG - Invisible hover (theme colors blend with background) */
+hover:bg-muted
+hover:bg-accent
+hover:bg-accent/50
+hover:bg-primary/10
+```
+
+### Hover Patterns by Element Type
+
+| Element Type        | Light Mode Hover      | Dark Mode Hover            | Extra Classes    |
+| ------------------- | --------------------- | -------------------------- | ---------------- |
+| **Ghost buttons**   | `hover:bg-zinc-100`   | `dark:hover:bg-zinc-800`   | `cursor-pointer` |
+| **Outline buttons** | `hover:bg-zinc-100`   | `dark:hover:bg-zinc-800`   | `cursor-pointer` |
+| **Icon buttons**    | `hover:bg-zinc-100`   | `dark:hover:bg-zinc-800`   | `cursor-pointer` |
+| **List items**      | `hover:bg-zinc-100`   | `dark:hover:bg-zinc-800`   | `cursor-pointer` |
+| **Toggle buttons**  | `hover:bg-zinc-100`   | `dark:hover:bg-zinc-800`   | `cursor-pointer` |
+| **Destructive**     | `hover:bg-red-500/15` | `dark:hover:bg-red-500/25` | `cursor-pointer` |
+| **Refresh button**  | `hover:bg-zinc-200`   | `dark:hover:bg-zinc-700`   | `cursor-pointer` |
+
+### Example Patterns
+
+**Ghost Button:**
+
+```svelte
+<Button
+  variant="ghost"
+  class="hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+>
+```
+
+**Toggle Button (Language/Theme):**
+
+```svelte
+<button
+  class="px-3 py-1.5 rounded-md transition-colors cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800"
+>
+```
+
+**List Item with Hover:**
+
+```svelte
+<div class="p-3 rounded-lg cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+```
+
+**Destructive Action:**
+
+```svelte
+<Button
+  variant="outline"
+  class="hover:bg-red-500/15 dark:hover:bg-red-500/25"
+  style="border-color: hsl(var(--destructive)); color: hsl(var(--destructive));"
+>
+```
+
+### Switch Component Hover
+
+The Switch component has custom hover styles in its CSS:
+
+```css
+.switch-track:hover {
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15); /* Ring glow */
+  background-color: /* slightly different shade */ ;
+}
+.switch-track {
+  cursor: pointer;
+}
+.switch-track:active {
+  transform: scale(0.98);
+}
+```
+
+### Dark Mode Contrast
+
+To reduce eye strain, dark mode uses softer colors:
+
+| Property         | Old Value (harsh) | New Value (softer) |
+| ---------------- | ----------------- | ------------------ |
+| Background       | `240 10% 3.9%`    | `240 6% 10%`       |
+| Foreground       | `0 0% 98%`        | `0 0% 93%`         |
+| Muted foreground | `240 5% 71%`      | `240 5% 65%`       |
+
+This provides better readability without harsh black/white contrast.
 
 ---
 
@@ -1434,6 +1531,54 @@ Status priority determines card background color when multiple statuses are pres
 
 ```css
 .subway-status-card                    /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 /* Card container */
 /* Card container */
 /* Card container */
@@ -67626,13 +67771,14 @@ For mutually exclusive options like Language, Theme, Text Size.
 
 - Border: `border border-input` (thin, light border)
 - Circle indicator: Empty circle with `border-2 border-muted-foreground/30`
-- Hover: `hover:bg-accent/50`
+- Hover: `hover:bg-zinc-100 dark:hover:bg-zinc-800` (visible gray background on hover)
+- Cursor: `cursor-pointer`
 
 ```svelte
 <!-- Selection Button Pattern -->
 {@const isSelected = currentValue === option.value}
 <button
-  class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 {isSelected ? 'border-2' : 'border border-input hover:bg-accent/50'}"
+  class="h-10 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 cursor-pointer {isSelected ? 'border-2' : 'border border-input hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
   style={isSelected ? 'border-color: hsl(var(--foreground));' : ''}
   onclick={() => handleSelect(option.value)}
 >

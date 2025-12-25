@@ -732,7 +732,7 @@
     "subtitle": "Learn more about TTC Alerts and its data sources.",
     "tagline": "Real-time Toronto transit alerts",
     "aboutDeveloper": "About the Developer",
-    "developerBio": "TTC Alerts is a passion project built by a Toronto transit rider who wanted a better way to stay informed about service disruptions. The app is free to use and continuously improved based on user feedback.",
+    "developerBio": "TTC Alerts is a passion project built by a Toronto transit rider who is an engineer turned UX designer. The goal is to build an app which is free to use and continuously improved based on user feedback.",
     "dataSources": "Data Sources",
     "dataSourcesDesc": "TTC Alerts uses open data and public APIs.",
     "sourceTTC": "TTC Service Alerts",
@@ -751,9 +751,6 @@
     "privacyLocationControl": "You can enable or disable location access anytime in your device settings or in the app's Settings page.",
     "privacyStorage": "Local Storage",
     "privacyStorageDetails": "Your preferences, bookmarks, and favorite stops are stored locally on your device. No account is required, and no personal data is collected or transmitted.",
-    "openSource": "Open Source",
-    "openSourceDesc": "Built with modern open source technologies.",
-    "licenseInfo": "TTC Alerts is built with open source software. See the project repository for full license information.",
     "madeWith": "Made with",
     "inToronto": "in Toronto"
   },

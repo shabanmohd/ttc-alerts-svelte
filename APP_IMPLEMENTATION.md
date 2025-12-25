@@ -653,6 +653,57 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Jan 20, 2025 - Hover States, Typography & Dark Mode Contrast
+
+**Purpose:** Fix invisible hover states across the app (theme colors too similar to background), improve text readability by increasing font sizes, and soften dark mode contrast to reduce eye strain.
+
+**Hover State Fixes:**
+
+- ✅ **Button component** - Updated `outline` and `ghost` variants to use `hover:bg-zinc-100 dark:hover:bg-zinc-800` instead of invisible `hover:bg-muted`
+- ✅ **Header buttons** - Fixed refresh, language toggle, theme toggle, help button hover states
+- ✅ **Settings page** - Language and theme toggle buttons now have visible hover
+- ✅ **Preferences page** - Text scale toggle buttons fixed
+- ✅ **Switch component** - Added hover ring glow, background change, and active scale
+- ✅ **MyStopsWidget** - Stop item hover states fixed
+- ✅ Added `cursor-pointer` to all interactive elements
+
+**Typography Improvements:**
+
+- ✅ **About page** - All `text-xs` (12px) → `text-sm` (14px) for descriptions, links, footer
+- ✅ **Help page** - Step descriptions updated to `text-sm`
+- ✅ **Settings page** - Toggle descriptions, footer text updated
+- ✅ **Preferences page** - Button subtitles, accessibility descriptions updated
+- ✅ **Route detail page** - Construction notices, empty states updated
+
+**Dark Mode Contrast (layout.css):**
+
+| Property             | Old Value (harsh) | New Value (softer) |
+| -------------------- | ----------------- | ------------------ |
+| `--background`       | `240 10% 3.9%`    | `240 6% 10%`       |
+| `--foreground`       | `0 0% 98%`        | `0 0% 93%`         |
+| `--muted-foreground` | `240 5% 71%`      | `240 5% 65%`       |
+
+**Card Spacing (About page):**
+
+- ✅ Reduced gap from `gap-6` to `gap-4` on cards without descriptions (About Developer, Disclaimer)
+- ✅ Removed nested `space-y-3` wrapper in Data Sources card
+- ✅ Standardized `space-y-4` across all Card.Content sections
+
+**Files Changed:**
+
+- `src/lib/components/ui/button/button.svelte` - Hover state classes
+- `src/lib/components/ui/switch/switch.svelte` - Hover ring, cursor, active state
+- `src/lib/components/layout/Header.svelte` - All button hover states + cursor-pointer
+- `src/routes/settings/+page.svelte` - Back button added, toggle hover, text sizes
+- `src/routes/about/+page.svelte` - Card spacing, text sizes
+- `src/routes/help/+page.svelte` - Text sizes
+- `src/routes/preferences/+page.svelte` - Text sizes
+- `src/routes/routes/[route]/+page.svelte` - Text sizes
+- `src/routes/layout.css` - Dark mode color values
+- `DESIGN_SYSTEM.md` - Added "Interactive States" section with hover patterns
+
+---
+
 ### Jan 19, 2025 - Elevator Alerts, Section Organization & Label Consistency
 
 **Purpose:** Show elevator alerts for saved subway lines in My Routes and on subway route pages, organize alerts into clearly labeled sections with icons and dividers, and standardize terminology across the app.

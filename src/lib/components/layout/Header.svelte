@@ -109,7 +109,7 @@
       <!-- Refresh + Status Group (desktop only) -->
       <div class="hidden sm:flex items-center bg-muted/50 rounded-md">
         <button
-          class="flex p-1.5 rounded-l-md hover:bg-accent transition-colors"
+          class="flex p-1.5 rounded-l-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
           onclick={handleRefresh}
           title={$_("common.refresh")}
           aria-label={$_("common.refresh")}
@@ -202,7 +202,7 @@
           <button
             onclick={() =>
               localPreferences.updatePreference("language", lang.code)}
-            class="min-w-[2.25rem] px-2 py-1 text-xs font-semibold rounded transition-all duration-150"
+            class="min-w-[2.25rem] px-2 py-1 text-xs font-semibold rounded transition-all duration-150 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800"
             style={$language === lang.code
               ? "background-color: hsl(var(--foreground)); color: hsl(var(--background));"
               : "background-color: transparent; color: hsl(var(--muted-foreground));"}
@@ -219,7 +219,7 @@
 
       <!-- Theme toggle (desktop only) -->
       <button
-        class="hidden sm:flex p-2 rounded-md hover:bg-accent transition-colors"
+        class="hidden sm:flex p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
         onclick={toggleTheme}
         title={$_("header.toggleTheme")}
         aria-label={$_("header.toggleTheme")}
@@ -234,7 +234,7 @@
       <!-- Help button (desktop only) -->
       <a
         href="/help"
-        class="hidden sm:flex p-2 rounded-md hover:bg-accent transition-colors"
+        class="hidden sm:flex p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
         title={$_("header.howToUse")}
         aria-label={$_("header.howToUse")}
       >
@@ -243,7 +243,7 @@
 
       <!-- Mobile Menu Button - toggles between hamburger and X -->
       <button
-        class="sm:hidden flex p-2 rounded-md hover:bg-accent transition-all active:scale-95"
+        class="sm:hidden flex p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all active:scale-95"
         onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
         title={mobileMenuOpen ? $_("header.closeMenu") : $_("header.menu")}
         aria-label={mobileMenuOpen
@@ -327,9 +327,9 @@
               }
               mobileMenuOpen = false;
             }}
-            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 active:scale-[0.98] {!isDark
+            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 active:scale-[0.98] cursor-pointer {!isDark
               ? 'border-2'
-              : 'border border-input hover:bg-accent/50'}"
+              : 'border border-input hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
             style={!isDark ? "border-color: hsl(var(--foreground));" : ""}
           >
             {#if !isDark}
@@ -356,9 +356,9 @@
               }
               mobileMenuOpen = false;
             }}
-            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 active:scale-[0.98] {isDark
+            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 active:scale-[0.98] cursor-pointer {isDark
               ? 'border-2'
-              : 'border border-input hover:bg-accent/50'}"
+              : 'border border-input hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
             style={isDark ? "border-color: hsl(var(--foreground));" : ""}
           >
             {#if isDark}
