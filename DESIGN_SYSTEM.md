@@ -361,28 +361,65 @@ Simple confirmation dialogs use centered layout.
 
 ### Tab Indicators
 
-Active tabs use a 2px bottom line indicator to show the current selection.
+Active tabs use a **pill-style background** with a **2px bottom accent line** to show the current selection. The accent line is positioned just below the tab border.
+
+#### Tab Styles
+
+**Primary Tabs (Now / Scheduled, My Stops / My Routes):**
+
+- Container: `background: hsl(var(--muted))`, rounded corners, padding
+- Active tab: `background: hsl(var(--background))`, box-shadow, foreground text
+- Active indicator: 2px line, primary color, centered, positioned below tab (`bottom: -0.125rem`)
 
 #### Usage Locations
 
 | Component                  | Tabs                                     |
 | -------------------------- | ---------------------------------------- |
 | `HomeSubTabs.svelte`       | My Stops / My Routes                     |
-| `alerts/+page.svelte`      | Active / Resolved / Scheduled            |
+| `alerts/+page.svelte`      | Now / Scheduled                          |
 | `MaintenanceWidget.svelte` | Starting Soon / This Weekend / Coming Up |
 | `ClosuresView.svelte`      | Starting Soon / This Weekend / Coming Up |
 
 #### CSS Pattern
 
 ```css
-.tab {
-  position: relative;
+/* Container */
+.tabs {
+  display: flex;
+  background-color: hsl(var(--muted));
+  border-radius: calc(var(--radius) + 2px);
+  padding: 0.25rem;
 }
 
-.tab.active:after {
+/* Tab button */
+.tab {
+  position: relative;
+  flex: 1;
+  padding: 0.625rem 1rem;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tab:hover:not(.active) {
+  color: hsl(var(--foreground));
+}
+
+/* Active tab - background fill + accent line */
+.tab.active {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.tab.active::after {
   content: "";
   position: absolute;
-  bottom: 0;
+  bottom: -0.125rem; /* Positioned just below tab */
   left: 50%;
   transform: translateX(-50%);
   width: 2rem;
@@ -391,6 +428,96 @@ Active tabs use a 2px bottom line indicator to show the current selection.
   border-radius: 1px;
 }
 ```
+
+### Collapsible Accordions
+
+Collapsible sections for organizing content with expandable headers. Used throughout the app for grouping alerts, ETA cards, and settings sections.
+
+#### Usage Locations
+
+| Component                       | Purpose                                              |
+| ------------------------------- | ---------------------------------------------------- |
+| Route Page                      | Closures, Elevator Alerts, Slow Zones, Route Changes |
+| `MyRouteAlerts.svelte`          | Same 4 alert sections                                |
+| `MyStops.svelte` / `ETACard`    | Collapsible ETA cards for each stop                  |
+| `alerts/+page.svelte`           | Subway alerts grouped by line                        |
+| `preferences/+page.svelte`      | Settings steps                                       |
+
+#### Accordion Pattern
+
+```svelte
+<button
+  class="accordion-header"
+  onclick={() => (expanded = !expanded)}
+  aria-expanded={expanded}
+>
+  <div class="flex items-center gap-2">
+    <Icon class="h-4 w-4" />
+    <h3 class="accordion-title">{label}</h3>
+    <span class="accordion-count">{count}</span>
+  </div>
+  <ChevronDown class="h-4 w-4 transition-transform duration-200 {expanded ? 'rotate-180' : ''}" />
+</button>
+
+{#if expanded}
+  <div class="accordion-content">
+    <!-- Collapsible content -->
+  </div>
+{/if}
+```
+
+#### CSS Pattern
+
+```css
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background-color: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.accordion-header:hover {
+  background-color: hsl(var(--muted) / 0.8);
+}
+
+.accordion-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.accordion-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.375rem;
+  background-color: hsl(var(--muted-foreground) / 0.2);
+  color: hsl(var(--muted-foreground));
+  border-radius: 9999px;
+}
+
+.accordion-content {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+```
+
+#### State Persistence
+
+Accordion states are persisted to localStorage for better UX:
+
+| Key                              | Storage                                         |
+| -------------------------------- | ----------------------------------------------- |
+| `ttc-alerts-expanded-stops`      | Set of expanded stop IDs                        |
+| `ttc-alerts-my-routes-accordions`| Object with section expanded booleans           |
+| `ttc-alerts-route-accordions`    | Object with section expanded booleans           |
 
 ### Input Fields
 
@@ -715,6 +842,7 @@ Direction badges indicate the travel direction of a stop (extracted from GTFS tr
 **Pattern:** Used in My Routes and Route detail pages to organize alerts by type.
 
 Each section has:
+
 - Icon (Lucide-svelte) + Text label
 - Horizontal divider below the heading
 - Hidden when section has no content
@@ -722,6 +850,7 @@ Each section has:
 #### Section Order
 
 **My Routes page:**
+
 1. Active Service Alerts (AlertTriangle, destructive)
 2. Scheduled Closures (Calendar, muted)
 3. Planned Route Changes (GitBranch, muted)
@@ -729,6 +858,7 @@ Each section has:
 5. Slow Zones (Gauge, muted)
 
 **Subway Route page:**
+
 1. Active Service Alerts (AlertTriangle, destructive)
 2. Scheduled Closures (Calendar, muted)
 3. Elevator Alerts (Accessibility, muted)
@@ -748,13 +878,13 @@ Each section has:
 
 #### Icon Colors
 
-| Section               | Icon           | Color Class             |
-| --------------------- | -------------- | ----------------------- |
-| Active Service Alerts | AlertTriangle  | `text-destructive`      |
-| Scheduled Closures    | Calendar       | `text-muted-foreground` |
-| Planned Route Changes | GitBranch      | `text-muted-foreground` |
-| Elevator Alerts       | Accessibility  | `text-muted-foreground` |
-| Slow Zones            | Gauge          | `text-muted-foreground` |
+| Section               | Icon          | Color Class             |
+| --------------------- | ------------- | ----------------------- |
+| Active Service Alerts | AlertTriangle | `text-destructive`      |
+| Scheduled Closures    | Calendar      | `text-muted-foreground` |
+| Planned Route Changes | GitBranch     | `text-muted-foreground` |
+| Elevator Alerts       | Accessibility | `text-muted-foreground` |
+| Slow Zones            | Gauge         | `text-muted-foreground` |
 
 ### RSZ (Reduced Speed Zone) Alert Cards
 
@@ -1197,6 +1327,12 @@ Status priority determines card background color when multiple statuses are pres
 
 ```css
 .subway-status-card                    /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 /* Card container */
 .subway-status-card.status-ok          /* Normal service - green */
 .subway-status-card.status-disruption  /* Disruption - red */

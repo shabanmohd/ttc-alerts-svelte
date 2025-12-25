@@ -608,6 +608,7 @@
   }
 
   .primary-tab {
+    position: relative;
     flex: 1;
     display: flex;
     align-items: center;
@@ -632,6 +633,18 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  }
+
+  .primary-tab.active::after {
+    content: "";
+    position: absolute;
+    bottom: -0.125rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2rem;
+    height: 2px;
+    background: hsl(var(--primary));
+    border-radius: 1px;
   }
 
   /* Loading skeleton */

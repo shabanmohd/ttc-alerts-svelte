@@ -83,7 +83,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes cards: badges + route name inline, 5-min polling 🆕 **B** |
 | `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                                 |
 | `components/alerts/MaintenanceWidget.svelte`     | ✅     | Scheduled maintenance display                                           |
-| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with elevator alerts, section headings, dividers                      |
+| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with elevator alerts, section headings, dividers          |
 | `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                           |
 | `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                        |
 | `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile                     |
@@ -739,6 +739,66 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 - `src/routes/alerts/+page.svelte` - URL param sync logic with mappings
 - `src/routes/alerts/PlannedContent.svelte` - Controlled component with subtab props
+
+---
+
+### Jan 21, 2025 - Collapsible Accordions & State Persistence
+
+**Purpose:** Added collapsible accordion sections for better scannability and persisted accordion states to localStorage.
+
+**Accordion Sections Added:**
+
+| Page/Component | Sections                                                               |
+| -------------- | ---------------------------------------------------------------------- |
+| Route Page     | Scheduled Closures, Elevator Alerts, Slow Zones, Planned Route Changes |
+| My Routes      | Scheduled Closures, Elevator Alerts, Slow Zones, Planned Route Changes |
+| My Stops       | Each stop's ETA card (collapsible header with live arrivals)           |
+
+**State Persistence (localStorage):**
+
+| Key                               | Data                                                               |
+| --------------------------------- | ------------------------------------------------------------------ |
+| `ttc-alerts-expanded-stops`       | Set of expanded stop IDs (My Stops tab)                            |
+| `ttc-alerts-my-routes-accordions` | Object: closures, routeChanges, elevatorAlerts, slowZones booleans |
+| `ttc-alerts-route-accordions`     | Object: closures, routeChanges, elevatorAlerts, slowZones booleans |
+
+**Accordion UI Pattern:**
+
+- Header: Icon + Title + Count badge + ChevronDown
+- Collapsed by default for easy scanning
+- ChevronDown rotates 180° when expanded
+- Persists open/close state across refreshes
+
+**Tab Styling Fix:**
+
+- Updated Now/Scheduled tabs to include bottom accent line (2px primary color)
+- Tabs now have pill-style background fill + bottom accent indicator
+- Matches My Stops/My Routes tab design
+
+**Files Updated:**
+
+- `src/lib/components/stops/MyStops.svelte` - Collapsible ETA cards, localStorage persistence
+- `src/lib/components/eta/ETACard.svelte` - Added `collapsed` and `onToggleCollapse` props
+- `src/lib/components/alerts/MyRouteAlerts.svelte` - Accordion sections with persistence
+- `src/routes/routes/[route]/+page.svelte` - Accordion sections with persistence
+- `src/routes/alerts/+page.svelte` - Added bottom accent line to active tab
+- `DESIGN_SYSTEM.md` - Updated tab indicator CSS pattern
+
+**Design Pattern (from DESIGN_SYSTEM.md):**
+
+```css
+.tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -0.125rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2rem;
+  height: 2px;
+  background: hsl(var(--primary));
+  border-radius: 1px;
+}
+```
 
 ---
 

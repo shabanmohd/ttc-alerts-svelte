@@ -11,6 +11,7 @@
     Search,
     Loader2,
     Trash2,
+    ChevronDown,
   } from "lucide-svelte";
   import { browser } from "$app/environment";
   import { savedStops, savedStopsCount } from "$lib/stores/savedStops";
@@ -37,6 +38,44 @@
 
   let isEditMode = $state(false);
   let nearbyError = $state<string | null>(null);
+
+  // Track which stops are expanded (by stopId) - persisted to localStorage
+  const EXPANDED_STOPS_KEY = "ttc-alerts-expanded-stops";
+
+  function loadExpandedStops(): Set<string> {
+    if (!browser) return new Set();
+    try {
+      const saved = localStorage.getItem(EXPANDED_STOPS_KEY);
+      if (saved) {
+        return new Set(JSON.parse(saved));
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return new Set();
+  }
+
+  function saveExpandedStops(stops: Set<string>) {
+    if (!browser) return;
+    try {
+      localStorage.setItem(EXPANDED_STOPS_KEY, JSON.stringify([...stops]));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  let expandedStops = $state<Set<string>>(loadExpandedStops());
+
+  function toggleStopExpanded(stopId: string) {
+    const newSet = new Set(expandedStops);
+    if (newSet.has(stopId)) {
+      newSet.delete(stopId);
+    } else {
+      newSet.add(stopId);
+    }
+    expandedStops = newSet;
+    saveExpandedStops(newSet);
+  }
 
   // Subscribe to stores
   $effect(() => {
@@ -162,6 +201,7 @@
     <!-- ETA Cards -->
     <div class="eta-cards-section">
       {#each etas.slice(0, maxDisplay) as eta, i (eta.stopId)}
+        {@const isCollapsed = !expandedStops.has(eta.stopId)}
         <div
           class="eta-card-wrapper animate-fade-in-up"
           class:editing={isEditMode}
@@ -170,6 +210,8 @@
           <ETACard
             {eta}
             showRemove={false}
+            collapsed={isCollapsed}
+            onToggleCollapse={() => toggleStopExpanded(eta.stopId)}
             onRefresh={etaStore.refreshStop}
             class="flex-1"
           />

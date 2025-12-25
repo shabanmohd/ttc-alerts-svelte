@@ -15,6 +15,7 @@
     AlertTriangle,
     Accessibility,
     Gauge,
+    ChevronDown,
   } from "lucide-svelte";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
@@ -361,75 +362,6 @@
     return { hours: parseInt(match[1], 10), minutes: parseInt(match[2], 10) };
   }
 
-  // Check if scheduled maintenance is happening right now
-  function isMaintenanceHappeningNow(item: PlannedMaintenance): boolean {
-    const now = new Date();
-    const startDate = parseLocalDate(item.start_date);
-    const endDate = parseLocalDate(item.end_date);
-
-    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startDateOnly = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth(),
-      startDate.getDate()
-    );
-    const endDateOnly = new Date(
-      endDate.getFullYear(),
-      endDate.getMonth(),
-      endDate.getDate()
-    );
-
-    const startTime = parseTime(item.start_time);
-    let endTime = parseTime(item.end_time);
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-    // For nightly closures (start >= 10 PM) with no end time, assume 6 AM
-    const isNightlyClosure = startTime && startTime.hours >= 22;
-    if (isNightlyClosure && !endTime) {
-      endTime = { hours: 6, minutes: 0 };
-    }
-
-    // Extend end date for overnight closures
-    const endDateExtended = new Date(endDateOnly);
-    if (isNightlyClosure && endTime && endTime.hours < 12) {
-      endDateExtended.setDate(endDateExtended.getDate() + 1);
-    }
-
-    if (nowDate < startDateOnly || nowDate > endDateExtended) return false;
-
-    // Morning after last closure
-    if (
-      nowDate.getTime() === endDateExtended.getTime() &&
-      nowDate > endDateOnly
-    ) {
-      if (endTime) {
-        const endMinutes = endTime.hours * 60 + endTime.minutes;
-        return nowMinutes <= endMinutes;
-      }
-      return false;
-    }
-
-    if (nowDate.getTime() === startDateOnly.getTime() && startTime) {
-      const startMinutes = startTime.hours * 60 + startTime.minutes;
-      if (nowMinutes < startMinutes) return false;
-    }
-
-    // Overnight closure check
-    if (startTime && endTime) {
-      const startMinutes = startTime.hours * 60 + startTime.minutes;
-      const endMinutes = endTime.hours * 60 + endTime.minutes;
-
-      if (startMinutes > endMinutes) {
-        // Overnight: active if after start OR before end
-        return nowMinutes >= startMinutes || nowMinutes <= endMinutes;
-      } else {
-        return nowMinutes >= startMinutes && nowMinutes <= endMinutes;
-      }
-    }
-
-    return true;
-  }
-
   // Format time for display
   function formatTimeDisplay(timeStr: string | null): string {
     if (!timeStr) return "";
@@ -489,17 +421,12 @@
     } as unknown as ThreadWithAlerts;
   }
 
-  // Get active maintenance matching saved routes
-  let activeMaintenanceForRoutes = $derived.by<ThreadWithAlerts[]>(() => {
+  // Get all scheduled closures matching saved routes (including future ones)
+  let scheduledClosuresForRoutes = $derived.by<ThreadWithAlerts[]>(() => {
     if (routeIds.length === 0) return [];
 
-    // Get active maintenance items
-    const activeMaintenance = $maintenanceItems.filter(
-      isMaintenanceHappeningNow
-    );
-
-    // Filter to those matching saved routes
-    const matchingMaintenance = activeMaintenance.filter((item) => {
+    // Filter to maintenance items matching saved routes (no "currently active" filter)
+    const matchingMaintenance = $maintenanceItems.filter((item) => {
       // Check if any maintenance route matches any saved route
       return item.routes.some((maintRoute) =>
         routeIds.some((savedRoute) => {
@@ -535,32 +462,71 @@
     return matchingMaintenance.map(maintenanceToThread);
   });
 
+  // Accordion state for collapsible sections - persisted to localStorage
+  const ACCORDION_STATE_KEY = "ttc-alerts-my-routes-accordions";
+
+  interface AccordionState {
+    closures: boolean;
+    routeChanges: boolean;
+    elevatorAlerts: boolean;
+    slowZones: boolean;
+  }
+
+  function loadAccordionState(): AccordionState {
+    if (!browser)
+      return {
+        closures: false,
+        routeChanges: false,
+        elevatorAlerts: false,
+        slowZones: false,
+      };
+    try {
+      const saved = localStorage.getItem(ACCORDION_STATE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return {
+      closures: false,
+      routeChanges: false,
+      elevatorAlerts: false,
+      slowZones: false,
+    };
+  }
+
+  function saveAccordionState(state: AccordionState) {
+    if (!browser) return;
+    try {
+      localStorage.setItem(ACCORDION_STATE_KEY, JSON.stringify(state));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  let accordionState = loadAccordionState();
+  let closuresExpanded = $state(accordionState.closures);
+  let routeChangesExpanded = $state(accordionState.routeChanges);
+  let elevatorAlertsExpanded = $state(accordionState.elevatorAlerts);
+  let slowZonesExpanded = $state(accordionState.slowZones);
+
+  // Save accordion state when any changes
+  $effect(() => {
+    saveAccordionState({
+      closures: closuresExpanded,
+      routeChanges: routeChangesExpanded,
+      elevatorAlerts: elevatorAlertsExpanded,
+      slowZones: slowZonesExpanded,
+    });
+  });
+
   // ====== Route Changes (from TTC website) ======
 
   // Load route changes on mount
   onMount(() => {
     loadRouteChanges();
   });
-
-  // Check if a route change is currently active based on dates
-  function isRouteChangeCurrentlyActive(change: RouteChange): boolean {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    // If no start date, assume it's active
-    if (!change.startDate) return true;
-
-    const startDate = new Date(change.startDate + "T00:00:00");
-    if (today < startDate) return false;
-
-    // If there's an end date, check if we're past it
-    if (change.endDate) {
-      const endDate = new Date(change.endDate + "T23:59:59");
-      if (now > endDate) return false;
-    }
-
-    return true;
-  }
 
   // Format route change date for display
   /**
@@ -643,19 +609,17 @@
     return parts.join(" ");
   }
 
-  // Filter route changes for saved routes
+  // Filter route changes for saved routes (all scheduled, including future)
   let filteredRouteChanges = $derived.by<RouteChange[]>(() => {
     if (routeIds.length === 0) return [];
 
-    // Start with active route changes that match saved routes
-    let changes = $routeChanges
-      .filter(isRouteChangeCurrentlyActive)
-      .filter((change) => {
-        // Check if any of the change's routes match any saved route
-        return change.routes.some((changeRoute) =>
-          routeIds.some((savedRoute) => routesMatch(changeRoute, savedRoute))
-        );
-      });
+    // Start with all route changes that match saved routes (no "currently active" filter)
+    let changes = $routeChanges.filter((change) => {
+      // Check if any of the change's routes match any saved route
+      return change.routes.some((changeRoute) =>
+        routeIds.some((savedRoute) => routesMatch(changeRoute, savedRoute))
+      );
+    });
 
     // Apply optional route filter
     if (selectedRouteFilter) {
@@ -799,7 +763,7 @@
         {$_("myRoutes.useSearchBar")}
       </p>
     </button>
-  {:else if myAlerts.length === 0 && activeMaintenanceForRoutes.length === 0 && filteredRouteChanges.length === 0}
+  {:else if myAlerts.length === 0 && scheduledClosuresForRoutes.length === 0 && filteredRouteChanges.length === 0}
     <!-- Empty State: Routes Saved but No Active Alerts -->
     <div class="empty-state success animate-fade-in">
       <div class="empty-state-icon success">
@@ -852,115 +816,164 @@
         </section>
       {/if}
 
-      <!-- 2. Scheduled Maintenance (closures happening now) -->
-      {#if activeMaintenanceForRoutes.length > 0}
+      <!-- 2. Scheduled Closures (Accordion) -->
+      {#if scheduledClosuresForRoutes.length > 0}
         {#if serviceAlerts.length > 0}
           <hr class="section-divider" />
         {/if}
         <section class="alert-section">
-          <h3 class="section-heading">
-            <Calendar class="h-4 w-4" />
-            {$_("myRoutes.scheduledMaintenance")}
-          </h3>
-          <div class="section-content">
-            {#each activeMaintenanceForRoutes as thread, i (thread.thread_id)}
-              <div
-                class="animate-fade-in-up"
-                style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
+          <button
+            class="accordion-header"
+            onclick={() => (closuresExpanded = !closuresExpanded)}
+            aria-expanded={closuresExpanded}
+          >
+            <div class="flex items-center gap-2">
+              <Calendar class="h-4 w-4" />
+              <h3 class="accordion-title">
+                {$_("myRoutes.scheduledMaintenance")}
+              </h3>
+              <span class="accordion-count"
+                >{scheduledClosuresForRoutes.length}</span
               >
-                <AlertCard {thread} />
-              </div>
-            {/each}
-          </div>
+            </div>
+            <ChevronDown
+              class="h-4 w-4 transition-transform duration-200 {closuresExpanded
+                ? 'rotate-180'
+                : ''}"
+            />
+          </button>
+
+          {#if closuresExpanded}
+            <div class="accordion-content">
+              {#each scheduledClosuresForRoutes as thread, i (thread.thread_id)}
+                <div
+                  class="animate-fade-in-up"
+                  style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
+                >
+                  <AlertCard {thread} />
+                </div>
+              {/each}
+            </div>
+          {/if}
         </section>
       {/if}
 
-      <!-- 3. Route Changes (from TTC website) -->
+      <!-- 3. Route Changes (Accordion) -->
       {#if filteredRouteChanges.length > 0}
-        {#if serviceAlerts.length > 0 || activeMaintenanceForRoutes.length > 0}
+        {#if serviceAlerts.length > 0 || scheduledClosuresForRoutes.length > 0}
           <hr class="section-divider" />
         {/if}
         <section class="alert-section">
-          <h3 class="section-heading">
-            <GitBranch class="h-4 w-4" />
-            {$_("routes.routeChanges")}
-          </h3>
-          <div class="section-content">
-            {#each filteredRouteChanges as change, i (change.id)}
-              <div
-                class="route-change-card animate-fade-in-up"
-                style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
-              >
-                <!-- Header: all affected routes + route name -->
-                <div class="route-change-header">
-                  <div class="route-badges">
-                    {#each change.routes as route}
-                      <RouteBadge {route} size="lg" />
-                    {/each}
-                  </div>
-                  {#if change.routeName}
-                    <span class="route-name"
-                      >{formatRouteName(change.routeName)}</span
-                    >
-                  {/if}
-                </div>
+          <button
+            class="accordion-header"
+            onclick={() => (routeChangesExpanded = !routeChangesExpanded)}
+            aria-expanded={routeChangesExpanded}
+          >
+            <div class="flex items-center gap-2">
+              <GitBranch class="h-4 w-4" />
+              <h3 class="accordion-title">{$_("routes.routeChanges")}</h3>
+              <span class="accordion-count">{filteredRouteChanges.length}</span>
+            </div>
+            <ChevronDown
+              class="h-4 w-4 transition-transform duration-200 {routeChangesExpanded
+                ? 'rotate-180'
+                : ''}"
+            />
+          </button>
 
-                <!-- Title -->
-                <p class="card-title">{change.title}</p>
-
-                <!-- Date info -->
-                {#if formatRouteChangeDate(change)}
-                  <p class="card-date">
-                    <Calendar class="date-icon" />
-                    <span>{formatRouteChangeDate(change)}</span>
-                  </p>
-                {/if}
-
-                <!-- Link -->
-                <a
-                  href={change.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="card-link"
+          {#if routeChangesExpanded}
+            <div class="accordion-content">
+              {#each filteredRouteChanges as change, i (change.id)}
+                <div
+                  class="route-change-card animate-fade-in-up"
+                  style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
                 >
-                  {$_("common.moreDetails")}
-                  <ExternalLink class="link-icon" />
-                </a>
-              </div>
-            {/each}
-          </div>
+                  <!-- Header: all affected routes + route name -->
+                  <div class="route-change-header">
+                    <div class="route-badges">
+                      {#each change.routes as route}
+                        <RouteBadge {route} size="lg" />
+                      {/each}
+                    </div>
+                    {#if change.routeName}
+                      <span class="route-name"
+                        >{formatRouteName(change.routeName)}</span
+                      >
+                    {/if}
+                  </div>
+
+                  <!-- Title -->
+                  <p class="card-title">{change.title}</p>
+
+                  <!-- Date info -->
+                  {#if formatRouteChangeDate(change)}
+                    <p class="card-date">
+                      <Calendar class="date-icon" />
+                      <span>{formatRouteChangeDate(change)}</span>
+                    </p>
+                  {/if}
+
+                  <!-- Link -->
+                  <a
+                    href={change.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="card-link"
+                  >
+                    {$_("common.moreDetails")}
+                    <ExternalLink class="link-icon" />
+                  </a>
+                </div>
+              {/each}
+            </div>
+          {/if}
         </section>
       {/if}
 
       <!-- 4. Elevator Alerts -->
       {#if elevatorAlerts.length > 0}
-        {#if serviceAlerts.length > 0 || activeMaintenanceForRoutes.length > 0 || filteredRouteChanges.length > 0}
+        {#if serviceAlerts.length > 0 || scheduledClosuresForRoutes.length > 0 || filteredRouteChanges.length > 0}
           <hr class="section-divider" />
         {/if}
         <section class="alert-section">
-          <h3 class="section-heading">
-            <Accessibility class="h-4 w-4" />
-            {$_("routes.elevatorAlerts")}
-          </h3>
-          <div class="section-content">
-            {#each elevatorAlerts as thread, i (thread.thread_id)}
-              {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
-              <div
-                class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-                style={isNew
-                  ? ""
-                  : `animation-delay: ${Math.min(i * 50, 300)}ms`}
-              >
-                <AlertCard {thread} />
-              </div>
-            {/each}
-          </div>
+          <button
+            class="accordion-header"
+            onclick={() => (elevatorAlertsExpanded = !elevatorAlertsExpanded)}
+            aria-expanded={elevatorAlertsExpanded}
+          >
+            <div class="flex items-center gap-2">
+              <Accessibility class="h-4 w-4" />
+              <h3 class="accordion-title">{$_("routes.elevatorAlerts")}</h3>
+              <span class="accordion-count">{elevatorAlerts.length}</span>
+            </div>
+            <ChevronDown
+              class="h-4 w-4 transition-transform duration-200 {elevatorAlertsExpanded
+                ? 'rotate-180'
+                : ''}"
+            />
+          </button>
+
+          {#if elevatorAlertsExpanded}
+            <div class="accordion-content">
+              {#each elevatorAlerts as thread, i (thread.thread_id)}
+                {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
+                <div
+                  class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
+                  style={isNew
+                    ? ""
+                    : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+                >
+                  <AlertCard {thread} />
+                </div>
+              {/each}
+            </div>
+          {/if}
         </section>
       {/if}
 
       <!-- 5. Slow Zones (RSZ Alerts grouped by line) -->
       {#if rszAlerts.length > 0}
-        {#if serviceAlerts.length > 0 || activeMaintenanceForRoutes.length > 0 || filteredRouteChanges.length > 0 || elevatorAlerts.length > 0}
+        {#if serviceAlerts.length > 0 || scheduledClosuresForRoutes.length > 0 || filteredRouteChanges.length > 0 || elevatorAlerts.length > 0}
           <hr class="section-divider" />
         {/if}
         {@const line1RSZ = rszAlerts.filter((t) => {
@@ -986,18 +999,33 @@
           );
         })}
         <section class="alert-section">
-          <h3 class="section-heading">
-            <Gauge class="h-4 w-4" />
-            {$_("myRoutes.slowZones")}
-          </h3>
-          <div class="section-content">
-            {#if line1RSZ.length > 0}
-              <RSZAlertCard threads={line1RSZ} />
-            {/if}
-            {#if line2RSZ.length > 0}
-              <RSZAlertCard threads={line2RSZ} />
-            {/if}
-          </div>
+          <button
+            class="accordion-header"
+            onclick={() => (slowZonesExpanded = !slowZonesExpanded)}
+            aria-expanded={slowZonesExpanded}
+          >
+            <div class="flex items-center gap-2">
+              <Gauge class="h-4 w-4" />
+              <h3 class="accordion-title">{$_("myRoutes.slowZones")}</h3>
+              <span class="accordion-count">{rszAlerts.length}</span>
+            </div>
+            <ChevronDown
+              class="h-4 w-4 transition-transform duration-200 {slowZonesExpanded
+                ? 'rotate-180'
+                : ''}"
+            />
+          </button>
+
+          {#if slowZonesExpanded}
+            <div class="accordion-content">
+              {#if line1RSZ.length > 0}
+                <RSZAlertCard threads={line1RSZ} />
+              {/if}
+              {#if line2RSZ.length > 0}
+                <RSZAlertCard threads={line2RSZ} />
+              {/if}
+            </div>
+          {/if}
         </section>
       {/if}
     </div>
@@ -1418,5 +1446,55 @@
   .card-link :global(.link-icon) {
     width: 0.875rem;
     height: 0.875rem;
+  }
+
+  /* Accordion Styles */
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: hsl(var(--muted) / 0.5);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: hsl(var(--foreground));
+    transition: background-color 0.2s ease;
+  }
+
+  .accordion-header:hover {
+    background-color: hsl(var(--muted) / 0.8);
+  }
+
+  .accordion-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0;
+    color: hsl(var(--foreground) / 0.8);
+  }
+
+  .accordion-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.25rem;
+    padding: 0 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: hsl(var(--primary-foreground));
+    background-color: hsl(var(--primary));
+    border-radius: 9999px;
+  }
+
+  .accordion-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid hsl(var(--border));
   }
 </style>

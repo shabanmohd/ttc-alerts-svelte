@@ -24,11 +24,14 @@
   import { Button } from "$lib/components/ui/button";
   import { cn } from "$lib/utils";
   import { getEmptyStateMessage } from "$lib/utils/ttc-service-info";
+  import { ChevronDown } from "lucide-svelte";
 
   interface Props {
     eta: StopETA;
     compact?: boolean;
     showRemove?: boolean;
+    collapsed?: boolean;
+    onToggleCollapse?: () => void;
     onRefresh?: (stopId: string) => void;
     class?: string;
   }
@@ -37,6 +40,8 @@
     eta,
     compact = false,
     showRemove = true,
+    collapsed = false,
+    onToggleCollapse,
     onRefresh,
     class: className = "",
   }: Props = $props();
@@ -336,375 +341,349 @@
   )}
 >
   <!-- Header: Stop Name + Direction Badge + Stop ID -->
-  <div
-    class="flex items-start justify-between gap-2 px-4 py-3 bg-zinc-100 dark:bg-zinc-800 border-b"
-  >
-    <div class="flex items-start gap-2.5 min-w-0 flex-1">
-      <MapPin class="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-      <div class="min-w-0 flex-1">
-        <h4 class="font-medium text-base leading-tight">{crossStreets}</h4>
-        <div class="flex items-center gap-2 mt-1">
-          {#if primaryDirection}
-            {@const dirColor = primaryDirection.toLowerCase().includes("east")
-              ? "bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40"
-              : primaryDirection.toLowerCase().includes("west")
-                ? "bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-600/40"
-                : primaryDirection.toLowerCase().includes("north")
-                  ? "bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40"
-                  : primaryDirection.toLowerCase().includes("south")
-                    ? "bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40"
-                    : "bg-muted text-muted-foreground border-muted-foreground/30"}
-            <span
-              class="text-[10px] font-semibold px-1.5 py-0.5 rounded border uppercase {dirColor}"
-            >
-              {primaryDirection}
-            </span>
-          {/if}
-          <span class="text-xs text-muted-foreground">#{eta.stopId}</span>
-        </div>
-      </div>
-    </div>
-    {#if showRemove}
-      <Button
-        variant="ghost"
-        size="icon"
-        class="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-        onclick={handleRemove}
-        aria-label="Remove stop"
-      >
-        <X class="h-4 w-4" />
-      </Button>
-    {/if}
-  </div>
-
-  <!-- Content -->
-  {#if eta.error}
-    <!-- Error State -->
-    <div class="flex items-center gap-2 text-destructive text-sm p-4">
-      <AlertCircle class="h-4 w-4 flex-shrink-0" />
-      <span>{eta.error}</span>
-    </div>
-  {:else if eta.isLoading && eta.predictions.length === 0}
-    <!-- Loading State -->
-    <div class="p-4 space-y-3">
-      {#each [1, 2] as _}
-        <div class="animate-pulse flex items-center gap-3">
-          <div class="h-10 w-14 bg-muted rounded-lg flex-shrink-0"></div>
-          <div class="flex-1 space-y-2">
-            <div class="h-4 w-32 bg-muted rounded"></div>
-            <div class="h-3 w-24 bg-muted rounded"></div>
-          </div>
-          <div class="h-8 w-16 bg-muted rounded"></div>
-        </div>
-      {/each}
-    </div>
-  {:else if sortedPredictions.length === 0}
-    <!-- No Predictions - Show scheduled departures in full card style -->
-    {@const emptyState = getEmptyStateMessage(isSubway, eta.stopId)}
-
-    {#if scheduleLoaded && scheduledDepartures.size > 0}
-      <!-- Show scheduled departures in same style as live ETA -->
-      <div class="bg-blue-500/10 dark:bg-blue-950/30">
-        <!-- Section Header -->
-        <div
-          class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20"
-        >
-          <div
-            class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
-          >
-            <Calendar class="h-3.5 w-3.5" />
-            <span>Scheduled Next Bus</span>
-          </div>
-        </div>
-
-        <!-- Scheduled Route Cards - Same style as live ETA -->
-        <div class="divide-y divide-border">
-          {#each [...scheduledDepartures.entries()] as [routeId, departure]}
-            {@const routeName = getRouteName(routeId)}
-            <div class="px-4 py-3">
-              <!-- Mobile: Vertical layout -->
-              <div class="sm:hidden">
-                <!-- Row 1: Route Badge + Route Name -->
-                <div class="flex items-start gap-3">
-                  <RouteBadge route={routeId} size="lg" class="flex-shrink-0" />
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-foreground leading-snug">
-                      {routeName || routeId}
-                    </p>
-                    <p class="text-xs text-muted-foreground mt-0.5">
-                      {crossStreets}
-                    </p>
-                  </div>
-                </div>
-                <!-- Row 2: Time (right aligned, matching live ETA style) -->
-                <div class="flex flex-col items-end mt-2">
-                  {#if departure && departure.time}
-                    <span
-                      class="text-5xl font-bold text-foreground/70 tabular-nums"
-                    >
-                      {departure.time}
-                    </span>
-                    {#if departure.noWeekendService && departure.nextWeekdayLabel}
-                      <span class="text-sm text-muted-foreground"
-                        >{departure.nextWeekdayLabel}</span
-                      >
-                    {:else if !departure.isToday && departure.tomorrowLabel}
-                      <span class="text-sm text-muted-foreground"
-                        >{formatFutureLabel(departure.tomorrowLabel)}</span
-                      >
-                    {/if}
-                  {:else if departure?.noWeekendService}
-                    <span
-                      class="text-xl font-semibold text-muted-foreground/60"
-                    >
-                      No Weekend Service
-                    </span>
-                  {:else}
-                    <span
-                      class="text-2xl font-semibold text-muted-foreground/60"
-                    >
-                      No Service
-                    </span>
-                  {/if}
-                </div>
-              </div>
-
-              <!-- Desktop: Horizontal layout -->
-              <div class="hidden sm:flex items-center justify-between gap-4">
-                <!-- Left: Route Badge + Route Name -->
-                <div class="flex items-center gap-3 min-w-0 flex-1">
-                  <RouteBadge route={routeId} size="lg" class="flex-shrink-0" />
-                  <div class="min-w-0 flex-1">
-                    <p class="text-sm font-medium text-foreground leading-snug">
-                      {routeName || routeId}
-                    </p>
-                    <p class="text-xs text-muted-foreground mt-0.5">
-                      {crossStreets}
-                    </p>
-                  </div>
-                </div>
-                <!-- Right: Time -->
-                <div class="flex flex-col items-end flex-shrink-0">
-                  {#if departure && departure.time}
-                    <span
-                      class="text-4xl font-bold text-foreground/70 tabular-nums"
-                    >
-                      {departure.time}
-                    </span>
-                    {#if departure.noWeekendService && departure.nextWeekdayLabel}
-                      <span class="text-sm text-muted-foreground"
-                        >{departure.nextWeekdayLabel}</span
-                      >
-                    {:else if !departure.isToday && departure.tomorrowLabel}
-                      <span class="text-sm text-muted-foreground"
-                        >{formatFutureLabel(departure.tomorrowLabel)}</span
-                      >
-                    {/if}
-                  {:else if departure?.noWeekendService}
-                    <span
-                      class="text-lg font-semibold text-muted-foreground/60"
-                    >
-                      No Weekend Service
-                    </span>
-                  {:else}
-                    <span
-                      class="text-xl font-semibold text-muted-foreground/60"
-                    >
-                      No Service
-                    </span>
-                  {/if}
-                </div>
-              </div>
-            </div>
-          {/each}
-        </div>
-      </div>
-    {:else if !scheduleLoaded && stopRoutes.length > 0}
-      <!-- Loading schedule data -->
-      <div class="p-5 flex flex-col items-center gap-3 text-center">
-        <div
-          class="h-3 w-3 border-2 border-muted-foreground/30 border-t-muted-foreground/70 rounded-full animate-spin"
-        ></div>
-        <span class="text-xs text-muted-foreground/60">Loading schedule...</span
-        >
-      </div>
-    {:else}
-      <!-- Fallback: No scheduled data available -->
-      <div class="p-5 flex flex-col items-center gap-3 text-center">
-        {#if emptyState.icon === "moon"}
-          <Moon class="h-6 w-6 text-muted-foreground/50 mb-1" />
-        {:else if emptyState.icon === "alert"}
-          <AlertCircle class="h-6 w-6 text-muted-foreground/50 mb-1" />
-        {:else}
-          <Clock class="h-6 w-6 text-muted-foreground/50 mb-1" />
-        {/if}
-        <p class="text-sm font-medium text-muted-foreground">
-          {emptyState.title}
-        </p>
-        <p class="text-xs text-muted-foreground/70">{emptyState.subtitle}</p>
-
-        {#if onRefresh}
-          <Button
-            variant="outline"
-            size="sm"
-            class="mt-2 gap-1.5"
-            onclick={handleRefresh}
-            disabled={isRefreshing || eta.isLoading}
-          >
-            <RefreshCw
-              class={cn(
-                "h-3.5 w-3.5",
-                (isRefreshing || eta.isLoading) && "animate-spin"
-              )}
-            />
-            <span
-              >{isRefreshing || eta.isLoading
-                ? "Refreshing..."
-                : "Refresh"}</span
-            >
-          </Button>
-        {/if}
-      </div>
-    {/if}
-  {:else}
-    <!-- Stacked Route Cards with Dividers -->
-    <div class="divide-y divide-border">
-      {#each sortedPredictions as prediction (prediction.route + prediction.direction)}
-        {@const parsed = parseDirection(prediction.direction)}
-        {@const primaryTime = prediction.arrivals[0]}
-        {@const secondaryTimes = prediction.arrivals.slice(1)}
-
-        <!-- Mobile: Vertical layout | Desktop: Original horizontal layout -->
-        <div class="px-4 py-3">
-          <!-- Desktop: Single row with badge + direction left, times right -->
-          <div class="hidden sm:flex items-center justify-between gap-4">
-            <!-- Left: Route Badge + Direction -->
-            <div class="flex items-center gap-3 min-w-0 flex-1">
-              <RouteBadge
-                route={prediction.route}
-                size="lg"
-                class="flex-shrink-0"
-              />
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-foreground leading-snug">
-                  {parsed.direction}{parsed.direction && parsed.destination
-                    ? " to "
-                    : ""}{parsed.destination}
-                </p>
-                <p class="text-xs text-muted-foreground mt-0.5">
-                  {crossStreets}
-                </p>
-              </div>
-            </div>
-            <!-- Right: Arrival Times -->
-            {#if prediction.arrivals.length > 0}
-              {#if prediction.isLive}
-                <!-- Live GPS data: show minutes countdown with signal icon -->
-                <div class="flex items-baseline gap-1 flex-shrink-0">
-                  <span class="text-4xl font-bold text-foreground tabular-nums"
-                    >{primaryTime}</span
-                  >
-                  <LiveSignalIcon size="md" class="self-start mt-1" />
-                  {#if secondaryTimes.length > 0}
-                    {#each secondaryTimes as time}
-                      <span class="text-base text-foreground/70 tabular-nums"
-                        >, {time}</span
-                      >
-                      <LiveSignalIcon size="sm" class="self-center" />
-                    {/each}
-                  {/if}
-                  <span class="text-base text-foreground/70 ml-1">min</span>
-                </div>
-              {:else}
-                <!-- Scheduled: show times with AM/PM and label -->
-                {@const primaryTimeObj = minutesToTimeObject(primaryTime)}
-                {@const allTimeObjs = [
-                  primaryTimeObj,
-                  ...secondaryTimes.map((t) => minutesToTimeObject(t)),
-                ]}
-                {@const allSamePeriod = allTimeObjs.every(
-                  (t) => t.period === primaryTimeObj.period
-                )}
-                <div class="flex flex-col items-end flex-shrink-0">
-                  <div class="flex items-baseline gap-1">
-                    <span
-                      class="text-4xl font-bold text-foreground tabular-nums"
-                      >{primaryTimeObj.time}</span
-                    >
-                    {#if !allSamePeriod}
-                      <span class="text-base text-muted-foreground"
-                        >{primaryTimeObj.period}</span
-                      >
-                    {/if}
-                    {#if secondaryTimes.length > 0}
-                      {#each secondaryTimes as time, i}
-                        {@const timeObj = allTimeObjs[i + 1]}
-                        <span class="text-base text-foreground/70 tabular-nums"
-                          >, {timeObj.time}</span
-                        >
-                        {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
-                          <span class="text-sm text-muted-foreground"
-                            >{timeObj.period}</span
-                          >
-                        {/if}
-                      {/each}
-                    {/if}
-                    {#if allSamePeriod}
-                      <span class="text-sm text-muted-foreground ml-0.5"
-                        >{primaryTimeObj.period}</span
-                      >
-                    {/if}
-                  </div>
-                  <span
-                    class="text-sm text-amber-600 dark:text-amber-400 font-medium"
-                    >Scheduled</span
-                  >
-                </div>
-              {/if}
-            {:else}
-              <span class="text-4xl font-bold text-muted-foreground/50">–</span>
+  {#if onToggleCollapse}
+    <!-- Clickable header for collapsible mode -->
+    <button
+      type="button"
+      class={cn(
+        "flex items-start justify-between gap-2 px-4 py-3 bg-zinc-100 dark:bg-zinc-800 w-full text-left",
+        !collapsed && "border-b",
+        "cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+      )}
+      onclick={onToggleCollapse}
+      aria-expanded={!collapsed}
+    >
+      <div class="flex items-start gap-2.5 min-w-0 flex-1">
+        <MapPin class="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+        <div class="min-w-0 flex-1">
+          <h4 class="font-medium text-base leading-tight">{crossStreets}</h4>
+          <div class="flex items-center gap-2 mt-1">
+            {#if primaryDirection}
+              {@const dirColor = primaryDirection.toLowerCase().includes("east")
+                ? "bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40"
+                : primaryDirection.toLowerCase().includes("west")
+                  ? "bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-600/40"
+                  : primaryDirection.toLowerCase().includes("north")
+                    ? "bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40"
+                    : primaryDirection.toLowerCase().includes("south")
+                      ? "bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40"
+                      : "bg-muted text-muted-foreground border-muted-foreground/30"}
+              <span
+                class="text-[10px] font-semibold px-1.5 py-0.5 rounded border uppercase {dirColor}"
+              >
+                {primaryDirection}
+              </span>
             {/if}
+            <span class="text-xs text-muted-foreground">#{eta.stopId}</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1 flex-shrink-0">
+        <ChevronDown
+          class={cn(
+            "h-5 w-5 text-muted-foreground transition-transform duration-200",
+            !collapsed && "rotate-180"
+          )}
+        />
+      </div>
+    </button>
+  {:else}
+    <!-- Non-clickable header for normal mode -->
+    <div
+      class="flex items-start justify-between gap-2 px-4 py-3 bg-zinc-100 dark:bg-zinc-800 border-b"
+    >
+      <div class="flex items-start gap-2.5 min-w-0 flex-1">
+        <MapPin class="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+        <div class="min-w-0 flex-1">
+          <h4 class="font-medium text-base leading-tight">{crossStreets}</h4>
+          <div class="flex items-center gap-2 mt-1">
+            {#if primaryDirection}
+              {@const dirColor = primaryDirection.toLowerCase().includes("east")
+                ? "bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40"
+                : primaryDirection.toLowerCase().includes("west")
+                  ? "bg-amber-600/20 text-amber-700 dark:text-amber-400 border-amber-600/40"
+                  : primaryDirection.toLowerCase().includes("north")
+                    ? "bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40"
+                    : primaryDirection.toLowerCase().includes("south")
+                      ? "bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40"
+                      : "bg-muted text-muted-foreground border-muted-foreground/30"}
+              <span
+                class="text-[10px] font-semibold px-1.5 py-0.5 rounded border uppercase {dirColor}"
+              >
+                {primaryDirection}
+              </span>
+            {/if}
+            <span class="text-xs text-muted-foreground">#{eta.stopId}</span>
+          </div>
+        </div>
+      </div>
+      {#if showRemove}
+        <Button
+          variant="ghost"
+          size="icon"
+          class="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
+          onclick={handleRemove}
+          aria-label="Remove stop"
+        >
+          <X class="h-4 w-4" />
+        </Button>
+      {/if}
+    </div>
+  {/if}
+
+  <!-- Content (collapsible) -->
+  {#if !collapsed}
+    {#if eta.error}
+      <!-- Error State -->
+      <div class="flex items-center gap-2 text-destructive text-sm p-4">
+        <AlertCircle class="h-4 w-4 flex-shrink-0" />
+        <span>{eta.error}</span>
+      </div>
+    {:else if eta.isLoading && eta.predictions.length === 0}
+      <!-- Loading State -->
+      <div class="p-4 space-y-3">
+        {#each [1, 2] as _}
+          <div class="animate-pulse flex items-center gap-3">
+            <div class="h-10 w-14 bg-muted rounded-lg flex-shrink-0"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 w-32 bg-muted rounded"></div>
+              <div class="h-3 w-24 bg-muted rounded"></div>
+            </div>
+            <div class="h-8 w-16 bg-muted rounded"></div>
+          </div>
+        {/each}
+      </div>
+    {:else if sortedPredictions.length === 0}
+      <!-- No Predictions - Show scheduled departures in full card style -->
+      {@const emptyState = getEmptyStateMessage(isSubway, eta.stopId)}
+
+      {#if scheduleLoaded && scheduledDepartures.size > 0}
+        <!-- Show scheduled departures in same style as live ETA -->
+        <div class="bg-blue-500/10 dark:bg-blue-950/30">
+          <!-- Section Header -->
+          <div
+            class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20"
+          >
+            <div
+              class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
+            >
+              <Calendar class="h-3.5 w-3.5" />
+              <span>Scheduled Next Bus</span>
+            </div>
           </div>
 
-          <!-- Mobile: Vertical layout with text on top, ETAs below -->
-          <div class="sm:hidden">
-            <!-- Row 1: Route Badge + Direction/Destination Text -->
-            <div class="flex items-start gap-3">
-              <RouteBadge
-                route={prediction.route}
-                size="lg"
-                class="flex-shrink-0"
-              />
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-foreground leading-snug">
-                  {parsed.direction}{parsed.direction && parsed.destination
-                    ? " to "
-                    : ""}{parsed.destination}
-                </p>
-                <p class="text-xs text-muted-foreground mt-0.5">
-                  {crossStreets}
-                </p>
+          <!-- Scheduled Route Cards - Same style as live ETA -->
+          <div class="divide-y divide-border">
+            {#each [...scheduledDepartures.entries()] as [routeId, departure]}
+              {@const routeName = getRouteName(routeId)}
+              <div class="px-4 py-3">
+                <!-- Mobile: Vertical layout -->
+                <div class="sm:hidden">
+                  <!-- Row 1: Route Badge + Route Name -->
+                  <div class="flex items-start gap-3">
+                    <RouteBadge
+                      route={routeId}
+                      size="lg"
+                      class="flex-shrink-0"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <p
+                        class="text-sm font-medium text-foreground leading-snug"
+                      >
+                        {routeName || routeId}
+                      </p>
+                      <p class="text-xs text-muted-foreground mt-0.5">
+                        {crossStreets}
+                      </p>
+                    </div>
+                  </div>
+                  <!-- Row 2: Time (right aligned, matching live ETA style) -->
+                  <div class="flex flex-col items-end mt-2">
+                    {#if departure && departure.time}
+                      <span
+                        class="text-5xl font-bold text-foreground/70 tabular-nums"
+                      >
+                        {departure.time}
+                      </span>
+                      {#if departure.noWeekendService && departure.nextWeekdayLabel}
+                        <span class="text-sm text-muted-foreground"
+                          >{departure.nextWeekdayLabel}</span
+                        >
+                      {:else if !departure.isToday && departure.tomorrowLabel}
+                        <span class="text-sm text-muted-foreground"
+                          >{formatFutureLabel(departure.tomorrowLabel)}</span
+                        >
+                      {/if}
+                    {:else if departure?.noWeekendService}
+                      <span
+                        class="text-xl font-semibold text-muted-foreground/60"
+                      >
+                        No Weekend Service
+                      </span>
+                    {:else}
+                      <span
+                        class="text-2xl font-semibold text-muted-foreground/60"
+                      >
+                        No Service
+                      </span>
+                    {/if}
+                  </div>
+                </div>
+
+                <!-- Desktop: Horizontal layout -->
+                <div class="hidden sm:flex items-center justify-between gap-4">
+                  <!-- Left: Route Badge + Route Name -->
+                  <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <RouteBadge
+                      route={routeId}
+                      size="lg"
+                      class="flex-shrink-0"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <p
+                        class="text-sm font-medium text-foreground leading-snug"
+                      >
+                        {routeName || routeId}
+                      </p>
+                      <p class="text-xs text-muted-foreground mt-0.5">
+                        {crossStreets}
+                      </p>
+                    </div>
+                  </div>
+                  <!-- Right: Time -->
+                  <div class="flex flex-col items-end flex-shrink-0">
+                    {#if departure && departure.time}
+                      <span
+                        class="text-4xl font-bold text-foreground/70 tabular-nums"
+                      >
+                        {departure.time}
+                      </span>
+                      {#if departure.noWeekendService && departure.nextWeekdayLabel}
+                        <span class="text-sm text-muted-foreground"
+                          >{departure.nextWeekdayLabel}</span
+                        >
+                      {:else if !departure.isToday && departure.tomorrowLabel}
+                        <span class="text-sm text-muted-foreground"
+                          >{formatFutureLabel(departure.tomorrowLabel)}</span
+                        >
+                      {/if}
+                    {:else if departure?.noWeekendService}
+                      <span
+                        class="text-lg font-semibold text-muted-foreground/60"
+                      >
+                        No Weekend Service
+                      </span>
+                    {:else}
+                      <span
+                        class="text-xl font-semibold text-muted-foreground/60"
+                      >
+                        No Service
+                      </span>
+                    {/if}
+                  </div>
+                </div>
               </div>
-            </div>
-            <!-- Row 2: ETA Times (right aligned) -->
-            <div class="flex items-baseline justify-end gap-2 mt-2">
+            {/each}
+          </div>
+        </div>
+      {:else if !scheduleLoaded && stopRoutes.length > 0}
+        <!-- Loading schedule data -->
+        <div class="p-5 flex flex-col items-center gap-3 text-center">
+          <div
+            class="h-3 w-3 border-2 border-muted-foreground/30 border-t-muted-foreground/70 rounded-full animate-spin"
+          ></div>
+          <span class="text-xs text-muted-foreground/60"
+            >Loading schedule...</span
+          >
+        </div>
+      {:else}
+        <!-- Fallback: No scheduled data available -->
+        <div class="p-5 flex flex-col items-center gap-3 text-center">
+          {#if emptyState.icon === "moon"}
+            <Moon class="h-6 w-6 text-muted-foreground/50 mb-1" />
+          {:else if emptyState.icon === "alert"}
+            <AlertCircle class="h-6 w-6 text-muted-foreground/50 mb-1" />
+          {:else}
+            <Clock class="h-6 w-6 text-muted-foreground/50 mb-1" />
+          {/if}
+          <p class="text-sm font-medium text-muted-foreground">
+            {emptyState.title}
+          </p>
+          <p class="text-xs text-muted-foreground/70">{emptyState.subtitle}</p>
+
+          {#if onRefresh}
+            <Button
+              variant="outline"
+              size="sm"
+              class="mt-2 gap-1.5"
+              onclick={handleRefresh}
+              disabled={isRefreshing || eta.isLoading}
+            >
+              <RefreshCw
+                class={cn(
+                  "h-3.5 w-3.5",
+                  (isRefreshing || eta.isLoading) && "animate-spin"
+                )}
+              />
+              <span
+                >{isRefreshing || eta.isLoading
+                  ? "Refreshing..."
+                  : "Refresh"}</span
+              >
+            </Button>
+          {/if}
+        </div>
+      {/if}
+    {:else}
+      <!-- Stacked Route Cards with Dividers -->
+      <div class="divide-y divide-border">
+        {#each sortedPredictions as prediction (prediction.route + prediction.direction)}
+          {@const parsed = parseDirection(prediction.direction)}
+          {@const primaryTime = prediction.arrivals[0]}
+          {@const secondaryTimes = prediction.arrivals.slice(1)}
+
+          <!-- Mobile: Vertical layout | Desktop: Original horizontal layout -->
+          <div class="px-4 py-3">
+            <!-- Desktop: Single row with badge + direction left, times right -->
+            <div class="hidden sm:flex items-center justify-between gap-4">
+              <!-- Left: Route Badge + Direction -->
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <RouteBadge
+                  route={prediction.route}
+                  size="lg"
+                  class="flex-shrink-0"
+                />
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium text-foreground leading-snug">
+                    {parsed.direction}{parsed.direction && parsed.destination
+                      ? " to "
+                      : ""}{parsed.destination}
+                  </p>
+                  <p class="text-xs text-muted-foreground mt-0.5">
+                    {crossStreets}
+                  </p>
+                </div>
+              </div>
+              <!-- Right: Arrival Times -->
               {#if prediction.arrivals.length > 0}
                 {#if prediction.isLive}
                   <!-- Live GPS data: show minutes countdown with signal icon -->
-                  <span class="text-5xl font-bold text-foreground tabular-nums"
-                    >{primaryTime}</span
-                  >
-                  <LiveSignalIcon size="lg" class="self-start mt-1.5" />
-                  {#if secondaryTimes.length > 0}
-                    {#each secondaryTimes as time}
-                      <span
-                        class="text-3xl font-semibold text-muted-foreground tabular-nums"
-                        >, {time}</span
-                      >
-                      <LiveSignalIcon size="md" class="self-start mt-1" />
-                    {/each}
-                  {/if}
-                  <span class="text-lg text-muted-foreground ml-1">min</span>
+                  <div class="flex items-baseline gap-1 flex-shrink-0">
+                    <span
+                      class="text-4xl font-bold text-foreground tabular-nums"
+                      >{primaryTime}</span
+                    >
+                    <LiveSignalIcon size="md" class="self-start mt-1" />
+                    {#if secondaryTimes.length > 0}
+                      {#each secondaryTimes as time}
+                        <span class="text-base text-foreground/70 tabular-nums"
+                          >, {time}</span
+                        >
+                        <LiveSignalIcon size="sm" class="self-center" />
+                      {/each}
+                    {/if}
+                    <span class="text-base text-foreground/70 ml-1">min</span>
+                  </div>
                 {:else}
                   <!-- Scheduled: show times with AM/PM and label -->
                   {@const primaryTimeObj = minutesToTimeObject(primaryTime)}
@@ -715,7 +694,7 @@
                   {@const allSamePeriod = allTimeObjs.every(
                     (t) => t.period === primaryTimeObj.period
                   )}
-                  <div class="flex flex-col items-end">
+                  <div class="flex flex-col items-end flex-shrink-0">
                     <div class="flex items-baseline gap-1">
                       <span
                         class="text-4xl font-bold text-foreground tabular-nums"
@@ -730,7 +709,7 @@
                         {#each secondaryTimes as time, i}
                           {@const timeObj = allTimeObjs[i + 1]}
                           <span
-                            class="text-2xl font-semibold text-muted-foreground tabular-nums"
+                            class="text-base text-foreground/70 tabular-nums"
                             >, {timeObj.time}</span
                           >
                           {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
@@ -753,136 +732,243 @@
                   </div>
                 {/if}
               {:else}
-                <span class="text-5xl font-bold text-muted-foreground/50"
+                <span class="text-4xl font-bold text-muted-foreground/50"
                   >–</span
                 >
-                <span class="text-lg text-muted-foreground">min</span>
               {/if}
             </div>
-          </div>
-        </div>
-      {/each}
-    </div>
 
-    <!-- Routes without real-time data - show scheduled times -->
-    {#if scheduleLoaded && missingRoutesSchedule.size > 0}
-      <div
-        class="border-t border-blue-500/20 bg-blue-500/10 dark:bg-blue-950/30"
-      >
-        <!-- Section Header -->
-        <div
-          class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20"
-        >
-          <div
-            class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
-          >
-            <Calendar class="h-3.5 w-3.5" />
-            <span>Scheduled Next Bus</span>
-          </div>
-        </div>
-
-        <!-- Scheduled Route Cards -->
-        <div class="divide-y divide-border/50">
-          {#each [...missingRoutesSchedule.entries()] as [routeId, departure]}
-            {@const routeName = getRouteName(routeId)}
-            <div class="px-4 py-3">
-              <!-- Mobile: Vertical layout -->
-              <div class="sm:hidden">
-                <!-- Row 1: Route Badge + Route Name -->
-                <div class="flex items-start gap-3">
-                  <RouteBadge route={routeId} size="lg" class="flex-shrink-0" />
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-foreground leading-snug">
-                      {routeName || routeId}
-                    </p>
-                    <p class="text-xs text-muted-foreground mt-0.5">
-                      {crossStreets}
-                    </p>
-                  </div>
-                </div>
-                <!-- Row 2: Time (right aligned, matching live ETA style) -->
-                <div class="flex flex-col items-end mt-2">
-                  {#if departure && departure.time}
-                    <span
-                      class="text-5xl font-bold text-foreground/70 tabular-nums"
-                    >
-                      {departure.time}
-                    </span>
-                    {#if departure.noWeekendService && departure.nextWeekdayLabel}
-                      <span class="text-sm text-muted-foreground"
-                        >{departure.nextWeekdayLabel}</span
-                      >
-                    {:else if !departure.isToday && departure.tomorrowLabel}
-                      <span class="text-sm text-muted-foreground"
-                        >{formatFutureLabel(departure.tomorrowLabel)}</span
-                      >
-                    {/if}
-                  {:else if departure?.noWeekendService}
-                    <span
-                      class="text-xl font-semibold text-muted-foreground/60"
-                    >
-                      No Weekend Service
-                    </span>
-                  {:else}
-                    <span
-                      class="text-2xl font-semibold text-muted-foreground/60"
-                    >
-                      No Service
-                    </span>
-                  {/if}
+            <!-- Mobile: Vertical layout with text on top, ETAs below -->
+            <div class="sm:hidden">
+              <!-- Row 1: Route Badge + Direction/Destination Text -->
+              <div class="flex items-start gap-3">
+                <RouteBadge
+                  route={prediction.route}
+                  size="lg"
+                  class="flex-shrink-0"
+                />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-foreground leading-snug">
+                    {parsed.direction}{parsed.direction && parsed.destination
+                      ? " to "
+                      : ""}{parsed.destination}
+                  </p>
+                  <p class="text-xs text-muted-foreground mt-0.5">
+                    {crossStreets}
+                  </p>
                 </div>
               </div>
-
-              <!-- Desktop: Horizontal layout -->
-              <div class="hidden sm:flex items-center justify-between gap-4">
-                <!-- Left: Route Badge + Route Name -->
-                <div class="flex items-center gap-3 min-w-0 flex-1">
-                  <RouteBadge route={routeId} size="lg" class="flex-shrink-0" />
-                  <div class="min-w-0 flex-1">
-                    <p class="text-sm font-medium text-foreground leading-snug">
-                      {routeName || routeId}
-                    </p>
-                    <p class="text-xs text-muted-foreground mt-0.5">
-                      {crossStreets}
-                    </p>
-                  </div>
-                </div>
-                <!-- Right: Time -->
-                <div class="flex flex-col items-end flex-shrink-0">
-                  {#if departure && departure.time}
+              <!-- Row 2: ETA Times (right aligned) -->
+              <div class="flex items-baseline justify-end gap-2 mt-2">
+                {#if prediction.arrivals.length > 0}
+                  {#if prediction.isLive}
+                    <!-- Live GPS data: show minutes countdown with signal icon -->
                     <span
-                      class="text-4xl font-bold text-foreground/70 tabular-nums"
+                      class="text-5xl font-bold text-foreground tabular-nums"
+                      >{primaryTime}</span
                     >
-                      {departure.time}
-                    </span>
-                    {#if departure.noWeekendService && departure.nextWeekdayLabel}
-                      <span class="text-sm text-muted-foreground"
-                        >{departure.nextWeekdayLabel}</span
-                      >
-                    {:else if !departure.isToday && departure.tomorrowLabel}
-                      <span class="text-sm text-muted-foreground"
-                        >{formatFutureLabel(departure.tomorrowLabel)}</span
-                      >
+                    <LiveSignalIcon size="lg" class="self-start mt-1.5" />
+                    {#if secondaryTimes.length > 0}
+                      {#each secondaryTimes as time}
+                        <span
+                          class="text-3xl font-semibold text-muted-foreground tabular-nums"
+                          >, {time}</span
+                        >
+                        <LiveSignalIcon size="md" class="self-start mt-1" />
+                      {/each}
                     {/if}
-                  {:else if departure?.noWeekendService}
-                    <span
-                      class="text-lg font-semibold text-muted-foreground/60"
-                    >
-                      No Weekend Service
-                    </span>
+                    <span class="text-lg text-muted-foreground ml-1">min</span>
                   {:else}
-                    <span
-                      class="text-xl font-semibold text-muted-foreground/60"
-                    >
-                      No Service
-                    </span>
+                    <!-- Scheduled: show times with AM/PM and label -->
+                    {@const primaryTimeObj = minutesToTimeObject(primaryTime)}
+                    {@const allTimeObjs = [
+                      primaryTimeObj,
+                      ...secondaryTimes.map((t) => minutesToTimeObject(t)),
+                    ]}
+                    {@const allSamePeriod = allTimeObjs.every(
+                      (t) => t.period === primaryTimeObj.period
+                    )}
+                    <div class="flex flex-col items-end">
+                      <div class="flex items-baseline gap-1">
+                        <span
+                          class="text-4xl font-bold text-foreground tabular-nums"
+                          >{primaryTimeObj.time}</span
+                        >
+                        {#if !allSamePeriod}
+                          <span class="text-base text-muted-foreground"
+                            >{primaryTimeObj.period}</span
+                          >
+                        {/if}
+                        {#if secondaryTimes.length > 0}
+                          {#each secondaryTimes as time, i}
+                            {@const timeObj = allTimeObjs[i + 1]}
+                            <span
+                              class="text-2xl font-semibold text-muted-foreground tabular-nums"
+                              >, {timeObj.time}</span
+                            >
+                            {#if !allSamePeriod && timeObj.period !== allTimeObjs[i]?.period}
+                              <span class="text-sm text-muted-foreground"
+                                >{timeObj.period}</span
+                              >
+                            {/if}
+                          {/each}
+                        {/if}
+                        {#if allSamePeriod}
+                          <span class="text-sm text-muted-foreground ml-0.5"
+                            >{primaryTimeObj.period}</span
+                          >
+                        {/if}
+                      </div>
+                      <span
+                        class="text-sm text-amber-600 dark:text-amber-400 font-medium"
+                        >Scheduled</span
+                      >
+                    </div>
                   {/if}
-                </div>
+                {:else}
+                  <span class="text-5xl font-bold text-muted-foreground/50"
+                    >–</span
+                  >
+                  <span class="text-lg text-muted-foreground">min</span>
+                {/if}
               </div>
             </div>
-          {/each}
-        </div>
+          </div>
+        {/each}
       </div>
+
+      <!-- Routes without real-time data - show scheduled times -->
+      {#if scheduleLoaded && missingRoutesSchedule.size > 0}
+        <div
+          class="border-t border-blue-500/20 bg-blue-500/10 dark:bg-blue-950/30"
+        >
+          <!-- Section Header -->
+          <div
+            class="px-4 py-2 bg-blue-500/20 dark:bg-blue-900/40 border-b border-blue-500/20"
+          >
+            <div
+              class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300/80"
+            >
+              <Calendar class="h-3.5 w-3.5" />
+              <span>Scheduled Next Bus</span>
+            </div>
+          </div>
+
+          <!-- Scheduled Route Cards -->
+          <div class="divide-y divide-border/50">
+            {#each [...missingRoutesSchedule.entries()] as [routeId, departure]}
+              {@const routeName = getRouteName(routeId)}
+              <div class="px-4 py-3">
+                <!-- Mobile: Vertical layout -->
+                <div class="sm:hidden">
+                  <!-- Row 1: Route Badge + Route Name -->
+                  <div class="flex items-start gap-3">
+                    <RouteBadge
+                      route={routeId}
+                      size="lg"
+                      class="flex-shrink-0"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <p
+                        class="text-sm font-medium text-foreground leading-snug"
+                      >
+                        {routeName || routeId}
+                      </p>
+                      <p class="text-xs text-muted-foreground mt-0.5">
+                        {crossStreets}
+                      </p>
+                    </div>
+                  </div>
+                  <!-- Row 2: Time (right aligned, matching live ETA style) -->
+                  <div class="flex flex-col items-end mt-2">
+                    {#if departure && departure.time}
+                      <span
+                        class="text-5xl font-bold text-foreground/70 tabular-nums"
+                      >
+                        {departure.time}
+                      </span>
+                      {#if departure.noWeekendService && departure.nextWeekdayLabel}
+                        <span class="text-sm text-muted-foreground"
+                          >{departure.nextWeekdayLabel}</span
+                        >
+                      {:else if !departure.isToday && departure.tomorrowLabel}
+                        <span class="text-sm text-muted-foreground"
+                          >{formatFutureLabel(departure.tomorrowLabel)}</span
+                        >
+                      {/if}
+                    {:else if departure?.noWeekendService}
+                      <span
+                        class="text-xl font-semibold text-muted-foreground/60"
+                      >
+                        No Weekend Service
+                      </span>
+                    {:else}
+                      <span
+                        class="text-2xl font-semibold text-muted-foreground/60"
+                      >
+                        No Service
+                      </span>
+                    {/if}
+                  </div>
+                </div>
+
+                <!-- Desktop: Horizontal layout -->
+                <div class="hidden sm:flex items-center justify-between gap-4">
+                  <!-- Left: Route Badge + Route Name -->
+                  <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <RouteBadge
+                      route={routeId}
+                      size="lg"
+                      class="flex-shrink-0"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <p
+                        class="text-sm font-medium text-foreground leading-snug"
+                      >
+                        {routeName || routeId}
+                      </p>
+                      <p class="text-xs text-muted-foreground mt-0.5">
+                        {crossStreets}
+                      </p>
+                    </div>
+                  </div>
+                  <!-- Right: Time -->
+                  <div class="flex flex-col items-end flex-shrink-0">
+                    {#if departure && departure.time}
+                      <span
+                        class="text-4xl font-bold text-foreground/70 tabular-nums"
+                      >
+                        {departure.time}
+                      </span>
+                      {#if departure.noWeekendService && departure.nextWeekdayLabel}
+                        <span class="text-sm text-muted-foreground"
+                          >{departure.nextWeekdayLabel}</span
+                        >
+                      {:else if !departure.isToday && departure.tomorrowLabel}
+                        <span class="text-sm text-muted-foreground"
+                          >{formatFutureLabel(departure.tomorrowLabel)}</span
+                        >
+                      {/if}
+                    {:else if departure?.noWeekendService}
+                      <span
+                        class="text-lg font-semibold text-muted-foreground/60"
+                      >
+                        No Weekend Service
+                      </span>
+                    {:else}
+                      <span
+                        class="text-xl font-semibold text-muted-foreground/60"
+                      >
+                        No Service
+                      </span>
+                    {/if}
+                  </div>
+                </div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/if}
     {/if}
   {/if}
 </div>

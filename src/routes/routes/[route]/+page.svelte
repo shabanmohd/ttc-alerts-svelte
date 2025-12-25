@@ -2,6 +2,7 @@
   import { _ } from "svelte-i18n";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
+  import { browser } from "$app/environment";
   import { onMount } from "svelte";
   import {
     ArrowLeft,
@@ -13,6 +14,7 @@
     ExternalLink,
     Accessibility,
     Gauge,
+    ChevronDown,
   } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
@@ -29,7 +31,10 @@
     maintenanceItems,
   } from "$lib/stores/alerts";
   import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
-  import type { ThreadWithAlerts, PlannedMaintenance } from "$lib/types/database";
+  import type {
+    ThreadWithAlerts,
+    PlannedMaintenance,
+  } from "$lib/types/database";
 
   // Import subway station mapping for elevator alerts
   import { getStationLines, type SubwayLine } from "$lib/data/subway-stations";
@@ -302,7 +307,9 @@
   /**
    * Convert PlannedMaintenance to ThreadWithAlerts for AlertCard display
    */
-  function maintenanceToThread(maintenance: PlannedMaintenance): ThreadWithAlerts {
+  function maintenanceToThread(
+    maintenance: PlannedMaintenance
+  ): ThreadWithAlerts {
     // Format date range for display
     const startDate = maintenance.start_date
       ? new Date(maintenance.start_date).toLocaleDateString("en-US", {
@@ -333,7 +340,10 @@
       latestAlert: {
         id: `maintenance-alert-${maintenance.id}`,
         thread_id: `maintenance-${maintenance.id}`,
-        header_text: maintenance.description || maintenance.affected_stations || "Scheduled Maintenance",
+        header_text:
+          maintenance.description ||
+          maintenance.affected_stations ||
+          "Scheduled Maintenance",
         description_text: `${dateRange}${timeRange ? ` • ${timeRange}` : ""}${maintenance.reason ? ` • ${maintenance.reason}` : ""}`,
         effect: "MODIFIED_SERVICE",
         cause: "MAINTENANCE",
@@ -363,15 +373,72 @@
     });
   }
 
-  // Get active maintenance for this route
-  let activeMaintenanceForRoute = $derived.by<ThreadWithAlerts[]>(() => {
-    // Get active maintenance items matching this route
-    const activeMaintenance = $maintenanceItems
-      .filter(isMaintenanceHappeningNow)
-      .filter(maintenanceMatchesRoute);
+  // Get all scheduled closures for this route (including future ones)
+  let scheduledClosuresForRoute = $derived.by<ThreadWithAlerts[]>(() => {
+    // Get maintenance items matching this route (no "currently active" filter)
+    const closures = $maintenanceItems.filter(maintenanceMatchesRoute);
 
     // Convert to ThreadWithAlerts for AlertCard display
-    return activeMaintenance.map(maintenanceToThread);
+    return closures.map(maintenanceToThread);
+  });
+
+  // Accordion state for collapsible sections - persisted to localStorage
+  const ROUTE_ACCORDION_KEY = "ttc-alerts-route-accordions";
+
+  interface RouteAccordionState {
+    closures: boolean;
+    routeChanges: boolean;
+    elevatorAlerts: boolean;
+    slowZones: boolean;
+  }
+
+  function loadRouteAccordionState(): RouteAccordionState {
+    if (!browser)
+      return {
+        closures: false,
+        routeChanges: false,
+        elevatorAlerts: false,
+        slowZones: false,
+      };
+    try {
+      const saved = localStorage.getItem(ROUTE_ACCORDION_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return {
+      closures: false,
+      routeChanges: false,
+      elevatorAlerts: false,
+      slowZones: false,
+    };
+  }
+
+  function saveRouteAccordionState(state: RouteAccordionState) {
+    if (!browser) return;
+    try {
+      localStorage.setItem(ROUTE_ACCORDION_KEY, JSON.stringify(state));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  let routeAccordionState = loadRouteAccordionState();
+  let closuresExpanded = $state(routeAccordionState.closures);
+  let routeChangesExpanded = $state(routeAccordionState.routeChanges);
+  let elevatorAlertsExpanded = $state(routeAccordionState.elevatorAlerts);
+  let slowZonesExpanded = $state(routeAccordionState.slowZones);
+
+  // Save accordion state when any changes
+  $effect(() => {
+    saveRouteAccordionState({
+      closures: closuresExpanded,
+      routeChanges: routeChangesExpanded,
+      elevatorAlerts: elevatorAlertsExpanded,
+      slowZones: slowZonesExpanded,
+    });
   });
 
   /**
@@ -391,15 +458,13 @@
     return isNaN(date.getTime()) ? null : date;
   }
 
-  // Filter route changes for this specific route (only currently active ones)
+  // Filter route changes for this specific route (all scheduled, including future)
   let filteredRouteChanges = $derived(
-    $routeChanges
-      .filter((change) => {
-        return change.routes.some(
-          (r) => normalizeRouteId(r) === normalizeRouteId(routeId)
-        );
-      })
-      .filter(isRouteChangeCurrentlyActive)
+    $routeChanges.filter((change) => {
+      return change.routes.some(
+        (r) => normalizeRouteId(r) === normalizeRouteId(routeId)
+      );
+    })
   );
 
   /**
@@ -870,58 +935,101 @@
     </section>
   {/if}
 
-  <!-- 2. Scheduled Maintenance Section -->
-  {#if activeMaintenanceForRoute.length > 0}
+  <!-- 2. Scheduled Closures Section (Accordion) -->
+  {#if scheduledClosuresForRoute.length > 0}
     {#if nonRSZAlerts.length > 0}
       <hr class="section-divider" />
     {/if}
     <section class="mt-6">
-      <h2 class="section-title">
-        <Calendar class="h-4 w-4" />
-        {$_("myRoutes.scheduledMaintenance")}
-      </h2>
+      <button
+        class="accordion-header"
+        onclick={() => (closuresExpanded = !closuresExpanded)}
+        aria-expanded={closuresExpanded}
+      >
+        <div class="flex items-center gap-2">
+          <Calendar class="h-4 w-4" />
+          <h2 class="accordion-title">{$_("myRoutes.scheduledMaintenance")}</h2>
+          <span class="accordion-count">{scheduledClosuresForRoute.length}</span
+          >
+        </div>
+        <ChevronDown
+          class="h-4 w-4 transition-transform duration-200 {closuresExpanded
+            ? 'rotate-180'
+            : ''}"
+        />
+      </button>
 
-      <div class="space-y-3 mt-3">
-        {#each activeMaintenanceForRoute as thread (thread.thread_id)}
-          <AlertCard {thread} />
-        {/each}
-      </div>
+      {#if closuresExpanded}
+        <div class="accordion-content">
+          {#each scheduledClosuresForRoute as thread (thread.thread_id)}
+            <AlertCard {thread} />
+          {/each}
+        </div>
+      {/if}
     </section>
   {/if}
 
-  <!-- 3. Elevator Alerts Section (only for subway lines) -->
+  <!-- 3. Elevator Alerts Section (Accordion - only for subway lines) -->
   {#if isSubwayLine && elevatorAlerts.length > 0}
-    {#if nonRSZAlerts.length > 0 || activeMaintenanceForRoute.length > 0}
+    {#if nonRSZAlerts.length > 0 || scheduledClosuresForRoute.length > 0}
       <hr class="section-divider" />
     {/if}
     <section class="mt-6">
-      <h2 class="section-title">
-        <Accessibility class="h-4 w-4" />
-        {$_("routes.elevatorAlerts")}
-      </h2>
+      <button
+        class="accordion-header"
+        onclick={() => (elevatorAlertsExpanded = !elevatorAlertsExpanded)}
+        aria-expanded={elevatorAlertsExpanded}
+      >
+        <div class="flex items-center gap-2">
+          <Accessibility class="h-4 w-4" />
+          <h2 class="accordion-title">{$_("routes.elevatorAlerts")}</h2>
+          <span class="accordion-count">{elevatorAlerts.length}</span>
+        </div>
+        <ChevronDown
+          class="h-4 w-4 transition-transform duration-200 {elevatorAlertsExpanded
+            ? 'rotate-180'
+            : ''}"
+        />
+      </button>
 
-      <div class="space-y-3 mt-3">
-        {#each elevatorAlerts as thread (thread.thread_id)}
-          <AlertCard {thread} />
-        {/each}
-      </div>
+      {#if elevatorAlertsExpanded}
+        <div class="accordion-content">
+          {#each elevatorAlerts as thread (thread.thread_id)}
+            <AlertCard {thread} />
+          {/each}
+        </div>
+      {/if}
     </section>
   {/if}
 
-  <!-- 4. Slow Zones (RSZ alerts - only for subway lines) -->
+  <!-- 4. Slow Zones (Accordion - RSZ alerts, only for subway lines) -->
   {#if isSubwayLine && rszAlerts.length > 0}
-    {#if nonRSZAlerts.length > 0 || activeMaintenanceForRoute.length > 0 || elevatorAlerts.length > 0}
+    {#if nonRSZAlerts.length > 0 || scheduledClosuresForRoute.length > 0 || elevatorAlerts.length > 0}
       <hr class="section-divider" />
     {/if}
     <section class="mt-6">
-      <h2 class="section-title">
-        <Gauge class="h-4 w-4" />
-        {$_("myRoutes.slowZones")}
-      </h2>
+      <button
+        class="accordion-header"
+        onclick={() => (slowZonesExpanded = !slowZonesExpanded)}
+        aria-expanded={slowZonesExpanded}
+      >
+        <div class="flex items-center gap-2">
+          <Gauge class="h-4 w-4" />
+          <h2 class="accordion-title">{$_("myRoutes.slowZones")}</h2>
+          <span class="accordion-count">{rszAlerts.length}</span>
+        </div>
+        <ChevronDown
+          class="h-4 w-4 transition-transform duration-200 {slowZonesExpanded
+            ? 'rotate-180'
+            : ''}"
+        />
+      </button>
 
-      <div class="space-y-3 mt-3">
-        <RSZAlertCard threads={rszAlerts} />
-      </div>
+      {#if slowZonesExpanded}
+        <div class="accordion-content">
+          <RSZAlertCard threads={rszAlerts} />
+        </div>
+      {/if}
     </section>
   {/if}
 
@@ -939,58 +1047,72 @@
     </section>
   {/if}
 
-  <!-- Route Changes Section (if any affect this route) -->
+  <!-- Route Changes Section (Accordion) -->
   {#if filteredRouteChanges.length > 0}
     {#if routeAlerts.length > 0 || (isSubwayLine && elevatorAlerts.length > 0)}
       <hr class="section-divider" />
     {/if}
     <section class="mt-6">
-      <h2 class="section-title">
-        <GitBranch class="h-4 w-4" />
-        {$_("routes.routeChanges")}
-      </h2>
+      <button
+        class="accordion-header"
+        onclick={() => (routeChangesExpanded = !routeChangesExpanded)}
+        aria-expanded={routeChangesExpanded}
+      >
+        <div class="flex items-center gap-2">
+          <GitBranch class="h-4 w-4" />
+          <h2 class="accordion-title">{$_("routes.routeChanges")}</h2>
+          <span class="accordion-count">{filteredRouteChanges.length}</span>
+        </div>
+        <ChevronDown
+          class="h-4 w-4 transition-transform duration-200 {routeChangesExpanded
+            ? 'rotate-180'
+            : ''}"
+        />
+      </button>
 
-      <div class="space-y-3 mt-3">
-        {#each filteredRouteChanges as change (change.id)}
-          <div class="route-change-card animate-fade-in">
-            <!-- Header: all affected routes + route name -->
-            <div class="route-change-header">
-              <div class="route-badges">
-                {#each change.routes as route}
-                  <RouteBadge {route} size="lg" />
-                {/each}
+      {#if routeChangesExpanded}
+        <div class="accordion-content">
+          {#each filteredRouteChanges as change (change.id)}
+            <div class="route-change-card animate-fade-in">
+              <!-- Header: all affected routes + route name -->
+              <div class="route-change-header">
+                <div class="route-badges">
+                  {#each change.routes as route}
+                    <RouteBadge {route} size="lg" />
+                  {/each}
+                </div>
+                {#if change.routeName}
+                  <span class="route-name"
+                    >{formatRouteName(change.routeName)}</span
+                  >
+                {/if}
               </div>
-              {#if change.routeName}
-                <span class="route-name"
-                  >{formatRouteName(change.routeName)}</span
-                >
+
+              <!-- Title -->
+              <p class="card-title">{change.title}</p>
+
+              <!-- Date info -->
+              {#if formatRouteChangeDate(change)}
+                <p class="card-date">
+                  <Calendar class="date-icon" />
+                  <span>{formatRouteChangeDate(change)}</span>
+                </p>
               {/if}
+
+              <!-- Link -->
+              <a
+                href={change.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="card-link"
+              >
+                {$_("common.moreDetails")}
+                <ExternalLink class="link-icon" />
+              </a>
             </div>
-
-            <!-- Title -->
-            <p class="card-title">{change.title}</p>
-
-            <!-- Date info -->
-            {#if formatRouteChangeDate(change)}
-              <p class="card-date">
-                <Calendar class="date-icon" />
-                <span>{formatRouteChangeDate(change)}</span>
-              </p>
-            {/if}
-
-            <!-- Link -->
-            <a
-              href={change.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="card-link"
-            >
-              {$_("common.moreDetails")}
-              <ExternalLink class="link-icon" />
-            </a>
-          </div>
-        {/each}
-      </div>
+          {/each}
+        </div>
+      {/if}
     </section>
   {/if}
 
@@ -1352,5 +1474,55 @@
   .card-link :global(.link-icon) {
     width: 0.875rem;
     height: 0.875rem;
+  }
+
+  /* Accordion Styles */
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: hsl(var(--muted) / 0.5);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: hsl(var(--foreground));
+    transition: background-color 0.2s ease;
+  }
+
+  .accordion-header:hover {
+    background-color: hsl(var(--muted) / 0.8);
+  }
+
+  .accordion-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0;
+    color: hsl(var(--foreground) / 0.8);
+  }
+
+  .accordion-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.25rem;
+    padding: 0 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: hsl(var(--primary-foreground));
+    background-color: hsl(var(--primary));
+    border-radius: 9999px;
+  }
+
+  .accordion-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid hsl(var(--border));
   }
 </style>
