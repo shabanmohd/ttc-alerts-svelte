@@ -5,7 +5,7 @@
   import { onMount } from "svelte";
   import {
     ArrowLeft,
-    AlertOctagon,
+    AlertTriangle,
     CheckCircle,
     MapPin,
     Loader2,
@@ -661,7 +661,7 @@
   {#if !isNotOperational}
     <section class="mt-6">
       <h2 class="section-title">
-        <AlertOctagon class="h-4 w-4" />
+        <AlertTriangle class="h-4 w-4" />
         {$_("routes.activeAlerts")}
       </h2>
 
