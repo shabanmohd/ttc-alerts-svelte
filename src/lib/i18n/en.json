@@ -230,7 +230,7 @@
     "noActiveAlerts": "No active disruptions",
     "serviceRunningNormally": "Service is running normally on {route}",
     "routeChanges": "Route Changes",
-    "elevatorAlerts": "Elevator & Escalator Status",
+    "elevatorAlerts": "Elevator Alerts",
     "stopsAndETA": "Stops & Live ETA",
     "realtimePredictions": "Real-time arrival predictions"
   },
@@ -255,7 +255,9 @@
     "removeRouteTitle": "Remove Route?",
     "removeRouteConfirm": "Are you sure you want to remove {route}?",
     "removeRoute": "Remove Route",
-    "filterByRoute": "Filter by route"
+    "filterByRoute": "Filter by route",
+    "scheduledMaintenance": "Scheduled Maintenance",
+    "slowZones": "Slow Zones"
   },
   "stops": {
     "title": "Stops",

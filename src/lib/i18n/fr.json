@@ -229,7 +229,7 @@
     "activeAlerts": "Alertes de service actives",
     "noActiveAlerts": "Aucune perturbation active",
     "serviceRunningNormally": "Le service fonctionne normalement sur {route}",
-    "elevatorAlerts": "État des ascenseurs et escaliers mécaniques",
+    "elevatorAlerts": "Alertes d'ascenseurs",
     "stopsAndETA": "Arrêts et horaires en direct",
     "realtimePredictions": "Prédictions d'arrivée en temps réel",
     "routeChanges": "Changements d'itinéraires"
@@ -255,7 +255,9 @@
     "removeRouteConfirm": "Êtes-vous sûr de vouloir supprimer {route}?",
     "removeRoute": "Supprimer la ligne",
     "myAlerts": "Mes alertes",
-    "filterByRoute": "Filtrer par itinéraire"
+    "filterByRoute": "Filtrer par itinéraire",
+    "scheduledMaintenance": "Entretien prévu",
+    "slowZones": "Zones lentes"
   },
   "stops": {
     "title": "Arrêts",

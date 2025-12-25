@@ -12,6 +12,9 @@
     GitBranch,
     Calendar,
     ExternalLink,
+    AlertTriangle,
+    Accessibility,
+    Gauge,
   } from "lucide-svelte";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
@@ -306,9 +309,13 @@
   });
 
   // Separate RSZ alerts from regular alerts
-  // Elevator alerts are included in regularAlerts (they're not RSZ)
+  // Then separate elevator alerts from service disruption alerts
   let rszAlerts = $derived(myAlerts.filter(isRSZAlert));
-  let regularAlerts = $derived(myAlerts.filter((t) => !isRSZAlert(t)));
+  let allNonRSZAlerts = $derived(myAlerts.filter((t) => !isRSZAlert(t)));
+  
+  // Split into elevator alerts and service alerts
+  let elevatorAlerts = $derived(allNonRSZAlerts.filter(isElevatorAlert));
+  let serviceAlerts = $derived(allNonRSZAlerts.filter((t) => !isElevatorAlert(t)));
 
   // ====== Scheduled Maintenance Helpers ======
 
@@ -798,33 +805,83 @@
   {:else}
     <!-- Alert Cards for Saved Routes -->
     <div
-      class="space-y-3"
+      class="space-y-4"
       role="feed"
       aria-label="Alerts for your saved routes"
     >
       <!-- Active Scheduled Maintenance (closures happening now) -->
-      {#each activeMaintenanceForRoutes as thread, i (thread.thread_id)}
-        <div
-          class="animate-fade-in-up"
-          style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
-        >
-          <AlertCard {thread} />
-        </div>
-      {/each}
+      {#if activeMaintenanceForRoutes.length > 0}
+        <section class="alert-section">
+          <h3 class="section-heading">
+            <Calendar class="h-4 w-4" />
+            {$_("myRoutes.scheduledMaintenance")}
+          </h3>
+          <div class="section-content">
+            {#each activeMaintenanceForRoutes as thread, i (thread.thread_id)}
+              <div
+                class="animate-fade-in-up"
+                style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
+              >
+                <AlertCard {thread} />
+              </div>
+            {/each}
+          </div>
+        </section>
+      {/if}
 
-      <!-- Regular Alerts (non-RSZ) -->
-      {#each regularAlerts as thread, i (thread.thread_id)}
-        {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
-        <div
-          class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-          style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
-        >
-          <AlertCard {thread} />
-        </div>
-      {/each}
+      <!-- Service Alerts (non-RSZ, non-elevator) -->
+      {#if serviceAlerts.length > 0}
+        {#if activeMaintenanceForRoutes.length > 0}
+          <hr class="section-divider" />
+        {/if}
+        <section class="alert-section">
+          <h3 class="section-heading">
+            <AlertTriangle class="h-4 w-4" />
+            {$_("routes.activeAlerts")}
+          </h3>
+          <div class="section-content">
+            {#each serviceAlerts as thread, i (thread.thread_id)}
+              {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
+              <div
+                class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
+                style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+              >
+                <AlertCard {thread} />
+              </div>
+            {/each}
+          </div>
+        </section>
+      {/if}
+
+      <!-- Elevator Alerts -->
+      {#if elevatorAlerts.length > 0}
+        {#if activeMaintenanceForRoutes.length > 0 || serviceAlerts.length > 0}
+          <hr class="section-divider" />
+        {/if}
+        <section class="alert-section">
+          <h3 class="section-heading">
+            <Accessibility class="h-4 w-4" />
+            {$_("routes.elevatorAlerts")}
+          </h3>
+          <div class="section-content">
+            {#each elevatorAlerts as thread, i (thread.thread_id)}
+              {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
+              <div
+                class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
+                style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+              >
+                <AlertCard {thread} />
+              </div>
+            {/each}
+          </div>
+        </section>
+      {/if}
 
       <!-- RSZ Alerts grouped by line (lowest priority) -->
       {#if rszAlerts.length > 0}
+        {#if activeMaintenanceForRoutes.length > 0 || serviceAlerts.length > 0 || elevatorAlerts.length > 0}
+          <hr class="section-divider" />
+        {/if}
         {@const line1RSZ = rszAlerts.filter((t) => {
           const routes = t.affected_routes || t.latestAlert?.affected_routes;
           if (!routes) return false;
@@ -847,26 +904,38 @@
               r.toLowerCase().includes("line 2")
           );
         })}
-        {#if line1RSZ.length > 0}
-          <RSZAlertCard threads={line1RSZ} />
-        {/if}
-        {#if line2RSZ.length > 0}
-          <RSZAlertCard threads={line2RSZ} />
-        {/if}
+        <section class="alert-section">
+          <h3 class="section-heading">
+            <Gauge class="h-4 w-4" />
+            {$_("myRoutes.slowZones")}
+          </h3>
+          <div class="section-content">
+            {#if line1RSZ.length > 0}
+              <RSZAlertCard threads={line1RSZ} />
+            {/if}
+            {#if line2RSZ.length > 0}
+              <RSZAlertCard threads={line2RSZ} />
+            {/if}
+          </div>
+        </section>
       {/if}
 
       <!-- Route Changes (from TTC website) -->
       {#if filteredRouteChanges.length > 0}
-        <div class="route-changes-section">
-          <h3 class="route-changes-title">
+        {#if activeMaintenanceForRoutes.length > 0 || serviceAlerts.length > 0 || elevatorAlerts.length > 0 || rszAlerts.length > 0}
+          <hr class="section-divider" />
+        {/if}
+        <section class="alert-section">
+          <h3 class="section-heading">
             <GitBranch class="h-4 w-4" />
             {$_("routes.routeChanges")}
           </h3>
-          {#each filteredRouteChanges as change, i (change.id)}
-            <div
-              class="route-change-card animate-fade-in-up"
-              style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
-            >
+          <div class="section-content">
+            {#each filteredRouteChanges as change, i (change.id)}
+              <div
+                class="route-change-card animate-fade-in-up"
+                style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
+              >
               <!-- Header: all affected routes + route name -->
               <div class="route-change-header">
                 <div class="route-badges">
@@ -902,7 +971,8 @@
               </a>
             </div>
           {/each}
-        </div>
+          </div>
+        </section>
       {/if}
     </div>
   {/if}
@@ -959,6 +1029,36 @@
 <style>
   .my-route-alerts {
     min-height: 200px;
+  }
+
+  /* Section styling for alert groups */
+  .alert-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin: 0;
+    padding: 0;
+  }
+
+  .section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid hsl(var(--border));
+    margin: 0.5rem 0;
   }
 
   .search-section {

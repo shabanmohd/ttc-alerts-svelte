@@ -230,6 +230,7 @@
     "noActiveAlerts": "No active disruptions",
     "serviceRunningNormally": "Service is running normally on {route}",
     "routeChanges": "Route Changes",
+    "elevatorAlerts": "Elevator & Escalator Status",
     "stopsAndETA": "Stops & Live ETA",
     "realtimePredictions": "Real-time arrival predictions"
   },

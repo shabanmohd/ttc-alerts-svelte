@@ -11,6 +11,7 @@
     GitBranch,
     Calendar,
     ExternalLink,
+    Accessibility,
   } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
@@ -755,9 +756,12 @@
 
   <!-- Elevator/Escalator Alerts Section (only for subway lines) -->
   {#if isSubwayLine && elevatorAlerts.length > 0}
+    {#if routeAlerts.length > 0}
+      <hr class="section-divider" />
+    {/if}
     <section class="mt-6">
       <h2 class="section-title">
-        <AlertTriangle class="h-4 w-4" />
+        <Accessibility class="h-4 w-4" />
         {$_("routes.elevatorAlerts")}
       </h2>
 
@@ -771,6 +775,9 @@
 
   <!-- Route Changes Section (if any affect this route) -->
   {#if filteredRouteChanges.length > 0}
+    {#if routeAlerts.length > 0 || (isSubwayLine && elevatorAlerts.length > 0)}
+      <hr class="section-divider" />
+    {/if}
     <section class="mt-6">
       <h2 class="section-title">
         <GitBranch class="h-4 w-4" />
@@ -1003,6 +1010,12 @@
     font-size: 1rem;
     font-weight: 600;
     color: hsl(var(--foreground));
+  }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid hsl(var(--border));
+    margin: 1rem 0 0;
   }
 
   /* Mobile: stack header vertically */
