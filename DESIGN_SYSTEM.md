@@ -1084,6 +1084,51 @@ All settings cards follow a consistent header structure:
 </button>
 ```
 
+### Error Page (404)
+
+The error page (`+error.svelte`) displays a responsive, centered layout for 404 and other error states.
+
+#### Layout Structure
+
+```
+┌─────────────────────────────────────────────────────┐
+│              ┌──────────────┐                       │
+│              │  Error Icon  │  (6-8rem circle)      │
+│              └──────────────┘                       │
+│                                                     │
+│                    404                              │
+│                Page Not Found                       │
+│         The page you're looking for...             │
+│                                                     │
+│    ┌──────────┐  ┌──────────────┐                  │
+│    │ Go Home  │  │   Go Back    │                  │
+│    └──────────┘  └──────────────┘                  │
+│                                                     │
+│    ─────────────────────────────                   │
+│              Helpful Links                          │
+│    ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐    │
+│    │ Alerts │ │ Routes │ │Settings│ │  Help  │    │
+│    └────────┘ └────────┘ └────────┘ └────────┘    │
+└─────────────────────────────────────────────────────┘
+```
+
+#### Key Styling
+
+| Element         | Desktop                    | Mobile                        |
+| --------------- | -------------------------- | ----------------------------- |
+| Error Icon      | 8rem circle                | 6rem circle                   |
+| Error Code      | 6rem, weight 800           | 4rem, weight 800              |
+| Title           | 2rem, weight 700           | 1.5rem, weight 700            |
+| Action Buttons  | Horizontal row             | Stacked vertically, max 280px |
+| Helpful Links   | 4-column grid              | 2-column grid                 |
+
+#### Icon Variants
+
+| Status | Icon            | Circle Color                    |
+| ------ | --------------- | ------------------------------- |
+| 404    | `SearchX`       | `hsl(var(--muted))`             |
+| Other  | `AlertTriangle` | `hsl(var(--destructive) / 0.1)` |
+
 ### Empty States
 
 Empty states are displayed when content is not available or when filters produce no results. They follow a consistent pattern across the app.

@@ -728,5 +728,20 @@
     "licenseInfo": "Alertes TTC est construit avec des logiciels open source. Consultez le dépôt du projet pour les informations de licence complètes.",
     "madeWith": "Fait avec",
     "inToronto": "à Toronto"
+  },
+  "error": {
+    "notFound": {
+      "pageTitle": "Page non trouvée - Alertes TTC",
+      "title": "Page non trouvée",
+      "description": "La page que vous recherchez n'existe pas ou a été déplacée."
+    },
+    "generic": {
+      "pageTitle": "Erreur - Alertes TTC",
+      "title": "Une erreur s'est produite",
+      "description": "Une erreur inattendue s'est produite. Veuillez réessayer."
+    },
+    "goHome": "Accueil",
+    "goBack": "Retour",
+    "helpfulLinks": "Liens utiles"
   }
 }

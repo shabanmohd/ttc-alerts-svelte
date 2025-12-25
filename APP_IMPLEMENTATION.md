@@ -113,6 +113,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | File                              | Status | Purpose                                                   |
 | --------------------------------- | ------ | --------------------------------------------------------- |
 | `+layout.svelte`                  | ✅     | App layout, auth init, dialogs                            |
+| `+error.svelte`                   | ✅     | 404 and error page - responsive, i18n, helpful links 🆕   |
 | `+page.svelte`                    | ✅     | Homepage with alert tabs + ETA                            |
 | `alerts/+page.svelte`             | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3) |
 | `alerts-v3/+page.svelte`          | 📦     | Legacy alerts page (old design, kept for reference)       |

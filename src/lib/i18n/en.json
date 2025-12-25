@@ -728,5 +728,20 @@
     "licenseInfo": "TTC Alerts is built with open source software. See the project repository for full license information.",
     "madeWith": "Made with",
     "inToronto": "in Toronto"
+  },
+  "error": {
+    "notFound": {
+      "pageTitle": "Page Not Found - TTC Alerts",
+      "title": "Page Not Found",
+      "description": "The page you're looking for doesn't exist or may have been moved."
+    },
+    "generic": {
+      "pageTitle": "Error - TTC Alerts",
+      "title": "Something Went Wrong",
+      "description": "An unexpected error occurred. Please try again."
+    },
+    "goHome": "Go Home",
+    "goBack": "Go Back",
+    "helpfulLinks": "Helpful Links"
   }
 }
