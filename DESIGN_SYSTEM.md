@@ -1034,15 +1034,15 @@ The Maintenance Widget displays planned subway closures. Each maintenance item u
 
 **Global Card Border Standard**: All cards use `2px` borders for better visual separation when stacked vertically.
 
-| Card Type          | Border Style                    | Location                     |
-| ------------------ | ------------------------------- | ---------------------------- |
-| ETACard            | `border-2` (Tailwind)           | ETACard.svelte               |
-| Alert Card         | `border: 2px solid`             | layout.css `.alert-card`     |
-| RSZ Alert Card     | `border: 2px solid`             | RSZAlertCard.svelte          |
-| Route Change Card  | `border: 2px solid`             | RouteChangesView.svelte      |
-| Maintenance Widget | `border: 2px solid`             | MaintenanceWidget.svelte     |
-| Subway Status Card | `border: 2px solid`             | alerts/+page.svelte          |
-| shadcn Card.Root   | Default (uses component styles) | From shadcn-svelte           |
+| Card Type          | Border Style                    | Location                 |
+| ------------------ | ------------------------------- | ------------------------ |
+| ETACard            | `border-2` (Tailwind)           | ETACard.svelte           |
+| Alert Card         | `border: 2px solid`             | layout.css `.alert-card` |
+| RSZ Alert Card     | `border: 2px solid`             | RSZAlertCard.svelte      |
+| Route Change Card  | `border: 2px solid`             | RouteChangesView.svelte  |
+| Maintenance Widget | `border: 2px solid`             | MaintenanceWidget.svelte |
+| Subway Status Card | `border: 2px solid`             | alerts/+page.svelte      |
+| shadcn Card.Root   | Default (uses component styles) | From shadcn-svelte       |
 
 ```svelte
 <Card.Root>
@@ -1103,24 +1103,17 @@ The error page (`+error.svelte`) displays a responsive, centered layout for 404 
 │    ┌──────────┐  ┌──────────────┐                  │
 │    │ Go Home  │  │   Go Back    │                  │
 │    └──────────┘  └──────────────┘                  │
-│                                                     │
-│    ─────────────────────────────                   │
-│              Helpful Links                          │
-│    ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐    │
-│    │ Alerts │ │ Routes │ │Settings│ │  Help  │    │
-│    └────────┘ └────────┘ └────────┘ └────────┘    │
 └─────────────────────────────────────────────────────┘
 ```
 
 #### Key Styling
 
-| Element         | Desktop                    | Mobile                        |
-| --------------- | -------------------------- | ----------------------------- |
-| Error Icon      | 8rem circle                | 6rem circle                   |
-| Error Code      | 6rem, weight 800           | 4rem, weight 800              |
-| Title           | 2rem, weight 700           | 1.5rem, weight 700            |
-| Action Buttons  | Horizontal row             | Stacked vertically, max 280px |
-| Helpful Links   | 4-column grid              | 2-column grid                 |
+| Element        | Desktop          | Mobile                        |
+| -------------- | ---------------- | ----------------------------- |
+| Error Icon     | 8rem circle      | 6rem circle                   |
+| Error Code     | 6rem, weight 800 | 4rem, weight 800              |
+| Title          | 2rem, weight 700 | 1.5rem, weight 700            |
+| Action Buttons | Horizontal row   | Stacked vertically, max 280px |
 
 #### Icon Variants
 
@@ -1374,6 +1367,8 @@ Status priority determines card background color when multiple statuses are pres
 
 ```css
 .subway-status-card                    /* Card container */
+/* Card container */
+/* Card container */
 /* Card container */
 .subway-status-card.status-ok          /* Normal service - green */
 .subway-status-card.status-disruption  /* Disruption - red */

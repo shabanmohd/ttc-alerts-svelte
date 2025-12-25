@@ -10,8 +10,10 @@
     Info,
     Check,
     X,
+    CloudOff,
   } from "lucide-svelte";
   import { lastUpdated, refreshAlerts, isConnected } from "$lib/stores/alerts";
+  import { isOnline } from "$lib/stores/networkStatus";
   import { etaStore } from "$lib/stores/eta";
   import { language, getSupportedLanguages } from "$lib/stores/language";
   import { localPreferences } from "$lib/stores/localPreferences";
@@ -121,13 +123,18 @@
         <div class="w-px h-4 bg-border"></div>
         <div
           class="flex items-center gap-1.5 px-2 py-1.5 text-xs text-muted-foreground font-normal"
-          title={$isConnected
-            ? $_("header.liveUpdates")
-            : $_("header.connecting")}
+          title={!$isOnline
+            ? $_("networkStatus.offline.message")
+            : $isConnected
+              ? $_("header.liveUpdates")
+              : $_("header.connecting")}
           role="status"
           aria-live="polite"
         >
-          {#if $isConnected}
+          {#if !$isOnline}
+            <!-- Offline: red cloud-off icon -->
+            <CloudOff class="w-3 h-3 text-destructive" />
+          {:else if $isConnected}
             <!-- Connected: pulsing green dot -->
             <span class="relative flex h-2 w-2">
               <span
@@ -154,13 +161,18 @@
       <!-- Mobile-only: Compact Status (dot + time) -->
       <div
         class="sm:hidden flex items-center gap-1.5 text-xs text-muted-foreground font-normal"
-        title={$isConnected
-          ? $_("header.liveUpdates")
-          : $_("header.connecting")}
+        title={!$isOnline
+          ? $_("networkStatus.offline.message")
+          : $isConnected
+            ? $_("header.liveUpdates")
+            : $_("header.connecting")}
         role="status"
         aria-live="polite"
       >
-        {#if $isConnected}
+        {#if !$isOnline}
+          <!-- Offline: red cloud-off icon -->
+          <CloudOff class="w-3 h-3 text-destructive" />
+        {:else if $isConnected}
           <!-- Connected: pulsing green dot -->
           <span class="relative flex h-2 w-2">
             <span

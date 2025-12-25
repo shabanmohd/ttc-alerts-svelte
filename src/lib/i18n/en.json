@@ -74,6 +74,24 @@
     "lightMode": "Light Mode",
     "language": "Language"
   },
+  "networkStatus": {
+    "offline": {
+      "message": "You're offline",
+      "description": "Showing cached data. Some features may be unavailable."
+    },
+    "degraded": {
+      "message": "Connection issues",
+      "description": "Realtime updates are temporarily unavailable."
+    },
+    "connecting": {
+      "message": "Connecting...",
+      "description": "Establishing connection to server."
+    },
+    "online": {
+      "message": "Connected",
+      "description": "Live updates active."
+    }
+  },
   "navigation": {
     "home": "Home",
     "alerts": "Alerts",
@@ -123,7 +141,10 @@
     "search": "Search alerts...",
     "clearSearch": "Clear search",
     "loading": "Loading alerts...",
-    "error": "Failed to load alerts",
+    "error": {
+      "title": "Unable to load alerts",
+      "description": "There was a problem fetching the latest alerts. Please check your connection and try again."
+    },
     "lastUpdated": "Last updated: {time}"
   },
   "filters": {
@@ -741,7 +762,6 @@
       "description": "An unexpected error occurred. Please try again."
     },
     "goHome": "Go Home",
-    "goBack": "Go Back",
-    "helpfulLinks": "Helpful Links"
+    "goBack": "Go Back"
   }
 }

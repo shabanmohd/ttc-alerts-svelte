@@ -7,7 +7,11 @@
 </script>
 
 <svelte:head>
-  <title>{$page.status === 404 ? $_("error.notFound.pageTitle") : $_("error.generic.pageTitle")}</title>
+  <title
+    >{$page.status === 404
+      ? $_("error.notFound.pageTitle")
+      : $_("error.generic.pageTitle")}</title
+  >
 </svelte:head>
 
 <Header />
@@ -58,25 +62,6 @@
         <ArrowLeft class="h-4 w-4" />
         {$_("error.goBack")}
       </Button>
-    </div>
-
-    <!-- Helpful Links -->
-    <div class="helpful-links">
-      <p class="helpful-links-title">{$_("error.helpfulLinks")}</p>
-      <div class="links-grid">
-        <a href="/alerts" class="link-item">
-          {$_("navigation.alerts")}
-        </a>
-        <a href="/routes" class="link-item">
-          {$_("navigation.routes")}
-        </a>
-        <a href="/settings" class="link-item">
-          {$_("navigation.settings")}
-        </a>
-        <a href="/help" class="link-item">
-          {$_("help.title")}
-        </a>
-      </div>
     </div>
   </div>
 </main>
@@ -158,7 +143,6 @@
     gap: 0.75rem;
     width: 100%;
     max-width: 280px;
-    margin-bottom: 3rem;
   }
 
   @media (min-width: 640px) {
@@ -167,47 +151,5 @@
       max-width: none;
       width: auto;
     }
-  }
-
-  .helpful-links {
-    border-top: 1px solid hsl(var(--border));
-    padding-top: 2rem;
-    width: 100%;
-    max-width: 400px;
-  }
-
-  .helpful-links-title {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: hsl(var(--muted-foreground));
-    margin-bottom: 1rem;
-  }
-
-  .links-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-
-  @media (min-width: 640px) {
-    .links-grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  .link-item {
-    display: block;
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius);
-    background-color: hsl(var(--muted));
-    color: hsl(var(--foreground));
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
-  }
-
-  .link-item:hover {
-    background-color: hsl(var(--muted-foreground) / 0.15);
   }
 </style>

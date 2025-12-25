@@ -4,11 +4,12 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { browser } from "$app/environment";
-  import { Zap, Calendar, CheckCircle } from "lucide-svelte";
+  import { Zap, Calendar, CheckCircle, RefreshCw, AlertTriangle } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
   import RSZAlertCard from "$lib/components/alerts/RSZAlertCard.svelte";
   import { Skeleton } from "$lib/components/ui/skeleton";
+  import { Button } from "$lib/components/ui/button";
   import {
     threadsWithAlerts,
     isLoading,
@@ -454,6 +455,15 @@
     });
   });
 
+  // Retry handler for failed fetches
+  let isRetrying = $state(false);
+  async function handleRetry() {
+    isRetrying = true;
+    await fetchAlerts();
+    await fetchMaintenance();
+    isRetrying = false;
+  }
+
   onMount(() => {
     fetchAlerts();
     fetchMaintenance();
@@ -517,8 +527,21 @@
           <Skeleton class="h-24 w-full rounded-lg" />
         </div>
       {:else if $error}
-        <div class="error-message">
-          <p>Unable to load alerts. Please try again.</p>
+        <div class="error-state">
+          <div class="error-icon">
+            <AlertTriangle class="h-8 w-8" />
+          </div>
+          <h3 class="error-title">{$_("alerts.error.title")}</h3>
+          <p class="error-description">{$_("alerts.error.description")}</p>
+          <Button 
+            variant="outline" 
+            onclick={handleRetry}
+            disabled={isRetrying}
+            class="gap-2"
+          >
+            <RefreshCw class="h-4 w-4 {isRetrying ? 'animate-spin' : ''}" />
+            {isRetrying ? $_("common.refreshing") : $_("common.tryAgain")}
+          </Button>
         </div>
       {:else}
         <!-- RSZ alerts (for delays tab) -->
@@ -701,11 +724,43 @@
     gap: 0.75rem;
   }
 
-  /* Error message */
-  .error-message {
-    padding: 2rem;
+  /* Error state */
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
     text-align: center;
+    border: 1px dashed hsl(var(--border));
+    border-radius: var(--radius);
+    background-color: hsl(var(--muted) / 0.3);
+  }
+
+  .error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 9999px;
+    background-color: hsl(var(--destructive) / 0.1);
     color: hsl(var(--destructive));
+    margin-bottom: 1rem;
+  }
+
+  .error-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin-bottom: 0.5rem;
+  }
+
+  .error-description {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 1.5rem;
+    max-width: 280px;
   }
 
   /* RSZ section */

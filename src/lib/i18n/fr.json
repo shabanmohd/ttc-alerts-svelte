@@ -123,7 +123,10 @@
     "search": "Rechercher des alertes...",
     "clearSearch": "Effacer la recherche",
     "loading": "Chargement des alertes...",
-    "error": "Échec du chargement des alertes",
+    "error": {
+      "title": "Impossible de charger les alertes",
+      "description": "Il y a eu un problème pour récupérer les dernières alertes. Veuillez vérifier votre connexion et réessayer."
+    },
     "lastUpdated": "Dernière mise à jour : {time}"
   },
   "filters": {
@@ -741,7 +744,24 @@
       "description": "Une erreur inattendue s'est produite. Veuillez réessayer."
     },
     "goHome": "Accueil",
-    "goBack": "Retour",
-    "helpfulLinks": "Liens utiles"
+    "goBack": "Retour"
+  },
+  "networkStatus": {
+    "offline": {
+      "message": "Vous êtes hors ligne",
+      "description": "Affichage des données mises en cache. Certaines fonctionnalités peuvent être indisponibles."
+    },
+    "degraded": {
+      "message": "Problèmes de connexion",
+      "description": "Les mises à jour en temps réel sont temporairement indisponibles."
+    },
+    "connecting": {
+      "message": "Connexion...",
+      "description": "Établissement de la connexion avec le serveur."
+    },
+    "online": {
+      "message": "Connecté",
+      "description": "Les mises à jour en direct sont actives."
+    }
   }
 }

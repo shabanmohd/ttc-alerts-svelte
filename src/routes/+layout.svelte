@@ -5,6 +5,7 @@
   import Sidebar from "$lib/components/layout/Sidebar.svelte";
   import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
   import PullToRefresh from "$lib/components/layout/PullToRefresh.svelte";
+  import StatusBanner from "$lib/components/layout/StatusBanner.svelte";
   import {
     ReportIssueDialog,
     FeatureRequestDialog,
@@ -23,6 +24,7 @@
   import { initLanguage } from "$lib/stores/language";
   import { initI18n } from "$lib/i18n";
   import { activeDialog, openDialog, closeDialog } from "$lib/stores/dialogs";
+  import { initNetworkListeners } from "$lib/stores/networkStatus";
 
   // Initialize i18n translations
   initI18n();
@@ -33,6 +35,7 @@
   let { children } = $props();
 
   let unsubscribeAlerts: (() => void) | null = null;
+  let cleanupNetworkListeners: (() => void) | undefined;
 
   // Pull-to-refresh handler
   async function handlePullRefresh() {
@@ -41,6 +44,9 @@
 
   // Initialize app on mount
   onMount(async () => {
+    // Initialize network status listeners
+    cleanupNetworkListeners = initNetworkListeners();
+
     // Initialize IndexedDB storage (with migration from old localStorage)
     await initializeStorage();
 
@@ -62,6 +68,7 @@
   onDestroy(() => {
     // Cleanup subscriptions
     if (unsubscribeAlerts) unsubscribeAlerts();
+    if (cleanupNetworkListeners) cleanupNetworkListeners();
   });
 </script>
 
@@ -80,6 +87,9 @@
 
 <!-- Desktop Sidebar -->
 <Sidebar onOpenDialog={openDialog} />
+
+<!-- Network Status Banner (shows when offline or degraded) -->
+<StatusBanner />
 
 <!-- Main wrapper with pull-to-refresh -->
 <PullToRefresh onRefresh={handlePullRefresh}>
