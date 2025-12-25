@@ -650,11 +650,21 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 **Purpose:** Filter tabs and categories on the alerts page now sync with URL query parameters, enabling shareable links and browser history navigation.
 
+**URL Structure:**
+
+| Tab       | Filter/Subtab | URL                                         |
+|-----------|---------------|---------------------------------------------|
+| Now       | Disruptions   | `/alerts` (default)                         |
+| Now       | Slow Zones    | `/alerts?category=slowzones`                |
+| Now       | Elevators     | `/alerts?category=elevators`                |
+| Scheduled | Closures      | `/alerts?tab=scheduled`                     |
+| Scheduled | Route Changes | `/alerts?tab=scheduled&subtab=routechanges` |
+
 **Features:**
 
-- Tab selections update URL (e.g., `/alerts?tab=planned`)
-- Category selections update URL (e.g., `/alerts?category=delays`)
-- Combined filters work (e.g., `/alerts?tab=now&category=elevators`)
+- Tab selections update URL (`?tab=scheduled` for Scheduled tab)
+- Category selections update URL for Now tab (`?category=slowzones` or `?category=elevators`)
+- Subtab selections update URL for Scheduled tab (`?subtab=routechanges`)
 - Page load reads URL params to restore filter state
 - Uses `replaceState` to avoid polluting browser history
 - Browser back/forward navigation works correctly
@@ -663,11 +673,14 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 - Uses SvelteKit's `goto()` with `replaceState: true, noScroll: true, keepFocus: true`
 - Browser-safe initialization with `$app/environment` (`browser` guard)
-- Default values: tab=`now`, category=`disruptions` (no params needed for defaults)
+- URL param mappings: `delays` internal → `slowzones` URL, `changes` internal → `routechanges` URL
+- Default values omitted from URL: tab=`now`, category=`disruptions`, subtab=`closures`
+- Category param only appears for Now tab; subtab param only appears for Scheduled tab
 
 **Files Changed:**
 
-- `src/routes/alerts/+page.svelte` - Added URL param sync logic
+- `src/routes/alerts/+page.svelte` - URL param sync logic with mappings
+- `src/routes/alerts/PlannedContent.svelte` - Controlled component with subtab props
 
 ---
 
