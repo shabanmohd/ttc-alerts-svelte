@@ -125,13 +125,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Alerts Components (`src/routes/alerts/`)
 
-| File                      | Status | Purpose                                                                |
-| ------------------------- | ------ | ---------------------------------------------------------------------- |
-| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs with icons (Zap/Calendar), 576px layout  |
-| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile) - matches production CSS         |
-| `CategoryFilterV3.svelte` | ✅     | Compact pill filter (Disruptions & Delays/Slow Zones/Elevators)        |
-| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API) |
-| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)           |
+| File                      | Status | Purpose                                                                             |
+| ------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs, URL param sync (tab/category), 576px layout 🆕 **B** |
+| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile) - matches production CSS                      |
+| `CategoryFilterV3.svelte` | ✅     | Compact pill filter (Disruptions & Delays/Slow Zones/Elevators)                     |
+| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)              |
+| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)                        |
 
 ### Backend (`supabase/`)
 
@@ -645,6 +645,31 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 ---
 
 ## Changelog
+
+### Jan 18, 2025 - URL Parameter Sync for Alert Filters
+
+**Purpose:** Filter tabs and categories on the alerts page now sync with URL query parameters, enabling shareable links and browser history navigation.
+
+**Features:**
+
+- Tab selections update URL (e.g., `/alerts?tab=planned`)
+- Category selections update URL (e.g., `/alerts?category=delays`)
+- Combined filters work (e.g., `/alerts?tab=now&category=elevators`)
+- Page load reads URL params to restore filter state
+- Uses `replaceState` to avoid polluting browser history
+- Browser back/forward navigation works correctly
+
+**Technical Details:**
+
+- Uses SvelteKit's `goto()` with `replaceState: true, noScroll: true, keepFocus: true`
+- Browser-safe initialization with `$app/environment` (`browser` guard)
+- Default values: tab=`now`, category=`disruptions` (no params needed for defaults)
+
+**Files Changed:**
+
+- `src/routes/alerts/+page.svelte` - Added URL param sync logic
+
+---
 
 ### Jan 18, 2025 - Alerts V3: Now Live at /alerts
 
