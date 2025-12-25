@@ -734,17 +734,6 @@
       <MapPin class="h-4 w-4" />
       {$_("routes.stopsAndETA")}
     </h2>
-    {#if !isNotOperational}
-      <p class="text-xs text-muted-foreground -mt-1 mb-3">
-        {$_("routes.realtimePredictions")}{" "}
-        <a
-          href="https://www.ttc.ca/routes-and-schedules"
-          target="_blank"
-          rel="noopener"
-          class="underline hover:text-foreground">ttc.ca</a
-        >
-      </p>
-    {/if}
 
     <div class="stops-section mt-3">
       {#if isNotOperational}
