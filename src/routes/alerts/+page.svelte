@@ -1,6 +1,9 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
+  import { browser } from "$app/environment";
   import { Zap, Calendar, CheckCircle } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
@@ -25,12 +28,54 @@
 
   import type { ThreadWithAlerts } from "$lib/types/database";
 
-  // Tab state: "now" or "planned"
-  let activeTab: "now" | "planned" = $state("now");
+  // Parse URL params to get initial state
+  function getInitialTab(): "now" | "planned" {
+    if (!browser) return "now";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("tab") === "planned" ? "planned" : "now";
+  }
 
-  // Category filter: "disruptions" | "delays" | "elevators"
+  function getInitialCategory(): "disruptions" | "delays" | "elevators" {
+    if (!browser) return "disruptions";
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get("category");
+    if (cat === "delays" || cat === "elevators") return cat;
+    return "disruptions";
+  }
+
+  // Tab state: "now" or "planned" - initialized from URL params
+  let activeTab: "now" | "planned" = $state(getInitialTab());
+
+  // Category filter: "disruptions" | "delays" | "elevators" - initialized from URL params
   let selectedCategory: "disruptions" | "delays" | "elevators" =
-    $state("disruptions");
+    $state(getInitialCategory());
+
+  // Update URL when tab changes (shallow navigation without full reload)
+  function updateUrl(tab: "now" | "planned", category: "disruptions" | "delays" | "elevators") {
+    if (!browser) return;
+    const params = new URLSearchParams();
+    if (tab !== "now") params.set("tab", tab);
+    if (category !== "disruptions") params.set("category", category);
+    const queryString = params.toString();
+    const newUrl = queryString ? `/alerts?${queryString}` : "/alerts";
+    goto(newUrl, { replaceState: true, noScroll: true, keepFocus: true });
+  }
+
+  // Handle tab change
+  function setActiveTab(tab: "now" | "planned") {
+    activeTab = tab;
+    // Reset category to disruptions when switching to "now" tab
+    if (tab === "now" && selectedCategory !== "disruptions") {
+      selectedCategory = "disruptions";
+    }
+    updateUrl(tab, selectedCategory);
+  }
+
+  // Handle category change
+  function setCategory(cat: "disruptions" | "delays" | "elevators") {
+    selectedCategory = cat;
+    updateUrl(activeTab, cat);
+  }
 
   // Subway lines configuration
   const SUBWAY_LINES = [
@@ -366,7 +411,7 @@
         class:active={activeTab === "now"}
         role="tab"
         aria-selected={activeTab === "now"}
-        onclick={() => (activeTab = "now")}
+        onclick={() => setActiveTab("now")}
       >
         <Zap class="h-4 w-4" />
         Now
@@ -376,7 +421,7 @@
         class:active={activeTab === "planned"}
         role="tab"
         aria-selected={activeTab === "planned"}
-        onclick={() => (activeTab = "planned")}
+        onclick={() => setActiveTab("planned")}
       >
         <Calendar class="h-4 w-4" />
         Scheduled
@@ -388,7 +433,7 @@
       <CategoryFilterV3
         selected={selectedCategory}
         counts={categoryCounts}
-        onSelect={(cat) => (selectedCategory = cat)}
+        onSelect={(cat) => setCategory(cat)}
       />
 
       <!-- Loading state -->
