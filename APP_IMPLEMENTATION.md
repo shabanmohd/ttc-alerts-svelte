@@ -290,10 +290,15 @@ Real-time Toronto Transit alerts with biometric authentication.
 - **GTFS Data**: 9,270 stops with first bus times (weekday/saturday/sunday)
 - **Day Type Detection**: Weekday, Saturday, Sunday (auto-detected)
 - **Holiday Handling**: TTC holidays use Sunday schedule (2025-2026 holidays defined)
+- **7-Day Lookahead**: Checks up to 7 days ahead to find next service (handles holiday gaps, weekends for express routes)
 - **Express Route PM Schedule**: 9xx routes show PM first departure (after 3PM) on weekday afternoons when no live ETA
 - **No Weekend Service**: Express routes (9xx) show "No Weekend Service" on Sat/Sun (express routes don't operate weekends)
 - **No Service Detection**: Routes without schedule data show "No Service"
 - **12-Hour Format**: Times displayed as "5:21 AM" format
+- **Label Formats**:
+  - Tomorrow: `Tomorrow` or `Tomorrow - Christmas Day`
+  - Future days: `Mon, Dec 29` (abbreviated day, comma, date)
+  - Future holidays: `Thu, Dec 25 - Christmas Day`
 
 ### Utilities (`src/lib/utils/`) 🆕 **Version B Only**
 
