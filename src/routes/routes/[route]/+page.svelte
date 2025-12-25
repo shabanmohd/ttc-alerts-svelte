@@ -6,7 +6,6 @@
   import {
     ArrowLeft,
     AlertTriangle,
-    CheckCircle,
     MapPin,
     Loader2,
     GitBranch,
@@ -657,8 +656,8 @@
     />
   </div>
 
-  <!-- Active Alerts Section (hidden for lines not yet operational) -->
-  {#if !isNotOperational}
+  <!-- Active Alerts Section (only show when there are alerts) -->
+  {#if !isNotOperational && !$isLoading && routeAlerts.length > 0}
     <section class="mt-6">
       <h2 class="section-title">
         <AlertTriangle class="h-4 w-4" />
@@ -666,44 +665,14 @@
       </h2>
 
       <div class="space-y-3 mt-3">
-        {#if $isLoading}
-          {#each Array(2) as _}
-            <div class="alert-card" aria-hidden="true">
-              <div class="alert-card-content">
-                <div class="alert-card-header">
-                  <div class="alert-card-badges">
-                    <Skeleton class="h-6 w-16 rounded-md" />
-                    <Skeleton class="h-5 w-20 rounded-full" />
-                  </div>
-                  <Skeleton class="h-4 w-16" />
-                </div>
-                <Skeleton class="h-4 w-full mt-3" />
-                <Skeleton class="h-4 w-3/4 mt-2" />
-              </div>
-            </div>
-          {/each}
-        {:else if routeAlerts.length === 0}
-          <div class="no-alerts">
-            <div class="no-alerts-icon">
-              <CheckCircle class="h-6 w-6" />
-            </div>
-            <p class="no-alerts-title">{$_("routes.noActiveAlerts")}</p>
-            <p class="no-alerts-description">
-              {$_("routes.serviceRunningNormally", {
-                values: { route: routeId },
-              })}
-            </p>
-          </div>
-        {:else}
-          <!-- Regular (non-RSZ) alerts -->
-          {#each nonRSZAlerts as thread (thread.thread_id)}
-            <AlertCard {thread} />
-          {/each}
+        <!-- Regular (non-RSZ) alerts -->
+        {#each nonRSZAlerts as thread (thread.thread_id)}
+          <AlertCard {thread} />
+        {/each}
 
-          <!-- RSZ alerts (grouped table display) -->
-          {#if rszAlerts.length > 0}
-            <RSZAlertCard threads={rszAlerts} />
-          {/if}
+        <!-- RSZ alerts (grouped table display) -->
+        {#if rszAlerts.length > 0}
+          <RSZAlertCard threads={rszAlerts} />
         {/if}
       </div>
     </section>
@@ -954,41 +923,6 @@
     font-size: 1rem;
     font-weight: 600;
     color: hsl(var(--foreground));
-  }
-
-  .no-alerts {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 2.5rem 1.5rem;
-    background-color: hsl(var(--muted) / 0.3);
-    border-radius: var(--radius);
-    border: 1px dashed hsl(var(--border));
-  }
-
-  .no-alerts-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    background-color: hsl(142 76% 36% / 0.1);
-    color: hsl(142 76% 36%);
-    margin-bottom: 0.75rem;
-  }
-
-  .no-alerts-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: hsl(var(--foreground));
-    margin-bottom: 0.25rem;
-  }
-
-  .no-alerts-description {
-    font-size: 0.875rem;
-    color: hsl(var(--muted-foreground));
   }
 
   /* Mobile: stack header vertically */
