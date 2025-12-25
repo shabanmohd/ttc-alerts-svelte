@@ -31,7 +31,7 @@ export interface NextDepartureInfo {
   time: string;           // e.g., "5:31 AM"
   dayType: string;        // e.g., "weekday", "Saturday", "Sunday"
   isToday: boolean;       // Whether this departure is today or tomorrow
-  tomorrowLabel?: string; // e.g., "Tomorrow (Saturday)" or "Friday Dec 27"
+  tomorrowLabel?: string; // e.g., "Tomorrow", "Tomorrow - Christmas Day", "Mon, Dec 29"
   nextWeekdayLabel?: string; // e.g., "Monday" - for express routes on weekends
   isPM?: boolean;         // Whether this is an evening/PM departure
   noWeekendService?: boolean; // Express routes don't run on weekends
@@ -293,19 +293,20 @@ export function getNextScheduledDeparture(
     
     if (futureFirst) {
       const futureHoliday = getTTCHoliday(futureDate);
-      const futureDayName = futureDate.toLocaleDateString('en-US', { weekday: 'long' });
       
       let futureLabel: string;
       if (daysAhead === 1) {
+        // Tomorrow: "Tomorrow" or "Tomorrow - Christmas Day"
         futureLabel = futureHoliday 
-          ? `Tomorrow (${futureHoliday.name})` 
-          : `Tomorrow (${futureDayName})`;
+          ? `Tomorrow - ${futureHoliday.name}` 
+          : 'Tomorrow';
       } else {
-        // For days further ahead, show the day name and optionally date
+        // Future days: "Mon, Dec 29" or "Thu, Dec 25 - Christmas Day"
+        const dayAbbr = futureDate.toLocaleDateString('en-US', { weekday: 'short' });
         const dateStr = futureDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         futureLabel = futureHoliday
-          ? `${futureDayName} ${dateStr} (${futureHoliday.name})`
-          : `${futureDayName} ${dateStr}`;
+          ? `${dayAbbr}, ${dateStr} - ${futureHoliday.name}`
+          : `${dayAbbr}, ${dateStr}`;
       }
       
       return {

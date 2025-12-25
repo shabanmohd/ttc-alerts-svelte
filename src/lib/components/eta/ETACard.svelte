@@ -210,15 +210,13 @@
 
   /**
    * Format the future day label for display
-   * - "Tomorrow (Wednesday)" → "Tomorrow"
-   * - "Friday Dec 26" → "Friday Dec 26"
+   * Labels from schedule-lookup are already formatted correctly:
+   * - "Tomorrow"
+   * - "Tomorrow - Christmas Day" 
+   * - "Mon, Dec 29"
+   * - "Thu, Dec 25 - Christmas Day"
    */
   function formatFutureLabel(label: string): string {
-    // If label starts with "Tomorrow", just show "Tomorrow"
-    if (label.startsWith("Tomorrow")) {
-      return "Tomorrow";
-    }
-    // Otherwise show the full label (e.g., "Monday Dec 29")
     return label;
   }
 
