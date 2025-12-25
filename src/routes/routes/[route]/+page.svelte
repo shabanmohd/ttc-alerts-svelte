@@ -28,6 +28,9 @@
   import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import type { ThreadWithAlerts } from "$lib/types/database";
 
+  // Import subway station mapping for elevator alerts
+  import { getStationLines, type SubwayLine } from "$lib/data/subway-stations";
+
   // Import route changes store
   import {
     routeChanges,
@@ -185,6 +188,78 @@
   // Separate RSZ alerts from regular alerts
   let rszAlerts = $derived(routeAlerts.filter(isRSZAlert));
   let nonRSZAlerts = $derived(routeAlerts.filter((t) => !isRSZAlert(t)));
+
+  // Check if this route is a subway line
+  let isSubwayLine = $derived(routeId.toLowerCase().startsWith("line "));
+
+  /**
+   * Check if a thread is an elevator/escalator (accessibility) alert
+   */
+  function isElevatorAlert(thread: ThreadWithAlerts): boolean {
+    const alert = thread.latestAlert;
+    if (!alert) return false;
+
+    // Check effect for ACCESSIBILITY_ISSUE
+    const effect = (alert.effect || '').toUpperCase();
+    if (effect.includes('ACCESSIBILITY')) return true;
+
+    // Check header text for elevator/escalator keywords
+    const headerText = (alert.header_text || '').toLowerCase();
+    if (headerText.includes('elevator') || headerText.includes('escalator')) return true;
+
+    return false;
+  }
+
+  /**
+   * Extract station names from an elevator alert
+   */
+  function getElevatorStations(thread: ThreadWithAlerts): string[] {
+    const threadRoutes = Array.isArray(thread.affected_routes)
+      ? thread.affected_routes
+      : [];
+    const alertRoutes = Array.isArray(thread.latestAlert?.affected_routes)
+      ? thread.latestAlert.affected_routes
+      : [];
+    const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
+    
+    // Filter to items that look like station names
+    return allRoutes.filter(r => {
+      const lower = r.toLowerCase();
+      return lower.includes('station') || 
+             lower.includes('elevator') || 
+             lower.includes('escalator') ||
+             (!(/^\d+$/.test(r)) && !r.toLowerCase().startsWith('line '));
+    });
+  }
+
+  /**
+   * Check if an elevator alert matches this subway line
+   */
+  function elevatorMatchesThisLine(thread: ThreadWithAlerts): boolean {
+    if (!isElevatorAlert(thread)) return false;
+    if (!isSubwayLine) return false;
+    
+    const stations = getElevatorStations(thread);
+    
+    for (const station of stations) {
+      const lines = getStationLines(station);
+      if (lines.some(line => line.toLowerCase() === routeId.toLowerCase())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Get elevator alerts for this subway line (only for subway lines)
+  let elevatorAlerts = $derived(
+    isSubwayLine
+      ? $threadsWithAlerts.filter((thread) => {
+          if (isResolved(thread)) return false;
+          if (thread.is_hidden) return false;
+          return elevatorMatchesThisLine(thread);
+        })
+      : []
+  );
 
   /**
    * Parse a date string that could be in various formats
@@ -674,6 +749,22 @@
         {#if rszAlerts.length > 0}
           <RSZAlertCard threads={rszAlerts} />
         {/if}
+      </div>
+    </section>
+  {/if}
+
+  <!-- Elevator/Escalator Alerts Section (only for subway lines) -->
+  {#if isSubwayLine && elevatorAlerts.length > 0}
+    <section class="mt-6">
+      <h2 class="section-title">
+        <AlertTriangle class="h-4 w-4" />
+        {$_("routes.elevatorAlerts")}
+      </h2>
+
+      <div class="space-y-3 mt-3">
+        {#each elevatorAlerts as thread (thread.thread_id)}
+          <AlertCard {thread} />
+        {/each}
       </div>
     </section>
   {/if}
