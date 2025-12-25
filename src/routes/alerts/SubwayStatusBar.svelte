@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { OctagonX, Clock, CheckCircle, Calendar, Gauge } from "lucide-svelte";
+  import { OctagonX, Clock, CheckCircle, Calendar } from "lucide-svelte";
 
-  type StatusType = "slowzone" | "delay" | "disruption" | "scheduled";
+  type StatusType = "delay" | "disruption" | "scheduled";
 
   interface SubwayLine {
     id: string;
@@ -9,7 +9,7 @@
     shortName: string;
     color: string;
     textColor: string;
-    status: "ok" | "slowzone" | "delay" | "disruption" | "scheduled";
+    status: "ok" | "delay" | "disruption" | "scheduled";
     uniqueTypes: StatusType[];
     alertCount: number;
   }
@@ -19,8 +19,6 @@
   // Helper: get display name for status type
   function getStatusTypeName(type: StatusType): string {
     switch (type) {
-      case "slowzone":
-        return "Slow Zone";
       case "delay":
         return "Delay";
       case "disruption":
@@ -37,7 +35,6 @@
     <div
       class="subway-status-card"
       class:status-ok={line.status === "ok"}
-      class:status-slowzone={line.status === "slowzone"}
       class:status-delay={line.status === "delay"}
       class:status-disruption={line.status === "disruption"}
       class:status-scheduled={line.status === "scheduled"}
@@ -72,10 +69,6 @@
                 {:else if type === "delay"}
                   <Clock class="w-4 h-4 status-delay-icon" />
                   <span class="status-text status-delay-text">Delay</span>
-                {:else if type === "slowzone"}
-                  <Gauge class="w-4 h-4 status-slowzone-icon" />
-                  <span class="status-text status-slowzone-text">Slow Zone</span
-                  >
                 {:else if type === "scheduled"}
                   <Calendar
                     class="w-4 h-4 status-scheduled-icon flex-shrink-0"
@@ -97,14 +90,15 @@
   /* Subway Status Grid - exact copy from production */
   .subway-status-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
     margin-bottom: 1rem;
+    width: 100%;
   }
 
   @media (min-width: 640px) {
     .subway-status-grid {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 
@@ -117,6 +111,7 @@
     background-color: hsl(var(--card));
     border: 2px solid hsl(var(--border));
     text-align: left;
+    min-width: 0;
   }
 
   .subway-status-card.status-ok {
@@ -140,16 +135,6 @@
 
   :global(.dark) .subway-status-card.status-delay {
     background-color: hsl(38 92% 50% / 0.25);
-  }
-
-  /* Slow Zone status - amber/orange to match the filter pill */
-  .subway-status-card.status-slowzone {
-    border-color: hsl(45 93% 47% / 0.5);
-    background-color: hsl(45 93% 95%);
-  }
-
-  :global(.dark) .subway-status-card.status-slowzone {
-    background-color: hsl(45 93% 50% / 0.2);
   }
 
   :global(.dark) .subway-status-card.status-disruption {
@@ -206,10 +191,6 @@
     color: hsl(28 90% 25%) !important;
   }
 
-  :global(.status-slowzone-icon) {
-    color: hsl(45 93% 30%) !important;
-  }
-
   :global(.status-disruption-icon) {
     color: hsl(0 72% 30%) !important;
   }
@@ -221,10 +202,6 @@
 
   .status-delay-text {
     color: hsl(28 90% 25%);
-  }
-
-  .status-slowzone-text {
-    color: hsl(45 93% 30%);
   }
 
   .status-disruption-text {
@@ -283,11 +260,6 @@
   :global(.dark .status-delay-icon),
   :global(.dark) .status-delay-text {
     color: hsl(43 96% 70%) !important;
-  }
-
-  :global(.dark .status-slowzone-icon),
-  :global(.dark) .status-slowzone-text {
-    color: hsl(45 93% 60%) !important;
   }
 
   :global(.dark .status-disruption-icon),

@@ -1484,7 +1484,7 @@ header.sticky {
    ============================================ */
 
 .content-area {
-  max-width: 40rem; /* 640px for better readability */
+  max-width: 600px; /* Consistent width across all pages */
   margin: 0 auto;
   padding: 0.875rem;
   padding-bottom: 5rem; /* Space for mobile bottom nav */

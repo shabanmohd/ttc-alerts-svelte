@@ -1320,25 +1320,18 @@ Status priority determines card background color when multiple statuses are pres
 | 1        | **disruption** | `OctagonX`    | Red tint         | "Disruption"     |
 | 2        | **delay**      | `Clock`       | Orange tint      | "Delay"          |
 | 3        | **scheduled**  | `Calendar`    | Blue tint        | "Scheduled"      |
-| 4        | **slowzone**   | `Gauge`       | Amber tint       | "Slow Zone"      |
 | -        | **ok**         | `CheckCircle` | Green tint       | "Normal service" |
+
+> **Note:** Slow zone status was removed from the subway status cards. Slow zones are still available as a filter category but no longer shown as a subway line status.
 
 #### CSS Classes
 
 ```css
 .subway-status-card                    /* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
-/* Card container */
 .subway-status-card.status-ok          /* Normal service - green */
 .subway-status-card.status-disruption  /* Disruption - red */
 .subway-status-card.status-delay       /* Delay - orange */
 .subway-status-card.status-scheduled   /* Scheduled - blue */
-.subway-status-card.status-slowzone; /* Slow Zone - amber */
 ```
 
 /_ Card container _/
@@ -66925,7 +66918,7 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 │  Mobile: Logo + Refresh + Menu                  │
 │  Desktop: Last Updated + Actions                │
 ├─────────────────────────────────────────────────┤
-│ [Content Area - max-width: 40rem/640px]         │
+│ [Content Area - max-width: 600px]               │
 │  ├── Filter chips                               │
 │  ├── Maintenance widget                         │
 │  └── Alert cards                                │
@@ -66939,7 +66932,7 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ```css
 .content-area {
-  max-width: 40rem; /* 640px - optimal reading width */
+  max-width: 600px; /* Consistent width across all pages */
   margin: 0 auto;
   padding: 0.875rem; /* Mobile */
   padding: 1.5rem 2rem; /* Desktop */

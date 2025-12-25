@@ -125,13 +125,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Alerts Components (`src/routes/alerts/`)
 
-| File                      | Status | Purpose                                                                             |
-| ------------------------- | ------ | ----------------------------------------------------------------------------------- |
-| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs, URL param sync (tab/category), 576px layout 🆕 **B** |
-| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile) - matches production CSS                      |
-| `CategoryFilterV3.svelte` | ✅     | Compact pill filter (Disruptions & Delays/Slow Zones/Elevators)                     |
-| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)              |
-| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)                        |
+| File                      | Status | Purpose                                                                                           |
+| ------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs, URL param sync (tab/category), TTC attribution link, 600px layout  |
+| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile) - no slowzone status, minmax(0, 1fr) grid                   |
+| `CategoryFilterV3.svelte` | ✅     | Compact pill filter (Disruptions & Delays/Slow Zones/Elevators)                                   |
+| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)                            |
+| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)                                      |
 
 ### Backend (`supabase/`)
 
@@ -815,13 +815,13 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 | Active Alert Filtering | Severity accordion (Major/Minor) | Pill-based filters (Disruptions/etc.) |
 | Planned Content        | Scheduled tab with all closures  | Sub-tabs: Closures / Route Changes    |
 | Recently Resolved      | Hidden in accordion              | Always visible section at bottom      |
-| Layout                 | Full width                       | Centered 576px max-width              |
+| Layout                 | Full width                       | Centered 600px max-width              |
 
 **Components (now at `src/routes/alerts/`):**
 
-- `SubwayStatusBar.svelte` - Exact copy of production CSS, 4-col desktop / 2x2 mobile
+- `SubwayStatusBar.svelte` - 4-col desktop / 2x2 mobile, no slowzone status, minmax(0, 1fr) grid
 - `CategoryFilterV3.svelte` - Color-coded pill filters with counts
-- `PlannedContent.svelte` - Closures vs Route Changes sub-tabs
+- `PlannedContent.svelte` - Closures vs Route Changes sub-tabs, TTC attribution link
 - `ResolvedSection.svelte` - Always-visible recently resolved section
 
 **Design Decisions:**
@@ -830,6 +830,7 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 2. **Pill-based filters** - More compact than accordion, shows counts at a glance
 3. **Recently Resolved always visible** - Users can see what just cleared
 4. **Centered narrow layout** - Better readability, matches design system
+5. **TTC attribution link** - Dynamic link to TTC.ca based on current view (Slow Zones, Closures, Route Changes)
 
 ### Jan 15, 2025 - NextBus Tag → GTFS StopId Conversion (Critical Fix)
 

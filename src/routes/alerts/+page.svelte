@@ -410,36 +410,40 @@
       const allAlerts = getAllAlertsForLine(line.id);
       const hasMaintenance = getActiveMaintenanceForLine(line.id);
 
-      // Count total issues: alerts + active maintenance
-      const alertCount = allAlerts.length + (hasMaintenance ? 1 : 0);
+      // Filter out slowzone alerts from subway status cards
+      // (slow zones are shown separately in the Slow Zones filter tab)
+      const nonSlowzoneAlerts = allAlerts.filter(
+        (alert) => getAlertStatusType(alert) !== "slowzone"
+      );
 
-      // Get unique alert types for display (e.g., ["disruption", "slowzone"])
-      const alertTypes = new Set<
-        "slowzone" | "delay" | "disruption" | "scheduled"
-      >();
-      for (const alert of allAlerts) {
-        alertTypes.add(getAlertStatusType(alert));
+      // Count total issues: non-slowzone alerts + active maintenance
+      const alertCount = nonSlowzoneAlerts.length + (hasMaintenance ? 1 : 0);
+
+      // Get unique alert types for display (e.g., ["disruption", "delay"])
+      // Exclude slowzone from subway status cards
+      const alertTypes = new Set<"delay" | "disruption" | "scheduled">();
+      for (const alert of nonSlowzoneAlerts) {
+        const type = getAlertStatusType(alert);
+        if (type !== "slowzone") {
+          alertTypes.add(type as "delay" | "disruption" | "scheduled");
+        }
       }
       // Add scheduled if there's active maintenance
       if (hasMaintenance) {
         alertTypes.add("scheduled");
       }
 
-      // Convert to array in priority order (disruption > delay > scheduled > slowzone)
-      const uniqueTypes: ("slowzone" | "delay" | "disruption" | "scheduled")[] =
-        [];
+      // Convert to array in priority order (disruption > delay > scheduled)
+      const uniqueTypes: ("delay" | "disruption" | "scheduled")[] = [];
       if (alertTypes.has("disruption")) uniqueTypes.push("disruption");
       if (alertTypes.has("delay")) uniqueTypes.push("delay");
       if (alertTypes.has("scheduled")) uniqueTypes.push("scheduled");
-      if (alertTypes.has("slowzone")) uniqueTypes.push("slowzone");
 
-      // Determine primary status (most severe)
-      let status: "ok" | "slowzone" | "delay" | "disruption" | "scheduled" =
-        "ok";
+      // Determine primary status (most severe) - no slowzone
+      let status: "ok" | "delay" | "disruption" | "scheduled" = "ok";
       if (alertTypes.has("disruption")) status = "disruption";
       else if (alertTypes.has("delay")) status = "delay";
       else if (alertTypes.has("scheduled")) status = "scheduled";
-      else if (alertTypes.has("slowzone")) status = "slowzone";
 
       return {
         ...line,
@@ -559,6 +563,44 @@
         onSubtabChange={setScheduledSubtab}
       />
     {/if}
+
+    <!-- TTC Attribution -->
+    <div class="ttc-attribution">
+      <span>Data from</span>
+      {#if activeTab === "now" && selectedCategory === "delays"}
+        <a
+          href="https://www.ttc.ca/riding-the-ttc/Updates/Reduced-Speed-Zones"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          TTC Reduced Speed Zones
+        </a>
+      {:else if activeTab === "planned" && scheduledSubtab === "changes"}
+        <a
+          href="https://www.ttc.ca/service-advisories/Service-Changes"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          TTC Service Changes
+        </a>
+      {:else if activeTab === "planned" && scheduledSubtab === "closures"}
+        <a
+          href="https://www.ttc.ca/service-advisories/subway-service#e=0"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          TTC Subway Service Advisories
+        </a>
+      {:else}
+        <a
+          href="https://www.ttc.ca/service-alerts"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          TTC Service Alerts
+        </a>
+      {/if}
+    </div>
   </div>
 </main>
 
@@ -573,11 +615,14 @@
   /* Main content area */
   .alerts-main {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     min-width: 0;
     padding: 1rem;
     padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px) + 4.5rem);
-    max-width: 576px;
+    max-width: 600px; /* Consistent with content-area */
     margin: 0 auto;
+    width: 100%;
   }
 
   @media (min-width: 640px) {
@@ -595,6 +640,7 @@
   /* Subway status section */
   .subway-status-section {
     margin-bottom: 1rem;
+    width: 100%;
   }
 
   /* Primary tabs */
@@ -605,6 +651,7 @@
     border-radius: calc(var(--radius) + 2px);
     padding: 0.25rem;
     margin-bottom: 1rem;
+    width: 100%;
   }
 
   .primary-tab {
@@ -716,5 +763,28 @@
 
   .empty-state p {
     font-size: 0.875rem;
+  }
+
+  /* TTC Attribution */
+  .ttc-attribution {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 1rem 0;
+    margin-top: 1.5rem;
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .ttc-attribution a {
+    color: hsl(var(--primary));
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .ttc-attribution a:hover {
+    text-decoration: underline;
   }
 </style>
