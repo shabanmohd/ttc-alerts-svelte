@@ -41,11 +41,21 @@
     elevators: "elevators",
   };
 
+  // URL param to subtab mapping
+  const URL_TO_SUBTAB: Record<string, "closures" | "changes"> = {
+    closures: "closures",
+    routechanges: "changes",
+  };
+  const SUBTAB_TO_URL: Record<"closures" | "changes", string> = {
+    closures: "closures",
+    changes: "routechanges",
+  };
+
   // Parse URL params to get initial state
   function getInitialTab(): "now" | "planned" {
     if (!browser) return "now";
     const params = new URLSearchParams(window.location.search);
-    return params.get("tab") === "planned" ? "planned" : "now";
+    return params.get("tab") === "scheduled" ? "planned" : "now";
   }
 
   function getInitialCategory(): "disruptions" | "delays" | "elevators" {
@@ -59,6 +69,16 @@
     return "disruptions";
   }
 
+  function getInitialSubtab(): "closures" | "changes" {
+    if (!browser) return "closures";
+    const params = new URLSearchParams(window.location.search);
+    const subtab = params.get("subtab");
+    if (subtab && URL_TO_SUBTAB[subtab]) {
+      return URL_TO_SUBTAB[subtab];
+    }
+    return "closures";
+  }
+
   // Tab state: "now" or "planned" - initialized from URL params
   let activeTab: "now" | "planned" = $state(getInitialTab());
 
@@ -66,16 +86,29 @@
   let selectedCategory: "disruptions" | "delays" | "elevators" =
     $state(getInitialCategory());
 
-  // Update URL when tab changes (shallow navigation without full reload)
-  function updateUrl(tab: "now" | "planned", category: "disruptions" | "delays" | "elevators") {
+  // Subtab for Scheduled tab: "closures" | "changes" - initialized from URL params
+  let scheduledSubtab: "closures" | "changes" = $state(getInitialSubtab());
+
+  // Update URL when state changes (shallow navigation without full reload)
+  function updateUrl(
+    tab: "now" | "planned",
+    category: "disruptions" | "delays" | "elevators",
+    subtab: "closures" | "changes"
+  ) {
     if (!browser) return;
     const params = new URLSearchParams();
-    if (tab !== "now") params.set("tab", tab);
-    // Only include category in URL for "now" tab (category filter doesn't apply to planned tab)
-    if (tab === "now") {
+    
+    if (tab === "planned") {
+      // Scheduled tab: use "scheduled" in URL and include subtab
+      params.set("tab", "scheduled");
+      const urlSubtab = SUBTAB_TO_URL[subtab];
+      if (urlSubtab !== "closures") params.set("subtab", urlSubtab);
+    } else {
+      // Now tab: only include category if not default
       const urlCategory = CATEGORY_TO_URL[category];
       if (urlCategory !== "disruptions") params.set("category", urlCategory);
     }
+    
     const queryString = params.toString();
     const newUrl = queryString ? `/alerts?${queryString}` : "/alerts";
     goto(newUrl, { replaceState: true, noScroll: true, keepFocus: true });
@@ -88,13 +121,23 @@
     if (selectedCategory !== "disruptions") {
       selectedCategory = "disruptions";
     }
-    updateUrl(tab, selectedCategory);
+    // Reset subtab to closures when switching to scheduled
+    if (tab === "planned" && scheduledSubtab !== "closures") {
+      scheduledSubtab = "closures";
+    }
+    updateUrl(tab, selectedCategory, scheduledSubtab);
   }
 
-  // Handle category change
+  // Handle category change (Now tab)
   function setCategory(cat: "disruptions" | "delays" | "elevators") {
     selectedCategory = cat;
-    updateUrl(activeTab, cat);
+    updateUrl(activeTab, cat, scheduledSubtab);
+  }
+
+  // Handle subtab change (Scheduled tab)
+  function setScheduledSubtab(subtab: "closures" | "changes") {
+    scheduledSubtab = subtab;
+    updateUrl(activeTab, selectedCategory, subtab);
   }
 
   // Subway lines configuration
@@ -505,7 +548,10 @@
       {/if}
     {:else}
       <!-- Scheduled content - closures and route changes -->
-      <PlannedContent />
+      <PlannedContent 
+        activeSubTab={scheduledSubtab}
+        onSubtabChange={setScheduledSubtab}
+      />
     {/if}
   </div>
 </main>

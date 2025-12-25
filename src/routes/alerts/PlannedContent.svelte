@@ -10,8 +10,21 @@
   import type { PlannedMaintenance } from "$lib/types/database";
   import { onMount } from "svelte";
 
-  // Sub-tab state
-  let activeSubTab: "closures" | "changes" = $state("closures");
+  // Props from parent - controlled component pattern
+  let {
+    activeSubTab = "closures",
+    onSubtabChange,
+  }: {
+    activeSubTab?: "closures" | "changes";
+    onSubtabChange?: (subtab: "closures" | "changes") => void;
+  } = $props();
+
+  // Handle subtab change
+  function handleSubtabChange(subtab: "closures" | "changes") {
+    if (onSubtabChange) {
+      onSubtabChange(subtab);
+    }
+  }
 
   // Load route changes when switching to that tab or on mount
   onMount(() => {
@@ -58,7 +71,7 @@
     class:active={activeSubTab === "closures"}
     role="tab"
     aria-selected={activeSubTab === "closures"}
-    onclick={() => (activeSubTab = "closures")}
+    onclick={() => handleSubtabChange("closures")}
   >
     <Construction class="sub-tab-icon" aria-hidden="true" />
     <span class="sub-tab-label">Closures</span>
@@ -71,7 +84,7 @@
     class:active={activeSubTab === "changes"}
     role="tab"
     aria-selected={activeSubTab === "changes"}
-    onclick={() => (activeSubTab = "changes")}
+    onclick={() => handleSubtabChange("changes")}
   >
     <GitBranch class="sub-tab-icon" aria-hidden="true" />
     <span class="sub-tab-label">Route Changes</span>
