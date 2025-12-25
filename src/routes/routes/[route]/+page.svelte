@@ -252,6 +252,17 @@
     return parts.join(" ");
   }
 
+  /**
+   * Capitalize first letter of each word in route name
+   */
+  function formatRouteName(name: string): string {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  }
+
   // Stops state
   let directionGroups = $state<DirectionGroup[]>([]);
   let selectedDirection = $state<DirectionLabel>("All Stops");
@@ -649,25 +660,25 @@
       <div class="space-y-3 mt-3">
         {#each filteredRouteChanges as change (change.id)}
           <div class="route-change-card animate-fade-in">
-            <!-- Header: all affected routes -->
+            <!-- Header: all affected routes + route name -->
             <div class="route-change-header">
               <div class="route-badges">
                 {#each change.routes as route}
-                  <RouteBadge {route} size="sm" />
+                  <RouteBadge {route} size="lg" />
                 {/each}
               </div>
               {#if change.routeName}
-                <span class="route-name">{change.routeName}</span>
+                <span class="route-name">{formatRouteName(change.routeName)}</span>
               {/if}
             </div>
 
             <!-- Title -->
-            <p class="route-change-title">{change.title}</p>
+            <p class="card-title">{change.title}</p>
 
             <!-- Date info -->
             {#if formatRouteChangeDate(change)}
-              <p class="route-change-date">
-                <Calendar class="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+              <p class="card-date">
+                <Calendar class="date-icon" />
                 <span>{formatRouteChangeDate(change)}</span>
               </p>
             {/if}
@@ -677,10 +688,10 @@
               href={change.url}
               target="_blank"
               rel="noopener noreferrer"
-              class="route-change-link"
+              class="card-link"
             >
               {$_("common.moreDetails")}
-              <ExternalLink class="h-3.5 w-3.5" />
+              <ExternalLink class="link-icon" />
             </a>
           </div>
         {/each}
@@ -1011,52 +1022,65 @@
     z-index: 1;
   }
 
-  /* Route Change Card Styles */
+  /* Route Change Card Styles (matching RouteChangesView) */
   .route-change-card {
+    display: block;
     padding: 0.875rem;
     background-color: hsl(var(--card));
     border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
+    color: inherit;
   }
 
   .route-change-header {
     display: flex;
+    flex-direction: row;
     align-items: center;
+    justify-content: flex-start;
     gap: 0.5rem;
     margin-bottom: 0.5rem;
   }
 
   .route-badges {
     display: inline-flex;
+    flex-direction: row;
     flex-wrap: wrap;
     gap: 0.25rem;
     flex-shrink: 0;
   }
 
   .route-name {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: hsl(var(--muted-foreground));
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
   }
 
-  .route-change-title {
+  .card-title {
     font-size: 0.9375rem;
     font-weight: 500;
     line-height: 1.4;
+    margin: 0 0 0.375rem 0;
     color: hsl(var(--foreground));
-    margin: 0 0 0.5rem 0;
   }
 
-  .route-change-date {
+  .card-date {
     display: flex;
     align-items: flex-start;
     gap: 0.375rem;
     font-size: 0.8125rem;
     color: hsl(var(--muted-foreground));
-    margin-bottom: 0.625rem;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.35;
   }
 
-  .route-change-link {
+  .card-date :global(.date-icon) {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+
+  .card-link {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
@@ -1066,7 +1090,12 @@
     text-decoration: none;
   }
 
-  .route-change-link:hover {
+  .card-link:hover {
     text-decoration: underline;
+  }
+
+  .card-link :global(.link-icon) {
+    width: 0.875rem;
+    height: 0.875rem;
   }
 </style>
