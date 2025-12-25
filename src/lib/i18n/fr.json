@@ -226,7 +226,7 @@
     "saveToMyRoutes": "Enregistrer dans mes lignes",
     "savedToMyRoutes": "Enregistré dans mes lignes",
     "backToRoutes": "Retour aux lignes",
-    "activeAlerts": "Perturbations et retards de ligne",
+    "activeAlerts": "Alertes de service actives",
     "noActiveAlerts": "Aucune perturbation active",
     "serviceRunningNormally": "Le service fonctionne normalement sur {route}",
     "stopsAndETA": "Arrêts et horaires en direct",
