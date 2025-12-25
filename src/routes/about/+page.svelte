@@ -13,6 +13,9 @@
     Code,
     Database,
     AlertTriangle,
+    Shield,
+    MapPin,
+    HardDrive,
   } from "lucide-svelte";
 
   // App version - could be injected from build process
@@ -202,6 +205,51 @@
         <p class="text-sm font-medium text-amber-600 dark:text-amber-400">
           {$_("about.disclaimerImportant")}
         </p>
+      </div>
+    </Card.Content>
+  </Card.Root>
+
+  <!-- Privacy & Location -->
+  <Card.Root class="mb-6 border-blue-500/50">
+    <Card.Header>
+      <Card.Title class="text-lg flex items-center gap-2">
+        <Shield class="h-5 w-5 text-blue-500" />
+        {$_("about.privacy")}
+      </Card.Title>
+      <Card.Description>{$_("about.privacyText")}</Card.Description>
+    </Card.Header>
+    <Card.Content class="space-y-4">
+      <!-- Location Data -->
+      <div class="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+        <div
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/10"
+        >
+          <MapPin class="h-5 w-5 text-blue-500" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-medium text-sm">{$_("about.privacyLocation")}</h4>
+          <p class="text-xs text-muted-foreground mt-1">
+            {$_("about.privacyLocationDetails")}
+          </p>
+          <p class="text-xs text-muted-foreground mt-2">
+            {$_("about.privacyLocationControl")}
+          </p>
+        </div>
+      </div>
+
+      <!-- Local Storage -->
+      <div class="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+        <div
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10"
+        >
+          <HardDrive class="h-5 w-5 text-emerald-500" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-medium text-sm">{$_("about.privacyStorage")}</h4>
+          <p class="text-xs text-muted-foreground mt-1">
+            {$_("about.privacyStorageDetails")}
+          </p>
+        </div>
       </div>
     </Card.Content>
   </Card.Root>
