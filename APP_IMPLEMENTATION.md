@@ -653,7 +653,7 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 **URL Structure:**
 
 | Tab       | Filter/Subtab | URL                                         |
-|-----------|---------------|---------------------------------------------|
+| --------- | ------------- | ------------------------------------------- |
 | Now       | Disruptions   | `/alerts` (default)                         |
 | Now       | Slow Zones    | `/alerts?category=slowzones`                |
 | Now       | Elevators     | `/alerts?category=elevators`                |

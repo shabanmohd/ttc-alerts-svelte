@@ -30,12 +30,18 @@
 
   // URL param names (user-friendly) vs internal state names
   // URL: slowzones → Internal: delays
-  const URL_TO_CATEGORY: Record<string, "disruptions" | "delays" | "elevators"> = {
+  const URL_TO_CATEGORY: Record<
+    string,
+    "disruptions" | "delays" | "elevators"
+  > = {
     disruptions: "disruptions",
     slowzones: "delays",
     elevators: "elevators",
   };
-  const CATEGORY_TO_URL: Record<"disruptions" | "delays" | "elevators", string> = {
+  const CATEGORY_TO_URL: Record<
+    "disruptions" | "delays" | "elevators",
+    string
+  > = {
     disruptions: "disruptions",
     delays: "slowzones",
     elevators: "elevators",
@@ -97,7 +103,7 @@
   ) {
     if (!browser) return;
     const params = new URLSearchParams();
-    
+
     if (tab === "planned") {
       // Scheduled tab: use "scheduled" in URL and include subtab
       params.set("tab", "scheduled");
@@ -108,7 +114,7 @@
       const urlCategory = CATEGORY_TO_URL[category];
       if (urlCategory !== "disruptions") params.set("category", urlCategory);
     }
-    
+
     const queryString = params.toString();
     const newUrl = queryString ? `/alerts?${queryString}` : "/alerts";
     goto(newUrl, { replaceState: true, noScroll: true, keepFocus: true });
@@ -548,7 +554,7 @@
       {/if}
     {:else}
       <!-- Scheduled content - closures and route changes -->
-      <PlannedContent 
+      <PlannedContent
         activeSubTab={scheduledSubtab}
         onSubtabChange={setScheduledSubtab}
       />

@@ -31,10 +31,11 @@ export interface NextDepartureInfo {
   time: string;           // e.g., "5:31 AM"
   dayType: string;        // e.g., "weekday", "Saturday", "Sunday"
   isToday: boolean;       // Whether this departure is today or tomorrow
-  tomorrowLabel?: string; // e.g., "Tomorrow (Saturday)"
+  tomorrowLabel?: string; // e.g., "Tomorrow (Saturday)" or "Friday Dec 27"
   nextWeekdayLabel?: string; // e.g., "Monday" - for express routes on weekends
   isPM?: boolean;         // Whether this is an evening/PM departure
   noWeekendService?: boolean; // Express routes don't run on weekends
+  daysUntilService?: number; // Days until next service (for routes with gaps)
 }
 
 // PM period starts at 3PM (15:00)
@@ -118,16 +119,6 @@ export function getDayTypeLabel(dayType: 'weekday' | 'saturday' | 'sunday'): str
     case 'saturday': return 'Saturday';
     case 'sunday': return 'Sunday';
   }
-}
-
-/**
- * Get tomorrow's date
- */
-function getTomorrow(): Date {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-  return tomorrow;
 }
 
 /**
@@ -290,29 +281,44 @@ export function getNextScheduledDeparture(
     }
   }
   
-  // Service for today has ended or passed - show tomorrow's first departure
-  const tomorrow = getTomorrow();
-  const tomorrowType = getServiceDayType(tomorrow);
-  const tomorrowFirst = getFirstDeparture(stopId, routeId, tomorrowType);
-  
-  if (tomorrowFirst) {
-    // Check if tomorrow is a holiday
-    const tomorrowHoliday = getTTCHoliday(tomorrow);
-    const tomorrowDayName = tomorrow.toLocaleDateString('en-US', { weekday: 'long' });
+  // Service for today has ended or passed - look ahead for next available service
+  // Check up to 7 days ahead to handle holidays and weekend gaps
+  for (let daysAhead = 1; daysAhead <= 7; daysAhead++) {
+    const futureDate = new Date(now);
+    futureDate.setDate(futureDate.getDate() + daysAhead);
+    futureDate.setHours(0, 0, 0, 0);
     
-    let tomorrowLabel = `Tomorrow (${tomorrowDayName})`;
-    if (tomorrowHoliday) {
-      tomorrowLabel = `Tomorrow (${tomorrowHoliday.name})`;
+    const futureType = getServiceDayType(futureDate);
+    const futureFirst = getFirstDeparture(stopId, routeId, futureType);
+    
+    if (futureFirst) {
+      const futureHoliday = getTTCHoliday(futureDate);
+      const futureDayName = futureDate.toLocaleDateString('en-US', { weekday: 'long' });
+      
+      let futureLabel: string;
+      if (daysAhead === 1) {
+        futureLabel = futureHoliday 
+          ? `Tomorrow (${futureHoliday.name})` 
+          : `Tomorrow (${futureDayName})`;
+      } else {
+        // For days further ahead, show the day name and optionally date
+        const dateStr = futureDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        futureLabel = futureHoliday
+          ? `${futureDayName} ${dateStr} (${futureHoliday.name})`
+          : `${futureDayName} ${dateStr}`;
+      }
+      
+      return {
+        time: formatTo12Hour(futureFirst),
+        dayType: getDayTypeLabel(futureType),
+        isToday: false,
+        tomorrowLabel: futureLabel,
+        daysUntilService: daysAhead  // Add this info for UI display
+      };
     }
-    
-    return {
-      time: formatTo12Hour(tomorrowFirst),
-      dayType: getDayTypeLabel(tomorrowType),
-      isToday: false,
-      tomorrowLabel
-    };
   }
   
+  // No service found within the next 7 days
   return null;
 }
 
