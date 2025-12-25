@@ -83,7 +83,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes cards: badges + route name inline, 5-min polling 🆕 **B** |
 | `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                                 |
 | `components/alerts/MaintenanceWidget.svelte`     | ✅     | Scheduled maintenance display                                           |
-| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with responsive route badge tabs                          |
+| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with route changes integration                            |
 | `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                           |
 | `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                        |
 | `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile                     |
@@ -120,7 +120,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `preferences/+page.svelte`        | ✅     | Route/mode preferences                                        |
 | `settings/+page.svelte`           | ✅     | Settings with stops, routes, prefs, location 🆕 **B**         |
 | `routes/+page.svelte`             | ✅     | Route browser by category 🆕 **B**                            |
-| `routes/[route]/+page.svelte`     | ✅     | Route detail page with active alerts (filtered from resolved) |
+| `routes/[route]/+page.svelte`     | ✅     | Route detail page with alerts and route changes                   |
 | `auth/callback/+page.svelte`      | ✅     | Auth callback handler                                         |
 
 ### Alerts Components (`src/routes/alerts/`)
