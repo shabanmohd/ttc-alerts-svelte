@@ -226,7 +226,7 @@
     "saveToMyRoutes": "Save to My Routes",
     "savedToMyRoutes": "Saved to My Routes",
     "backToRoutes": "Back to Routes",
-    "activeAlerts": "Route Disruptions and Delays",
+    "activeAlerts": "Active Service Alerts",
     "noActiveAlerts": "No active disruptions",
     "serviceRunningNormally": "Service is running normally on {route}",
     "routeChanges": "Route Changes",
