@@ -710,6 +710,52 @@ Direction badges indicate the travel direction of a stop (extracted from GTFS tr
 - `.alert-border-info` - Blue (planned)
 - `.alert-border-resumed` - Teal (resolved)
 
+### Alert Section Headings
+
+**Pattern:** Used in My Routes and Route detail pages to organize alerts by type.
+
+Each section has:
+- Icon (Lucide-svelte) + Text label
+- Horizontal divider below the heading
+- Hidden when section has no content
+
+#### Section Order
+
+**My Routes page:**
+1. Active Service Alerts (AlertTriangle, destructive)
+2. Scheduled Closures (Calendar, muted)
+3. Planned Route Changes (GitBranch, muted)
+4. Elevator Alerts (Accessibility, muted)
+5. Slow Zones (Gauge, muted)
+
+**Subway Route page:**
+1. Active Service Alerts (AlertTriangle, destructive)
+2. Scheduled Closures (Calendar, muted)
+3. Elevator Alerts (Accessibility, muted)
+4. Slow Zones (Gauge, muted)
+
+#### Markup Pattern
+
+```svelte
+<div class="flex items-center gap-2 mt-6 mb-2">
+  <AlertTriangle class="size-4 text-destructive" />
+  <h3 class="text-sm font-semibold text-foreground/80">
+    {$t("myRoutes.activeServiceAlerts")}
+  </h3>
+</div>
+<hr class="border-border/40 mb-3" />
+```
+
+#### Icon Colors
+
+| Section               | Icon           | Color Class             |
+| --------------------- | -------------- | ----------------------- |
+| Active Service Alerts | AlertTriangle  | `text-destructive`      |
+| Scheduled Closures    | Calendar       | `text-muted-foreground` |
+| Planned Route Changes | GitBranch      | `text-muted-foreground` |
+| Elevator Alerts       | Accessibility  | `text-muted-foreground` |
+| Slow Zones            | Gauge          | `text-muted-foreground` |
+
 ### RSZ (Reduced Speed Zone) Alert Cards
 
 **Component:** `RSZAlertCard.svelte`

@@ -83,7 +83,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes cards: badges + route name inline, 5-min polling 🆕 **B** |
 | `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                                 |
 | `components/alerts/MaintenanceWidget.svelte`     | ✅     | Scheduled maintenance display                                           |
-| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with route changes integration                            |
+| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with elevator alerts, section headings, dividers                      |
 | `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                           |
 | `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                        |
 | `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile                     |
@@ -175,6 +175,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | File                         | Status | Purpose                                                                            |
 | ---------------------------- | ------ | ---------------------------------------------------------------------------------- |
 | `stops-db.ts`                | ✅     | IndexedDB layer with Dexie.js, GTFS direction/sequence, branch helpers             |
+| `subway-stations.ts`         | ✅     | Station-to-line mapping (69 stations) for elevator alert filtering 🆕              |
 | `ttc-route-stop-orders.json` | ✅     | Route stop ordering (211 routes, auto-generated from NextBus API) 🆕 **V-B**       |
 | `ttc-route-branches.json`    | ✅     | Route branch data - directions with branches (102A/B/C/D, 501 variants) 🆕 **V-B** |
 | `ttc-direction-labels.json`  | ✅     | Direction display labels ("Towards Kennedy", etc.) 🆕 **V-B**                      |
@@ -650,6 +651,58 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 ---
 
 ## Changelog
+
+### Jan 19, 2025 - Elevator Alerts, Section Organization & Label Consistency
+
+**Purpose:** Show elevator alerts for saved subway lines in My Routes and on subway route pages, organize alerts into clearly labeled sections with icons and dividers, and standardize terminology across the app.
+
+**My Routes Page Changes (`MyRouteAlerts.svelte`):**
+
+- ✅ Added **Elevator Alerts section** - shows elevator/escalator alerts for saved subway lines
+- ✅ Added **section headings with icons** and horizontal dividers between alert types
+- ✅ Added station-to-line mapping via `subway-stations.ts` to identify which line an elevator alert belongs to
+- ✅ **Section order**: Active Service Alerts → Scheduled Closures → Planned Route Changes → Elevator Alerts → Slow Zones
+- ✅ Hidden empty sections (e.g., no "Planned Route Changes" heading if user has no route changes)
+
+**Subway Route Page Changes (`[route]/+page.svelte`):**
+
+- ✅ Added **Elevator Alerts section** - shows elevator/escalator alerts for stations on the current subway line
+- ✅ Added **Scheduled Closures section** - shows active scheduled maintenance for the route
+- ✅ Added **section headings with icons** (AlertTriangle, Calendar, Accessibility, Gauge)
+- ✅ **Section order**: Active Service Alerts → Scheduled Closures → Elevator Alerts → Slow Zones
+
+**New Data File:**
+
+- ✅ `src/lib/data/subway-stations.ts` - Maps 69 subway stations to their line(s) for elevator alert filtering
+
+**Label Consistency (i18n):**
+
+- ✅ "Scheduled Maintenance" → **"Scheduled Closures"** (EN) / "Fermetures prévues" (FR)
+- ✅ "Route Changes" → **"Planned Route Changes"** (EN) / "Changements d'itinéraires prévus" (FR)
+
+**Blue Night Streetcar Routes:**
+
+- ✅ Added missing routes 301, 304, 305, 306, 310, 312 to `RouteSearch.svelte`
+
+**Section Icons:**
+| Section | Icon | Color |
+|---------|------|-------|
+| Active Service Alerts | AlertTriangle | text-destructive |
+| Scheduled Closures | Calendar | text-muted-foreground |
+| Planned Route Changes | GitBranch | text-muted-foreground |
+| Elevator Alerts | Accessibility | text-muted-foreground |
+| Slow Zones | Gauge | text-muted-foreground |
+
+**Files Changed:**
+
+- `src/lib/components/alerts/MyRouteAlerts.svelte` - Elevator alerts, section headings, dividers, reordering
+- `src/routes/routes/[route]/+page.svelte` - Elevator alerts, scheduled closures, section organization
+- `src/lib/components/alerts/RouteSearch.svelte` - Added Blue Night Streetcar routes
+- `src/lib/data/subway-stations.ts` - **NEW** Station-to-line mapping
+- `src/lib/i18n/en.json` - Updated labels for consistency
+- `src/lib/i18n/fr.json` - French translations updated
+
+---
 
 ### Jan 18, 2025 - URL Parameter Sync for Alert Filters
 

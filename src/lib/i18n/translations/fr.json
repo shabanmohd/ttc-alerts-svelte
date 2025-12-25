@@ -232,7 +232,7 @@
     "elevatorAlerts": "Alertes d'ascenseurs",
     "stopsAndETA": "Arrêts et horaires en direct",
     "realtimePredictions": "Prédictions d'arrivée en temps réel",
-    "routeChanges": "Changements d'itinéraires"
+    "routeChanges": "Changements d'itinéraires prévus"
   },
   "routeCategories": {
     "all": "Toutes",
@@ -256,7 +256,7 @@
     "removeRoute": "Supprimer la ligne",
     "myAlerts": "Mes alertes",
     "filterByRoute": "Filtrer par itinéraire",
-    "scheduledMaintenance": "Entretien prévu",
+    "scheduledMaintenance": "Fermetures prévues",
     "slowZones": "Zones lentes"
   },
   "stops": {
