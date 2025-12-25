@@ -809,31 +809,8 @@
       role="feed"
       aria-label="Alerts for your saved routes"
     >
-      <!-- Active Scheduled Maintenance (closures happening now) -->
-      {#if activeMaintenanceForRoutes.length > 0}
-        <section class="alert-section">
-          <h3 class="section-heading">
-            <Calendar class="h-4 w-4" />
-            {$_("myRoutes.scheduledMaintenance")}
-          </h3>
-          <div class="section-content">
-            {#each activeMaintenanceForRoutes as thread, i (thread.thread_id)}
-              <div
-                class="animate-fade-in-up"
-                style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
-              >
-                <AlertCard {thread} />
-              </div>
-            {/each}
-          </div>
-        </section>
-      {/if}
-
-      <!-- Service Alerts (non-RSZ, non-elevator) -->
+      <!-- 1. Active Service Alerts (non-RSZ, non-elevator) -->
       {#if serviceAlerts.length > 0}
-        {#if activeMaintenanceForRoutes.length > 0}
-          <hr class="section-divider" />
-        {/if}
         <section class="alert-section">
           <h3 class="section-heading">
             <AlertTriangle class="h-4 w-4" />
@@ -853,22 +830,21 @@
         </section>
       {/if}
 
-      <!-- Elevator Alerts -->
-      {#if elevatorAlerts.length > 0}
-        {#if activeMaintenanceForRoutes.length > 0 || serviceAlerts.length > 0}
+      <!-- 2. Scheduled Maintenance (closures happening now) -->
+      {#if activeMaintenanceForRoutes.length > 0}
+        {#if serviceAlerts.length > 0}
           <hr class="section-divider" />
         {/if}
         <section class="alert-section">
           <h3 class="section-heading">
-            <Accessibility class="h-4 w-4" />
-            {$_("routes.elevatorAlerts")}
+            <Calendar class="h-4 w-4" />
+            {$_("myRoutes.scheduledMaintenance")}
           </h3>
           <div class="section-content">
-            {#each elevatorAlerts as thread, i (thread.thread_id)}
-              {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
+            {#each activeMaintenanceForRoutes as thread, i (thread.thread_id)}
               <div
-                class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-                style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+                class="animate-fade-in-up"
+                style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
               >
                 <AlertCard {thread} />
               </div>
@@ -877,52 +853,9 @@
         </section>
       {/if}
 
-      <!-- RSZ Alerts grouped by line (lowest priority) -->
-      {#if rszAlerts.length > 0}
-        {#if activeMaintenanceForRoutes.length > 0 || serviceAlerts.length > 0 || elevatorAlerts.length > 0}
-          <hr class="section-divider" />
-        {/if}
-        {@const line1RSZ = rszAlerts.filter((t) => {
-          const routes = t.affected_routes || t.latestAlert?.affected_routes;
-          if (!routes) return false;
-          const routeArr = Array.isArray(routes) ? routes : [routes];
-          return routeArr.some(
-            (r: string) =>
-              r === "1" ||
-              r.toLowerCase() === "line 1" ||
-              r.toLowerCase().includes("line 1")
-          );
-        })}
-        {@const line2RSZ = rszAlerts.filter((t) => {
-          const routes = t.affected_routes || t.latestAlert?.affected_routes;
-          if (!routes) return false;
-          const routeArr = Array.isArray(routes) ? routes : [routes];
-          return routeArr.some(
-            (r: string) =>
-              r === "2" ||
-              r.toLowerCase() === "line 2" ||
-              r.toLowerCase().includes("line 2")
-          );
-        })}
-        <section class="alert-section">
-          <h3 class="section-heading">
-            <Gauge class="h-4 w-4" />
-            {$_("myRoutes.slowZones")}
-          </h3>
-          <div class="section-content">
-            {#if line1RSZ.length > 0}
-              <RSZAlertCard threads={line1RSZ} />
-            {/if}
-            {#if line2RSZ.length > 0}
-              <RSZAlertCard threads={line2RSZ} />
-            {/if}
-          </div>
-        </section>
-      {/if}
-
-      <!-- Route Changes (from TTC website) -->
+      <!-- 3. Route Changes (from TTC website) -->
       {#if filteredRouteChanges.length > 0}
-        {#if activeMaintenanceForRoutes.length > 0 || serviceAlerts.length > 0 || elevatorAlerts.length > 0 || rszAlerts.length > 0}
+        {#if serviceAlerts.length > 0 || activeMaintenanceForRoutes.length > 0}
           <hr class="section-divider" />
         {/if}
         <section class="alert-section">
@@ -971,6 +904,73 @@
               </a>
             </div>
           {/each}
+          </div>
+        </section>
+      {/if}
+
+      <!-- 4. Elevator Alerts -->
+      {#if elevatorAlerts.length > 0}
+        {#if serviceAlerts.length > 0 || activeMaintenanceForRoutes.length > 0 || filteredRouteChanges.length > 0}
+          <hr class="section-divider" />
+        {/if}
+        <section class="alert-section">
+          <h3 class="section-heading">
+            <Accessibility class="h-4 w-4" />
+            {$_("routes.elevatorAlerts")}
+          </h3>
+          <div class="section-content">
+            {#each elevatorAlerts as thread, i (thread.thread_id)}
+              {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
+              <div
+                class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
+                style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+              >
+                <AlertCard {thread} />
+              </div>
+            {/each}
+          </div>
+        </section>
+      {/if}
+
+      <!-- 5. Slow Zones (RSZ Alerts grouped by line) -->
+      {#if rszAlerts.length > 0}
+        {#if serviceAlerts.length > 0 || activeMaintenanceForRoutes.length > 0 || filteredRouteChanges.length > 0 || elevatorAlerts.length > 0}
+          <hr class="section-divider" />
+        {/if}
+        {@const line1RSZ = rszAlerts.filter((t) => {
+          const routes = t.affected_routes || t.latestAlert?.affected_routes;
+          if (!routes) return false;
+          const routeArr = Array.isArray(routes) ? routes : [routes];
+          return routeArr.some(
+            (r: string) =>
+              r === "1" ||
+              r.toLowerCase() === "line 1" ||
+              r.toLowerCase().includes("line 1")
+          );
+        })}
+        {@const line2RSZ = rszAlerts.filter((t) => {
+          const routes = t.affected_routes || t.latestAlert?.affected_routes;
+          if (!routes) return false;
+          const routeArr = Array.isArray(routes) ? routes : [routes];
+          return routeArr.some(
+            (r: string) =>
+              r === "2" ||
+              r.toLowerCase() === "line 2" ||
+              r.toLowerCase().includes("line 2")
+          );
+        })}
+        <section class="alert-section">
+          <h3 class="section-heading">
+            <Gauge class="h-4 w-4" />
+            {$_("myRoutes.slowZones")}
+          </h3>
+          <div class="section-content">
+            {#if line1RSZ.length > 0}
+              <RSZAlertCard threads={line1RSZ} />
+            {/if}
+            {#if line2RSZ.length > 0}
+              <RSZAlertCard threads={line2RSZ} />
+            {/if}
           </div>
         </section>
       {/if}

@@ -12,6 +12,7 @@
     Calendar,
     ExternalLink,
     Accessibility,
+    Gauge,
   } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
@@ -732,8 +733,8 @@
     />
   </div>
 
-  <!-- Active Alerts Section (only show when there are alerts) -->
-  {#if !isNotOperational && !$isLoading && routeAlerts.length > 0}
+  <!-- 1. Active Service Alerts Section (only show when there are non-RSZ alerts) -->
+  {#if !isNotOperational && !$isLoading && nonRSZAlerts.length > 0}
     <section class="mt-6">
       <h2 class="section-title">
         <AlertTriangle class="h-4 w-4" />
@@ -741,22 +742,16 @@
       </h2>
 
       <div class="space-y-3 mt-3">
-        <!-- Regular (non-RSZ) alerts -->
         {#each nonRSZAlerts as thread (thread.thread_id)}
           <AlertCard {thread} />
         {/each}
-
-        <!-- RSZ alerts (grouped table display) -->
-        {#if rszAlerts.length > 0}
-          <RSZAlertCard threads={rszAlerts} />
-        {/if}
       </div>
     </section>
   {/if}
 
-  <!-- Elevator/Escalator Alerts Section (only for subway lines) -->
+  <!-- 2. Elevator Alerts Section (only for subway lines) -->
   {#if isSubwayLine && elevatorAlerts.length > 0}
-    {#if routeAlerts.length > 0}
+    {#if nonRSZAlerts.length > 0}
       <hr class="section-divider" />
     {/if}
     <section class="mt-6">
@@ -769,6 +764,37 @@
         {#each elevatorAlerts as thread (thread.thread_id)}
           <AlertCard {thread} />
         {/each}
+      </div>
+    </section>
+  {/if}
+
+  <!-- 3. Slow Zones (RSZ alerts - only for subway lines) -->
+  {#if isSubwayLine && rszAlerts.length > 0}
+    {#if nonRSZAlerts.length > 0 || elevatorAlerts.length > 0}
+      <hr class="section-divider" />
+    {/if}
+    <section class="mt-6">
+      <h2 class="section-title">
+        <Gauge class="h-4 w-4" />
+        {$_("myRoutes.slowZones")}
+      </h2>
+
+      <div class="space-y-3 mt-3">
+        <RSZAlertCard threads={rszAlerts} />
+      </div>
+    </section>
+  {/if}
+
+  <!-- For non-subway routes, show RSZ in Active Alerts -->
+  {#if !isSubwayLine && rszAlerts.length > 0 && nonRSZAlerts.length === 0}
+    <section class="mt-6">
+      <h2 class="section-title">
+        <AlertTriangle class="h-4 w-4" />
+        {$_("routes.activeAlerts")}
+      </h2>
+
+      <div class="space-y-3 mt-3">
+        <RSZAlertCard threads={rszAlerts} />
       </div>
     </section>
   {/if}
