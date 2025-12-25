@@ -435,13 +435,13 @@ Collapsible sections for organizing content with expandable headers. Used throug
 
 #### Usage Locations
 
-| Component                       | Purpose                                              |
-| ------------------------------- | ---------------------------------------------------- |
-| Route Page                      | Closures, Elevator Alerts, Slow Zones, Route Changes |
-| `MyRouteAlerts.svelte`          | Same 4 alert sections                                |
-| `MyStops.svelte` / `ETACard`    | Collapsible ETA cards for each stop                  |
-| `alerts/+page.svelte`           | Subway alerts grouped by line                        |
-| `preferences/+page.svelte`      | Settings steps                                       |
+| Component                    | Purpose                                              |
+| ---------------------------- | ---------------------------------------------------- |
+| Route Page                   | Closures, Elevator Alerts, Slow Zones, Route Changes |
+| `MyRouteAlerts.svelte`       | Same 4 alert sections                                |
+| `MyStops.svelte` / `ETACard` | Collapsible ETA cards for each stop                  |
+| `alerts/+page.svelte`        | Subway alerts grouped by line                        |
+| `preferences/+page.svelte`   | Settings steps                                       |
 
 #### Accordion Pattern
 
@@ -513,11 +513,11 @@ Collapsible sections for organizing content with expandable headers. Used throug
 
 Accordion states are persisted to localStorage for better UX:
 
-| Key                              | Storage                                         |
-| -------------------------------- | ----------------------------------------------- |
-| `ttc-alerts-expanded-stops`      | Set of expanded stop IDs                        |
-| `ttc-alerts-my-routes-accordions`| Object with section expanded booleans           |
-| `ttc-alerts-route-accordions`    | Object with section expanded booleans           |
+| Key                               | Storage                               |
+| --------------------------------- | ------------------------------------- |
+| `ttc-alerts-expanded-stops`       | Set of expanded stop IDs              |
+| `ttc-alerts-my-routes-accordions` | Object with section expanded booleans |
+| `ttc-alerts-route-accordions`     | Object with section expanded booleans |
 
 ### Input Fields
 
@@ -1328,10 +1328,11 @@ Status priority determines card background color when multiple statuses are pres
 
 ```css
 .subway-status-card                    /* Card container */
+/* Card container */
 .subway-status-card.status-ok          /* Normal service - green */
 .subway-status-card.status-disruption  /* Disruption - red */
 .subway-status-card.status-delay       /* Delay - orange */
-.subway-status-card.status-scheduled   /* Scheduled - blue */
+.subway-status-card.status-scheduled; /* Scheduled - blue */
 ```
 
 /_ Card container _/
