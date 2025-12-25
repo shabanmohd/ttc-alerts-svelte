@@ -71,9 +71,11 @@
     if (!browser) return;
     const params = new URLSearchParams();
     if (tab !== "now") params.set("tab", tab);
-    // Use URL-friendly category name
-    const urlCategory = CATEGORY_TO_URL[category];
-    if (urlCategory !== "disruptions") params.set("category", urlCategory);
+    // Only include category in URL for "now" tab (category filter doesn't apply to planned tab)
+    if (tab === "now") {
+      const urlCategory = CATEGORY_TO_URL[category];
+      if (urlCategory !== "disruptions") params.set("category", urlCategory);
+    }
     const queryString = params.toString();
     const newUrl = queryString ? `/alerts?${queryString}` : "/alerts";
     goto(newUrl, { replaceState: true, noScroll: true, keepFocus: true });
@@ -82,8 +84,8 @@
   // Handle tab change
   function setActiveTab(tab: "now" | "planned") {
     activeTab = tab;
-    // Reset category to disruptions when switching to "now" tab
-    if (tab === "now" && selectedCategory !== "disruptions") {
+    // Reset category to disruptions when switching tabs
+    if (selectedCategory !== "disruptions") {
       selectedCategory = "disruptions";
     }
     updateUrl(tab, selectedCategory);
