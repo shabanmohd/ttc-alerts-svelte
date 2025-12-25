@@ -110,18 +110,18 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Pages (`src/routes/`)
 
-| File                              | Status | Purpose                                                       |
-| --------------------------------- | ------ | ------------------------------------------------------------- |
-| `+layout.svelte`                  | ✅     | App layout, auth init, dialogs                                |
-| `+page.svelte`                    | ✅     | Homepage with alert tabs + ETA                                |
-| `alerts/+page.svelte`             | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3)     |
-| `alerts-v3/+page.svelte`          | 📦     | Legacy alerts page (old design, kept for reference)           |
-| `alerts-archive/+page.svelte.bak` | 📦     | Archived original alerts page                                 |
-| `preferences/+page.svelte`        | ✅     | Route/mode preferences                                        |
-| `settings/+page.svelte`           | ✅     | Settings with stops, routes, prefs, location 🆕 **B**         |
-| `routes/+page.svelte`             | ✅     | Route browser by category 🆕 **B**                            |
-| `routes/[route]/+page.svelte`     | ✅     | Route detail page with alerts and route changes                   |
-| `auth/callback/+page.svelte`      | ✅     | Auth callback handler                                         |
+| File                              | Status | Purpose                                                   |
+| --------------------------------- | ------ | --------------------------------------------------------- |
+| `+layout.svelte`                  | ✅     | App layout, auth init, dialogs                            |
+| `+page.svelte`                    | ✅     | Homepage with alert tabs + ETA                            |
+| `alerts/+page.svelte`             | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3) |
+| `alerts-v3/+page.svelte`          | 📦     | Legacy alerts page (old design, kept for reference)       |
+| `alerts-archive/+page.svelte.bak` | 📦     | Archived original alerts page                             |
+| `preferences/+page.svelte`        | ✅     | Route/mode preferences                                    |
+| `settings/+page.svelte`           | ✅     | Settings with stops, routes, prefs, location 🆕 **B**     |
+| `routes/+page.svelte`             | ✅     | Route browser by category 🆕 **B**                        |
+| `routes/[route]/+page.svelte`     | ✅     | Route detail page with alerts and route changes           |
+| `auth/callback/+page.svelte`      | ✅     | Auth callback handler                                     |
 
 ### Alerts Components (`src/routes/alerts/`)
 

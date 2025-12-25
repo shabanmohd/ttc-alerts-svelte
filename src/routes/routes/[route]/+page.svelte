@@ -26,9 +26,10 @@
     isLoading,
     fetchAlerts,
     getSeverityCategory,
+    maintenanceItems,
   } from "$lib/stores/alerts";
   import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
-  import type { ThreadWithAlerts } from "$lib/types/database";
+  import type { ThreadWithAlerts, PlannedMaintenance } from "$lib/types/database";
 
   // Import subway station mapping for elevator alerts
   import { getStationLines, type SubwayLine } from "$lib/data/subway-stations";
@@ -202,12 +203,13 @@
     if (!alert) return false;
 
     // Check effect for ACCESSIBILITY_ISSUE
-    const effect = (alert.effect || '').toUpperCase();
-    if (effect.includes('ACCESSIBILITY')) return true;
+    const effect = (alert.effect || "").toUpperCase();
+    if (effect.includes("ACCESSIBILITY")) return true;
 
     // Check header text for elevator/escalator keywords
-    const headerText = (alert.header_text || '').toLowerCase();
-    if (headerText.includes('elevator') || headerText.includes('escalator')) return true;
+    const headerText = (alert.header_text || "").toLowerCase();
+    if (headerText.includes("elevator") || headerText.includes("escalator"))
+      return true;
 
     return false;
   }
@@ -223,14 +225,16 @@
       ? thread.latestAlert.affected_routes
       : [];
     const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
-    
+
     // Filter to items that look like station names
-    return allRoutes.filter(r => {
+    return allRoutes.filter((r) => {
       const lower = r.toLowerCase();
-      return lower.includes('station') || 
-             lower.includes('elevator') || 
-             lower.includes('escalator') ||
-             (!(/^\d+$/.test(r)) && !r.toLowerCase().startsWith('line '));
+      return (
+        lower.includes("station") ||
+        lower.includes("elevator") ||
+        lower.includes("escalator") ||
+        (!/^\d+$/.test(r) && !r.toLowerCase().startsWith("line "))
+      );
     });
   }
 
@@ -240,12 +244,12 @@
   function elevatorMatchesThisLine(thread: ThreadWithAlerts): boolean {
     if (!isElevatorAlert(thread)) return false;
     if (!isSubwayLine) return false;
-    
+
     const stations = getElevatorStations(thread);
-    
+
     for (const station of stations) {
       const lines = getStationLines(station);
-      if (lines.some(line => line.toLowerCase() === routeId.toLowerCase())) {
+      if (lines.some((line) => line.toLowerCase() === routeId.toLowerCase())) {
         return true;
       }
     }
@@ -263,18 +267,125 @@
       : []
   );
 
+  // ====== Scheduled Maintenance Helpers ======
+
+  /**
+   * Check if a maintenance item is happening right now
+   */
+  function isMaintenanceHappeningNow(item: PlannedMaintenance): boolean {
+    const now = new Date();
+
+    // Parse start date
+    let startTime = item.start_date ? new Date(item.start_date) : null;
+    if (startTime && item.start_time) {
+      const [hours, minutes] = item.start_time.split(":").map(Number);
+      startTime.setHours(hours, minutes, 0, 0);
+    }
+
+    // Parse end date
+    let endTime = item.end_date ? new Date(item.end_date) : null;
+    if (endTime && item.end_time) {
+      const [hours, minutes] = item.end_time.split(":").map(Number);
+      endTime.setHours(hours, minutes, 0, 0);
+    }
+
+    // If no valid times, not active
+    if (!startTime) return false;
+
+    // Check if now is within the maintenance window
+    const isAfterStart = now >= startTime;
+    const isBeforeEnd = endTime ? now <= endTime : true;
+
+    return isAfterStart && isBeforeEnd;
+  }
+
+  /**
+   * Convert PlannedMaintenance to ThreadWithAlerts for AlertCard display
+   */
+  function maintenanceToThread(maintenance: PlannedMaintenance): ThreadWithAlerts {
+    // Format date range for display
+    const startDate = maintenance.start_date
+      ? new Date(maintenance.start_date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        })
+      : "";
+    const endDate = maintenance.end_date
+      ? new Date(maintenance.end_date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        })
+      : "";
+    const dateRange =
+      startDate && endDate ? `${startDate} - ${endDate}` : startDate || endDate;
+    const timeRange = maintenance.start_time
+      ? `${maintenance.start_time}${maintenance.end_time ? ` - ${maintenance.end_time}` : ""}`
+      : "";
+
+    return {
+      thread_id: `maintenance-${maintenance.id}`,
+      affected_routes: maintenance.routes,
+      categories: ["SCHEDULED_MAINTENANCE"],
+      is_resolved: false,
+      is_hidden: false,
+      created_at: maintenance.start_date,
+      updated_at: maintenance.start_date,
+      latestAlert: {
+        id: `maintenance-alert-${maintenance.id}`,
+        thread_id: `maintenance-${maintenance.id}`,
+        header_text: maintenance.description || maintenance.affected_stations || "Scheduled Maintenance",
+        description_text: `${dateRange}${timeRange ? ` • ${timeRange}` : ""}${maintenance.reason ? ` • ${maintenance.reason}` : ""}`,
+        effect: "MODIFIED_SERVICE",
+        cause: "MAINTENANCE",
+        severity: 3,
+        categories: ["SCHEDULED_MAINTENANCE"],
+        affected_routes: maintenance.routes,
+        is_latest: true,
+        created_at: maintenance.start_date,
+        url: maintenance.url,
+      },
+    } as unknown as ThreadWithAlerts;
+  }
+
+  /**
+   * Check if maintenance item matches this route
+   */
+  function maintenanceMatchesRoute(item: PlannedMaintenance): boolean {
+    return item.routes.some((maintRoute) => {
+      const maintLower = maintRoute.toLowerCase();
+      const routeLower = routeId.toLowerCase();
+      return (
+        maintLower === routeLower ||
+        maintLower === `line ${routeLower}` ||
+        maintLower.replace("line ", "") === routeLower ||
+        normalizeRouteId(maintRoute) === normalizeRouteId(routeId)
+      );
+    });
+  }
+
+  // Get active maintenance for this route
+  let activeMaintenanceForRoute = $derived.by<ThreadWithAlerts[]>(() => {
+    // Get active maintenance items matching this route
+    const activeMaintenance = $maintenanceItems
+      .filter(isMaintenanceHappeningNow)
+      .filter(maintenanceMatchesRoute);
+
+    // Convert to ThreadWithAlerts for AlertCard display
+    return activeMaintenance.map(maintenanceToThread);
+  });
+
   /**
    * Parse a date string that could be in various formats
    * e.g., "November 22, 2025" or "2025-11-22"
    */
   function parseFlexibleDate(dateStr: string): Date | null {
     if (!dateStr) return null;
-    
+
     // If it's an ISO format date (YYYY-MM-DD), append time
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
       return new Date(dateStr + "T00:00:00");
     }
-    
+
     // Otherwise, try to parse the human-readable format
     const date = new Date(dateStr);
     return isNaN(date.getTime()) ? null : date;
@@ -297,30 +408,38 @@
   function isRouteChangeCurrentlyActive(change: RouteChange): boolean {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     // If there's no start date, consider it active (show it)
     if (!change.startDate) return true;
-    
+
     // Parse the start date
     const startDate = parseFlexibleDate(change.startDate);
     if (!startDate) return true; // If can't parse, show it
-    
+
     // Set time to midnight for date comparison
-    const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-    
+    const startDateOnly = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      startDate.getDate()
+    );
+
     // Not active yet if start date is in the future
     if (startDateOnly > today) return false;
-    
+
     // Check end date if present
     if (change.endDate) {
       const endDate = parseFlexibleDate(change.endDate);
       if (endDate) {
-        const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        const endDateOnly = new Date(
+          endDate.getFullYear(),
+          endDate.getMonth(),
+          endDate.getDate()
+        );
         // Past end date means no longer active
         if (today > endDateOnly) return false;
       }
     }
-    
+
     return true;
   }
 
@@ -329,13 +448,15 @@
    */
   function formatRouteChangeDate(change: RouteChange): string {
     const parts: string[] = [];
-    
+
     // Always show start date label if present
     if (change.startDateLabel) {
-      const label = change.startDateLabel.charAt(0).toUpperCase() + change.startDateLabel.slice(1);
+      const label =
+        change.startDateLabel.charAt(0).toUpperCase() +
+        change.startDateLabel.slice(1);
       parts.push(label);
     }
-    
+
     // Add start date if present
     if (change.startDate) {
       const date = parseFlexibleDate(change.startDate);
@@ -359,7 +480,7 @@
         }
       }
     }
-    
+
     // Add end date if present
     if (change.endDate) {
       const date = parseFlexibleDate(change.endDate);
@@ -384,7 +505,7 @@
         }
       }
     }
-    
+
     return parts.join(" ");
   }
 
@@ -749,9 +870,28 @@
     </section>
   {/if}
 
-  <!-- 2. Elevator Alerts Section (only for subway lines) -->
-  {#if isSubwayLine && elevatorAlerts.length > 0}
+  <!-- 2. Scheduled Maintenance Section -->
+  {#if activeMaintenanceForRoute.length > 0}
     {#if nonRSZAlerts.length > 0}
+      <hr class="section-divider" />
+    {/if}
+    <section class="mt-6">
+      <h2 class="section-title">
+        <Calendar class="h-4 w-4" />
+        {$_("myRoutes.scheduledMaintenance")}
+      </h2>
+
+      <div class="space-y-3 mt-3">
+        {#each activeMaintenanceForRoute as thread (thread.thread_id)}
+          <AlertCard {thread} />
+        {/each}
+      </div>
+    </section>
+  {/if}
+
+  <!-- 3. Elevator Alerts Section (only for subway lines) -->
+  {#if isSubwayLine && elevatorAlerts.length > 0}
+    {#if nonRSZAlerts.length > 0 || activeMaintenanceForRoute.length > 0}
       <hr class="section-divider" />
     {/if}
     <section class="mt-6">
@@ -768,9 +908,9 @@
     </section>
   {/if}
 
-  <!-- 3. Slow Zones (RSZ alerts - only for subway lines) -->
+  <!-- 4. Slow Zones (RSZ alerts - only for subway lines) -->
   {#if isSubwayLine && rszAlerts.length > 0}
-    {#if nonRSZAlerts.length > 0 || elevatorAlerts.length > 0}
+    {#if nonRSZAlerts.length > 0 || activeMaintenanceForRoute.length > 0 || elevatorAlerts.length > 0}
       <hr class="section-divider" />
     {/if}
     <section class="mt-6">
@@ -821,7 +961,9 @@
                 {/each}
               </div>
               {#if change.routeName}
-                <span class="route-name">{formatRouteName(change.routeName)}</span>
+                <span class="route-name"
+                  >{formatRouteName(change.routeName)}</span
+                >
               {/if}
             </div>
 

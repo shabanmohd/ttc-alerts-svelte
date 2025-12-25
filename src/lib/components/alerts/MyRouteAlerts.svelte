@@ -35,14 +35,22 @@
     maintenanceItems,
   } from "$lib/stores/alerts";
   import { savedRoutes } from "$lib/stores/savedRoutes";
-  import { routeChanges, routeChangesLoading, loadRouteChanges } from "$lib/stores/route-changes";
+  import {
+    routeChanges,
+    routeChangesLoading,
+    loadRouteChanges,
+  } from "$lib/stores/route-changes";
   import type { RouteChange } from "$lib/services/route-changes";
   import type {
     ThreadWithAlerts,
     PlannedMaintenance,
   } from "$lib/types/database";
   // Import subway station helpers for elevator alert matching
-  import { getStationLines, normalizeStationName, type SubwayLine } from "$lib/data/subway-stations";
+  import {
+    getStationLines,
+    normalizeStationName,
+    type SubwayLine,
+  } from "$lib/data/subway-stations";
 
   // Route filter state - which specific route to show (null = all saved routes)
   let selectedRouteFilter = $state<string | null>(null);
@@ -207,12 +215,13 @@
     if (!alert) return false;
 
     // Check effect for ACCESSIBILITY_ISSUE
-    const effect = (alert.effect || '').toUpperCase();
-    if (effect.includes('ACCESSIBILITY')) return true;
+    const effect = (alert.effect || "").toUpperCase();
+    if (effect.includes("ACCESSIBILITY")) return true;
 
     // Check header text for elevator/escalator keywords
-    const headerText = (alert.header_text || '').toLowerCase();
-    if (headerText.includes('elevator') || headerText.includes('escalator')) return true;
+    const headerText = (alert.header_text || "").toLowerCase();
+    if (headerText.includes("elevator") || headerText.includes("escalator"))
+      return true;
 
     return false;
   }
@@ -223,16 +232,18 @@
     const threadRoutes = extractRoutes(thread.affected_routes);
     const alertRoutes = extractRoutes(thread.latestAlert?.affected_routes);
     const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
-    
+
     // Filter to only items that look like station names (not route numbers)
     // Station names typically include "Station" or are known station names
-    return allRoutes.filter(r => {
+    return allRoutes.filter((r) => {
       const lower = r.toLowerCase();
-      return lower.includes('station') || 
-             lower.includes('elevator') || 
-             lower.includes('escalator') ||
-             // If it's NOT a route number or subway line ID, it might be a station
-             (!(/^\d+$/.test(r)) && !r.toLowerCase().startsWith('line '));
+      return (
+        lower.includes("station") ||
+        lower.includes("elevator") ||
+        lower.includes("escalator") ||
+        // If it's NOT a route number or subway line ID, it might be a station
+        (!/^\d+$/.test(r) && !r.toLowerCase().startsWith("line "))
+      );
     });
   }
 
@@ -240,17 +251,17 @@
   // Returns the matching lines if any, empty array if no match
   function getMatchingSubwayLines(thread: ThreadWithAlerts): SubwayLine[] {
     if (!isElevatorAlert(thread)) return [];
-    
+
     const stations = getElevatorStations(thread);
     const matchingLines = new Set<SubwayLine>();
-    
+
     for (const station of stations) {
       const lines = getStationLines(station);
       for (const line of lines) {
         matchingLines.add(line);
       }
     }
-    
+
     return Array.from(matchingLines);
   }
 
@@ -258,18 +269,25 @@
   function elevatorMatchesSavedRoutes(thread: ThreadWithAlerts): boolean {
     const matchingLines = getMatchingSubwayLines(thread);
     // Check if any matching line is in saved routes
-    return matchingLines.some(line => 
-      routeIds.some(savedRoute => savedRoute.toLowerCase() === line.toLowerCase())
+    return matchingLines.some((line) =>
+      routeIds.some(
+        (savedRoute) => savedRoute.toLowerCase() === line.toLowerCase()
+      )
     );
   }
 
   // Helper: Check if an elevator alert matches a specific saved route (must be a subway line)
-  function elevatorMatchesSpecificRoute(thread: ThreadWithAlerts, routeId: string): boolean {
+  function elevatorMatchesSpecificRoute(
+    thread: ThreadWithAlerts,
+    routeId: string
+  ): boolean {
     // Only applies if the route is a subway line
-    if (!routeId.toLowerCase().startsWith('line ')) return false;
-    
+    if (!routeId.toLowerCase().startsWith("line ")) return false;
+
     const matchingLines = getMatchingSubwayLines(thread);
-    return matchingLines.some(line => line.toLowerCase() === routeId.toLowerCase());
+    return matchingLines.some(
+      (line) => line.toLowerCase() === routeId.toLowerCase()
+    );
   }
 
   // Get all alerts matching saved routes (excluding resolved)
@@ -277,7 +295,7 @@
   let routeMatchedAlerts = $derived.by<ThreadWithAlerts[]>(() => {
     if (routeIds.length === 0) return [];
     return $threadsWithAlerts
-      .filter(thread => {
+      .filter((thread) => {
         // Include if it matches routes directly
         if (matchesRoutes(thread)) return true;
         // Also include elevator alerts that match saved subway lines
@@ -312,10 +330,12 @@
   // Then separate elevator alerts from service disruption alerts
   let rszAlerts = $derived(myAlerts.filter(isRSZAlert));
   let allNonRSZAlerts = $derived(myAlerts.filter((t) => !isRSZAlert(t)));
-  
+
   // Split into elevator alerts and service alerts
   let elevatorAlerts = $derived(allNonRSZAlerts.filter(isElevatorAlert));
-  let serviceAlerts = $derived(allNonRSZAlerts.filter((t) => !isElevatorAlert(t)));
+  let serviceAlerts = $derived(
+    allNonRSZAlerts.filter((t) => !isElevatorAlert(t))
+  );
 
   // ====== Scheduled Maintenance Helpers ======
 
@@ -549,12 +569,12 @@
    */
   function parseFlexibleDate(dateStr: string): Date | null {
     if (!dateStr) return null;
-    
+
     // If it's an ISO format date (YYYY-MM-DD), append time
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
       return new Date(dateStr + "T00:00:00");
     }
-    
+
     // Otherwise, try to parse the human-readable format
     const date = new Date(dateStr);
     return isNaN(date.getTime()) ? null : date;
@@ -562,13 +582,15 @@
 
   function formatRouteChangeDate(change: RouteChange): string {
     const parts: string[] = [];
-    
+
     // Always show start date label if present
     if (change.startDateLabel) {
-      const label = change.startDateLabel.charAt(0).toUpperCase() + change.startDateLabel.slice(1);
+      const label =
+        change.startDateLabel.charAt(0).toUpperCase() +
+        change.startDateLabel.slice(1);
       parts.push(label);
     }
-    
+
     // Add start date if present
     if (change.startDate) {
       const date = parseFlexibleDate(change.startDate);
@@ -592,7 +614,7 @@
         }
       }
     }
-    
+
     // Add end date if present
     if (change.endDate) {
       const date = parseFlexibleDate(change.endDate);
@@ -617,7 +639,7 @@
         }
       }
     }
-    
+
     return parts.join(" ");
   }
 
@@ -631,9 +653,7 @@
       .filter((change) => {
         // Check if any of the change's routes match any saved route
         return change.routes.some((changeRoute) =>
-          routeIds.some((savedRoute) =>
-            routesMatch(changeRoute, savedRoute)
-          )
+          routeIds.some((savedRoute) => routesMatch(changeRoute, savedRoute))
         );
       });
 
@@ -821,7 +841,9 @@
               {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
               <div
                 class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-                style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+                style={isNew
+                  ? ""
+                  : `animation-delay: ${Math.min(i * 50, 300)}ms`}
               >
                 <AlertCard {thread} />
               </div>
@@ -869,41 +891,43 @@
                 class="route-change-card animate-fade-in-up"
                 style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
               >
-              <!-- Header: all affected routes + route name -->
-              <div class="route-change-header">
-                <div class="route-badges">
-                  {#each change.routes as route}
-                    <RouteBadge {route} size="lg" />
-                  {/each}
+                <!-- Header: all affected routes + route name -->
+                <div class="route-change-header">
+                  <div class="route-badges">
+                    {#each change.routes as route}
+                      <RouteBadge {route} size="lg" />
+                    {/each}
+                  </div>
+                  {#if change.routeName}
+                    <span class="route-name"
+                      >{formatRouteName(change.routeName)}</span
+                    >
+                  {/if}
                 </div>
-                {#if change.routeName}
-                  <span class="route-name">{formatRouteName(change.routeName)}</span>
+
+                <!-- Title -->
+                <p class="card-title">{change.title}</p>
+
+                <!-- Date info -->
+                {#if formatRouteChangeDate(change)}
+                  <p class="card-date">
+                    <Calendar class="date-icon" />
+                    <span>{formatRouteChangeDate(change)}</span>
+                  </p>
                 {/if}
+
+                <!-- Link -->
+                <a
+                  href={change.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="card-link"
+                >
+                  {$_("common.moreDetails")}
+                  <ExternalLink class="link-icon" />
+                </a>
               </div>
-
-              <!-- Title -->
-              <p class="card-title">{change.title}</p>
-
-              <!-- Date info -->
-              {#if formatRouteChangeDate(change)}
-                <p class="card-date">
-                  <Calendar class="date-icon" />
-                  <span>{formatRouteChangeDate(change)}</span>
-                </p>
-              {/if}
-
-              <!-- Link -->
-              <a
-                href={change.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="card-link"
-              >
-                {$_("common.moreDetails")}
-                <ExternalLink class="link-icon" />
-              </a>
-            </div>
-          {/each}
+            {/each}
           </div>
         </section>
       {/if}
@@ -923,7 +947,9 @@
               {@const isNew = $recentlyAddedThreadIds.has(thread.thread_id)}
               <div
                 class={isNew ? "animate-new-alert" : "animate-fade-in-up"}
-                style={isNew ? "" : `animation-delay: ${Math.min(i * 50, 300)}ms`}
+                style={isNew
+                  ? ""
+                  : `animation-delay: ${Math.min(i * 50, 300)}ms`}
               >
                 <AlertCard {thread} />
               </div>
