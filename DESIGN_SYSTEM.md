@@ -1034,14 +1034,15 @@ The Maintenance Widget displays planned subway closures. Each maintenance item u
 
 **Global Card Border Standard**: All cards use `2px` borders for better visual separation when stacked vertically.
 
-| Card Type          | Border Style                    | Location                 |
-| ------------------ | ------------------------------- | ------------------------ |
-| ETACard            | `border-2` (Tailwind)           | ETACard.svelte           |
-| Alert Card         | `border: 2px solid`             | layout.css `.alert-card` |
-| RSZ Alert Card     | `border: 2px solid`             | RSZAlertCard.svelte      |
-| Maintenance Widget | `border: 2px solid`             | MaintenanceWidget.svelte |
-| Subway Status Card | `border: 2px solid`             | alerts/+page.svelte      |
-| shadcn Card.Root   | Default (uses component styles) | From shadcn-svelte       |
+| Card Type          | Border Style                    | Location                     |
+| ------------------ | ------------------------------- | ---------------------------- |
+| ETACard            | `border-2` (Tailwind)           | ETACard.svelte               |
+| Alert Card         | `border: 2px solid`             | layout.css `.alert-card`     |
+| RSZ Alert Card     | `border: 2px solid`             | RSZAlertCard.svelte          |
+| Route Change Card  | `border: 2px solid`             | RouteChangesView.svelte      |
+| Maintenance Widget | `border: 2px solid`             | MaintenanceWidget.svelte     |
+| Subway Status Card | `border: 2px solid`             | alerts/+page.svelte          |
+| shadcn Card.Root   | Default (uses component styles) | From shadcn-svelte           |
 
 ```svelte
 <Card.Root>

@@ -75,24 +75,24 @@ Real-time Toronto Transit alerts with biometric authentication.
 | File                                             | Status | Purpose                                                                 |
 | ------------------------------------------------ | ------ | ----------------------------------------------------------------------- |
 | `components/alerts/AccessibilityBadge.svelte`    | ✅     | Wheelchair icon badge for elevator/escalator alerts 🆕                  |
-| `components/alerts/AlertCard.svelte`             | ✅     | Alert cards w/ accessibility badge, route deduplication (v50)           |
-| `components/alerts/RSZAlertCard.svelte`          | ✅     | Reduced Speed Zone alerts - grouped table display 🆕                    |
-| `components/alerts/BookmarkRouteButton.svelte`   | ✅     | Save route button with feedback animation 🆕 **B**                      |
-| `components/alerts/CategoryFilter.svelte`        | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA            |
-| `components/alerts/ClosuresView.svelte`          | ✅     | Scheduled tab with closure type badges (nightly/weekend)                |
-| `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes cards: badges + route name inline, 5-min polling 🆕 **B** |
-| `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                                 |
-| `components/alerts/MaintenanceWidget.svelte`     | ✅     | Scheduled maintenance display                                           |
-| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with elevator alerts, section headings, dividers          |
-| `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                           |
-| `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                        |
-| `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile                     |
-| `components/dialogs/AboutDialog.svelte`          | ✅     | App info, version, links                                                |
-| `components/dialogs/ReportIssueDialog.svelte`    | ✅     | Bug/issue report form with Turnstile + Resend                           |
-| `components/dialogs/FeatureRequestDialog.svelte` | ✅     | Feature suggestion form with Turnstile + Resend                         |
-| `components/dialogs/InstallPWADialog.svelte`     | ✅     | PWA install prompt                                                      |
-| `components/layout/Header.svelte`                | ✅     | App header - language toggle, hamburger menu w/ iOS safe area           |
-| `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header                   |
+| `components/alerts/AlertCard.svelte`             | ✅     | Alert cards w/ accessibility badge, route deduplication (v50)                   |
+| `components/alerts/RSZAlertCard.svelte`          | ✅     | Reduced Speed Zone alerts - grouped table display 🆕                            |
+| `components/alerts/BookmarkRouteButton.svelte`   | ✅     | Save route button with feedback animation 🆕 **B**                              |
+| `components/alerts/CategoryFilter.svelte`        | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA                    |
+| `components/alerts/ClosuresView.svelte`          | ✅     | Scheduled tab with closure type badges (nightly/weekend)                        |
+| `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes: AlertCard-style (2px border, hover), title case route names 🆕   |
+| `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                                         |
+| `components/alerts/MaintenanceWidget.svelte`     | ✅     | Scheduled maintenance display                                                   |
+| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with elevator alerts, section headings, dividers                  |
+| `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                                   |
+| `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                                |
+| `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile                             |
+| `components/dialogs/AboutDialog.svelte`          | ✅     | App info, version, links                                                        |
+| `components/dialogs/ReportIssueDialog.svelte`    | ✅     | Bug/issue report form with Turnstile + Resend                                   |
+| `components/dialogs/FeatureRequestDialog.svelte` | ✅     | Feature suggestion form with Turnstile + Resend                                 |
+| `components/dialogs/InstallPWADialog.svelte`     | ✅     | PWA install prompt                                                              |
+| `components/layout/Header.svelte`                | ✅     | App header - language toggle, hamburger menu w/ iOS safe area                   |
+| `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header                           |
 | `components/layout/Sidebar.svelte`               | ✅     | Desktop sidebar - nav + footer links (no How to Use)                    |
 | `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom                   |
 | `components/ui/*`                                | ✅     | shadcn-svelte base components                                           |
@@ -125,13 +125,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Alerts Components (`src/routes/alerts/`)
 
-| File                      | Status | Purpose                                                                                          |
-| ------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
-| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs, URL param sync (tab/category), TTC attribution link, 600px layout |
-| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile) - no slowzone status, minmax(0, 1fr) grid                  |
-| `CategoryFilterV3.svelte` | ✅     | Compact pill filter (Disruptions & Delays/Slow Zones/Elevators)                                  |
-| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)                           |
-| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)                                     |
+| File                      | Status | Purpose                                                                                           |
+| ------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs, URL param sync (tab/category), TTC attribution link, 600px layout  |
+| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile) - no slowzone status, minmax(0, 1fr) grid                   |
+| `CategoryFilterV3.svelte` | ✅     | Compact pill filter (Disruptions & Delays / Elevators / Slow Zones)                               |
+| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)                            |
+| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)                                      |
 
 ### Backend (`supabase/`)
 

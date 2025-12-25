@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { _ } from "svelte-i18n";
-  import { CheckCircle, ExternalLink, Calendar } from "lucide-svelte";
+  import { CheckCircle, ExternalLink } from "lucide-svelte";
   import RouteBadge from "./RouteBadge.svelte";
   import {
     routeChanges,
@@ -102,14 +102,28 @@
 
     return parts.join(" ");
   }
+
   /**
-   * Capitalize first letter of each word
+   * Capitalize first letter of each word (title case)
+   * Handles hyphenated words like "Esplanade-River"
    */
   function formatRouteName(name: string): string {
     if (!name) return "";
     return name
       .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .map((word) => {
+        // Handle hyphenated words like "Esplanade-River"
+        if (word.includes("-")) {
+          return word
+            .split("-")
+            .map(
+              (part) =>
+                part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+            )
+            .join("-");
+        }
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
       .join(" ");
   }
 
@@ -166,10 +180,7 @@
 
         <!-- Date info with full format -->
         {#if getDateDisplay(change)}
-          <p class="card-date">
-            <Calendar class="date-icon" />
-            <span>{getDateDisplay(change)}</span>
-          </p>
+          <p class="card-date">{getDateDisplay(change)}</p>
         {/if}
 
         <!-- Link indicator - only this is clickable -->
@@ -315,14 +326,25 @@
     gap: 0.75rem;
   }
 
-  /* Route change card - vertical layout (not clickable) */
+  /* Route change card - matching AlertCard border, padding, and hover */
   .route-change-card {
     display: block;
-    padding: 0.875rem;
+    padding: 0.875rem 1rem;
     background-color: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
+    border: 2px solid hsl(var(--border));
     border-radius: var(--radius);
     color: inherit;
+    transition: box-shadow 0.2s ease;
+  }
+
+  @media (min-width: 640px) {
+    .route-change-card {
+      padding: 1rem 1.25rem;
+    }
+  }
+
+  .route-change-card:hover {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   }
 
   /* Card header - badges + route name on same row (left-aligned) */
@@ -344,8 +366,8 @@
   }
 
   .route-name {
-    font-size: 1.125rem;
-    font-weight: 600;
+    font-size: 1.25rem;
+    font-weight: 700;
     color: hsl(var(--foreground));
   }
 
@@ -360,28 +382,17 @@
 
   /* Card date */
   .card-date {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.375rem;
     font-size: 0.8125rem;
     color: hsl(var(--muted-foreground));
     margin: 0 0 0.5rem 0;
-    line-height: 1.35;
   }
 
-  .card-date :global(.date-icon) {
-    width: 1rem;
-    height: 1rem;
-    flex-shrink: 0;
-    margin-top: 0.125rem;
-  }
-
-  /* Card link - the only clickable element */
+  /* Card link */
   .card-link {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: hsl(var(--primary));
     text-decoration: none;
@@ -392,8 +403,8 @@
   }
 
   .card-link :global(.link-icon) {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: 0.75rem;
+    height: 0.75rem;
   }
 
   /* Animation */

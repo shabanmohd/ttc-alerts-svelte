@@ -29,16 +29,16 @@
       ariaLabel: "Show service disruptions and delays",
     },
     {
-      id: "delays",
-      label: "Slow Zones",
-      icon: Gauge,
-      ariaLabel: "Show subway slow zones",
-    },
-    {
       id: "elevators",
       label: "Elevators",
       icon: Accessibility,
       ariaLabel: "Show elevator and escalator status",
+    },
+    {
+      id: "delays",
+      label: "Slow Zones",
+      icon: Gauge,
+      ariaLabel: "Show subway slow zones",
     },
   ];
 
