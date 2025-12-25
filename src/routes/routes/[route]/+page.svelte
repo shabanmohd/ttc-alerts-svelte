@@ -187,13 +187,32 @@
   let rszAlerts = $derived(routeAlerts.filter(isRSZAlert));
   let nonRSZAlerts = $derived(routeAlerts.filter((t) => !isRSZAlert(t)));
 
-  // Filter route changes for this specific route
+  /**
+   * Parse a date string that could be in various formats
+   * e.g., "November 22, 2025" or "2025-11-22"
+   */
+  function parseFlexibleDate(dateStr: string): Date | null {
+    if (!dateStr) return null;
+    
+    // If it's an ISO format date (YYYY-MM-DD), append time
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return new Date(dateStr + "T00:00:00");
+    }
+    
+    // Otherwise, try to parse the human-readable format
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  // Filter route changes for this specific route (only currently active ones)
   let filteredRouteChanges = $derived(
-    $routeChanges.filter((change) => {
-      return change.routes.some(
-        (r) => normalizeRouteId(r) === normalizeRouteId(routeId)
-      );
-    })
+    $routeChanges
+      .filter((change) => {
+        return change.routes.some(
+          (r) => normalizeRouteId(r) === normalizeRouteId(routeId)
+        );
+      })
+      .filter(isRouteChangeCurrentlyActive)
   );
 
   /**
@@ -201,12 +220,32 @@
    */
   function isRouteChangeCurrentlyActive(change: RouteChange): boolean {
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
-    // If there's no start date, consider it active
+    // If there's no start date, consider it active (show it)
     if (!change.startDate) return true;
     
-    const startDate = new Date(change.startDate);
-    return startDate <= now;
+    // Parse the start date
+    const startDate = parseFlexibleDate(change.startDate);
+    if (!startDate) return true; // If can't parse, show it
+    
+    // Set time to midnight for date comparison
+    const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    
+    // Not active yet if start date is in the future
+    if (startDateOnly > today) return false;
+    
+    // Check end date if present
+    if (change.endDate) {
+      const endDate = parseFlexibleDate(change.endDate);
+      if (endDate) {
+        const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        // Past end date means no longer active
+        if (today > endDateOnly) return false;
+      }
+    }
+    
+    return true;
   }
 
   /**
@@ -215,37 +254,58 @@
   function formatRouteChangeDate(change: RouteChange): string {
     const parts: string[] = [];
     
-    if (change.startDateLabel && change.startDate) {
+    // Always show start date label if present
+    if (change.startDateLabel) {
       const label = change.startDateLabel.charAt(0).toUpperCase() + change.startDateLabel.slice(1);
       parts.push(label);
     }
     
+    // Add start date if present
     if (change.startDate) {
-      const date = new Date(change.startDate);
-      const formatted = date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-      if (change.startTime) {
-        parts.push(`${formatted} - ${change.startTime}`);
+      const date = parseFlexibleDate(change.startDate);
+      if (date) {
+        const formatted = date.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+        if (change.startTime) {
+          parts.push(`${formatted} - ${change.startTime}`);
+        } else {
+          parts.push(formatted);
+        }
       } else {
-        parts.push(formatted);
+        // If parsing failed, use the raw date string
+        if (change.startTime) {
+          parts.push(`${change.startDate} - ${change.startTime}`);
+        } else {
+          parts.push(change.startDate);
+        }
       }
     }
     
+    // Add end date if present
     if (change.endDate) {
-      const date = new Date(change.endDate);
-      const formatted = date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
+      const date = parseFlexibleDate(change.endDate);
       parts.push("to");
-      if (change.endTime) {
-        parts.push(`${formatted} - ${change.endTime}`);
+      if (date) {
+        const formatted = date.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+        if (change.endTime) {
+          parts.push(`${formatted} - ${change.endTime}`);
+        } else {
+          parts.push(formatted);
+        }
       } else {
-        parts.push(formatted);
+        // If parsing failed, use the raw date string
+        if (change.endTime) {
+          parts.push(`${change.endDate} - ${change.endTime}`);
+        } else {
+          parts.push(change.endDate);
+        }
       }
     }
     

@@ -75,8 +75,8 @@
   function getDateDisplay(change: RouteChange): string {
     const parts: string[] = [];
 
-    // Only add start date label if we also have an actual date
-    if (change.startDateLabel && change.startDate) {
+    // Always show start date label if present (e.g., "starting as early as")
+    if (change.startDateLabel) {
       // Capitalize first letter
       const label =
         change.startDateLabel.charAt(0).toUpperCase() +
@@ -95,14 +95,13 @@
       parts.push(formatFullDate(change.endDate, change.endTime));
     }
 
-    // If no dates at all, return empty (don't show calendar row)
+    // If nothing to display, return empty
     if (parts.length === 0) {
       return "";
     }
 
     return parts.join(" ");
   }
-
   /**
    * Capitalize first letter of each word
    */

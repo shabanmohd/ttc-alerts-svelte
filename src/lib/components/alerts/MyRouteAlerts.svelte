@@ -451,25 +451,82 @@
   }
 
   // Format route change date for display
-  function formatRouteChangeDate(change: RouteChange): string {
-    if (!change.startDate) return change.startDateLabel || "";
-
-    const start = new Date(change.startDate + "T00:00:00");
-    const startStr = start.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-
-    if (change.endDate) {
-      const end = new Date(change.endDate + "T00:00:00");
-      const endStr = end.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-      return `${startStr} - ${endStr}`;
+  /**
+   * Parse a date string that could be in various formats
+   * e.g., "November 22, 2025" or "2025-11-22"
+   */
+  function parseFlexibleDate(dateStr: string): Date | null {
+    if (!dateStr) return null;
+    
+    // If it's an ISO format date (YYYY-MM-DD), append time
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return new Date(dateStr + "T00:00:00");
     }
+    
+    // Otherwise, try to parse the human-readable format
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
+  }
 
-    return change.startDateLabel || startStr;
+  function formatRouteChangeDate(change: RouteChange): string {
+    const parts: string[] = [];
+    
+    // Always show start date label if present
+    if (change.startDateLabel) {
+      const label = change.startDateLabel.charAt(0).toUpperCase() + change.startDateLabel.slice(1);
+      parts.push(label);
+    }
+    
+    // Add start date if present
+    if (change.startDate) {
+      const date = parseFlexibleDate(change.startDate);
+      if (date) {
+        const formatted = date.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+        if (change.startTime) {
+          parts.push(`${formatted} - ${change.startTime}`);
+        } else {
+          parts.push(formatted);
+        }
+      } else {
+        // If parsing failed, use the raw date string
+        if (change.startTime) {
+          parts.push(`${change.startDate} - ${change.startTime}`);
+        } else {
+          parts.push(change.startDate);
+        }
+      }
+    }
+    
+    // Add end date if present
+    if (change.endDate) {
+      const date = parseFlexibleDate(change.endDate);
+      parts.push("to");
+      if (date) {
+        const formatted = date.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+        if (change.endTime) {
+          parts.push(`${formatted} - ${change.endTime}`);
+        } else {
+          parts.push(formatted);
+        }
+      } else {
+        // If parsing failed, use the raw date string
+        if (change.endTime) {
+          parts.push(`${change.endDate} - ${change.endTime}`);
+        } else {
+          parts.push(change.endDate);
+        }
+      }
+    }
+    
+    return parts.join(" ");
   }
 
   // Filter route changes for saved routes
