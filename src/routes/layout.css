@@ -218,6 +218,9 @@ html.reduce-motion *::after {
 html {
   color-scheme: light;
   background-color: hsl(var(--background));
+  /* Prevent subtle horizontal layout shift when content height changes
+     (e.g., expanding/collapsing accordions) by reserving scrollbar space. */
+  scrollbar-gutter: stable;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
   /* Use dvh for proper mobile viewport height */
@@ -235,6 +238,8 @@ body {
   font-family: "Lexend", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Some browsers use `body` as the scrolling element; keep gutter stable there too. */
+  scrollbar-gutter: stable;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
   /* Proper height for iOS */

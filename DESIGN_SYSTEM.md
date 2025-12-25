@@ -151,6 +151,18 @@ font-family: "Lexend", system-ui, -apple-system, sans-serif;
 | Tablet     | `640px - 1023px` | Increased padding              |
 | Desktop    | `≥ 1024px`       | Sidebar visible, no bottom nav |
 
+### Scrollbar Stability
+
+To prevent horizontal layout shift when content height changes (e.g., expanding accordions, switching filters), the app uses `scrollbar-gutter: stable` on both `html` and `body`:
+
+```css
+html, body {
+  scrollbar-gutter: stable;
+}
+```
+
+This reserves space for the vertical scrollbar even when content doesn't overflow, ensuring centered content doesn't shift when the scrollbar appears or disappears.
+
 ---
 
 ## 4. Border Radius
