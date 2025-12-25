@@ -230,7 +230,8 @@
     "noActiveAlerts": "Aucune perturbation active",
     "serviceRunningNormally": "Le service fonctionne normalement sur {route}",
     "stopsAndETA": "Arrêts et horaires en direct",
-    "realtimePredictions": "Prédictions d'arrivée en temps réel"
+    "realtimePredictions": "Prédictions d'arrivée en temps réel",
+    "routeChanges": "Changements d'itinéraires"
   },
   "routeCategories": {
     "all": "Toutes",

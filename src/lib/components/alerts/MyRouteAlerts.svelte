@@ -9,6 +9,9 @@
     RefreshCw,
     Route,
     Trash2,
+    GitBranch,
+    Calendar,
+    ExternalLink,
   } from "lucide-svelte";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
@@ -29,6 +32,8 @@
     maintenanceItems,
   } from "$lib/stores/alerts";
   import { savedRoutes } from "$lib/stores/savedRoutes";
+  import { routeChanges, routeChangesLoading, loadRouteChanges } from "$lib/stores/route-changes";
+  import type { RouteChange } from "$lib/services/route-changes";
   import type {
     ThreadWithAlerts,
     PlannedMaintenance,
@@ -418,6 +423,82 @@
     return matchingMaintenance.map(maintenanceToThread);
   });
 
+  // ====== Route Changes (from TTC website) ======
+
+  // Load route changes on mount
+  onMount(() => {
+    loadRouteChanges();
+  });
+
+  // Check if a route change is currently active based on dates
+  function isRouteChangeCurrentlyActive(change: RouteChange): boolean {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // If no start date, assume it's active
+    if (!change.startDate) return true;
+
+    const startDate = new Date(change.startDate + "T00:00:00");
+    if (today < startDate) return false;
+
+    // If there's an end date, check if we're past it
+    if (change.endDate) {
+      const endDate = new Date(change.endDate + "T23:59:59");
+      if (now > endDate) return false;
+    }
+
+    return true;
+  }
+
+  // Format route change date for display
+  function formatRouteChangeDate(change: RouteChange): string {
+    if (!change.startDate) return change.startDateLabel || "";
+
+    const start = new Date(change.startDate + "T00:00:00");
+    const startStr = start.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+
+    if (change.endDate) {
+      const end = new Date(change.endDate + "T00:00:00");
+      const endStr = end.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+      return `${startStr} - ${endStr}`;
+    }
+
+    return change.startDateLabel || startStr;
+  }
+
+  // Filter route changes for saved routes
+  let filteredRouteChanges = $derived.by<RouteChange[]>(() => {
+    if (routeIds.length === 0) return [];
+
+    // Start with active route changes that match saved routes
+    let changes = $routeChanges
+      .filter(isRouteChangeCurrentlyActive)
+      .filter((change) => {
+        // Check if any of the change's routes match any saved route
+        return change.routes.some((changeRoute) =>
+          routeIds.some((savedRoute) =>
+            routesMatch(changeRoute, savedRoute)
+          )
+        );
+      });
+
+    // Apply optional route filter
+    if (selectedRouteFilter) {
+      const filterRoute = selectedRouteFilter;
+      changes = changes.filter((change) =>
+        change.routes.some((r) => routesMatch(r, filterRoute))
+      );
+    }
+
+    return changes;
+  });
+
   function handleAddRoutes() {
     goto("/routes");
   }
@@ -538,7 +619,7 @@
         {$_("myRoutes.useSearchBar")}
       </p>
     </button>
-  {:else if myAlerts.length === 0 && activeMaintenanceForRoutes.length === 0}
+  {:else if myAlerts.length === 0 && activeMaintenanceForRoutes.length === 0 && filteredRouteChanges.length === 0}
     <!-- Empty State: Routes Saved but No Active Alerts -->
     <div class="empty-state success animate-fade-in">
       <div class="empty-state-icon success">
@@ -619,6 +700,58 @@
         {#if line2RSZ.length > 0}
           <RSZAlertCard threads={line2RSZ} />
         {/if}
+      {/if}
+
+      <!-- Route Changes (from TTC website) -->
+      {#if filteredRouteChanges.length > 0}
+        <div class="route-changes-section">
+          <h3 class="route-changes-title">
+            <GitBranch class="h-4 w-4" />
+            {$_("routes.routeChanges")}
+          </h3>
+          {#each filteredRouteChanges as change, i (change.id)}
+            <div
+              class="route-change-card animate-fade-in-up"
+              style={`animation-delay: ${Math.min(i * 50, 300)}ms`}
+            >
+              <!-- Header: all affected routes -->
+              <div class="route-change-header">
+                <div class="route-badges">
+                  {#each change.routes as route}
+                    <RouteBadge {route} size="sm" />
+                  {/each}
+                </div>
+                {#if change.routeName}
+                  <span class="route-name">{change.routeName}</span>
+                {/if}
+              </div>
+
+              <!-- Title -->
+              <p class="route-change-title-text">{change.title}</p>
+
+              <!-- Footer: dates and link -->
+              <div class="route-change-footer">
+                {#if change.startDate || change.startDateLabel}
+                  <span class="route-change-date">
+                    <Calendar class="h-3.5 w-3.5" />
+                    {formatRouteChangeDate(change)}
+                  </span>
+                {/if}
+                {#if change.url}
+                  <a
+                    href={change.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="route-change-link"
+                  >
+                    <ExternalLink class="h-3.5 w-3.5" />
+                    Details
+                  </a>
+                {/if}
+              </div>
+            </div>
+          {/each}
+        </div>
       {/if}
     </div>
   {/if}
@@ -909,5 +1042,91 @@
     to {
       transform: rotate(360deg);
     }
+  }
+
+  /* Route Changes Section */
+  .route-changes-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .route-changes-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin-bottom: 0.75rem;
+  }
+
+  .route-change-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 0.875rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .route-change-card:last-child {
+    margin-bottom: 0;
+  }
+
+  .route-change-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .route-badges {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+  }
+
+  .route-name {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    font-weight: 500;
+  }
+
+  .route-change-title-text {
+    font-size: 0.875rem;
+    color: hsl(var(--foreground));
+    line-height: 1.4;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .route-change-footer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .route-change-date {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .route-change-link {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: hsl(var(--primary));
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+
+  .route-change-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
   }
 </style>

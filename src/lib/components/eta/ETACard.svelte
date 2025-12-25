@@ -212,7 +212,7 @@
    * Format the future day label for display
    * Labels from schedule-lookup are already formatted correctly:
    * - "Tomorrow"
-   * - "Tomorrow - Christmas Day" 
+   * - "Tomorrow - Christmas Day"
    * - "Mon, Dec 29"
    * - "Thu, Dec 25 - Christmas Day"
    */

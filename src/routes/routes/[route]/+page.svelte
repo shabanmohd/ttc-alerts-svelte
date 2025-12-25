@@ -9,6 +9,9 @@
     CheckCircle,
     MapPin,
     Loader2,
+    GitBranch,
+    Calendar,
+    ExternalLink,
   } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
@@ -25,6 +28,14 @@
   } from "$lib/stores/alerts";
   import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import type { ThreadWithAlerts } from "$lib/types/database";
+
+  // Import route changes store
+  import {
+    routeChanges,
+    routeChangesLoading,
+    loadRouteChanges,
+  } from "$lib/stores/route-changes";
+  import type { RouteChange } from "$lib/services/route-changes";
 
   // Import route stops components
   import RouteDirectionTabs, {
@@ -176,6 +187,71 @@
   let rszAlerts = $derived(routeAlerts.filter(isRSZAlert));
   let nonRSZAlerts = $derived(routeAlerts.filter((t) => !isRSZAlert(t)));
 
+  // Filter route changes for this specific route
+  let filteredRouteChanges = $derived(
+    $routeChanges.filter((change) => {
+      return change.routes.some(
+        (r) => normalizeRouteId(r) === normalizeRouteId(routeId)
+      );
+    })
+  );
+
+  /**
+   * Check if a route change is currently active (not just upcoming)
+   */
+  function isRouteChangeCurrentlyActive(change: RouteChange): boolean {
+    const now = new Date();
+    
+    // If there's no start date, consider it active
+    if (!change.startDate) return true;
+    
+    const startDate = new Date(change.startDate);
+    return startDate <= now;
+  }
+
+  /**
+   * Format route change date for display
+   */
+  function formatRouteChangeDate(change: RouteChange): string {
+    const parts: string[] = [];
+    
+    if (change.startDateLabel && change.startDate) {
+      const label = change.startDateLabel.charAt(0).toUpperCase() + change.startDateLabel.slice(1);
+      parts.push(label);
+    }
+    
+    if (change.startDate) {
+      const date = new Date(change.startDate);
+      const formatted = date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      if (change.startTime) {
+        parts.push(`${formatted} - ${change.startTime}`);
+      } else {
+        parts.push(formatted);
+      }
+    }
+    
+    if (change.endDate) {
+      const date = new Date(change.endDate);
+      const formatted = date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      parts.push("to");
+      if (change.endTime) {
+        parts.push(`${formatted} - ${change.endTime}`);
+      } else {
+        parts.push(formatted);
+      }
+    }
+    
+    return parts.join(" ");
+  }
+
   // Stops state
   let directionGroups = $state<DirectionGroup[]>([]);
   let selectedDirection = $state<DirectionLabel>("All Stops");
@@ -323,8 +399,8 @@
   let activeDialog = $state<string | null>(null);
 
   onMount(async () => {
-    // Load alerts and stops in parallel
-    await Promise.all([fetchAlerts(), loadRouteStops()]);
+    // Load alerts, stops, and route changes in parallel
+    await Promise.all([fetchAlerts(), loadRouteStops(), loadRouteChanges()]);
   });
 
   /**
@@ -558,6 +634,56 @@
             <RSZAlertCard threads={rszAlerts} />
           {/if}
         {/if}
+      </div>
+    </section>
+  {/if}
+
+  <!-- Route Changes Section (if any affect this route) -->
+  {#if filteredRouteChanges.length > 0}
+    <section class="mt-6">
+      <h2 class="section-title">
+        <GitBranch class="h-4 w-4" />
+        {$_("routes.routeChanges")}
+      </h2>
+
+      <div class="space-y-3 mt-3">
+        {#each filteredRouteChanges as change (change.id)}
+          <div class="route-change-card animate-fade-in">
+            <!-- Header: all affected routes -->
+            <div class="route-change-header">
+              <div class="route-badges">
+                {#each change.routes as route}
+                  <RouteBadge {route} size="sm" />
+                {/each}
+              </div>
+              {#if change.routeName}
+                <span class="route-name">{change.routeName}</span>
+              {/if}
+            </div>
+
+            <!-- Title -->
+            <p class="route-change-title">{change.title}</p>
+
+            <!-- Date info -->
+            {#if formatRouteChangeDate(change)}
+              <p class="route-change-date">
+                <Calendar class="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                <span>{formatRouteChangeDate(change)}</span>
+              </p>
+            {/if}
+
+            <!-- Link -->
+            <a
+              href={change.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="route-change-link"
+            >
+              {$_("common.moreDetails")}
+              <ExternalLink class="h-3.5 w-3.5" />
+            </a>
+          </div>
+        {/each}
       </div>
     </section>
   {/if}
@@ -883,5 +1009,64 @@
   .stops-list-container {
     position: relative;
     z-index: 1;
+  }
+
+  /* Route Change Card Styles */
+  .route-change-card {
+    padding: 0.875rem;
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+  }
+
+  .route-change-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .route-badges {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  .route-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .route-change-title {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: hsl(var(--foreground));
+    margin: 0 0 0.5rem 0;
+  }
+
+  .route-change-date {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 0.625rem;
+  }
+
+  .route-change-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--primary));
+    text-decoration: none;
+  }
+
+  .route-change-link:hover {
+    text-decoration: underline;
   }
 </style>
