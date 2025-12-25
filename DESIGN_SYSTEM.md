@@ -156,7 +156,8 @@ font-family: "Lexend", system-ui, -apple-system, sans-serif;
 To prevent horizontal layout shift when content height changes (e.g., expanding accordions, switching filters), the app uses `scrollbar-gutter: stable` on both `html` and `body`:
 
 ```css
-html, body {
+html,
+body {
   scrollbar-gutter: stable;
 }
 ```
@@ -1433,6 +1434,14 @@ Status priority determines card background color when multiple statuses are pres
 
 ```css
 .subway-status-card                    /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 /* Card container */
 /* Card container */
 /* Card container */
