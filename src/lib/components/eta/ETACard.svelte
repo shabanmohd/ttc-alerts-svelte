@@ -208,6 +208,20 @@
     return null;
   }
 
+  /**
+   * Format the future day label for display
+   * - "Tomorrow (Wednesday)" → "Tomorrow"
+   * - "Friday Dec 26" → "Friday Dec 26"
+   */
+  function formatFutureLabel(label: string): string {
+    // If label starts with "Tomorrow", just show "Tomorrow"
+    if (label.startsWith("Tomorrow")) {
+      return "Tomorrow";
+    }
+    // Otherwise show the full label (e.g., "Monday Dec 29")
+    return label;
+  }
+
   let sortedPredictions = $derived(sortPredictions(eta.predictions));
   let primaryDirection = $derived(getPrimaryDirection(eta.predictions));
   let crossStreets = $derived(formatCrossStreets(eta.stopName));
@@ -438,8 +452,7 @@
                       >
                     {:else if !departure.isToday && departure.tomorrowLabel}
                       <span class="text-sm text-muted-foreground"
-                        >{departure.tomorrowLabel.match(/\((.+)\)/)?.[1] ||
-                          "Tomorrow"}</span
+                        >{formatFutureLabel(departure.tomorrowLabel)}</span
                       >
                     {/if}
                   {:else if departure?.noWeekendService}
@@ -486,8 +499,7 @@
                       >
                     {:else if !departure.isToday && departure.tomorrowLabel}
                       <span class="text-sm text-muted-foreground"
-                        >{departure.tomorrowLabel.match(/\((.+)\)/)?.[1] ||
-                          "Tomorrow"}</span
+                        >{formatFutureLabel(departure.tomorrowLabel)}</span
                       >
                     {/if}
                   {:else if departure?.noWeekendService}
@@ -804,8 +816,7 @@
                       >
                     {:else if !departure.isToday && departure.tomorrowLabel}
                       <span class="text-sm text-muted-foreground"
-                        >{departure.tomorrowLabel.match(/\((.+)\)/)?.[1] ||
-                          "Tomorrow"}</span
+                        >{formatFutureLabel(departure.tomorrowLabel)}</span
                       >
                     {/if}
                   {:else if departure?.noWeekendService}
@@ -852,8 +863,7 @@
                       >
                     {:else if !departure.isToday && departure.tomorrowLabel}
                       <span class="text-sm text-muted-foreground"
-                        >{departure.tomorrowLabel.match(/\((.+)\)/)?.[1] ||
-                          "Tomorrow"}</span
+                        >{formatFutureLabel(departure.tomorrowLabel)}</span
                       >
                     {/if}
                   {:else if departure?.noWeekendService}
