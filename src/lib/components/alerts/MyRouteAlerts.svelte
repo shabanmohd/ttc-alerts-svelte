@@ -38,6 +38,8 @@
     ThreadWithAlerts,
     PlannedMaintenance,
   } from "$lib/types/database";
+  // Import subway station helpers for elevator alert matching
+  import { getStationLines, normalizeStationName, type SubwayLine } from "$lib/data/subway-stations";
 
   // Route filter state - which specific route to show (null = all saved routes)
   let selectedRouteFilter = $state<string | null>(null);
@@ -196,11 +198,89 @@
     );
   }
 
+  // Helper: Check if a thread is an elevator/escalator (accessibility) alert
+  function isElevatorAlert(thread: ThreadWithAlerts): boolean {
+    const alert = thread.latestAlert;
+    if (!alert) return false;
+
+    // Check effect for ACCESSIBILITY_ISSUE
+    const effect = (alert.effect || '').toUpperCase();
+    if (effect.includes('ACCESSIBILITY')) return true;
+
+    // Check header text for elevator/escalator keywords
+    const headerText = (alert.header_text || '').toLowerCase();
+    if (headerText.includes('elevator') || headerText.includes('escalator')) return true;
+
+    return false;
+  }
+
+  // Helper: Extract station names from an elevator alert
+  // Elevator alerts have station names in affected_routes (e.g., "Dupont Station")
+  function getElevatorStations(thread: ThreadWithAlerts): string[] {
+    const threadRoutes = extractRoutes(thread.affected_routes);
+    const alertRoutes = extractRoutes(thread.latestAlert?.affected_routes);
+    const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
+    
+    // Filter to only items that look like station names (not route numbers)
+    // Station names typically include "Station" or are known station names
+    return allRoutes.filter(r => {
+      const lower = r.toLowerCase();
+      return lower.includes('station') || 
+             lower.includes('elevator') || 
+             lower.includes('escalator') ||
+             // If it's NOT a route number or subway line ID, it might be a station
+             (!(/^\d+$/.test(r)) && !r.toLowerCase().startsWith('line '));
+    });
+  }
+
+  // Helper: Check if an elevator alert matches a saved subway line
+  // Returns the matching lines if any, empty array if no match
+  function getMatchingSubwayLines(thread: ThreadWithAlerts): SubwayLine[] {
+    if (!isElevatorAlert(thread)) return [];
+    
+    const stations = getElevatorStations(thread);
+    const matchingLines = new Set<SubwayLine>();
+    
+    for (const station of stations) {
+      const lines = getStationLines(station);
+      for (const line of lines) {
+        matchingLines.add(line);
+      }
+    }
+    
+    return Array.from(matchingLines);
+  }
+
+  // Helper: Check if an elevator alert matches any saved subway line
+  function elevatorMatchesSavedRoutes(thread: ThreadWithAlerts): boolean {
+    const matchingLines = getMatchingSubwayLines(thread);
+    // Check if any matching line is in saved routes
+    return matchingLines.some(line => 
+      routeIds.some(savedRoute => savedRoute.toLowerCase() === line.toLowerCase())
+    );
+  }
+
+  // Helper: Check if an elevator alert matches a specific saved route (must be a subway line)
+  function elevatorMatchesSpecificRoute(thread: ThreadWithAlerts, routeId: string): boolean {
+    // Only applies if the route is a subway line
+    if (!routeId.toLowerCase().startsWith('line ')) return false;
+    
+    const matchingLines = getMatchingSubwayLines(thread);
+    return matchingLines.some(line => line.toLowerCase() === routeId.toLowerCase());
+  }
+
   // Get all alerts matching saved routes (excluding resolved)
+  // Now includes elevator alerts for saved subway lines!
   let routeMatchedAlerts = $derived.by<ThreadWithAlerts[]>(() => {
     if (routeIds.length === 0) return [];
     return $threadsWithAlerts
-      .filter(matchesRoutes)
+      .filter(thread => {
+        // Include if it matches routes directly
+        if (matchesRoutes(thread)) return true;
+        // Also include elevator alerts that match saved subway lines
+        if (elevatorMatchesSavedRoutes(thread)) return true;
+        return false;
+      })
       .filter((thread) => !isResolved(thread));
   });
 
@@ -213,15 +293,20 @@
 
     // Apply specific route filter if selected
     if (routeFilter) {
-      filtered = filtered.filter((thread) =>
-        matchesSpecificRoute(thread, routeFilter)
-      );
+      filtered = filtered.filter((thread) => {
+        // Check regular route match
+        if (matchesSpecificRoute(thread, routeFilter)) return true;
+        // Check elevator alert match for subway lines
+        if (elevatorMatchesSpecificRoute(thread, routeFilter)) return true;
+        return false;
+      });
     }
 
     return filtered;
   });
 
   // Separate RSZ alerts from regular alerts
+  // Elevator alerts are included in regularAlerts (they're not RSZ)
   let rszAlerts = $derived(myAlerts.filter(isRSZAlert));
   let regularAlerts = $derived(myAlerts.filter((t) => !isRSZAlert(t)));
 
