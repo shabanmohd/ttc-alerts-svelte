@@ -28,6 +28,19 @@
 
   import type { ThreadWithAlerts } from "$lib/types/database";
 
+  // URL param names (user-friendly) vs internal state names
+  // URL: slowzones → Internal: delays
+  const URL_TO_CATEGORY: Record<string, "disruptions" | "delays" | "elevators"> = {
+    disruptions: "disruptions",
+    slowzones: "delays",
+    elevators: "elevators",
+  };
+  const CATEGORY_TO_URL: Record<"disruptions" | "delays" | "elevators", string> = {
+    disruptions: "disruptions",
+    delays: "slowzones",
+    elevators: "elevators",
+  };
+
   // Parse URL params to get initial state
   function getInitialTab(): "now" | "planned" {
     if (!browser) return "now";
@@ -39,7 +52,10 @@
     if (!browser) return "disruptions";
     const params = new URLSearchParams(window.location.search);
     const cat = params.get("category");
-    if (cat === "delays" || cat === "elevators") return cat;
+    // Map URL param to internal category
+    if (cat && URL_TO_CATEGORY[cat]) {
+      return URL_TO_CATEGORY[cat];
+    }
     return "disruptions";
   }
 
@@ -55,7 +71,9 @@
     if (!browser) return;
     const params = new URLSearchParams();
     if (tab !== "now") params.set("tab", tab);
-    if (category !== "disruptions") params.set("category", category);
+    // Use URL-friendly category name
+    const urlCategory = CATEGORY_TO_URL[category];
+    if (urlCategory !== "disruptions") params.set("category", urlCategory);
     const queryString = params.toString();
     const newUrl = queryString ? `/alerts?${queryString}` : "/alerts";
     goto(newUrl, { replaceState: true, noScroll: true, keepFocus: true });
