@@ -371,6 +371,7 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: hsl(var(--foreground));
+    line-height: 1.3;
   }
 
   /* Card title */

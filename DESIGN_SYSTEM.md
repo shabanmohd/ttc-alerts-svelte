@@ -709,6 +709,60 @@ Compact pill-based filter with consistent sizing. Used in alerts-v3 page.
 | Now tab       | `Zap`      | Lightning bolt for real-time  |
 | Scheduled tab | `Calendar` | Calendar for scheduled events |
 
+**Mobile Scroll & Fade Effect:**
+
+On mobile, pills scroll horizontally with hidden scrollbars and a fade gradient on the right edge to indicate more content. On desktop (640px+), pills wrap to multiple lines instead of scrolling.
+
+| Property       | Mobile                                                          | Desktop (640px+)   |
+| -------------- | --------------------------------------------------------------- | ------------------ |
+| Layout         | Horizontal scroll (`overflow-x: auto`)                          | Wrap (`flex-wrap`) |
+| Scrollbar      | Hidden (`scrollbar-width: none`)                                | N/A                |
+| Fade indicator | Right edge gradient (`linear-gradient(transparent, background)` | Hidden             |
+| Fade width     | `2rem`                                                          | N/A                |
+
+```css
+/* Container with fade overlay */
+.category-filter-container {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+/* Horizontal scroll with hidden scrollbar */
+.category-filter {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.category-filter::-webkit-scrollbar {
+  display: none;
+}
+
+/* Fade gradient overlay */
+.category-filter-fade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0.25rem;
+  width: 2rem;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, hsl(var(--background)));
+}
+
+/* Desktop: wrap instead of scroll */
+@media (min-width: 640px) {
+  .category-filter {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  .category-filter-fade {
+    display: none;
+  }
+}
+```
+
+> **Pattern reuse:** This fade indicator pattern is also used in `MyRouteAlerts.svelte` for route filter tabs.
+
 ### Toast Notifications (Sonner)
 
 Toast notifications use svelte-sonner with dark solid backgrounds for high contrast.
@@ -1367,6 +1421,10 @@ Status priority determines card background color when multiple statuses are pres
 
 ```css
 .subway-status-card                    /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 /* Card container */
 /* Card container */
 /* Card container */

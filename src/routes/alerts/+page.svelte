@@ -4,7 +4,13 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { browser } from "$app/environment";
-  import { Zap, Calendar, CheckCircle, RefreshCw, AlertTriangle } from "lucide-svelte";
+  import {
+    Zap,
+    Calendar,
+    CheckCircle,
+    RefreshCw,
+    AlertTriangle,
+  } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
   import RSZAlertCard from "$lib/components/alerts/RSZAlertCard.svelte";
@@ -533,8 +539,8 @@
           </div>
           <h3 class="error-title">{$_("alerts.error.title")}</h3>
           <p class="error-description">{$_("alerts.error.description")}</p>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onclick={handleRetry}
             disabled={isRetrying}
             class="gap-2"

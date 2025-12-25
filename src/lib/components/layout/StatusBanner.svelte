@@ -48,17 +48,29 @@
         {/if}
       </div>
       <div class="banner-text">
-        <span class="banner-message">{$_(`networkStatus.${$networkStatus.status}.message`)}</span>
-        <span class="banner-description">{$_(`networkStatus.${$networkStatus.status}.description`)}</span>
+        <span class="banner-message"
+          >{$_(`networkStatus.${$networkStatus.status}.message`)}</span
+        >
+        <span class="banner-description"
+          >{$_(`networkStatus.${$networkStatus.status}.description`)}</span
+        >
       </div>
     </div>
     <div class="banner-actions">
       {#if $networkStatus.status === "degraded"}
-        <button class="banner-button retry" onclick={handleRetry} aria-label={$_("common.retry")}>
+        <button
+          class="banner-button retry"
+          onclick={handleRetry}
+          aria-label={$_("common.retry")}
+        >
           <RefreshCw class="h-4 w-4" />
         </button>
       {/if}
-      <button class="banner-button dismiss" onclick={handleDismiss} aria-label={$_("common.close")}>
+      <button
+        class="banner-button dismiss"
+        onclick={handleDismiss}
+        aria-label={$_("common.close")}
+      >
         ×
       </button>
     </div>
@@ -159,7 +171,9 @@
     cursor: pointer;
     color: inherit;
     opacity: 0.7;
-    transition: opacity 0.15s ease, background-color 0.15s ease;
+    transition:
+      opacity 0.15s ease,
+      background-color 0.15s ease;
   }
 
   .banner-button:hover {

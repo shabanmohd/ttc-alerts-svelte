@@ -126,13 +126,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Alerts Components (`src/routes/alerts/`)
 
-| File                      | Status | Purpose                                                                                          |
-| ------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
-| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs, URL param sync (tab/category), TTC attribution link, 600px layout |
-| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile) - no slowzone status, minmax(0, 1fr) grid                  |
-| `CategoryFilterV3.svelte` | ✅     | Compact pill filter (Disruptions & Delays / Elevators / Slow Zones)                              |
-| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)                           |
-| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)                                     |
+| File                      | Status | Purpose                                                                                           |
+| ------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs, URL param sync (tab/category), TTC attribution link, 600px layout  |
+| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile) - no slowzone status, minmax(0, 1fr) grid                   |
+| `CategoryFilterV3.svelte` | ✅     | Compact pill filter with fade indicator on mobile (Disruptions & Delays / Elevators / Slow Zones) |
+| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)                            |
+| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)                                      |
 
 ### Backend (`supabase/`)
 

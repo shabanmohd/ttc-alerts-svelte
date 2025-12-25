@@ -52,36 +52,72 @@
   });
 </script>
 
-<div class="category-filter" role="tablist" aria-label="Filter by category">
-  {#each categories as cat}
-    {@const isActive = selected === cat.id}
-    {@const Icon = cat.icon}
-    {@const count = counts[cat.id] || 0}
-    <button
-      class={cn("category-pill", cat.id, isActive && "active")}
-      role="tab"
-      aria-selected={isActive}
-      aria-label={`${cat.ariaLabel} (${count} alerts)`}
-      onclick={() => handleSelect(cat.id)}
-      type="button"
-    >
-      <Icon class="pill-icon" aria-hidden="true" />
-      <span class="pill-label">{cat.label}</span>
-      {#if count > 0}
-        <span class="pill-count">{count}</span>
-      {/if}
-    </button>
-  {/each}
+<div class="category-filter-container">
+  <div class="category-filter" role="tablist" aria-label="Filter by category">
+    {#each categories as cat}
+      {@const isActive = selected === cat.id}
+      {@const Icon = cat.icon}
+      {@const count = counts[cat.id] || 0}
+      <button
+        class={cn("category-pill", cat.id, isActive && "active")}
+        role="tab"
+        aria-selected={isActive}
+        aria-label={`${cat.ariaLabel} (${count} alerts)`}
+        onclick={() => handleSelect(cat.id)}
+        type="button"
+      >
+        <Icon class="pill-icon" aria-hidden="true" />
+        <span class="pill-label">{cat.label}</span>
+        {#if count > 0}
+          <span class="pill-count">{count}</span>
+        {/if}
+      </button>
+    {/each}
+  </div>
+  <div class="category-filter-fade" aria-hidden="true"></div>
 </div>
 
 <style>
+  /* Container for pills with fade indicator */
+  .category-filter-container {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
   .category-filter {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
     overflow-x: auto;
     padding-bottom: 0.25rem;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .category-filter::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Fade indicator on mobile to show more content */
+  .category-filter-fade {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0.25rem;
+    width: 2rem;
+    pointer-events: none;
+    background: linear-gradient(to right, transparent, hsl(var(--background)));
+  }
+
+  /* Desktop: wrap instead of scroll, hide fade */
+  @media (min-width: 640px) {
+    .category-filter {
+      flex-wrap: wrap;
+      overflow-x: visible;
+    }
+
+    .category-filter-fade {
+      display: none;
+    }
   }
 
   .category-pill {
