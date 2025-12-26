@@ -283,7 +283,7 @@
   {:else}
     <!-- Display closures as AlertCards -->
     <div class="space-y-3">
-      {#each sortedThreads() as thread, i (thread.thread_id)}
+      {#each sortedThreads as thread, i (thread.thread_id)}
         <div
           class="animate-fade-in-up"
           style="animation-delay: {Math.min(i * 50, 300)}ms"
