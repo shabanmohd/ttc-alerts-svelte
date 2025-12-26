@@ -2,8 +2,18 @@
 
 **Version:** 12.0  
 **Date:** June 19, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v56 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts)  
+**Status:** ✅ Implemented and Active (poll-alerts v60 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
+
+---
+
+## 📚 Related Documentation
+
+| Document | Purpose |
+| -------- | ------- |
+| [APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md) | File inventory, Edge Function locations |
+| [TTC-ROUTE-CONFLICTS.md](TTC-ROUTE-CONFLICTS.md) | Route number conflicts affecting threading |
+| [SECURITY_AUDIT.md](SECURITY_AUDIT.md) | Edge Function security review |
 
 ---
 

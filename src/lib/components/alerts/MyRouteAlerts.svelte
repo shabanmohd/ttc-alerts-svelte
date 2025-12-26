@@ -28,7 +28,10 @@
   import * as Dialog from "$lib/components/ui/dialog";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { toast } from "svelte-sonner";
-  import { formatTimeDisplay, formatDateDisplay } from "$lib/utils/date-formatters";
+  import {
+    formatTimeDisplay,
+    formatDateDisplay,
+  } from "$lib/utils/date-formatters";
   import {
     threadsWithAlerts,
     isLoading,

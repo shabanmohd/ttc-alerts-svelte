@@ -3,7 +3,10 @@
   import { LayoutGrid, CalendarDays, CheckCircle } from "lucide-svelte";
   import AlertCard from "./AlertCard.svelte";
   import { maintenanceItems } from "$lib/stores/alerts";
-  import { formatTimeDisplay, formatDateDisplay } from "$lib/utils/date-formatters";
+  import {
+    formatTimeDisplay,
+    formatDateDisplay,
+  } from "$lib/utils/date-formatters";
   import type {
     PlannedMaintenance,
     ThreadWithAlerts,

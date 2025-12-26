@@ -5,6 +5,16 @@
 
 ---
 
+## 📚 Related Documentation
+
+| Document | Purpose |
+| -------- | ------- |
+| [APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md) | File inventory, component list |
+| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Feature roadmap |
+| [ROUTE_BADGE_STYLES.md](ROUTE_BADGE_STYLES.md) | Route badge color specifications |
+
+---
+
 ## Quick Reference
 
 | Category          | File                           | Purpose                                         |

@@ -20,7 +20,10 @@
   import ClosuresView from "$lib/components/alerts/ClosuresView.svelte";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { Button } from "$lib/components/ui/button";
-  import { formatTimeDisplay, formatDateDisplay } from "$lib/utils/date-formatters";
+  import {
+    formatTimeDisplay,
+    formatDateDisplay,
+  } from "$lib/utils/date-formatters";
   import {
     threadsWithAlerts,
     isLoading,
@@ -916,7 +919,6 @@
   function handleOpenDialog(dialog: string) {
     activeDialog = dialog;
   }
-
 
   function handleTabClick(tabId: AlertsTab) {
     const url = new URL($page.url);
