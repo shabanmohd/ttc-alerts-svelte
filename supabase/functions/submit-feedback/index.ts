@@ -29,6 +29,18 @@ const TYPE_LABELS: Record<FeedbackType, { label: string; emoji: string; color: s
   other: { label: 'Other Feedback', emoji: '❓', color: '#3b82f6' },
 };
 
+// HTML escape function to prevent XSS in email templates
+function escapeHtml(text: string): string {
+  const htmlChars: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  return text.replace(/[&<>"']/g, c => htmlChars[c] || c);
+}
+
 interface FeedbackRequest {
   type: FeedbackType;
   title: string;
@@ -99,25 +111,32 @@ async function sendEmailViaResend(
   const typeLabel = `${typeInfo.emoji} ${typeInfo.label}`;
   const timestamp = new Date().toISOString();
 
+  // Escape user-provided content for HTML safety
+  const safeTitle = escapeHtml(title);
+  const safeDescription = escapeHtml(description);
+  const safeEmail = email ? escapeHtml(email) : '';
+  const safeUserAgent = userAgent ? escapeHtml(userAgent) : '';
+  const safeUrl = url ? escapeHtml(url) : '';
+
   const htmlContent = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: ${typeInfo.color};">${typeLabel}</h2>
       
       <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-        <h3 style="margin: 0 0 8px 0; color: #111827;">${title}</h3>
+        <h3 style="margin: 0 0 8px 0; color: #111827;">${safeTitle}</h3>
       </div>
       
       <div style="background: #ffffff; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px;">
-        <p style="margin: 0; white-space: pre-wrap; color: #374151;">${description}</p>
+        <p style="margin: 0; white-space: pre-wrap; color: #374151;">${safeDescription}</p>
       </div>
       
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
       
       <div style="font-size: 12px; color: #6b7280;">
         <p><strong>Submitted:</strong> ${timestamp}</p>
-        ${email ? `<p><strong>Contact Email:</strong> <a href="mailto:${email}">${email}</a></p>` : ''}
-        ${userAgent ? `<p><strong>User Agent:</strong> ${userAgent}</p>` : ''}
-        ${url ? `<p><strong>Page URL:</strong> ${url}</p>` : ''}
+        ${safeEmail ? `<p><strong>Contact Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>` : ''}
+        ${safeUserAgent ? `<p><strong>User Agent:</strong> ${safeUserAgent}</p>` : ''}
+        ${safeUrl ? `<p><strong>Page URL:</strong> ${safeUrl}</p>` : ''}
       </div>
     </div>
   `;
