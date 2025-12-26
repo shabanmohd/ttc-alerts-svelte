@@ -6,7 +6,7 @@
   let { alerts }: { alerts: ThreadWithAlerts[] } = $props();
 </script>
 
-<section class="resolved-section">
+<section class="resolved-section animate-fade-in-up" style="animation-delay: 100ms">
   <div class="resolved-header">
     <div class="header-left">
       <span class="header-icon"><CheckCircle /></span>
@@ -21,8 +21,13 @@
 
   {#if alerts.length > 0}
     <div id="resolved-content" class="resolved-content">
-      {#each alerts as thread (thread.thread_id)}
-        <AlertCard {thread} />
+      {#each alerts as thread, i (thread.thread_id)}
+        <div
+          class="animate-fade-in-up"
+          style="animation-delay: {Math.min((i + 1) * 50, 300)}ms"
+        >
+          <AlertCard {thread} />
+        </div>
       {/each}
     </div>
   {/if}

@@ -553,7 +553,7 @@
       {:else}
         <!-- RSZ alerts (for delays tab) -->
         {#if selectedCategory === "delays" && rszAlerts.length > 0}
-          <div class="rsz-section">
+          <div class="rsz-section animate-fade-in-up">
             <RSZAlertCard threads={rszAlerts} />
           </div>
         {/if}
@@ -561,12 +561,17 @@
         <!-- Alert cards -->
         {#if activeAlerts.length > 0}
           <div class="alerts-list">
-            {#each activeAlerts as thread (thread.thread_id)}
-              <AlertCard {thread} />
+            {#each activeAlerts as thread, i (thread.thread_id)}
+              <div
+                class="animate-fade-in-up"
+                style="animation-delay: {Math.min(i * 50, 300)}ms"
+              >
+                <AlertCard {thread} />
+              </div>
             {/each}
           </div>
         {:else if selectedCategory !== "delays"}
-          <div class="empty-state">
+          <div class="empty-state animate-fade-in-up">
             <div class="empty-icon">
               <CheckCircle class="h-8 w-8" />
             </div>
