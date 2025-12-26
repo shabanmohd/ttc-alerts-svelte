@@ -288,9 +288,11 @@ Real-time Toronto Transit alerts PWA.
 
 - **GTFS Data**: 9,270 stops with first bus times (weekday/saturday/sunday)
 - **Day Type Detection**: Weekday, Saturday, Sunday (auto-detected)
-- **Holiday Handling**: TTC holidays use Sunday schedule (2025-2026 holidays defined)
+- **Holiday Handling**: TTC holidays use Sunday schedule (2024-2026 holidays defined)
 - **7-Day Lookahead**: Checks up to 7 days ahead to find next service (handles holiday gaps, weekends for express routes)
 - **Express Route PM Schedule**: 9xx routes show PM first departure (after 3PM) on weekday afternoons when no live ETA
+- **Express Route Holiday Handling**: On holidays/weekends, express routes find the NEXT actual weekday (skipping holidays)
+  - Example: On Boxing Day (Friday), shows "Mon, Dec 29" instead of incorrectly showing "Friday"
 - **No Weekend Service**: Express routes (9xx) show "No Weekend Service" on Sat/Sun (express routes don't operate weekends)
 - **No Service Detection**: Routes without schedule data show "No Service"
 - **12-Hour Format**: Times displayed as "5:21 AM" format
@@ -307,7 +309,8 @@ Real-time Toronto Transit alerts PWA.
 
 **TTC Service Info (`ttc-service-info.ts`)**:
 
-- **Annual Holiday Updates**: 2025 & 2026 holiday schedules (update from https://www.ttc.ca/riding-the-ttc/Updates/Holiday-service)
+- **Annual Holiday Updates**: 2024, 2025 & 2026 holiday schedules (update from https://www.ttc.ca/riding-the-ttc/Updates/Holiday-service)
+- **Holiday Types**: 'sunday' (Christmas/New Year's - full Sunday service ~8am) vs 'holiday' (other holidays - Sunday schedule but ~6am start)
 - **Line Hours**: Lines 1/2/4 subway (6am-2am Mon-Sat, 8am-2am Sun) vs Line 6 LRT (5:30am-1:30am)
 - **Suspended Lines**: Easy toggle when lines are suspended/restored (Line 6 enabled - opened Dec 14, 2024)
 - **Service Frequency**: Rush hour (2-3 min), off-peak (4-5 min), weekend, Sunday, holiday
@@ -649,6 +652,31 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 ---
 
 ## Changelog
+
+### Dec 25, 2025 - Express Route Holiday Schedule Fix
+
+**Purpose:** Fix express routes (900 series) showing incorrect next service date on holidays. Previously showed the literal next weekday (e.g., "Friday" for Boxing Day) instead of the next actual service day.
+
+**Bug Fixed:**
+- On Christmas Day (Dec 25), express routes like 939 Finch Express incorrectly showed "Friday" as next service
+- Boxing Day (Dec 26) is a holiday, so express routes don't run
+- Now correctly shows "Mon, Dec 29" (the actual next weekday service)
+
+**Changes:**
+- ✅ **schedule-lookup.ts** - Express route logic now iterates through days to find next non-holiday weekday
+- ✅ **ttc-service-info.ts** - Added 2024 holidays (was missing, only had 2025-2026)
+
+**Express Route Holiday Behavior:**
+Express routes (900 series) only operate on **regular weekdays during peak hours**. On holidays and weekends, they show the next actual service date:
+- Christmas Day (Dec 25) → Shows "Mon, Dec 29" (skips Boxing Day weekend)
+- Boxing Day (Dec 26) → Shows "Mon, Dec 29"
+- Regular weekend → Shows "Monday" or next weekday
+
+**Files Changed:**
+- `src/lib/services/schedule-lookup.ts` - Express route next weekday logic
+- `src/lib/utils/ttc-service-info.ts` - Added HOLIDAYS_2024 constant
+
+---
 
 ### Jan 20, 2025 - Hover States, Typography & Dark Mode Contrast
 
