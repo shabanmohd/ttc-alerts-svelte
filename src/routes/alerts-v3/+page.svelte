@@ -20,6 +20,7 @@
   import ClosuresView from "$lib/components/alerts/ClosuresView.svelte";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { Button } from "$lib/components/ui/button";
+  import { formatTimeDisplay, formatDateDisplay } from "$lib/utils/date-formatters";
   import {
     threadsWithAlerts,
     isLoading,
@@ -766,22 +767,6 @@
   let scheduledClosuresCount = $derived(() => {
     return $maintenanceItems.length;
   });
-
-  // Format time for display (convert 24h to 12h format)
-  function formatTimeDisplay(timeStr: string | null): string {
-    if (!timeStr) return "";
-    const [hours, minutes] = timeStr.split(":").map(Number);
-    const period = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
-  }
-
-  // Format date for display (e.g., "Dec 18")
-  function formatDateDisplay(dateStr: string): string {
-    if (!dateStr) return "";
-    const date = new Date(dateStr + "T00:00:00");
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  }
 
   // Convert scheduled maintenance to thread-like format for AlertCard
   function maintenanceToThread(

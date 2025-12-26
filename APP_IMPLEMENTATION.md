@@ -140,12 +140,12 @@ Real-time Toronto Transit alerts PWA.
 
 ### Database (EXISTING in Supabase)
 
-| Table                  | Rows | Purpose                                                  |
-| ---------------------- | ---- | -------------------------------------------------------- |
-| `alert_cache`          | 600+ | Alerts from Bluesky (header_text, categories, is_latest) |
-| `incident_threads`     | 255K | Grouped alert threads (title, is_resolved, is_hidden)    |
-| `planned_maintenance`  | 9    | Scheduled maintenance                                    |
-| `device_preferences`   | -    | Device-based preferences (localStorage backup)           |
+| Table                 | Rows | Purpose                                                  |
+| --------------------- | ---- | -------------------------------------------------------- |
+| `alert_cache`         | 600+ | Alerts from Bluesky (header_text, categories, is_latest) |
+| `incident_threads`    | 255K | Grouped alert threads (title, is_resolved, is_hidden)    |
+| `planned_maintenance` | 9    | Scheduled maintenance                                    |
+| `device_preferences`  | -    | Device-based preferences (localStorage backup)           |
 
 ### Static (`static/`)
 

@@ -42,8 +42,11 @@ function extractCategories(data: unknown): string[] {
     try {
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed)) return parsed as string[];
-    } catch {
-      // Not valid JSON
+    } catch (e) {
+      // Log in development for debugging
+      if (import.meta.env.DEV) {
+        console.warn('[alerts] Failed to parse categories JSON:', e);
+      }
     }
   }
   return [];
@@ -174,108 +177,117 @@ export const filteredThreads = derived(
 );
 
 // Fetch alerts from Supabase (initial load only)
+// Optimized: Uses Promise.all to parallelize independent queries
 export async function fetchAlerts(): Promise<void> {
   isLoading.set(true);
   error.set(null);
   
   try {
-    // Step 1: Fetch recent alerts (last 24h) to identify active threads
-    const { data: recentAlerts, error: alertsError } = await supabase
-      .from('alert_cache')
-      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
-      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-      .order('created_at', { ascending: false })
-      .limit(100);
+    // Common query fields for alerts
+    const alertFields = 'alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data';
+    const threadFields = 'thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at';
     
-    if (alertsError) throw alertsError;
+    // Time boundaries
+    const now = Date.now();
+    const last24h = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+    const last90d = new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString();
+    const last12h = new Date(now - 12 * 60 * 60 * 1000).toISOString();
     
-    // Step 1b: Also fetch accessibility alerts (elevator/escalator) with extended 90-day window
-    // These issues persist much longer than typical service disruptions (some elevator outages last months)
-    const { data: accessibilityAlerts, error: accessibilityError } = await supabase
-      .from('alert_cache')
-      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
-      .eq('effect', 'ACCESSIBILITY_ISSUE')
-      .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
-      .order('created_at', { ascending: false })
-      .limit(50);
+    // Step 1: Fetch all alert types in PARALLEL (major performance improvement)
+    // These queries are independent and can run concurrently
+    const [recentAlertsResult, accessibilityAlertsResult, rszAlertsResult, resolvedThreadsResult] = await Promise.all([
+      // Recent alerts (last 24h)
+      supabase
+        .from('alert_cache')
+        .select(alertFields)
+        .gte('created_at', last24h)
+        .order('created_at', { ascending: false })
+        .limit(100),
+      
+      // Accessibility alerts (elevator/escalator) - extended 90-day window
+      supabase
+        .from('alert_cache')
+        .select(alertFields)
+        .eq('effect', 'ACCESSIBILITY_ISSUE')
+        .gte('created_at', last90d)
+        .order('created_at', { ascending: false })
+        .limit(50),
+      
+      // RSZ alerts (Reduced Speed Zones) - extended 90-day window
+      supabase
+        .from('alert_cache')
+        .select(alertFields)
+        .like('alert_id', 'ttc-RSZ-%')
+        .gte('created_at', last90d)
+        .order('created_at', { ascending: false })
+        .limit(50),
+      
+      // Recently resolved threads (last 12 hours)
+      supabase
+        .from('incident_threads')
+        .select(threadFields)
+        .eq('is_resolved', true)
+        .gte('resolved_at', last12h)
+        .order('resolved_at', { ascending: false })
+        .limit(50)
+    ]);
     
-    if (accessibilityError) throw accessibilityError;
+    // Check for errors in parallel queries
+    if (recentAlertsResult.error) throw recentAlertsResult.error;
+    if (accessibilityAlertsResult.error) throw accessibilityAlertsResult.error;
+    if (rszAlertsResult.error) throw rszAlertsResult.error;
+    if (resolvedThreadsResult.error) throw resolvedThreadsResult.error;
     
-    // Step 1c: Also fetch RSZ alerts with extended 90-day window
-    // Reduced Speed Zones persist for weeks/months due to ongoing track work
-    const { data: rszAlerts, error: rszError } = await supabase
-      .from('alert_cache')
-      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
-      .like('alert_id', 'ttc-RSZ-%')
-      .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
-      .order('created_at', { ascending: false })
-      .limit(50);
+    // Merge alerts (deduplicate by alert_id)
+    const allRecentAlerts: PartialAlert[] = (recentAlertsResult.data || []) as PartialAlert[];
+    const allAccessibilityAlerts: PartialAlert[] = (accessibilityAlertsResult.data || []) as PartialAlert[];
+    const allRszAlerts: PartialAlert[] = (rszAlertsResult.data || []) as PartialAlert[];
+    const recentlyResolvedThreads = resolvedThreadsResult.data || [];
     
-    if (rszError) throw rszError;
-    
-    // Merge recent alerts with accessibility and RSZ alerts (deduplicate by alert_id)
-    const allRecentAlerts: PartialAlert[] = (recentAlerts || []) as PartialAlert[];
-    const allAccessibilityAlerts: PartialAlert[] = (accessibilityAlerts || []) as PartialAlert[];
-    const allRszAlerts: PartialAlert[] = (rszAlerts || []) as PartialAlert[];
     const existingIds = new Set(allRecentAlerts.map(a => a.alert_id));
     const mergedAlerts: PartialAlert[] = [
       ...allRecentAlerts,
       ...allAccessibilityAlerts.filter(a => !existingIds.has(a.alert_id)),
       ...allRszAlerts.filter(a => !existingIds.has(a.alert_id))
     ];
-    // Update existingIds to include RSZ alerts for proper deduplication
+    // Update existingIds for proper deduplication
+    allAccessibilityAlerts.forEach(a => existingIds.add(a.alert_id));
     allRszAlerts.forEach(a => existingIds.add(a.alert_id));
     
-    // Get unique thread IDs from all alerts (recent + accessibility + RSZ)
+    // Get unique thread IDs from all alerts
     const threadIds = [...new Set(mergedAlerts.map(a => a.thread_id).filter((id): id is string => Boolean(id)))];
     
-    // Step 2: Fetch ALL alerts from these active threads (not just last 24h)
-    // This ensures we get the full thread history for display
+    // Step 2: Fetch thread history and metadata in PARALLEL
     let allAlertsData: PartialAlert[] = mergedAlerts;
-    
-    if (threadIds.length > 0) {
-      // Fetch all alerts for the identified threads (up to 90 days to cover accessibility issues)
-      const { data: threadAlerts, error: threadAlertsError } = await supabase
-        .from('alert_cache')
-        .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
-        .in('thread_id', threadIds)
-        .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false });
-      
-      if (threadAlertsError) throw threadAlertsError;
-      
-      // Merge: use thread alerts as base, which includes all alerts for those threads
-      // This replaces the recent-only alerts with the full thread history
-      allAlertsData = (threadAlerts || []) as PartialAlert[];
-    }
-    
-    // Step 3: Fetch threads - select only needed columns to reduce egress
     let threadsData: Thread[] = [];
+    
     if (threadIds.length > 0) {
-      const { data, error: threadsError } = await supabase
-        .from('incident_threads')
-        .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at')
-        .in('thread_id', threadIds);
+      const [threadAlertsResult, threadsResult] = await Promise.all([
+        // Fetch all alerts for identified threads (full history)
+        supabase
+          .from('alert_cache')
+          .select(alertFields)
+          .in('thread_id', threadIds)
+          .gte('created_at', last90d)
+          .order('created_at', { ascending: false }),
+        
+        // Fetch thread metadata
+        supabase
+          .from('incident_threads')
+          .select(threadFields)
+          .in('thread_id', threadIds)
+      ]);
       
-      if (threadsError) throw threadsError;
-      threadsData = data || [];
+      if (threadAlertsResult.error) throw threadAlertsResult.error;
+      if (threadsResult.error) throw threadsResult.error;
+      
+      allAlertsData = (threadAlertsResult.data || []) as PartialAlert[];
+      threadsData = threadsResult.data || [];
     }
     
-    // Step 4: Fetch recently resolved threads (last 12 hours) that may not have alerts in 24h window
-    // This ensures resolved alerts show up in the "Recently Resolved" section
-    const { data: recentlyResolvedThreads, error: resolvedError } = await supabase
-      .from('incident_threads')
-      .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at')
-      .eq('is_resolved', true)
-      .gte('resolved_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
-      .order('resolved_at', { ascending: false })
-      .limit(50);
-    
-    if (resolvedError) throw resolvedError;
-    
-    // Merge resolved threads with existing threads (deduplicate by thread_id)
+    // Merge resolved threads (deduplicate by thread_id)
     const existingThreadIds = new Set(threadsData.map(t => t.thread_id));
-    const newResolvedThreads = (recentlyResolvedThreads || []).filter(t => !existingThreadIds.has(t.thread_id));
+    const newResolvedThreads = recentlyResolvedThreads.filter(t => !existingThreadIds.has(t.thread_id));
     threadsData = [...threadsData, ...newResolvedThreads];
     
     // Fetch alerts for newly added resolved threads
@@ -283,7 +295,7 @@ export async function fetchAlerts(): Promise<void> {
       const resolvedThreadIds = newResolvedThreads.map(t => t.thread_id);
       const { data: resolvedAlerts, error: resolvedAlertsError } = await supabase
         .from('alert_cache')
-        .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at, raw_data')
+        .select(alertFields)
         .in('thread_id', resolvedThreadIds)
         .order('created_at', { ascending: false });
       

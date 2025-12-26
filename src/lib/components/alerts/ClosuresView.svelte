@@ -3,6 +3,7 @@
   import { LayoutGrid, CalendarDays, CheckCircle } from "lucide-svelte";
   import AlertCard from "./AlertCard.svelte";
   import { maintenanceItems } from "$lib/stores/alerts";
+  import { formatTimeDisplay, formatDateDisplay } from "$lib/utils/date-formatters";
   import type {
     PlannedMaintenance,
     ThreadWithAlerts,
@@ -42,26 +43,6 @@
       return hour;
     }
     return null;
-  }
-
-  /**
-   * Format time for display (e.g., "11:59 PM")
-   */
-  function formatTimeDisplay(timeStr: string | null): string {
-    if (!timeStr) return "";
-    const [hours, minutes] = timeStr.split(":").map(Number);
-    const period = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
-  }
-
-  /**
-   * Format date for display (e.g., "Dec 18")
-   */
-  function formatDateDisplay(dateStr: string): string {
-    if (!dateStr) return "";
-    const date = new Date(dateStr + "T00:00:00");
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
 
   /**
@@ -204,8 +185,9 @@
 
   /**
    * Get sorted maintenance items as threads.
+   * Using $derived.by() for complex computations that need function bodies.
    */
-  const allMaintenance = $derived(() => {
+  const allMaintenance = $derived.by(() => {
     return $maintenanceItems.filter(shouldShowInScheduled).sort((a, b) => {
       const startA = parseLocalDate(a.start_date).getTime();
       const startB = parseLocalDate(b.start_date).getTime();
@@ -213,19 +195,19 @@
     });
   });
 
-  const weekendMaintenance = $derived(() => {
-    return allMaintenance().filter(overlapsWeekend);
+  const weekendMaintenance = $derived.by(() => {
+    return allMaintenance.filter(overlapsWeekend);
   });
 
-  const sortedThreads = $derived(() => {
+  const sortedThreads = $derived.by(() => {
     const items =
-      activeFilter === "weekend" ? weekendMaintenance() : allMaintenance();
+      activeFilter === "weekend" ? weekendMaintenance : allMaintenance;
     return items.map(maintenanceToThread);
   });
 
-  const allCount = $derived(allMaintenance().length);
-  const weekendCount = $derived(weekendMaintenance().length);
-  const totalCount = $derived(sortedThreads().length);
+  const allCount = $derived(allMaintenance.length);
+  const weekendCount = $derived(weekendMaintenance.length);
+  const totalCount = $derived(sortedThreads.length);
 </script>
 
 {#if $maintenanceItems.length === 0}

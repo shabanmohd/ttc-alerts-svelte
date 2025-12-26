@@ -28,6 +28,7 @@
   import * as Dialog from "$lib/components/ui/dialog";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { toast } from "svelte-sonner";
+  import { formatTimeDisplay, formatDateDisplay } from "$lib/utils/date-formatters";
   import {
     threadsWithAlerts,
     isLoading,
@@ -360,22 +361,6 @@
     const match = timeStr.match(/^(\d{1,2}):(\d{2})/);
     if (!match) return null;
     return { hours: parseInt(match[1], 10), minutes: parseInt(match[2], 10) };
-  }
-
-  // Format time for display
-  function formatTimeDisplay(timeStr: string | null): string {
-    if (!timeStr) return "";
-    const [hours, minutes] = timeStr.split(":").map(Number);
-    const period = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
-  }
-
-  // Format date for display
-  function formatDateDisplay(dateStr: string): string {
-    if (!dateStr) return "";
-    const date = new Date(dateStr + "T00:00:00");
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
 
   // Convert maintenance to thread-like format for AlertCard

@@ -74,7 +74,10 @@ function loadCache(): Map<string, StopETA> {
 		}
 
 		return map;
-	} catch {
+	} catch (e) {
+		if (import.meta.env.DEV) {
+			console.warn('[eta] Failed to load cache:', e);
+		}
 		return new Map();
 	}
 }
@@ -91,8 +94,11 @@ function saveCache(stops: Map<string, StopETA>) {
 			obj[key] = value;
 		});
 		localStorage.setItem(CACHE_KEY, JSON.stringify(obj));
-	} catch {
-		// Ignore storage errors
+	} catch (e) {
+		// Log storage errors in development
+		if (import.meta.env.DEV) {
+			console.warn('[eta] Failed to save cache:', e);
+		}
 	}
 }
 
