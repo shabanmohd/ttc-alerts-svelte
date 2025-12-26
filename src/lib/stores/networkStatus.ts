@@ -17,7 +17,7 @@ export const networkStatus = derived(
       return {
         status: 'offline' as const,
         message: 'You\'re offline',
-        description: 'Showing cached data. Some features may be unavailable.'
+        description: 'Showing cached data'
       };
     }
     

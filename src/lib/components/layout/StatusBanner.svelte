@@ -1,13 +1,20 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import { networkStatus } from "$lib/stores/networkStatus";
-  import { CloudOff, AlertTriangle, RefreshCw } from "lucide-svelte";
+  import { CloudOff, AlertTriangle, RefreshCw, X } from "lucide-svelte";
   import { slide } from "svelte/transition";
+
+  // TEST MODE: Set to true to always show banner for testing
+  const TEST_MODE = false;
+  const TEST_STATUS: "offline" | "degraded" = "degraded";
 
   // Only show when offline or degraded (not connecting)
   let showBanner = $derived(
-    $networkStatus.status === "offline" || $networkStatus.status === "degraded"
+    TEST_MODE || $networkStatus.status === "offline" || $networkStatus.status === "degraded"
   );
+
+  // Get effective status (test or real)
+  let effectiveStatus = $derived(TEST_MODE ? TEST_STATUS : $networkStatus.status);
 
   // Dismiss state - resets when status changes
   let dismissed = $state(false);
@@ -34,14 +41,14 @@
 {#if showBanner && !dismissed}
   <div
     class="status-banner"
-    class:offline={$networkStatus.status === "offline"}
-    class:degraded={$networkStatus.status === "degraded"}
+    class:offline={effectiveStatus === "offline"}
+    class:degraded={effectiveStatus === "degraded"}
     transition:slide={{ duration: 200 }}
     role="alert"
   >
     <div class="banner-content">
       <div class="banner-icon">
-        {#if $networkStatus.status === "offline"}
+        {#if effectiveStatus === "offline"}
           <CloudOff class="h-4 w-4" />
         {:else}
           <AlertTriangle class="h-4 w-4" />
@@ -49,29 +56,29 @@
       </div>
       <div class="banner-text">
         <span class="banner-message"
-          >{$_(`networkStatus.${$networkStatus.status}.message`)}</span
+          >{$_(`networkStatus.${effectiveStatus}.message`)}</span
         >
-        <span class="banner-description"
-          >{$_(`networkStatus.${$networkStatus.status}.description`)}</span
-        >
+        <span class="banner-separator">•</span>
+        <span class="banner-description">
+          {$_(`networkStatus.${effectiveStatus}.description`)} —
+          <button
+            class="retry-link"
+            onclick={handleRetry}
+            aria-label={$_("common.retry")}
+          >
+            {$_("common.retry")}
+            <RefreshCw class="h-3.5 w-3.5 inline-icon" />
+          </button>
+        </span>
       </div>
     </div>
     <div class="banner-actions">
-      {#if $networkStatus.status === "degraded"}
-        <button
-          class="banner-button retry"
-          onclick={handleRetry}
-          aria-label={$_("common.retry")}
-        >
-          <RefreshCw class="h-4 w-4" />
-        </button>
-      {/if}
       <button
         class="banner-button dismiss"
         onclick={handleDismiss}
         aria-label={$_("common.close")}
       >
-        ×
+        <X class="h-4 w-4" />
       </button>
     </div>
   </div>
@@ -86,6 +93,13 @@
     gap: 0.75rem;
     font-size: calc(0.875rem * var(--text-scale, 1));
     border-bottom: 1px solid;
+  }
+
+  /* Account for desktop sidebar */
+  @media (min-width: 1024px) {
+    .status-banner {
+      margin-left: 16rem;
+    }
   }
 
   .status-banner.offline {
@@ -107,7 +121,7 @@
 
   .banner-content {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.625rem;
     flex: 1;
     min-width: 0;
@@ -115,6 +129,7 @@
 
   .banner-icon {
     flex-shrink: 0;
+    margin-top: 0.125rem;
   }
 
   .banner-text {
@@ -137,19 +152,47 @@
     white-space: nowrap;
   }
 
-  .banner-description {
-    font-weight: 400;
-    opacity: 0.9;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .banner-separator {
+    display: none;
+    opacity: 0.6;
+    flex-shrink: 0;
   }
 
   @media (min-width: 640px) {
-    .banner-description::before {
-      content: "—";
-      margin-right: 0.5rem;
+    .banner-separator {
+      display: inline;
     }
+  }
+
+  .banner-description {
+    font-weight: 400;
+    opacity: 0.9;
+  }
+
+  .retry-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+    font-family: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 500;
+    opacity: 0.9;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .retry-link:hover {
+    opacity: 1;
+  }
+
+  .retry-link :global(.inline-icon) {
+    flex-shrink: 0;
   }
 
   .banner-actions {
@@ -179,11 +222,5 @@
   .banner-button:hover {
     opacity: 1;
     background-color: hsl(var(--foreground) / 0.1);
-  }
-
-  .banner-button.dismiss {
-    font-size: calc(1.25rem * var(--text-scale, 1));
-    font-weight: 500;
-    line-height: 1;
   }
 </style>

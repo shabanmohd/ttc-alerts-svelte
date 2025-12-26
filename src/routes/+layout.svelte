@@ -6,6 +6,7 @@
   import MobileBottomNav from "$lib/components/layout/MobileBottomNav.svelte";
   import PullToRefresh from "$lib/components/layout/PullToRefresh.svelte";
   import StatusBanner from "$lib/components/layout/StatusBanner.svelte";
+  import HolidayBanner from "$lib/components/layout/HolidayBanner.svelte";
   import {
     ReportIssueDialog,
     FeatureRequestDialog,
@@ -90,6 +91,9 @@
 
 <!-- Network Status Banner (shows when offline or degraded) -->
 <StatusBanner />
+
+<!-- Holiday Schedule Banner (shows when today/tomorrow is a TTC holiday) -->
+<HolidayBanner />
 
 <!-- Main wrapper with pull-to-refresh -->
 <PullToRefresh onRefresh={handlePullRefresh}>

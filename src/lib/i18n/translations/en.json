@@ -77,11 +77,11 @@
   "networkStatus": {
     "offline": {
       "message": "You're offline",
-      "description": "Showing cached data. Some features may be unavailable."
+      "description": "Showing cached data"
     },
     "degraded": {
       "message": "Connection issues",
-      "description": "Realtime updates are temporarily unavailable."
+      "description": "Realtime updates are temporarily unavailable"
     },
     "connecting": {
       "message": "Connecting...",

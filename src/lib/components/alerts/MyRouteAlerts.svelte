@@ -760,8 +760,12 @@
       <h3 class="empty-state-title">{$_("myRoutes.allClear")}</h3>
       <p class="empty-state-description">
         {#if selectedRouteFilter}
-          {@const selectedRoute = $savedRoutes.find(r => r.id === selectedRouteFilter)}
-          {$_("myRoutes.noActiveAlertsForRoute", { values: { route: selectedRoute?.name || selectedRouteFilter } })}
+          {@const selectedRoute = $savedRoutes.find(
+            (r) => r.id === selectedRouteFilter
+          )}
+          {$_("myRoutes.noActiveAlertsForRoute", {
+            values: { route: selectedRoute?.name || selectedRouteFilter },
+          })}
         {:else}
           {$_("myRoutes.noActiveAlerts")}
         {/if}

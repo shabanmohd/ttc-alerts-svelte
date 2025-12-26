@@ -107,6 +107,8 @@ Real-time Toronto Transit alerts PWA.
 | `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header                        |
 | `components/layout/Sidebar.svelte`               | ✅     | Desktop sidebar - nav + footer links (no How to Use)                         |
 | `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom                        |
+| `components/layout/StatusBanner.svelte`          | ✅     | Network status banner (offline/degraded) with retry link 🆕                  |
+| `components/layout/HolidayBanner.svelte`         | ✅     | TTC holiday schedule banner with dismissal per holiday 🆕                    |
 | `components/ui/*`                                | ✅     | shadcn-svelte base components                                                |
 | `components/ui/turnstile/`                       | ✅     | Cloudflare Turnstile captcha component                                       |
 | `stores/alerts.ts`                               | ✅     | Alerts state + parallelized queries + 30-day accessibility window            |
@@ -181,6 +183,7 @@ Real-time Toronto Transit alerts PWA.
 | ---------------------------- | ------ | ---------------------------------------------------------------------------------- |
 | `stops-db.ts`                | ✅     | IndexedDB layer with Dexie.js, GTFS direction/sequence, branch helpers             |
 | `subway-stations.ts`         | ✅     | Station-to-line mapping (69 stations) for elevator alert filtering 🆕              |
+| `ttc-holidays.ts`            | ✅     | TTC holiday schedule data with helper functions 🆕                                 |
 | `ttc-route-stop-orders.json` | ✅     | Route stop ordering (211 routes, auto-generated from NextBus API) 🆕 **V-B**       |
 | `ttc-route-branches.json`    | ✅     | Route branch data - directions with branches (102A/B/C/D, 501 variants) 🆕 **V-B** |
 | `ttc-direction-labels.json`  | ✅     | Direction display labels ("Towards Kennedy", etc.) 🆕 **V-B**                      |

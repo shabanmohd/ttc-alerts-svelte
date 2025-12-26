@@ -754,6 +754,128 @@ textarea::placeholder {
 {/if}
 ```
 
+### Info Banners (Status & Holiday)
+
+Notification banners displayed at the top of the app for system status and holiday schedules. Both banner types share consistent styling for visual harmony.
+
+**Components:**
+
+- `StatusBanner.svelte` - Network connection status (offline/degraded)
+- `HolidayBanner.svelte` - TTC holiday schedule notifications
+
+#### Layout Structure
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│ [Icon]  Message • Description — Action Link ↻                   [X] │
+└────────────────────────────────────────────────────────────────────┘
+
+Desktop: margin-left: 16rem (account for sidebar)
+Mobile: full width
+```
+
+#### Common Patterns (MUST MATCH)
+
+| Element         | Pattern                                           |
+| --------------- | ------------------------------------------------- |
+| **Icon**        | `h-4 w-4`, aligned to top (`align-items: flex-start`) |
+| **Message**     | `font-weight: 600`, `white-space: nowrap`         |
+| **Separator**   | Bullet (•), hidden on mobile, `opacity: 0.6`      |
+| **Description** | `font-weight: 400`, `opacity: 0.9`                |
+| **Action Link** | Preceded by em dash (—), underlined, `font-weight: 500` |
+| **Close Button**| `X` icon (lucide), `h-4 w-4`, `opacity: 0.7 → 1 on hover` |
+
+#### CSS Structure
+
+```css
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 1rem;
+  gap: 0.75rem;
+  font-size: calc(0.875rem * var(--text-scale, 1));
+  border-bottom: 1px solid;
+}
+
+.banner-content {
+  display: flex;
+  align-items: flex-start; /* Icon aligns to top */
+  gap: 0.625rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.banner-icon {
+  flex-shrink: 0;
+  margin-top: 0.125rem; /* Optical alignment with text */
+}
+
+.banner-text {
+  display: flex;
+  flex-direction: column; /* Mobile: stacked */
+  gap: 0.125rem;
+}
+
+@media (min-width: 640px) {
+  .banner-text {
+    flex-direction: row; /* Desktop: inline */
+    gap: 0.5rem;
+    align-items: center;
+  }
+}
+
+.banner-separator {
+  display: none; /* Hidden on mobile */
+  opacity: 0.6;
+}
+
+@media (min-width: 640px) {
+  .banner-separator {
+    display: inline;
+  }
+}
+```
+
+#### Banner Types
+
+| Banner    | Background                     | Text Color          | Icon           |
+| --------- | ------------------------------ | ------------------- | -------------- |
+| Offline   | `hsl(var(--muted))`            | `muted-foreground`  | `CloudOff`     |
+| Degraded  | `hsl(45 93% 47% / 0.1)`        | `hsl(45 93% 35%)`   | `AlertTriangle`|
+| Holiday   | `hsl(45 93% 47% / 0.1)`        | `hsl(45 93% 30%)`   | `Calendar`     |
+| Tomorrow  | `hsl(210 40% 96%)`             | `foreground`        | `Calendar`     |
+
+#### Action Link Styling
+
+```css
+.action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+  opacity: 0.9;
+  transition: opacity 0.15s ease;
+}
+
+.action-link:hover {
+  opacity: 1;
+}
+```
+
+#### Desktop Sidebar Offset
+
+```css
+@media (min-width: 1024px) {
+  .banner-container {
+    margin-left: 16rem; /* Match sidebar width */
+  }
+}
+```
+
 ### Route Badges
 
 ```svelte

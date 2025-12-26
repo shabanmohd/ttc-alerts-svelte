@@ -757,11 +757,11 @@
   "networkStatus": {
     "offline": {
       "message": "Vous êtes hors ligne",
-      "description": "Affichage des données mises en cache. Certaines fonctionnalités peuvent être indisponibles."
+      "description": "Affichage des données mises en cache"
     },
     "degraded": {
       "message": "Problèmes de connexion",
-      "description": "Les mises à jour en temps réel sont temporairement indisponibles."
+      "description": "Les mises à jour en temps réel sont temporairement indisponibles"
     },
     "connecting": {
       "message": "Connexion...",
