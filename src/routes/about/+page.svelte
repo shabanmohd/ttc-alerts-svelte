@@ -28,8 +28,8 @@
 <Header />
 
 <main class="content-area pb-24">
-  <!-- Page Header -->
-  <div class="mb-6">
+  <!-- Page Header with entrance animation -->
+  <div class="mb-6 animate-fade-in-up" style="animation-delay: 0ms">
     <Button
       variant="ghost"
       onclick={() => history.back()}
@@ -50,7 +50,7 @@
   </div>
 
   <!-- App Info -->
-  <Card.Root class="mb-6">
+  <Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 50ms">
     <Card.Content>
       <div class="flex items-center gap-4">
         <div
@@ -67,7 +67,7 @@
   </Card.Root>
 
   <!-- About Me -->
-  <Card.Root class="mb-6 gap-4">
+  <Card.Root class="mb-6 gap-4 animate-fade-in-up" style="animation-delay: 100ms">
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <Heart class="h-5 w-5 text-rose-500" />
@@ -104,7 +104,7 @@
   </Card.Root>
 
   <!-- Data Sources -->
-  <Card.Root class="mb-6">
+  <Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 150ms">
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <Database class="h-5 w-5 text-blue-500" />
@@ -188,7 +188,7 @@
   </Card.Root>
 
   <!-- Privacy & Location -->
-  <Card.Root class="mb-6 border-blue-500/50">
+  <Card.Root class="mb-6 border-blue-500/50 animate-fade-in-up" style="animation-delay: 200ms">
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <Shield class="h-5 w-5 text-blue-500" />
@@ -233,7 +233,7 @@
   </Card.Root>
 
   <!-- Disclaimer -->
-  <Card.Root class="mb-6 gap-4 border-amber-500/50">
+  <Card.Root class="mb-6 gap-4 border-amber-500/50 animate-fade-in-up" style="animation-delay: 250ms">
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <AlertTriangle class="h-5 w-5 text-amber-500" />
@@ -254,7 +254,8 @@
 
   <!-- Support -->
   <Card.Root
-    class="mb-6 gap-4 border-rose-500/50 bg-gradient-to-br from-rose-500/5 to-amber-500/5"
+    class="mb-6 gap-4 border-rose-500/50 bg-gradient-to-br from-rose-500/5 to-amber-500/5 animate-fade-in-up"
+    style="animation-delay: 300ms"
   >
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
@@ -280,7 +281,7 @@
   </Card.Root>
 
   <!-- Footer -->
-  <div class="text-center text-sm text-muted-foreground space-y-1">
+  <div class="text-center text-sm text-muted-foreground space-y-1 animate-fade-in-up" style="animation-delay: 350ms">
     <p class="inline-flex items-center gap-1">
       {$_("about.madeWith")}
       <Heart class="h-3.5 w-3.5 text-rose-500 fill-rose-500" />

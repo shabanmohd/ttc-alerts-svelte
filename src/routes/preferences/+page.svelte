@@ -316,7 +316,7 @@
 
 <main class="content-area">
   <!-- Page Header -->
-  <div class="mb-8">
+  <div class="mb-8 animate-fade-in-up">
     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
       {$_("preferences.myAlertPreferences")}
     </h1>
@@ -333,7 +333,7 @@
     }}
   >
     <!-- Step 1: Transport Modes -->
-    <div class="card">
+    <div class="card animate-fade-in-up" style="animation-delay: 50ms">
       <Accordion.Root type="single" bind:value={openAccordion}>
         <Accordion.Item value="step-1" class="border-0">
           <Accordion.Trigger
@@ -423,7 +423,7 @@
     </div>
 
     <!-- Step 2: Route Selection -->
-    <div class="card">
+    <div class="card animate-fade-in-up" style="animation-delay: 100ms">
       <Accordion.Root type="single" bind:value={openAccordion}>
         <Accordion.Item value="step-2" class="border-0">
           <Accordion.Trigger
@@ -564,7 +564,7 @@
     </div>
 
     <!-- Step 3: Schedule -->
-    <div class="card">
+    <div class="card animate-fade-in-up" style="animation-delay: 150ms">
       <Accordion.Root type="single" bind:value={openAccordion}>
         <Accordion.Item value="step-3" class="border-0">
           <Accordion.Trigger
@@ -719,7 +719,7 @@
     </div>
 
     <!-- Step 4: Alert Types -->
-    <div class="card">
+    <div class="card animate-fade-in-up" style="animation-delay: 200ms">
       <Accordion.Root type="single" bind:value={openAccordion}>
         <Accordion.Item value="step-4" class="border-0">
           <Accordion.Trigger
@@ -823,7 +823,7 @@
   </div>
 
   <!-- Help & Feedback Section (mobile only) -->
-  <Card.Root class="mb-6 lg:hidden">
+  <Card.Root class="mb-6 lg:hidden animate-fade-in-up" style="animation-delay: 250ms">
     <Card.Header>
       <Card.Title class="text-base">Help & Feedback</Card.Title>
       <Card.Description
@@ -869,7 +869,7 @@
   </Card.Root>
 
   <!-- Accessibility Settings -->
-  <Card.Root class="mb-6">
+  <Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 300ms">
     <Card.Header>
       <Card.Title class="text-base flex items-center gap-2">
         <Eye class="h-5 w-5" />

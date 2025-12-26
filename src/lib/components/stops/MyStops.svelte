@@ -20,6 +20,7 @@
   import ETACard from "$lib/components/eta/ETACard.svelte";
   import { Button } from "$lib/components/ui/button";
   import * as Dialog from "$lib/components/ui/dialog";
+  import { Skeleton } from "$lib/components/ui/skeleton";
   import { cn } from "$lib/utils";
   import type { TTCStop } from "$lib/data/stops-db";
   import { initStopsDB, findNearbyStops } from "$lib/data/stops-db";
@@ -152,6 +153,9 @@
   }
 
   let hasStops = $derived(count > 0);
+  
+  // Initial loading = has stops but no ETA data yet
+  let isInitialLoading = $derived(hasStops && etas.length === 0 && loading);
 
   // Reference to StopSearch component for focus
   let stopSearchRef: { focus: () => void } | undefined = $state();
@@ -169,7 +173,52 @@
     />
   </div>
 
-  {#if hasStops}
+  {#if isInitialLoading}
+    <!-- Initial Loading Skeleton State -->
+    <div class="stops-header">
+      <div class="header-left">
+        <h2 class="section-title">
+          <Clock class="h-4 w-4 text-primary" />
+          {$_("stops.liveArrivals")}
+          <RefreshCw class="h-3 w-3 animate-spin text-muted-foreground" />
+        </h2>
+      </div>
+    </div>
+    <div class="eta-cards-section">
+      {#each Array(Math.min(count, 3)) as _, i}
+        <div
+          class="eta-card-skeleton animate-fade-in-up stagger-{i + 1}"
+          aria-hidden="true"
+        >
+          <div class="skeleton-header">
+            <div class="skeleton-stop-info">
+              <Skeleton class="h-5 w-5 rounded-full" />
+              <Skeleton class="h-5 w-40 rounded-md" />
+            </div>
+            <Skeleton class="h-4 w-20 rounded-md" />
+          </div>
+          <div class="skeleton-predictions">
+            <div class="skeleton-prediction">
+              <Skeleton class="h-7 w-12 rounded-md" />
+              <div class="skeleton-prediction-content">
+                <Skeleton class="h-4 w-32 rounded-md" />
+                <Skeleton class="h-3 w-24 rounded-md" />
+              </div>
+              <Skeleton class="h-6 w-16 rounded-md" />
+            </div>
+            <div class="skeleton-prediction">
+              <Skeleton class="h-7 w-12 rounded-md" />
+              <div class="skeleton-prediction-content">
+                <Skeleton class="h-4 w-28 rounded-md" />
+                <Skeleton class="h-3 w-20 rounded-md" />
+              </div>
+              <Skeleton class="h-6 w-16 rounded-md" />
+            </div>
+          </div>
+        </div>
+      {/each}
+    </div>
+  {:else if hasStops}
     <!-- Header with Saved Stops and Controls -->
     <div class="stops-header">
       <div class="header-left">
@@ -421,4 +470,51 @@
     max-width: 280px;
     line-height: 1.5;
   }
+
+  /* Skeleton Loading Styles */
+  .eta-card-skeleton {
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1rem;
+  }
+
+  .skeleton-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .skeleton-stop-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .skeleton-predictions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .skeleton-prediction {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .skeleton-prediction-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  /* Stagger animation classes */
+  .stagger-1 { animation-delay: 0ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 200ms; }
 </style>

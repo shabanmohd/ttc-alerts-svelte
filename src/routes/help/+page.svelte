@@ -32,7 +32,7 @@
 
 <main class="content-area pb-24">
   <!-- Page Header -->
-  <div class="mb-6">
+  <div class="mb-6 animate-fade-in-up" style="animation-delay: 0ms">
     <Button
       variant="ghost"
       href="/settings"
@@ -53,7 +53,7 @@
   </div>
 
   <!-- Quick Start Section -->
-  <Card.Root class="mb-6">
+  <Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 50ms">
     <Card.Header>
       <Card.Title class="text-lg">{$_("help.quickStart")}</Card.Title>
       <Card.Description>{$_("help.quickStartDesc")}</Card.Description>
@@ -124,7 +124,7 @@
   </Card.Root>
 
   <!-- Features Guide -->
-  <Card.Root class="mb-6">
+  <Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 100ms">
     <Card.Header>
       <Card.Title class="text-lg">{$_("help.featuresGuide")}</Card.Title>
       <Card.Description>{$_("help.featuresGuideDesc")}</Card.Description>
@@ -303,7 +303,7 @@
   </Card.Root>
 
   <!-- Troubleshooting -->
-  <Card.Root class="mb-6">
+  <Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 150ms">
     <Card.Header>
       <Card.Title class="text-lg">{$_("help.troubleshooting")}</Card.Title>
       <Card.Description>{$_("help.troubleshootingDesc")}</Card.Description>
