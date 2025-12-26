@@ -14,7 +14,7 @@
  * 3. Variable holidays change yearly: Family Day, Good Friday, Victoria Day, etc.
  * 4. Update SUSPENDED_LINES when lines are suspended/restored
  * 
- * Last updated: December 2024 (for 2025 & 2026 schedules)
+ * Last updated: December 2024 (for 2024, 2025 & 2026 schedules)
  * 
  * ============================================
  * SERVICE HOURS SUMMARY
@@ -164,6 +164,19 @@ export const SERVICE_FREQUENCY = {
  * - 'sunday': Full Sunday service (subway starts ~8am) - Christmas, New Year's
  * - 'holiday': Sunday schedule but starts earlier (~6am) - All other holidays
  */
+export const HOLIDAYS_2024: Record<string, TTCHoliday> = {
+  '2024-01-01': { name: "New Year's Day", type: 'sunday' },
+  '2024-02-19': { name: 'Family Day', type: 'holiday' },
+  '2024-03-29': { name: 'Good Friday', type: 'holiday' },
+  '2024-05-20': { name: 'Victoria Day', type: 'holiday' },
+  '2024-07-01': { name: 'Canada Day', type: 'holiday' },
+  '2024-08-05': { name: 'Simcoe Day', type: 'holiday' },
+  '2024-09-02': { name: 'Labour Day', type: 'holiday' },
+  '2024-10-14': { name: 'Thanksgiving', type: 'holiday' },
+  '2024-12-25': { name: 'Christmas Day', type: 'sunday' },
+  '2024-12-26': { name: 'Boxing Day', type: 'holiday' },
+};
+
 export const HOLIDAYS_2025: Record<string, TTCHoliday> = {
   '2025-01-01': { name: "New Year's Day", type: 'sunday' },
   '2025-02-17': { name: 'Family Day', type: 'holiday' },
@@ -213,7 +226,9 @@ export function getTTCHoliday(date: Date = new Date()): TTCHoliday | null {
   const year = date.getFullYear();
   
   // Check the appropriate year's holidays
-  if (year === 2025) {
+  if (year === 2024) {
+    return HOLIDAYS_2024[dateStr] || null;
+  } else if (year === 2025) {
     return HOLIDAYS_2025[dateStr] || null;
   } else if (year === 2026) {
     return HOLIDAYS_2026[dateStr] || null;

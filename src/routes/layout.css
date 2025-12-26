@@ -116,16 +116,16 @@
 
 :root {
   /* Transition Duration Tiers */
-  --duration-fast: 150ms;    /* Micro-interactions: hovers, active states */
-  --duration-normal: 200ms;  /* Standard: accordions, toggles, buttons */
-  --duration-slow: 300ms;    /* Emphasis: page transitions, nav changes */
-  --duration-slower: 400ms;  /* Complex: mobile nav, multi-step animations */
-  
+  --duration-fast: 150ms; /* Micro-interactions: hovers, active states */
+  --duration-normal: 200ms; /* Standard: accordions, toggles, buttons */
+  --duration-slow: 300ms; /* Emphasis: page transitions, nav changes */
+  --duration-slower: 400ms; /* Complex: mobile nav, multi-step animations */
+
   /* Easing Functions */
-  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);      /* Elements entering */
-  --ease-in: cubic-bezier(0.32, 0, 0.67, 0);       /* Elements leaving */
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);   /* Emphasis animations */
-  --ease-spring: cubic-bezier(0.4, 0, 0.2, 1);     /* Material Design */
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1); /* Elements entering */
+  --ease-in: cubic-bezier(0.32, 0, 0.67, 0); /* Elements leaving */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* Emphasis animations */
+  --ease-spring: cubic-bezier(0.4, 0, 0.2, 1); /* Material Design */
 }
 
 /* ============================================

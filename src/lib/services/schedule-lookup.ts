@@ -214,23 +214,57 @@ export function getNextScheduledDeparture(
   const routeSchedule = stopSchedules[routeId];
   if (!routeSchedule) return null;
   
-  // Express routes don't run on weekends - show next weekday's first departure
+  // Express routes don't run on weekends or holidays - find next weekday service
   if (isExpressRoute(routeId) && (todayType === 'saturday' || todayType === 'sunday')) {
     // Get the weekday first departure time
     const weekdayFirst = routeSchedule['weekday'] || null;
     if (weekdayFirst) {
-      // Calculate next Monday
-      const daysUntilMonday = todayType === 'saturday' ? 2 : 1;
-      const nextMonday = new Date(now);
-      nextMonday.setDate(nextMonday.getDate() + daysUntilMonday);
-      const mondayLabel = nextMonday.toLocaleDateString('en-US', { weekday: 'long' });
+      // Find the actual next weekday (considering holidays)
+      // Boxing Day could be a Friday but todayType='sunday' (holiday), so we need real day checking
+      let daysAhead = 1;
+      let nextWeekday = new Date(now);
+      
+      // Search up to 7 days to find the next actual weekday that isn't a holiday
+      while (daysAhead <= 7) {
+        nextWeekday = new Date(now);
+        nextWeekday.setDate(nextWeekday.getDate() + daysAhead);
+        const realDayOfWeek = nextWeekday.getDay();
+        const futureServiceType = getServiceDayType(nextWeekday);
+        
+        // Express routes run only on weekdays (Mon-Fri, day 1-5) when it's not a holiday
+        if (realDayOfWeek >= 1 && realDayOfWeek <= 5 && futureServiceType === 'weekday') {
+          break;
+        }
+        daysAhead++;
+      }
+      
+      // Check if next service day is a holiday (for label display)
+      const futureHoliday = getTTCHoliday(nextWeekday);
+      
+      // Build the label similar to regular routes
+      let nextWeekdayLabel: string;
+      if (daysAhead === 1) {
+        // Tomorrow
+        nextWeekdayLabel = futureHoliday 
+          ? `Tomorrow - ${futureHoliday.name}` 
+          : 'Tomorrow';
+      } else {
+        // Future days: "Mon, Dec 29" or "Fri, Dec 26 - Boxing Day"
+        const dayAbbr = nextWeekday.toLocaleDateString('en-US', { weekday: 'short' });
+        const dateStr = nextWeekday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        nextWeekdayLabel = futureHoliday
+          ? `${dayAbbr}, ${dateStr} - ${futureHoliday.name}`
+          : `${dayAbbr}, ${dateStr}`;
+      }
       
       return {
         time: formatTo12Hour(weekdayFirst),
         dayType: 'Weekday',
         isToday: false,
         noWeekendService: true,
-        nextWeekdayLabel: mondayLabel
+        nextWeekdayLabel: nextWeekdayLabel,
+        tomorrowLabel: daysAhead === 1 ? nextWeekdayLabel : undefined,  // For consistency
+        daysUntilService: daysAhead
       };
     }
     

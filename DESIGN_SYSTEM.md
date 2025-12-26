@@ -99,26 +99,26 @@
 ```css
 :root {
   /* Transition Duration Tiers */
-  --duration-fast: 150ms;    /* Micro-interactions: hovers, active states */
-  --duration-normal: 200ms;  /* Standard: accordions, toggles, buttons */
-  --duration-slow: 300ms;    /* Emphasis: page transitions, nav changes */
-  --duration-slower: 400ms;  /* Complex: mobile nav, multi-step animations */
-  
+  --duration-fast: 150ms; /* Micro-interactions: hovers, active states */
+  --duration-normal: 200ms; /* Standard: accordions, toggles, buttons */
+  --duration-slow: 300ms; /* Emphasis: page transitions, nav changes */
+  --duration-slower: 400ms; /* Complex: mobile nav, multi-step animations */
+
   /* Easing Functions */
-  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);      /* Elements entering */
-  --ease-in: cubic-bezier(0.32, 0, 0.67, 0);       /* Elements leaving */
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);   /* Emphasis animations */
-  --ease-spring: cubic-bezier(0.4, 0, 0.2, 1);     /* Material Design */
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1); /* Elements entering */
+  --ease-in: cubic-bezier(0.32, 0, 0.67, 0); /* Elements leaving */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* Emphasis animations */
+  --ease-spring: cubic-bezier(0.4, 0, 0.2, 1); /* Material Design */
 }
 ```
 
 ### When to Use Each Duration
 
-| Duration | Token | Use Case |
-| -------- | ----- | -------- |
-| **150ms** | `--duration-fast` | Hover states, button active, icon transforms |
-| **200ms** | `--duration-normal` | Accordion expand/collapse, toggle switches, dialogs |
-| **300ms** | `--duration-slow` | Navigation changes, checkmark animations, emphasis |
+| Duration  | Token               | Use Case                                                  |
+| --------- | ------------------- | --------------------------------------------------------- |
+| **150ms** | `--duration-fast`   | Hover states, button active, icon transforms              |
+| **200ms** | `--duration-normal` | Accordion expand/collapse, toggle switches, dialogs       |
+| **300ms** | `--duration-slow`   | Navigation changes, checkmark animations, emphasis        |
 | **400ms** | `--duration-slower` | Mobile bottom nav padding, complex multi-step transitions |
 
 ### Reduced Motion Support (WCAG 2.2 Compliant)
@@ -128,7 +128,9 @@ Both system preference AND manual user override are supported:
 ```css
 /* System preference */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
@@ -136,8 +138,8 @@ Both system preference AND manual user override are supported:
 }
 
 /* User override via settings */
-html.reduce-motion *, 
-html.reduce-motion *::before, 
+html.reduce-motion *,
+html.reduce-motion *::before,
 html.reduce-motion *::after {
   animation-duration: 0.01ms !important;
   transition-duration: 0.01ms !important;
@@ -1598,6 +1600,134 @@ Status priority determines card background color when multiple statuses are pres
 
 ```css
 .subway-status-card                    /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 /* Card container */
 /* Card container */
 /* Card container */

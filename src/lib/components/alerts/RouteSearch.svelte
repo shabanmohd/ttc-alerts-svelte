@@ -513,9 +513,9 @@
           class="flex w-full items-center justify-between px-3 py-2 text-left outline-none transition-colors {index ===
           highlightedIndex
             ? 'bg-zinc-100 dark:bg-zinc-800'
-            : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'} {saved ? 'bg-primary/5' : ''} {justAdded
-            ? 'animate-success-flash'
-            : ''}"
+            : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'} {saved
+            ? 'bg-primary/5'
+            : ''} {justAdded ? 'animate-success-flash' : ''}"
           role="option"
           aria-selected={index === highlightedIndex}
           onclick={() => selectRoute(route)}
