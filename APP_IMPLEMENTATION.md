@@ -2,15 +2,14 @@
 
 ## Overview
 
-Real-time Toronto Transit alerts with biometric authentication.
+Real-time Toronto Transit alerts PWA.
 
-| Stack      | Details                                                     |
-| ---------- | ----------------------------------------------------------- |
-| Frontend   | Svelte 5 + TypeScript + Tailwind + shadcn-svelte            |
-| Typography | Lexend (dyslexic-friendly) via Google Fonts                 |
-| Backend    | Supabase (DB, Edge Functions, Realtime)                     |
-| Auth       | Custom WebAuthn (displayName + biometrics + recovery codes) |
-| Hosting    | Cloudflare Pages                                            |
+| Stack      | Details                                          |
+| ---------- | ------------------------------------------------ |
+| Frontend   | Svelte 5 + TypeScript + Tailwind + shadcn-svelte |
+| Typography | Lexend (dyslexic-friendly) via Google Fonts      |
+| Backend    | Supabase (DB, Edge Functions, Realtime)          |
+| Hosting    | Cloudflare Pages                                 |
 
 📐 **Design System**: See [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) for colors, typography, spacing, and component patterns.
 
@@ -33,7 +32,6 @@ Real-time Toronto Transit alerts with biometric authentication.
 | Feature                      | Version A | Version B |
 | ---------------------------- | --------- | --------- |
 | Real-time alerts             | ✅        | ✅        |
-| WebAuthn authentication      | ✅        | ✅        |
 | Planned maintenance widget   | ✅        | ✅        |
 | Accessibility settings       | ❌        | ✅        |
 | Visibility-aware polling     | ❌        | ✅        |
@@ -44,7 +42,6 @@ Real-time Toronto Transit alerts with biometric authentication.
 | ETA predictions              | ❌        | ✅        |
 | GTFS scheduled departures    | ❌        | ✅        |
 | Route Browser                | ❌        | ✅        |
-| Weather warnings             | ❌        | ✅        |
 | French language (i18n)       | ❌        | ✅        |
 
 ---
@@ -97,12 +94,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom                         |
 | `components/ui/*`                                | ✅     | shadcn-svelte base components                                                 |
 | `components/ui/turnstile/`                       | ✅     | Cloudflare Turnstile captcha component                                        |
-| `services/webauthn.ts`                           | ✅     | WebAuthn browser API wrapper                                                  |
 | `stores/alerts.ts`                               | ✅     | Alerts state + 30-day accessibility query window                              |
-| `stores/auth.ts`                                 | ✅     | Custom WebAuthn auth store                                                    |
 | `stores/dialogs.ts`                              | ✅     | Shared dialog state (hamburger menu → dialogs)                                |
 | `stores/preferences.ts`                          | ✅     | User preferences state                                                        |
-| `types/auth.ts`                                  | ✅     | Auth TypeScript types                                                         |
+| `stores/bookmarks.ts`                            | ✅     | Bookmarked stops (localStorage only)                                          |
 | `types/database.ts`                              | ✅     | Database types (JSONB fields)                                                 |
 | `supabase.ts`                                    | ✅     | Supabase client config                                                        |
 | `utils.ts`                                       | ✅     | Utility functions                                                             |
@@ -138,12 +133,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | File                                    | Status | Purpose                                                   |
 | --------------------------------------- | ------ | --------------------------------------------------------- |
-| `functions/_shared/auth-utils.ts`       | ✅     | CORS + Supabase client factory                            |
-| `functions/auth-register/index.ts`      | ✅     | User registration + recovery codes (uses Supabase Auth)   |
-| `functions/auth-challenge/index.ts`     | ✅     | Generate WebAuthn challenge                               |
-| `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                         |
-| `functions/auth-session/index.ts`       | ✅     | Validate existing session                                 |
-| `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                                |
+| `functions/_shared/cors.ts`             | ✅     | CORS headers utility                                      |
 | `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v56: hidden stale alerts)      |
 | `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                               |
 | `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🆕 **B** |
@@ -155,10 +145,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `alert_cache`          | 600+ | Alerts from Bluesky (header_text, categories, is_latest) |
 | `incident_threads`     | 255K | Grouped alert threads (title, is_resolved, is_hidden)    |
 | `planned_maintenance`  | 9    | Scheduled maintenance                                    |
-| `user_profiles`        | -    | User display_name, linked to auth.users                  |
-| `webauthn_credentials` | -    | Public keys (credential_id as PK)                        |
-| `recovery_codes`       | -    | Bcrypt-hashed one-time codes                             |
-| `user_preferences`     | -    | Routes, modes, notification settings, bookmarked_stops   |
+| `device_preferences`   | -    | Device-based preferences (localStorage backup)           |
 
 ### Static (`static/`)
 
@@ -219,12 +206,6 @@ Real-time Toronto Transit alerts with biometric authentication.
 - **Day Type Header**: "Scheduled Next Bus · Weekday (Friday)" with current day name
 - **Responsive Layout**: Vertical on mobile (5xl time), horizontal on desktop (4xl time)
 - **Vehicle-Type Empty State**: Context-aware messages for buses vs subway
-
-### Weather Components (`src/lib/components/weather/`) 🆕 **Version B Only**
-
-| File                          | Status | Purpose                                                 |
-| ----------------------------- | ------ | ------------------------------------------------------- |
-| `WeatherWarningBanner.svelte` | ✅     | Transit-relevant weather alerts from Environment Canada |
 
 ### i18n (`src/lib/i18n/`) 🆕 **Version B Only**
 

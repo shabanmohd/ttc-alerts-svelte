@@ -8,11 +8,9 @@ tools to resolve library id and get library docs without me having to explicitly
 
 ## Project Overview
 
-TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authentication.
+TTC Service Alerts PWA - Real-time Toronto transit alerts.
 
 **Stack**: Svelte 5 + TypeScript + Tailwind + shadcn-svelte | Supabase (DB, Edge Functions, Realtime) | Cloudflare Pages
-
-**Auth**: Custom WebAuthn (username + biometrics + recovery codes) - NOT Supabase Auth
 
 ---
 
@@ -156,7 +154,7 @@ When documenting files, organize them into these categories:
 | File                | Status | Description                    |
 | ------------------- | ------ | ------------------------------ |
 | `alerts.ts`         | ✅     | Alert filtering - Shared       |
-| `auth.ts`           | ✅     | Auth state - Shared            |
+| `preferences.ts`    | ✅     | User preferences - Shared      |
 | `stops.ts` 🆕🅱️     | ✅     | Stop database - Version B only |
 | `bookmarks.ts` 🆕🅱️ | ✅     | Bookmarks - Version B only     |
 ```
@@ -248,18 +246,19 @@ When documenting files, organize them into these categories:
 
 ## Architecture
 
-### Auth System (Custom WebAuthn)
+### Data Storage
 
-- Username-based (no email) → WebAuthn biometrics → 8 recovery codes
-- Tables: `users`, `webauthn_credentials`, `recovery_codes`, `device_sessions`
+- **Preferences**: Stored in Supabase `device_preferences` table (device fingerprint based)
+- **Bookmarks**: Stored in localStorage only
+- **Alerts**: Fetched from Supabase with Realtime subscriptions
 
 ### Feature Access
 
-| Feature          | Auth Required |
+| Feature          | Storage       |
 | ---------------- | ------------- |
-| View alerts      | No            |
-| Save preferences | Yes           |
-| "My Alerts" tab  | Yes           |
+| View alerts      | None required |
+| Save preferences | Device-based  |
+| Bookmarks        | localStorage  |
 
 ## Code Patterns
 
@@ -284,21 +283,24 @@ When documenting files, organize them into these categories:
 ### Stores
 
 ```typescript
-import { isAuthenticated, user } from "$lib/stores/auth";
+import { threadsWithAlerts, isLoading } from "$lib/stores/alerts";
+import { bookmarks } from "$lib/stores/bookmarks";
+import { preferences } from "$lib/stores/preferences";
 ```
 
 ## File Structure
 
 ```
 src/lib/
-├── components/     # alerts/, dialogs/, layout/, ui/
-├── services/       # webauthn.ts
-├── stores/         # alerts.ts, auth.ts, preferences.ts
-├── types/          # auth.ts, database.ts
+├── components/     # alerts/, dialogs/, layout/, ui/, stops/, eta/
+├── stores/         # alerts.ts, preferences.ts, bookmarks.ts
+├── types/          # database.ts
+├── data/           # stops-db.ts, route-names.ts
+├── i18n/           # en.json, fr.json, translations/
 ├── supabase.ts
 └── utils.ts
 
-supabase/functions/ # auth-register, auth-challenge, auth-verify, auth-session, auth-recover
+supabase/functions/ # poll-alerts, scrape-maintenance, get-eta
 ```
 
 ## Commands
