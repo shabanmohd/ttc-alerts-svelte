@@ -16,7 +16,6 @@
   import { Input } from "$lib/components/ui/input";
   import { Button } from "$lib/components/ui/button";
   import { Toggle } from "$lib/components/ui/toggle";
-  import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import { activeFilters, setRouteFilter } from "$lib/stores/alerts";
   import { savedRoutes } from "$lib/stores/savedRoutes";
   import { goto } from "$app/navigation";
@@ -312,10 +311,6 @@
   function handleRouteClick(route: string) {
     // Navigate to route detail page
     goto(`/routes/${encodeURIComponent(route)}`);
-  }
-
-  async function handleSignOut() {
-    await signOut();
   }
 
   const categories = [

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Bell, Star } from "lucide-svelte";
   import { currentTab } from "$lib/stores/alerts";
-  import { isAuthenticated } from "$lib/stores/auth";
 
   let { myAlertsCount = 0 }: { myAlertsCount?: number } = $props();
 </script>
@@ -20,14 +19,10 @@
     class="tab-button"
     class:active={$currentTab === "my"}
     onclick={() => currentTab.set("my")}
-    disabled={!$isAuthenticated}
-    title={!$isAuthenticated
-      ? "Sign in to view your personalized alerts"
-      : undefined}
   >
     <Star class="w-4 h-4" />
     <span>My Alerts</span>
-    {#if myAlertsCount > 0 && $isAuthenticated}
+    {#if myAlertsCount > 0}
       <span class="tab-badge">{myAlertsCount}</span>
     {/if}
   </button>
@@ -60,13 +55,8 @@
     transition: all 0.15s ease;
   }
 
-  .tab-button:hover:not(:disabled) {
+  .tab-button:hover {
     color: hsl(var(--foreground));
-  }
-
-  .tab-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 
   .tab-button.active {

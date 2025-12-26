@@ -35,7 +35,6 @@
     getSeverityCategory,
     type SeverityCategory,
   } from "$lib/stores/alerts";
-  import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import { isVisible } from "$lib/stores/visibility";
 
   // Import dialogs
@@ -933,9 +932,6 @@
     activeDialog = dialog;
   }
 
-  async function handleSignOut() {
-    await signOut();
-  }
 
   function handleTabClick(tabId: AlertsTab) {
     const url = new URL($page.url);

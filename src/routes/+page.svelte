@@ -7,7 +7,6 @@
   import MyStops from "$lib/components/stops/MyStops.svelte";
   import MyRouteAlerts from "$lib/components/alerts/MyRouteAlerts.svelte";
   import { fetchAlerts, subscribeToAlerts } from "$lib/stores/alerts";
-  import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import { isVisible } from "$lib/stores/visibility";
 
   // Import dialogs
@@ -58,10 +57,6 @@
 
   function handleOpenDialog(dialog: string) {
     activeDialog = dialog;
-  }
-
-  async function handleSignOut() {
-    await signOut();
   }
 </script>
 

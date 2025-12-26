@@ -9,7 +9,6 @@
     Search,
     CheckCircle,
     XCircle,
-    LogIn,
     HelpCircle,
     Bug,
     Lightbulb,
@@ -17,7 +16,6 @@
     Eye,
     Type,
     Zap,
-    CloudSun,
   } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -27,7 +25,6 @@
   import { toast } from "svelte-sonner";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import { HowToUseDialog } from "$lib/components/dialogs";
-  import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import { accessibility, type TextScale } from "$lib/stores/accessibility";
   import { StopSearch } from "$lib/components/stops";
   import type { TTCStop } from "$lib/data/stops-db";
@@ -36,7 +33,6 @@
     modes as userModes,
     alertTypes as userAlertTypes,
     schedules as userSchedules,
-    showWeatherWarnings as userShowWeatherWarnings,
     savePreferences,
     resetPreferences,
   } from "$lib/stores/preferences";
@@ -78,16 +74,12 @@
   let schedules = $state<Schedule[]>([]);
   let nextScheduleId = $state(1);
 
-  // Weather warnings toggle
-  let showWeatherWarnings = $state(false);
-
   // Initialize from preferences store on mount
   onMount(() => {
     // Initialize from stores
     selectedModes = new Set($userModes);
     selectedRoutes = new Set($userRoutes);
     selectedAlertTypes = new Set($userAlertTypes);
-    showWeatherWarnings = $userShowWeatherWarnings;
 
     // Initialize schedules
     if ($userSchedules.length > 0) {
@@ -269,10 +261,6 @@
     activeDialog = dialog;
   }
 
-  async function handleSignOut() {
-    await signOut();
-  }
-
   async function handleSave() {
     // Convert schedules to the format expected by the store
     const schedulesData = schedules.map((s) => ({
@@ -286,7 +274,6 @@
       routes: Array.from(selectedRoutes),
       alertTypes: Array.from(selectedAlertTypes),
       schedules: schedulesData,
-      showWeatherWarnings,
     });
 
     toast.success($_("toasts.preferencesSaved"));
@@ -299,7 +286,6 @@
       selectedModes = new Set();
       selectedRoutes = new Set();
       selectedAlertTypes = new Set();
-      showWeatherWarnings = false;
       schedules = [
         {
           id: 1,
@@ -823,60 +809,10 @@
     <div class="mt-6">
       <Button type="submit" class="w-full btn-lg gap-2" size="lg">
         <Save class="h-5 w-5" />
-        {#if $isAuthenticated}
-          Save Preferences
-        {:else}
-          Save Preferences
-        {/if}
+        Save Preferences
       </Button>
-      {#if !$isAuthenticated}
-        <p class="text-center text-sm text-muted-foreground mt-2">
-          An account is required to save preferences
-        </p>
-      {/if}
     </div>
   </form>
-
-  <!-- Auth Section -->
-  <div class="mt-6">
-    <Card.Root>
-      <Card.Header>
-        <Card.Title class="text-base">Sync Across Devices</Card.Title>
-        <Card.Description>
-          {#if $isAuthenticated}
-            Your preferences are synced to your account.
-          {:else}
-            Sign in to access your alerts anywhere.
-          {/if}
-        </Card.Description>
-      </Card.Header>
-      <Card.Content>
-        {#if $isAuthenticated}
-          <div class="flex items-center gap-3 p-3 rounded-lg bg-muted">
-            <div
-              class="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
-            >
-              <span class="text-lg font-semibold text-primary-foreground">
-                {($userName || "U").charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div class="flex-1">
-              <p class="font-medium">{$userName}</p>
-              <p class="text-sm text-muted-foreground">Preferences synced</p>
-            </div>
-          </div>
-        {:else}
-          <Button
-            class="w-full gap-2"
-            onclick={() => (activeDialog = "sign-in")}
-          >
-            <LogIn class="h-4 w-4" />
-            Sign In
-          </Button>
-        {/if}
-      </Card.Content>
-    </Card.Root>
-  </div>
 
   <!-- Return Home -->
   <div class="mt-6 mb-6">
@@ -1012,28 +948,6 @@
           onCheckedChange={(checked) => accessibility.setReduceMotion(checked)}
           aria-labelledby="reduce-motion-label"
           aria-describedby="reduce-motion-desc"
-        />
-      </div>
-
-      <!-- Weather Warnings Toggle -->
-      <div class="flex items-center justify-between">
-        <div class="space-y-0.5">
-          <span
-            id="weather-warnings-label"
-            class="text-sm font-medium flex items-center gap-2"
-          >
-            <CloudSun class="h-4 w-4" />
-            Weather Warnings
-          </span>
-          <p id="weather-warnings-desc" class="text-sm text-muted-foreground">
-            Show transit-relevant weather alerts on homepage
-          </p>
-        </div>
-        <Switch
-          checked={showWeatherWarnings}
-          onCheckedChange={(checked) => (showWeatherWarnings = checked)}
-          aria-labelledby="weather-warnings-label"
-          aria-describedby="weather-warnings-desc"
         />
       </div>
     </Card.Content>

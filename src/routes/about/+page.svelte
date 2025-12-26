@@ -253,7 +253,9 @@
   </Card.Root>
 
   <!-- Support -->
-  <Card.Root class="mb-6 gap-4 border-rose-500/50 bg-gradient-to-br from-rose-500/5 to-amber-500/5">
+  <Card.Root
+    class="mb-6 gap-4 border-rose-500/50 bg-gradient-to-br from-rose-500/5 to-amber-500/5"
+  >
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <Coffee class="h-5 w-5 text-rose-500" />

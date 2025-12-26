@@ -30,7 +30,6 @@
     getSeverityCategory,
     maintenanceItems,
   } from "$lib/stores/alerts";
-  import { isAuthenticated, userName, signOut } from "$lib/stores/auth";
   import type {
     ThreadWithAlerts,
     PlannedMaintenance,
@@ -859,10 +858,6 @@
 
   function handleOpenDialog(dialog: string) {
     activeDialog = dialog;
-  }
-
-  async function handleSignOut() {
-    await signOut();
   }
 </script>
 

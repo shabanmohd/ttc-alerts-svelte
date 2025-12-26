@@ -1,16 +1,12 @@
 /**
  * Bookmarks Store for TTC Alerts PWA
  * 
- * Manages bookmarked stops:
- * - Local storage for anonymous users
- * - Supabase sync for authenticated users
- * - Max 10 bookmarked stops per user
+ * Manages bookmarked stops using localStorage only
+ * Max 10 bookmarked stops
  */
 
 import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
-import { supabase } from '$lib/supabase';
-import { user } from '$lib/stores/auth';
 import type { TTCStop } from '$lib/data/stops-db';
 import type { BookmarkedStop } from '$lib/types/database';
 
@@ -35,83 +31,10 @@ function createBookmarksStore() {
 
   const { subscribe, set, update } = writable<BookmarkedStop[]>(initial);
 
-  // Track if we've synced with Supabase
-  let hasSyncedWithServer = false;
-
-  // Sync with Supabase when user changes
-  if (browser) {
-    user.subscribe(async (currentUser) => {
-      if (currentUser && !hasSyncedWithServer) {
-        // User just logged in - fetch their bookmarks from server
-        try {
-          const { data, error } = await supabase
-            .from('user_preferences')
-            .select('bookmarked_stops')
-            .eq('user_id', currentUser.id)
-            .single();
-
-          if (!error && data) {
-            // Cast to any to bypass strict typing (column not in generated types)
-            const serverStops: BookmarkedStop[] = (data as { bookmarked_stops: BookmarkedStop[] }).bookmarked_stops || [];
-            const localStops = get({ subscribe });
-            
-            // Merge: start with server, add local ones not on server
-            const merged = [...serverStops];
-            for (const local of localStops) {
-              if (!merged.some(s => s.id === local.id) && merged.length < MAX_BOOKMARKS) {
-                merged.push(local);
-              }
-            }
-            
-            set(merged);
-            persistLocal(merged);
-            
-            // If we added local stops, sync back to server
-            if (merged.length > serverStops.length) {
-              await persistToServer(currentUser.id, merged);
-            }
-          }
-          hasSyncedWithServer = true;
-        } catch (err) {
-          console.error('Failed to sync bookmarks:', err);
-        }
-      } else if (!currentUser) {
-        // User logged out - keep local bookmarks but reset sync flag
-        hasSyncedWithServer = false;
-      }
-    });
-  }
-
   // Persist to localStorage
-  function persistLocal(stops: BookmarkedStop[]) {
+  function persist(stops: BookmarkedStop[]) {
     if (browser) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stops));
-    }
-  }
-
-  // Persist to Supabase (for authenticated users)
-  async function persistToServer(userId: string, stops: BookmarkedStop[]) {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const client = supabase as any;
-      await client
-        .from('user_preferences')
-        .upsert(
-          { user_id: userId, bookmarked_stops: stops },
-          { onConflict: 'user_id' }
-        );
-    } catch (err) {
-      console.error('Failed to save bookmarks to server:', err);
-    }
-  }
-
-  // Persist to both local and server
-  async function persist(stops: BookmarkedStop[]) {
-    persistLocal(stops);
-    
-    const currentUser = get(user);
-    if (currentUser) {
-      await persistToServer(currentUser.id, stops);
     }
   }
 
