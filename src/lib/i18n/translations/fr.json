@@ -733,6 +733,9 @@
     "privacyLocationControl": "Vous pouvez activer ou désactiver l'accès à la localisation à tout moment dans les paramètres de votre appareil ou dans la page Paramètres de l'application.",
     "privacyStorage": "Stockage local",
     "privacyStorageDetails": "Vos préférences, favoris et arrêts favoris sont stockés localement sur votre appareil. Aucun compte n'est requis et aucune donnée personnelle n'est collectée ou transmise.",
+    "supportTitle": "Soutenir ce projet",
+    "supportDescription": "J'ai créé cette application parce que j'en avais assez des publicités qui interrompaient mon trajet. Elle est gratuite, sans publicité, et le restera toujours. Si elle vous a évité de manquer un bus (ou de rester dans le froid), pensez à m'offrir un café. Chaque don aide à maintenir les serveurs et les mises à jour.",
+    "buyMeACoffee": "M'offrir un café",
     "madeWith": "Fait avec",
     "inToronto": "à Toronto"
   },

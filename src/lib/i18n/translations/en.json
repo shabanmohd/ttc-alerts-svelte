@@ -751,6 +751,9 @@
     "privacyLocationControl": "You can enable or disable location access anytime in your device settings or in the app's Settings page.",
     "privacyStorage": "Local Storage",
     "privacyStorageDetails": "Your preferences, bookmarks, and favorite stops are stored locally on your device. No account is required, and no personal data is collected or transmitted.",
+    "supportTitle": "Support This Project",
+    "supportDescription": "I built this app because I was tired of ads interrupting my commute. It's free, ad-free, and always will be. If it's saved you from missing a bus (or standing in the cold), consider buying me a coffee. Every donation helps keep the servers running and the updates coming.",
+    "buyMeACoffee": "Buy Me a Coffee",
     "madeWith": "Made with",
     "inToronto": "in Toronto"
   },

@@ -10,6 +10,7 @@
     Globe,
     Linkedin,
     Heart,
+    Coffee,
     Database,
     AlertTriangle,
     Shield,
@@ -248,6 +249,31 @@
           {$_("about.disclaimerImportant")}
         </p>
       </div>
+    </Card.Content>
+  </Card.Root>
+
+  <!-- Support -->
+  <Card.Root class="mb-6 gap-4 border-rose-500/50 bg-gradient-to-br from-rose-500/5 to-amber-500/5">
+    <Card.Header>
+      <Card.Title class="text-lg flex items-center gap-2">
+        <Coffee class="h-5 w-5 text-rose-500" />
+        {$_("about.supportTitle")}
+      </Card.Title>
+    </Card.Header>
+    <Card.Content class="space-y-4">
+      <p class="text-sm text-muted-foreground">
+        {$_("about.supportDescription")}
+      </p>
+      <Button
+        variant="default"
+        class="gap-2 bg-[#FF5F5F] hover:bg-[#FF5F5F]/90 text-white"
+        href="https://www.buymeacoffee.com/shabanca"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <Coffee class="h-4 w-4" />
+        {$_("about.buyMeACoffee")}
+      </Button>
     </Card.Content>
   </Card.Root>
 
