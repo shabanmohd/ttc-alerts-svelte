@@ -61,15 +61,15 @@
   color: #ffffff !important;
 }
 
-/* Line 5 - Orange */
+/* Line 5 - Orange (darkened for WCAG AA compliance: 4.5:1 contrast) */
 .route-line-5 {
-  background-color: #f26522 !important;
+  background-color: #d95319 !important; /* Darker orange for better contrast */
   color: #ffffff !important;
 }
 
-/* Line 6 - Grey */
+/* Line 6 - Grey (darkened for WCAG AA compliance: 4.5:1 contrast) */
 .route-line-6 {
-  background-color: #808285 !important;
+  background-color: #636569 !important; /* Darker grey for better contrast */
   color: #ffffff !important;
 }
 

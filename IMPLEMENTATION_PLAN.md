@@ -8,13 +8,13 @@ Comprehensive plan for ETA feature, stop search, accessibility enhancements, and
 
 ## � Related Documentation
 
-| Document | Purpose |
-| -------- | ------- |
-| [APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md) | Current file inventory, implementation status |
-| [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) | UI design tokens, component patterns |
-| [alert-categorization-and-threading.md](alert-categorization-and-threading.md) | Edge Function alert processing logic |
-| [CODEBASE_ACTION_PLAN.md](CODEBASE_ACTION_PLAN.md) | Code optimization (completed) |
-| [SECURITY_AUDIT.md](SECURITY_AUDIT.md) | Security review findings |
+| Document                                                                       | Purpose                                       |
+| ------------------------------------------------------------------------------ | --------------------------------------------- |
+| [APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md)                                 | Current file inventory, implementation status |
+| [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)                                           | UI design tokens, component patterns          |
+| [alert-categorization-and-threading.md](alert-categorization-and-threading.md) | Edge Function alert processing logic          |
+| [CODEBASE_ACTION_PLAN.md](CODEBASE_ACTION_PLAN.md)                             | Code optimization (completed)                 |
+| [SECURITY_AUDIT.md](SECURITY_AUDIT.md)                                         | Security review findings                      |
 
 ---
 

@@ -102,7 +102,7 @@
   }
 
   .error-code {
-    font-size: 4rem;
+    font-size: calc(4rem * var(--text-scale, 1));
     font-weight: 800;
     line-height: 1;
     color: hsl(var(--foreground));
@@ -112,12 +112,12 @@
 
   @media (min-width: 640px) {
     .error-code {
-      font-size: 6rem;
+      font-size: calc(6rem * var(--text-scale, 1));
     }
   }
 
   .error-title {
-    font-size: 1.5rem;
+    font-size: calc(1.5rem * var(--text-scale, 1));
     font-weight: 700;
     color: hsl(var(--foreground));
     margin-bottom: 0.75rem;
@@ -125,12 +125,12 @@
 
   @media (min-width: 640px) {
     .error-title {
-      font-size: 2rem;
+      font-size: calc(2rem * var(--text-scale, 1));
     }
   }
 
   .error-description {
-    font-size: 1rem;
+    font-size: calc(1rem * var(--text-scale, 1));
     color: hsl(var(--muted-foreground));
     max-width: 400px;
     margin-bottom: 2rem;

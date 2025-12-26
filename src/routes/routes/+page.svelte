@@ -421,7 +421,7 @@
               <button
                 type="button"
                 onclick={() => handleRouteClick(route)}
-                class="route-card flex items-center gap-1 p-2 rounded-md border bg-card hover:bg-accent transition-colors animate-fade-in text-left"
+                class="route-card flex items-center gap-1 p-2 rounded-md border bg-card hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors animate-fade-in text-left"
                 style="animation-delay: {Math.min(i * 30, 150)}ms"
               >
                 <span class="flex items-center gap-2">
@@ -490,7 +490,7 @@
             <button
               type="button"
               onclick={() => handleRouteClick(route)}
-              class="route-card flex items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent transition-colors animate-fade-in text-left"
+              class="route-card flex items-center gap-1 p-3 rounded-lg border bg-card hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors animate-fade-in text-left"
               style="animation-delay: {Math.min(i * 20, 200)}ms"
             >
               <span class="flex items-center gap-2">

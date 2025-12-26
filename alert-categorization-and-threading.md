@@ -9,11 +9,11 @@
 
 ## 📚 Related Documentation
 
-| Document | Purpose |
-| -------- | ------- |
-| [APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md) | File inventory, Edge Function locations |
+| Document                                         | Purpose                                    |
+| ------------------------------------------------ | ------------------------------------------ |
+| [APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md)   | File inventory, Edge Function locations    |
 | [TTC-ROUTE-CONFLICTS.md](TTC-ROUTE-CONFLICTS.md) | Route number conflicts affecting threading |
-| [SECURITY_AUDIT.md](SECURITY_AUDIT.md) | Edge Function security review |
+| [SECURITY_AUDIT.md](SECURITY_AUDIT.md)           | Edge Function security review              |
 
 ---
 

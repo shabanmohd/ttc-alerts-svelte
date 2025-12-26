@@ -15,18 +15,18 @@ Real-time Toronto Transit alerts PWA.
 
 ## 📚 Documentation Index
 
-| Document | Purpose | When to Update |
-| -------- | ------- | -------------- |
-| **[APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md)** (this file) | File inventory, completion status, architecture | New files, status changes, feature completion |
-| **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** | Version B feature roadmap & phases | Phase progress, Version B feature completion |
-| **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)** | Colors, typography, spacing, components | UI/UX changes, new components |
-| **[alert-categorization-and-threading.md](alert-categorization-and-threading.md)** | Edge Function logic, threading algorithm | Alert processing changes |
-| **[TTC-ROUTE-CONFLICTS.md](TTC-ROUTE-CONFLICTS.md)** | Route number conflicts (39/939, 46/996, etc.) | Route matching bugs |
-| **[TTC-BUS-ROUTES.md](TTC-BUS-ROUTES.md)** | Complete TTC bus route reference | Route additions/removals |
-| **[TTC-STREETCAR-ROUTES.md](TTC-STREETCAR-ROUTES.md)** | Complete TTC streetcar route reference | Route additions/removals |
-| **[CODEBASE_ACTION_PLAN.md](CODEBASE_ACTION_PLAN.md)** | Code optimization tasks (completed) | Future optimization work |
-| **[SECURITY_AUDIT.md](SECURITY_AUDIT.md)** | Security audit findings and fixes | Security changes/updates |
-| **[ROUTE_BADGE_STYLES.md](ROUTE_BADGE_STYLES.md)** | Route badge color system | Badge styling changes |
+| Document                                                                           | Purpose                                         | When to Update                                |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------- |
+| **[APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md)** (this file)                     | File inventory, completion status, architecture | New files, status changes, feature completion |
+| **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)**                               | Version B feature roadmap & phases              | Phase progress, Version B feature completion  |
+| **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)**                                           | Colors, typography, spacing, components         | UI/UX changes, new components                 |
+| **[alert-categorization-and-threading.md](alert-categorization-and-threading.md)** | Edge Function logic, threading algorithm        | Alert processing changes                      |
+| **[TTC-ROUTE-CONFLICTS.md](TTC-ROUTE-CONFLICTS.md)**                               | Route number conflicts (39/939, 46/996, etc.)   | Route matching bugs                           |
+| **[TTC-BUS-ROUTES.md](TTC-BUS-ROUTES.md)**                                         | Complete TTC bus route reference                | Route additions/removals                      |
+| **[TTC-STREETCAR-ROUTES.md](TTC-STREETCAR-ROUTES.md)**                             | Complete TTC streetcar route reference          | Route additions/removals                      |
+| **[CODEBASE_ACTION_PLAN.md](CODEBASE_ACTION_PLAN.md)**                             | Code optimization tasks (completed)             | Future optimization work                      |
+| **[SECURITY_AUDIT.md](SECURITY_AUDIT.md)**                                         | Security audit findings and fixes               | Security changes/updates                      |
+| **[ROUTE_BADGE_STYLES.md](ROUTE_BADGE_STYLES.md)**                                 | Route badge color system                        | Badge styling changes                         |
 
 ---
 
@@ -84,56 +84,56 @@ Real-time Toronto Transit alerts PWA.
 
 ### Frontend (`src/lib/`)
 
-| File                                             | Status | Purpose                                                                       |
-| ------------------------------------------------ | ------ | ----------------------------------------------------------------------------- |
-| `components/alerts/AccessibilityBadge.svelte`    | ✅     | Wheelchair icon badge for elevator/escalator alerts                           |
-| `components/alerts/AlertCard.svelte`             | ✅     | Alert cards w/ accessibility badge, route deduplication (v50)                 |
-| `components/alerts/RSZAlertCard.svelte`          | ✅     | Reduced Speed Zone alerts - grouped table display                             |
-| `components/alerts/BookmarkRouteButton.svelte`   | ✅     | Save route button with feedback animation 🅱️                                  |
-| `components/alerts/CategoryFilter.svelte`        | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA                  |
-| `components/alerts/ClosuresView.svelte`          | ✅     | Scheduled tab with closure type badges (nightly/weekend), uses $derived.by()  |
-| `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes: AlertCard-style (2px border, hover), title case route names    |
-| `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                                       |
-| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with elevator alerts, section headings, dividers                |
-| `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                                 |
-| `components/alerts/RouteSearch.svelte`           | ✅     | Route search component                                                        |
-| `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                              |
-| `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile                           |
-| `components/dialogs/AboutDialog.svelte`          | ✅     | App info, version, links                                                      |
-| `components/dialogs/ReportIssueDialog.svelte`    | ✅     | Bug/issue report form with Turnstile + Resend                                 |
-| `components/dialogs/FeatureRequestDialog.svelte` | ✅     | Feature suggestion form with Turnstile + Resend                               |
-| `components/dialogs/InstallPWADialog.svelte`     | ✅     | PWA install prompt                                                            |
-| `components/layout/Header.svelte`                | ✅     | App header - language toggle, hamburger menu w/ iOS safe area                 |
-| `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header                         |
-| `components/layout/Sidebar.svelte`               | ✅     | Desktop sidebar - nav + footer links (no How to Use)                          |
-| `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom                         |
-| `components/ui/*`                                | ✅     | shadcn-svelte base components                                                 |
-| `components/ui/turnstile/`                       | ✅     | Cloudflare Turnstile captcha component                                        |
-| `stores/alerts.ts`                               | ✅     | Alerts state + parallelized queries + 30-day accessibility window             |
-| `stores/dialogs.ts`                              | ✅     | Shared dialog state (hamburger menu → dialogs)                                |
-| `stores/preferences.ts`                          | ✅     | User preferences state                                                        |
-| `stores/savedStops.ts`                           | ✅     | Bookmarked stops (IndexedDB) - replaces deprecated bookmarks.ts 🅱️            |
-| `types/database.ts`                              | ✅     | Database types (JSONB fields)                                                 |
-| `supabase.ts`                                    | ✅     | Supabase client config                                                        |
-| `utils.ts`                                       | ✅     | Utility functions                                                             |
-| `utils/date-formatters.ts`                       | ✅     | Shared date/time formatting utilities (extracted Jan 2025) 🆕                 |
-| `utils/fetch-with-retry.ts`                      | ✅     | Network retry utility with exponential backoff 🆕                             |
-| `utils/ttc-service-info.ts`                      | ✅     | TTC service hours, holidays, suspended lines 🅱️                               |
+| File                                             | Status | Purpose                                                                      |
+| ------------------------------------------------ | ------ | ---------------------------------------------------------------------------- |
+| `components/alerts/AccessibilityBadge.svelte`    | ✅     | Wheelchair icon badge for elevator/escalator alerts                          |
+| `components/alerts/AlertCard.svelte`             | ✅     | Alert cards w/ accessibility badge, route deduplication (v50)                |
+| `components/alerts/RSZAlertCard.svelte`          | ✅     | Reduced Speed Zone alerts - grouped table display                            |
+| `components/alerts/BookmarkRouteButton.svelte`   | ✅     | Save route button with feedback animation 🅱️                                 |
+| `components/alerts/CategoryFilter.svelte`        | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA                 |
+| `components/alerts/ClosuresView.svelte`          | ✅     | Scheduled tab with closure type badges (nightly/weekend), uses $derived.by() |
+| `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes: AlertCard-style (2px border, hover), title case route names   |
+| `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                                      |
+| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with elevator alerts, section headings, dividers               |
+| `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                                |
+| `components/alerts/RouteSearch.svelte`           | ✅     | Route search component                                                       |
+| `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                             |
+| `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile                          |
+| `components/dialogs/AboutDialog.svelte`          | ✅     | App info, version, links                                                     |
+| `components/dialogs/ReportIssueDialog.svelte`    | ✅     | Bug/issue report form with Turnstile + Resend                                |
+| `components/dialogs/FeatureRequestDialog.svelte` | ✅     | Feature suggestion form with Turnstile + Resend                              |
+| `components/dialogs/InstallPWADialog.svelte`     | ✅     | PWA install prompt                                                           |
+| `components/layout/Header.svelte`                | ✅     | App header - language toggle, hamburger menu w/ iOS safe area                |
+| `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header                        |
+| `components/layout/Sidebar.svelte`               | ✅     | Desktop sidebar - nav + footer links (no How to Use)                         |
+| `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom                        |
+| `components/ui/*`                                | ✅     | shadcn-svelte base components                                                |
+| `components/ui/turnstile/`                       | ✅     | Cloudflare Turnstile captcha component                                       |
+| `stores/alerts.ts`                               | ✅     | Alerts state + parallelized queries + 30-day accessibility window            |
+| `stores/dialogs.ts`                              | ✅     | Shared dialog state (hamburger menu → dialogs)                               |
+| `stores/preferences.ts`                          | ✅     | User preferences state                                                       |
+| `stores/savedStops.ts`                           | ✅     | Bookmarked stops (IndexedDB) - replaces deprecated bookmarks.ts 🅱️           |
+| `types/database.ts`                              | ✅     | Database types (JSONB fields)                                                |
+| `supabase.ts`                                    | ✅     | Supabase client config                                                       |
+| `utils.ts`                                       | ✅     | Utility functions                                                            |
+| `utils/date-formatters.ts`                       | ✅     | Shared date/time formatting utilities (extracted Jan 2025) 🆕                |
+| `utils/fetch-with-retry.ts`                      | ✅     | Network retry utility with exponential backoff 🆕                            |
+| `utils/ttc-service-info.ts`                      | ✅     | TTC service hours, holidays, suspended lines 🅱️                              |
 
 ### Pages (`src/routes/`)
 
-| File                         | Status | Purpose                                                   |
-| ---------------------------- | ------ | --------------------------------------------------------- |
-| `+layout.svelte`             | ✅     | App layout, auth init, dialogs                            |
-| `+error.svelte`              | ✅     | 404 and error page - responsive, i18n, helpful links      |
-| `+page.svelte`               | ✅     | Homepage with alert tabs + ETA                            |
-| `alerts/+page.svelte`        | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3) |
-| `alerts-v3/+page.svelte`     | 📦     | Legacy alerts page (old design, kept for reference)       |
-| `preferences/+page.svelte`   | ✅     | Route/mode preferences                                    |
-| `settings/+page.svelte`      | ✅     | Settings with stops, routes, prefs, location 🅱️           |
-| `routes/+page.svelte`        | ✅     | Route browser by category 🅱️                              |
-| `routes/[route]/+page.svelte`| ✅     | Route detail page with alerts and route changes           |
-| `auth/callback/+page.svelte` | ✅     | Auth callback handler                                     |
+| File                          | Status | Purpose                                                   |
+| ----------------------------- | ------ | --------------------------------------------------------- |
+| `+layout.svelte`              | ✅     | App layout, auth init, dialogs                            |
+| `+error.svelte`               | ✅     | 404 and error page - responsive, i18n, helpful links      |
+| `+page.svelte`                | ✅     | Homepage with alert tabs + ETA                            |
+| `alerts/+page.svelte`         | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3) |
+| `alerts-v3/+page.svelte`      | 📦     | Legacy alerts page (old design, kept for reference)       |
+| `preferences/+page.svelte`    | ✅     | Route/mode preferences                                    |
+| `settings/+page.svelte`       | ✅     | Settings with stops, routes, prefs, location 🅱️           |
+| `routes/+page.svelte`         | ✅     | Route browser by category 🅱️                              |
+| `routes/[route]/+page.svelte` | ✅     | Route detail page with alerts and route changes           |
+| `auth/callback/+page.svelte`  | ✅     | Auth callback handler                                     |
 
 ### Alerts Components (`src/routes/alerts/`)
 
@@ -147,13 +147,13 @@ Real-time Toronto Transit alerts PWA.
 
 ### Backend (`supabase/`)
 
-| File                                    | Status | Purpose                                                      |
-| --------------------------------------- | ------ | ------------------------------------------------------------ |
-| `functions/_shared/cors.ts`             | ✅     | CORS headers utility                                         |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v60: elevator reconciliation)     |
-| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                                  |
-| `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🅱️          |
-| `functions/submit-feedback/index.ts`    | ✅     | Feedback form handler w/ Turnstile + Resend + HTML escaping  |
+| File                                    | Status | Purpose                                                     |
+| --------------------------------------- | ------ | ----------------------------------------------------------- |
+| `functions/_shared/cors.ts`             | ✅     | CORS headers utility                                        |
+| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v60: elevator reconciliation)    |
+| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                                 |
+| `functions/get-eta/index.ts`            | ✅     | Fetch TTC ETA: NextBus (surface) + NTAS (subway) 🅱️         |
+| `functions/submit-feedback/index.ts`    | ✅     | Feedback form handler w/ Turnstile + Resend + HTML escaping |
 
 ### Database (EXISTING in Supabase)
 

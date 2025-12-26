@@ -105,7 +105,7 @@
     align-items: center;
     gap: 0.375rem;
     padding: 0.4rem 0.75rem;
-    font-size: 0.8125rem;
+    font-size: calc(0.8125rem * var(--text-scale, 1));
     font-weight: 500;
     color: hsl(var(--muted-foreground));
     background-color: hsl(var(--muted));
@@ -165,7 +165,7 @@
     min-width: 1.25rem;
     height: 1.25rem;
     padding: 0 0.375rem;
-    font-size: 0.6875rem;
+    font-size: calc(0.6875rem * var(--text-scale, 1));
     font-weight: 600;
     background-color: hsl(var(--muted-foreground) / 0.15);
     border-radius: 9999px;

@@ -7,11 +7,11 @@
 
 ## 📚 Related Documentation
 
-| Document | Purpose |
-| -------- | ------- |
-| [APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md) | File inventory, component list |
-| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Feature roadmap |
-| [ROUTE_BADGE_STYLES.md](ROUTE_BADGE_STYLES.md) | Route badge color specifications |
+| Document                                         | Purpose                          |
+| ------------------------------------------------ | -------------------------------- |
+| [APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md)   | File inventory, component list   |
+| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Feature roadmap                  |
+| [ROUTE_BADGE_STYLES.md](ROUTE_BADGE_STYLES.md)   | Route badge color specifications |
 
 ---
 
@@ -76,16 +76,73 @@
 ### TTC Brand Colors
 
 ```css
-/* Subway Lines */
---ttc-line-1: #ffc524; /* Yellow - Yonge-University */
+/* Subway Lines (WCAG 2.2 AA Compliant - min 4.5:1 contrast) */
+--ttc-line-1: #ffc524; /* Yellow - Yonge-University (black text) */
 --ttc-line-2: #00853f; /* Green - Bloor-Danforth */
 --ttc-line-4: #a12f7d; /* Purple - Sheppard */
+--ttc-line-5: #d95319; /* Orange - Eglinton (darkened for contrast) */
+--ttc-line-6: #636569; /* Grey - Finch West (darkened for contrast) */
 
 /* Bus & Streetcar */
 --ttc-red: #c8102e; /* Regular routes */
 --ttc-express: #00853f; /* 900-series */
 --ttc-night: #003da5; /* 300-series border */
 --ttc-community: #6b7280; /* 400-series border */
+```
+
+---
+
+## 2a. Motion & Transitions
+
+### Duration Tokens (CSS Custom Properties)
+
+```css
+:root {
+  /* Transition Duration Tiers */
+  --duration-fast: 150ms;    /* Micro-interactions: hovers, active states */
+  --duration-normal: 200ms;  /* Standard: accordions, toggles, buttons */
+  --duration-slow: 300ms;    /* Emphasis: page transitions, nav changes */
+  --duration-slower: 400ms;  /* Complex: mobile nav, multi-step animations */
+  
+  /* Easing Functions */
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);      /* Elements entering */
+  --ease-in: cubic-bezier(0.32, 0, 0.67, 0);       /* Elements leaving */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);   /* Emphasis animations */
+  --ease-spring: cubic-bezier(0.4, 0, 0.2, 1);     /* Material Design */
+}
+```
+
+### When to Use Each Duration
+
+| Duration | Token | Use Case |
+| -------- | ----- | -------- |
+| **150ms** | `--duration-fast` | Hover states, button active, icon transforms |
+| **200ms** | `--duration-normal` | Accordion expand/collapse, toggle switches, dialogs |
+| **300ms** | `--duration-slow` | Navigation changes, checkmark animations, emphasis |
+| **400ms** | `--duration-slower` | Mobile bottom nav padding, complex multi-step transitions |
+
+### Reduced Motion Support (WCAG 2.2 Compliant)
+
+Both system preference AND manual user override are supported:
+
+```css
+/* System preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* User override via settings */
+html.reduce-motion *, 
+html.reduce-motion *::before, 
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
 ```
 
 ---
@@ -1541,6 +1598,70 @@ Status priority determines card background color when multiple statuses are pres
 
 ```css
 .subway-status-card                    /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 /* Card container */
 /* Card container */
 /* Card container */

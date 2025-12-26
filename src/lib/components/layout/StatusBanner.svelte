@@ -84,7 +84,7 @@
     justify-content: space-between;
     padding: 0.625rem 1rem;
     gap: 0.75rem;
-    font-size: 0.875rem;
+    font-size: calc(0.875rem * var(--text-scale, 1));
     border-bottom: 1px solid;
   }
 
@@ -182,7 +182,7 @@
   }
 
   .banner-button.dismiss {
-    font-size: 1.25rem;
+    font-size: calc(1.25rem * var(--text-scale, 1));
     font-weight: 500;
     line-height: 1;
   }

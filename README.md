@@ -3,6 +3,7 @@
 Real-time Toronto Transit Commission service alerts progressive web app.
 
 **Live URLs:**
+
 - **Production (Version A)**: https://ttc-alerts-svelte.pages.dev
 - **Beta (Version B)**: https://version-b.ttc-alerts-svelte.pages.dev
 
@@ -10,40 +11,42 @@ Real-time Toronto Transit Commission service alerts progressive web app.
 
 ## 📚 Documentation
 
-| Document | Purpose |
-| -------- | ------- |
-| [APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md) | **Start Here** - File inventory, status, architecture |
-| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Feature roadmap & phase progress |
-| [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) | UI design tokens, colors, typography |
-| [alert-categorization-and-threading.md](alert-categorization-and-threading.md) | Edge Function logic, alert threading |
-| [CODEBASE_ACTION_PLAN.md](CODEBASE_ACTION_PLAN.md) | Code optimization (completed) |
-| [SECURITY_AUDIT.md](SECURITY_AUDIT.md) | Security review findings |
+| Document                                                                       | Purpose                                               |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| [APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md)                                 | **Start Here** - File inventory, status, architecture |
+| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)                               | Feature roadmap & phase progress                      |
+| [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)                                           | UI design tokens, colors, typography                  |
+| [alert-categorization-and-threading.md](alert-categorization-and-threading.md) | Edge Function logic, alert threading                  |
+| [CODEBASE_ACTION_PLAN.md](CODEBASE_ACTION_PLAN.md)                             | Code optimization (completed)                         |
+| [SECURITY_AUDIT.md](SECURITY_AUDIT.md)                                         | Security review findings                              |
 
 ### Reference Docs
-| Document | Purpose |
-| -------- | ------- |
-| [TTC-ROUTE-CONFLICTS.md](TTC-ROUTE-CONFLICTS.md) | Route number conflicts (39/939, etc.) |
-| [TTC-BUS-ROUTES.md](TTC-BUS-ROUTES.md) | Bus route reference |
-| [TTC-STREETCAR-ROUTES.md](TTC-STREETCAR-ROUTES.md) | Streetcar route reference |
-| [ROUTE_BADGE_STYLES.md](ROUTE_BADGE_STYLES.md) | Route badge color system |
+
+| Document                                           | Purpose                               |
+| -------------------------------------------------- | ------------------------------------- |
+| [TTC-ROUTE-CONFLICTS.md](TTC-ROUTE-CONFLICTS.md)   | Route number conflicts (39/939, etc.) |
+| [TTC-BUS-ROUTES.md](TTC-BUS-ROUTES.md)             | Bus route reference                   |
+| [TTC-STREETCAR-ROUTES.md](TTC-STREETCAR-ROUTES.md) | Streetcar route reference             |
+| [ROUTE_BADGE_STYLES.md](ROUTE_BADGE_STYLES.md)     | Route badge color system              |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-| ----- | ---------- |
-| Frontend | Svelte 5 + TypeScript + Tailwind CSS + shadcn-svelte |
-| Typography | Lexend (dyslexic-friendly) |
-| Backend | Supabase (PostgreSQL + Edge Functions + Realtime) |
-| Hosting | Cloudflare Pages |
-| Data Sources | Bluesky @ttcalerts, TTC Live API, TTC NTAS |
+| Layer        | Technology                                           |
+| ------------ | ---------------------------------------------------- |
+| Frontend     | Svelte 5 + TypeScript + Tailwind CSS + shadcn-svelte |
+| Typography   | Lexend (dyslexic-friendly)                           |
+| Backend      | Supabase (PostgreSQL + Edge Functions + Realtime)    |
+| Hosting      | Cloudflare Pages                                     |
+| Data Sources | Bluesky @ttcalerts, TTC Live API, TTC NTAS           |
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - npm
 
