@@ -653,6 +653,35 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Dec 26, 2025 - Page Entrance Animations & Skeleton Loading
+
+**Purpose:** Add smooth entrance animations to static pages (About, Help, Settings, Preferences) and skeleton loading state for ETA cards to eliminate jarring content jumps.
+
+**Entrance Animations Added:**
+- ✅ **About page** - Header (0ms) → App Info → Developer → Data Sources → Privacy → Disclaimer → Support → Footer (350ms)
+- ✅ **Help page** - Header (0ms) → Quick Start → Features Guide → Troubleshooting (150ms)
+- ✅ **Settings page** - Header (0ms) → Saved Stops → Saved Routes → Preferences → Data Management (200ms)
+- ✅ **Preferences page** - Header (0ms) → Step 1-4 → Help & Feedback → Accessibility (300ms)
+
+**Animation Pattern:**
+- Using existing `animate-fade-in-up` class (defined in `layout.css`)
+- Staggered delays: 50ms increments for smooth cascade effect
+- `animation: fadeInUp 0.25s ease-out forwards`
+
+**Skeleton Loading:**
+- ✅ **MyStops component** - Added skeleton cards during initial ETA fetch
+- Shows placeholder cards with animated Skeleton components
+- Displays `isInitialLoading` state when stops exist but ETAs not yet loaded
+
+**Files Changed:**
+- `src/routes/about/+page.svelte` - Entrance animations
+- `src/routes/help/+page.svelte` - Entrance animations
+- `src/routes/settings/+page.svelte` - Entrance animations
+- `src/routes/preferences/+page.svelte` - Entrance animations
+- `src/lib/components/stops/MyStops.svelte` - Skeleton loading state
+
+---
+
 ### Dec 25, 2025 - Express Route Holiday Schedule Fix
 
 **Purpose:** Fix express routes (900 series) showing incorrect next service date on holidays. Previously showed the literal next weekday (e.g., "Friday" for Boxing Day) instead of the next actual service day.

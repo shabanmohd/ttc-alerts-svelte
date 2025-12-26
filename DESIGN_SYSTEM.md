@@ -67617,6 +67617,41 @@ Use dynamic delay for list items (capped at 200-300ms max):
 {/each}
 ```
 
+### Page Entrance Animations
+
+Static content pages use staggered `animate-fade-in-up` animations for smooth page loads:
+
+| Page        | Elements Animated                 | Delay Range |
+| ----------- | --------------------------------- | ----------- |
+| About       | Header, 7 cards, footer           | 0-350ms     |
+| Help        | Header, 3 cards                   | 0-150ms     |
+| Settings    | Header, 4 cards                   | 0-200ms     |
+| Preferences | Header, 4 step cards, 2 sections  | 0-300ms     |
+
+**Pattern:**
+
+```svelte
+<!-- Page header - immediate -->
+<div class="mb-6 animate-fade-in-up" style="animation-delay: 0ms">
+  <h1>Page Title</h1>
+</div>
+
+<!-- Content cards - staggered -->
+<Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 50ms">
+  <!-- First card -->
+</Card.Root>
+
+<Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 100ms">
+  <!-- Second card -->
+</Card.Root>
+```
+
+**Guidelines:**
+- Use 50ms increments between elements
+- Header always starts at 0ms
+- Cap maximum delay at ~350ms to avoid sluggish feel
+- Apply to Card.Root, section divs, and footer elements
+
 ### Loading Skeletons
 
 ```svelte
