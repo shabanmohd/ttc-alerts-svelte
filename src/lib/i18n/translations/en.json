@@ -273,6 +273,7 @@
     "useSearchBar": "Use the search bar above to find and save your favourite routes. See alerts for delays and disruptions.",
     "allClear": "All clear!",
     "noActiveAlerts": "No active alerts for your saved routes. Service is running normally.",
+    "noActiveAlertsForRoute": "No active alerts for {route}. Service is running normally.",
     "removeRouteTitle": "Remove Route?",
     "removeRouteConfirm": "Are you sure you want to remove {route}?",
     "removeRoute": "Remove Route",

@@ -254,6 +254,7 @@
     "useSearchBar": "Utilisez la barre de recherche ci-dessus pour trouver et enregistrer les lignes que vous utilisez régulièrement.",
     "allClear": "Tout est normal!",
     "noActiveAlerts": "Aucune alerte active pour vos lignes enregistrées. Toutes vos lignes fonctionnent normalement.",
+    "noActiveAlertsForRoute": "Aucune alerte active pour {route}. Le service fonctionne normalement.",
     "removeRouteTitle": "Supprimer la ligne?",
     "removeRouteConfirm": "Êtes-vous sûr de vouloir supprimer {route}?",
     "removeRoute": "Supprimer la ligne",
