@@ -658,26 +658,36 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 **Purpose:** Add smooth entrance animations to static pages (About, Help, Settings, Preferences) and skeleton loading state for ETA cards to eliminate jarring content jumps.
 
 **Entrance Animations Added:**
+
 - ✅ **About page** - Header (0ms) → App Info → Developer → Data Sources → Privacy → Disclaimer → Support → Footer (350ms)
 - ✅ **Help page** - Header (0ms) → Quick Start → Features Guide → Troubleshooting (150ms)
 - ✅ **Settings page** - Header (0ms) → Saved Stops → Saved Routes → Preferences → Data Management (200ms)
 - ✅ **Preferences page** - Header (0ms) → Step 1-4 → Help & Feedback → Accessibility (300ms)
+- ✅ **Alerts page** - AlertCards with staggered 50ms delays (capped at 300ms)
+- ✅ **ResolvedSection** - Section header and resolved alert cards with staggered animations
+- ✅ **RSZ alerts section** - Fade-in-up animation
+- ✅ **Empty state** - Fade-in-up animation for "All Clear" state
 
 **Animation Pattern:**
+
 - Using existing `animate-fade-in-up` class (defined in `layout.css`)
 - Staggered delays: 50ms increments for smooth cascade effect
 - `animation: fadeInUp 0.25s ease-out forwards`
 
 **Skeleton Loading:**
+
 - ✅ **MyStops component** - Added skeleton cards during initial ETA fetch
 - Shows placeholder cards with animated Skeleton components
 - Displays `isInitialLoading` state when stops exist but ETAs not yet loaded
 
 **Files Changed:**
+
 - `src/routes/about/+page.svelte` - Entrance animations
 - `src/routes/help/+page.svelte` - Entrance animations
 - `src/routes/settings/+page.svelte` - Entrance animations
 - `src/routes/preferences/+page.svelte` - Entrance animations
+- `src/routes/alerts/+page.svelte` - AlertCard staggered animations
+- `src/routes/alerts/ResolvedSection.svelte` - Resolved alerts animations
 - `src/lib/components/stops/MyStops.svelte` - Skeleton loading state
 
 ---
@@ -687,21 +697,25 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 **Purpose:** Fix express routes (900 series) showing incorrect next service date on holidays. Previously showed the literal next weekday (e.g., "Friday" for Boxing Day) instead of the next actual service day.
 
 **Bug Fixed:**
+
 - On Christmas Day (Dec 25), express routes like 939 Finch Express incorrectly showed "Friday" as next service
 - Boxing Day (Dec 26) is a holiday, so express routes don't run
 - Now correctly shows "Mon, Dec 29" (the actual next weekday service)
 
 **Changes:**
+
 - ✅ **schedule-lookup.ts** - Express route logic now iterates through days to find next non-holiday weekday
 - ✅ **ttc-service-info.ts** - Added 2024 holidays (was missing, only had 2025-2026)
 
 **Express Route Holiday Behavior:**
 Express routes (900 series) only operate on **regular weekdays during peak hours**. On holidays and weekends, they show the next actual service date:
+
 - Christmas Day (Dec 25) → Shows "Mon, Dec 29" (skips Boxing Day weekend)
 - Boxing Day (Dec 26) → Shows "Mon, Dec 29"
 - Regular weekend → Shows "Monday" or next weekday
 
 **Files Changed:**
+
 - `src/lib/services/schedule-lookup.ts` - Express route next weekday logic
 - `src/lib/utils/ttc-service-info.ts` - Added HOLIDAYS_2024 constant
 
