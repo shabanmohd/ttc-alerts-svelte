@@ -10,11 +10,15 @@
 
   // Only show when offline or degraded (not connecting)
   let showBanner = $derived(
-    TEST_MODE || $networkStatus.status === "offline" || $networkStatus.status === "degraded"
+    TEST_MODE ||
+      $networkStatus.status === "offline" ||
+      $networkStatus.status === "degraded"
   );
 
   // Get effective status (test or real)
-  let effectiveStatus = $derived(TEST_MODE ? TEST_STATUS : $networkStatus.status);
+  let effectiveStatus = $derived(
+    TEST_MODE ? TEST_STATUS : $networkStatus.status
+  );
 
   // Dismiss state - resets when status changes
   let dismissed = $state(false);

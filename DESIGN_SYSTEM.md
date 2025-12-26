@@ -776,14 +776,14 @@ Mobile: full width
 
 #### Common Patterns (MUST MATCH)
 
-| Element         | Pattern                                           |
-| --------------- | ------------------------------------------------- |
-| **Icon**        | `h-4 w-4`, aligned to top (`align-items: flex-start`) |
-| **Message**     | `font-weight: 600`, `white-space: nowrap`         |
-| **Separator**   | Bullet (•), hidden on mobile, `opacity: 0.6`      |
-| **Description** | `font-weight: 400`, `opacity: 0.9`                |
-| **Action Link** | Preceded by em dash (—), underlined, `font-weight: 500` |
-| **Close Button**| `X` icon (lucide), `h-4 w-4`, `opacity: 0.7 → 1 on hover` |
+| Element          | Pattern                                                   |
+| ---------------- | --------------------------------------------------------- |
+| **Icon**         | `h-4 w-4`, aligned to top (`align-items: flex-start`)     |
+| **Message**      | `font-weight: 600`, `white-space: nowrap`                 |
+| **Separator**    | Bullet (•), hidden on mobile, `opacity: 0.6`              |
+| **Description**  | `font-weight: 400`, `opacity: 0.9`                        |
+| **Action Link**  | Preceded by em dash (—), underlined, `font-weight: 500`   |
+| **Close Button** | `X` icon (lucide), `h-4 w-4`, `opacity: 0.7 → 1 on hover` |
 
 #### CSS Structure
 
@@ -839,12 +839,12 @@ Mobile: full width
 
 #### Banner Types
 
-| Banner    | Background                     | Text Color          | Icon           |
-| --------- | ------------------------------ | ------------------- | -------------- |
-| Offline   | `hsl(var(--muted))`            | `muted-foreground`  | `CloudOff`     |
-| Degraded  | `hsl(45 93% 47% / 0.1)`        | `hsl(45 93% 35%)`   | `AlertTriangle`|
-| Holiday   | `hsl(45 93% 47% / 0.1)`        | `hsl(45 93% 30%)`   | `Calendar`     |
-| Tomorrow  | `hsl(210 40% 96%)`             | `foreground`        | `Calendar`     |
+| Banner   | Background              | Text Color         | Icon            |
+| -------- | ----------------------- | ------------------ | --------------- |
+| Offline  | `hsl(var(--muted))`     | `muted-foreground` | `CloudOff`      |
+| Degraded | `hsl(45 93% 47% / 0.1)` | `hsl(45 93% 35%)`  | `AlertTriangle` |
+| Holiday  | `hsl(45 93% 47% / 0.1)` | `hsl(45 93% 30%)`  | `Calendar`      |
+| Tomorrow | `hsl(210 40% 96%)`      | `foreground`       | `Calendar`      |
 
 #### Action Link Styling
 
@@ -1722,6 +1722,262 @@ Status priority determines card background color when multiple statuses are pres
 
 ```css
 .subway-status-card                    /* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
+/* Card container */
 /* Card container */
 /* Card container */
 /* Card container */
@@ -67743,12 +67999,12 @@ Use dynamic delay for list items (capped at 200-300ms max):
 
 Static content pages use staggered `animate-fade-in-up` animations for smooth page loads:
 
-| Page        | Elements Animated                 | Delay Range |
-| ----------- | --------------------------------- | ----------- |
-| About       | Header, 7 cards, footer           | 0-350ms     |
-| Help        | Header, 3 cards                   | 0-150ms     |
-| Settings    | Header, 4 cards                   | 0-200ms     |
-| Preferences | Header, 4 step cards, 2 sections  | 0-300ms     |
+| Page        | Elements Animated                | Delay Range |
+| ----------- | -------------------------------- | ----------- |
+| About       | Header, 7 cards, footer          | 0-350ms     |
+| Help        | Header, 3 cards                  | 0-150ms     |
+| Settings    | Header, 4 cards                  | 0-200ms     |
+| Preferences | Header, 4 step cards, 2 sections | 0-300ms     |
 
 **Pattern:**
 
@@ -67769,6 +68025,7 @@ Static content pages use staggered `animate-fade-in-up` animations for smooth pa
 ```
 
 **Guidelines:**
+
 - Use 50ms increments between elements
 - Header always starts at 0ms
 - Cap maximum delay at ~350ms to avoid sluggish feel

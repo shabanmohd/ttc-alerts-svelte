@@ -16,7 +16,10 @@
   let currentLang = $derived($locale?.split("-")[0] || "en");
 
   // Get upcoming holidays (today and/or tomorrow)
-  let holidays = $state<{ today: TTCHoliday | null; tomorrow: TTCHoliday | null }>({
+  let holidays = $state<{
+    today: TTCHoliday | null;
+    tomorrow: TTCHoliday | null;
+  }>({
     today: null,
     tomorrow: null,
   });
@@ -42,14 +45,10 @@
   });
 
   // Derived: Should show today's banner?
-  let showTodayBanner = $derived(
-    holidays.today && !dismissedToday
-  );
+  let showTodayBanner = $derived(holidays.today && !dismissedToday);
 
   // Derived: Should show tomorrow's banner?
-  let showTomorrowBanner = $derived(
-    holidays.tomorrow && !dismissedTomorrow
-  );
+  let showTomorrowBanner = $derived(holidays.tomorrow && !dismissedTomorrow);
 
   // Derived: Any banner to show?
   let showAnyBanner = $derived(showTodayBanner || showTomorrowBanner);
@@ -88,11 +87,14 @@
           </div>
           <div class="banner-text">
             <span class="banner-message">
-              {currentLang === "fr" ? "Aujourd'hui :" : "Today:"} {getHolidayName(holidays.today)}
+              {currentLang === "fr" ? "Aujourd'hui :" : "Today:"}
+              {getHolidayName(holidays.today)}
             </span>
             <span class="banner-separator">•</span>
             <span class="banner-description">
-              {currentLang === "fr" ? "Pour les changements de service —" : "For service changes —"}
+              {currentLang === "fr"
+                ? "Pour les changements de service —"
+                : "For service changes —"}
               <a
                 href={TTC_HOLIDAY_SCHEDULE_URL}
                 target="_blank"
@@ -129,11 +131,14 @@
           </div>
           <div class="banner-text">
             <span class="banner-message">
-              {currentLang === "fr" ? "Demain :" : "Tomorrow:"} {getHolidayName(holidays.tomorrow)}
+              {currentLang === "fr" ? "Demain :" : "Tomorrow:"}
+              {getHolidayName(holidays.tomorrow)}
             </span>
             <span class="banner-separator">•</span>
             <span class="banner-description">
-              {currentLang === "fr" ? "Pour les changements de service —" : "For service changes —"}
+              {currentLang === "fr"
+                ? "Pour les changements de service —"
+                : "For service changes —"}
               <a
                 href={TTC_HOLIDAY_SCHEDULE_URL}
                 target="_blank"
