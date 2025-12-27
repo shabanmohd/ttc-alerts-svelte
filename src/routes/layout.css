@@ -242,10 +242,6 @@ html {
   scrollbar-gutter: stable;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  /* Use -webkit-fill-available for Safari, standard 100% for others */
-  height: 100%;
-  height: -webkit-fill-available;
-  overflow: hidden;
 }
 
 html.dark {
@@ -262,11 +258,8 @@ body {
   scrollbar-gutter: stable;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  /* iOS Safari viewport - use fill-available for proper height */
-  height: 100%;
-  height: -webkit-fill-available;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* ============================================
