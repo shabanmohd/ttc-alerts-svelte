@@ -267,9 +267,6 @@ body {
   height: -webkit-fill-available;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  /* iOS PWA safe areas - apply to body to ensure all content is pushed down */
-  padding-top: env(safe-area-inset-top, 0);
-  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 /* ============================================
@@ -280,8 +277,8 @@ body {
 .main-wrapper {
   min-height: 100vh;
   min-height: 100dvh;
-  /* Space for mobile bottom nav - safe-area-inset-bottom handled by body */
-  padding-bottom: 5rem;
+  /* Space for mobile bottom nav + safe area */
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 1024px) {
@@ -345,10 +342,10 @@ header.sticky {
 /* =============================================================================
    BANNERS CONTAINER
    Groups status/holiday banners at top of viewport
-   Safe area handled by body element for PWA mode
+   Note: Safe area handled by Header component (sticky top) for consistent PWA experience
    ============================================================================= */
 .banners-container {
-  /* Container for status/holiday banners - inherits safe area from body */
+  /* Container for status/holiday banners */
 }
 
 /* On desktop, account for sidebar */
