@@ -274,6 +274,21 @@
                   {$_("help.installDesktop")}
                 </p>
               </div>
+
+              <!-- iOS storage warning -->
+              <div
+                class="mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20"
+              >
+                <p
+                  class="text-sm font-medium text-amber-700 dark:text-amber-400"
+                >
+                  ⚠️ Important for iOS
+                </p>
+                <p class="text-sm text-amber-600 dark:text-amber-400/90 mt-1">
+                  Your saved stops and routes won't transfer to the installed
+                  app. The home screen app uses separate storage from Safari.
+                </p>
+              </div>
             </div>
           </Accordion.Content>
         </Accordion.Item>

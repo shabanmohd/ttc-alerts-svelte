@@ -866,15 +866,26 @@ Mobile: full width
 }
 ```
 
-#### Desktop Sidebar Offset
+#### Banners Container & iOS PWA Safe Area
+
+All banners are wrapped in a `.banners-container` div in the main layout. This container handles:
+
+1. **iOS PWA safe area** - Adds `padding-top: env(safe-area-inset-top)` to prevent banners from being obscured by the iOS status bar in standalone PWA mode
+2. **Desktop sidebar offset** - Shifts banners right to account for the sidebar on large screens
 
 ```css
+.banners-container {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
 @media (min-width: 1024px) {
-  .banner-container {
+  .banners-container {
     margin-left: 16rem; /* Match sidebar width */
   }
 }
 ```
+
+**Note:** Individual banners no longer need `margin-left: 16rem` since the container handles it.
 
 ### Route Badges
 

@@ -99,13 +99,6 @@
     border-bottom: 1px solid;
   }
 
-  /* Account for desktop sidebar */
-  @media (min-width: 1024px) {
-    .status-banner {
-      margin-left: 16rem;
-    }
-  }
-
   .status-banner.offline {
     background-color: hsl(var(--muted));
     border-color: hsl(var(--border));

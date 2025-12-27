@@ -171,13 +171,6 @@
     flex-direction: column;
   }
 
-  /* Account for desktop sidebar */
-  @media (min-width: 1024px) {
-    .holiday-banners {
-      margin-left: 16rem;
-    }
-  }
-
   .holiday-banner {
     display: flex;
     align-items: center;

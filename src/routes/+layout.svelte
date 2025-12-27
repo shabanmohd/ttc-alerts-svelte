@@ -89,11 +89,14 @@
 <!-- Desktop Sidebar -->
 <Sidebar onOpenDialog={openDialog} />
 
-<!-- Network Status Banner (shows when offline or degraded) -->
-<StatusBanner />
+<!-- Banners container - handles iOS safe area for PWA mode -->
+<div class="banners-container">
+  <!-- Network Status Banner (shows when offline or degraded) -->
+  <StatusBanner />
 
-<!-- Holiday Schedule Banner (shows when today/tomorrow is a TTC holiday) -->
-<HolidayBanner />
+  <!-- Holiday Schedule Banner (shows when today/tomorrow is a TTC holiday) -->
+  <HolidayBanner />
+</div>
 
 <!-- Main wrapper with pull-to-refresh -->
 <PullToRefresh onRefresh={handlePullRefresh}>

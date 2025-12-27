@@ -337,6 +337,30 @@ header.sticky {
   gap: 0.5rem;
 }
 
+/* =============================================================================
+   BANNERS CONTAINER
+   Handles iOS safe area for PWA standalone mode
+   ============================================================================= */
+.banners-container {
+  /* PWA safe area - adds padding at top when banners are present */
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* On desktop, account for sidebar */
+@media (min-width: 1024px) {
+  .banners-container {
+    margin-left: 16rem;
+  }
+}
+
+/* Adjust banner margin when container handles sidebar offset */
+@media (min-width: 1024px) {
+  .banners-container :global(.status-banner),
+  .banners-container :global(.holiday-banners) {
+    margin-left: 0;
+  }
+}
+
 /* Desktop Sidebar */
 .sidebar {
   display: none;
