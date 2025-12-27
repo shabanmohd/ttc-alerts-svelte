@@ -242,11 +242,10 @@ html {
   scrollbar-gutter: stable;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  /* iOS viewport fixes - prevent fixed elements from shifting */
+  /* Use -webkit-fill-available for Safari, standard 100% for others */
   height: 100%;
+  height: -webkit-fill-available;
   overflow: hidden;
-  position: fixed;
-  width: 100%;
 }
 
 html.dark {
@@ -263,8 +262,9 @@ body {
   scrollbar-gutter: stable;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  /* iOS scrolling fixes - body handles scrolling */
+  /* iOS Safari viewport - use fill-available for proper height */
   height: 100%;
+  height: -webkit-fill-available;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
