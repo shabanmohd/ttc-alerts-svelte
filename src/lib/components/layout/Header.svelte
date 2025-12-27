@@ -95,7 +95,7 @@
 
 <header
   class="sticky top-0 w-full border-b border-border"
-  style="z-index: 1000; background-color: hsl(var(--background)); padding-top: env(safe-area-inset-top, 0px);"
+  style="z-index: 1000; background-color: hsl(var(--background));"
 >
   <div class="header-container">
     <!-- Logo (mobile only) -->
@@ -133,7 +133,11 @@
         >
           {#if !$isOnline}
             <!-- Offline: red cloud-off icon -->
-            <CloudOff class="w-3 h-3 text-destructive" />
+            <span
+              class="flex-shrink-0 flex items-center justify-center w-4 h-4"
+            >
+              <CloudOff class="w-3 h-3 text-destructive" />
+            </span>
           {:else if $isConnected}
             <!-- Connected: pulsing green dot -->
             <span class="relative flex h-2 w-2">
@@ -171,7 +175,9 @@
       >
         {#if !$isOnline}
           <!-- Offline: red cloud-off icon -->
-          <CloudOff class="w-3 h-3 text-destructive" />
+          <span class="flex-shrink-0 flex items-center justify-center w-4 h-4">
+            <CloudOff class="w-3 h-3 text-destructive" />
+          </span>
         {:else if $isConnected}
           <!-- Connected: pulsing green dot -->
           <span class="relative flex h-2 w-2">

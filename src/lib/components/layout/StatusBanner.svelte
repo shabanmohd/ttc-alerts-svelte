@@ -127,6 +127,12 @@
   .banner-icon {
     flex-shrink: 0;
     margin-top: 0.125rem;
+    /* Ensure icon has explicit size to prevent clipping */
+    width: 1rem;
+    height: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .banner-text {

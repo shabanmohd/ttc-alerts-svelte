@@ -242,9 +242,11 @@ html {
   scrollbar-gutter: stable;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  /* Use dvh for proper mobile viewport height */
-  min-height: 100vh;
-  min-height: 100dvh;
+  /* iOS viewport fixes - prevent fixed elements from shifting */
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
 }
 
 html.dark {
@@ -261,10 +263,9 @@ body {
   scrollbar-gutter: stable;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  /* Proper height for iOS */
-  min-height: 100vh;
-  min-height: 100dvh;
-  /* Disable pull-to-refresh */
+  /* iOS scrolling fixes - body handles scrolling */
+  height: 100%;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
