@@ -13,6 +13,35 @@ When swiping up on iOS (Chrome/Safari), the bottom navigation bar would offset/s
 
 ## Solution
 
+### Browser Mode vs PWA Mode
+
+**Key Insight:** The viewport fix works great for browsers but caused issues (bottom gap) in PWA standalone mode. Solution: Use CSS `@media (display-mode: browser)` to apply the fix **only in browser mode**.
+
+```css
+/* Only apply viewport fix in browser mode (Chrome, Safari browser, etc.) */
+/* PWA standalone mode doesn't need this and works better without it */
+@media (display-mode: browser) {
+  html {
+    position: fixed;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+  
+  body {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+```
+
+**Why this works:**
+- `display-mode: browser` - Only matches when running in a regular browser tab/window
+- `display-mode: standalone` - Matches when running as an installed PWA
+- PWAs have stable viewport (no browser chrome showing/hiding), so they don't need the fix
+- Browsers on iOS have the dynamic viewport issue, so they get the fix
+
 ### 1. Dynamic Viewport Height Tracking
 
 Added JavaScript to track actual viewport height:
@@ -72,23 +101,18 @@ Added `transform: translateZ(0)` to force the nav onto its own GPU layer:
 - Prevents repaints/reflows from affecting the nav
 - Smoother animations and positioning
 
-### 3. Fix HTML/Body Positioning
+### 3. Fix HTML/Body Positioning (Browser Mode Only)
 
-Prevent the viewport from shifting:
+Prevent the viewport from shifting (only in browser mode, not PWA):
 
 ```css
 /* layout.css */
+/* Default styles for all modes */
 html {
   color-scheme: light;
   background-color: hsl(var(--background));
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-
-  /* iOS viewport fixes */
-  height: 100%;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
 }
 
 body {
@@ -97,6 +121,25 @@ body {
   /* ... other styles ... */
   overscroll-behavior: none;
   overscroll-behavior-y: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Browser mode only - fix viewport shifting */
+@media (display-mode: browser) {
+  html {
+    position: fixed;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+
+  body {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
 
   /* iOS scrolling fixes */
   height: 100%;
@@ -107,12 +150,31 @@ body {
 
 **Why it works:**
 
-- `html` is `position: fixed` - Prevents viewport shifts
+- `@media (display-mode: browser)` only targets browser tabs, not PWA standalone
+- `html` is `position: fixed` - Prevents viewport shifts from browser chrome
 - `body` handles scrolling - Maintains smooth scroll behavior
 - `-webkit-overflow-scrolling: touch` - Native iOS momentum scrolling
 - `overscroll-behavior-y: none` - Prevents rubber-band bounce
+- PWA keeps the simpler `min-height: 100dvh` approach which works well in standalone mode
 
 ## Key Concepts
+
+### Display Mode Media Query
+
+The `display-mode` CSS media feature detects how the app is being displayed:
+
+- `display-mode: browser` - Normal browser tab/window (Chrome, Safari, Firefox, etc.)
+- `display-mode: standalone` - PWA installed and running as standalone app
+- `display-mode: fullscreen` - Fullscreen mode
+- `display-mode: minimal-ui` - Some UI elements but not full browser chrome
+
+**PWA vs Browser differences:**
+| Aspect | Browser | PWA Standalone |
+|--------|---------|----------------|
+| Browser chrome | Shows/hides on scroll | None |
+| Viewport height | Dynamic (100vh varies) | Stable |
+| Safe areas | Handled by browser | App must handle |
+| Need viewport fix | ✅ Yes | ❌ No (causes gap) |
 
 ### Position Fixed on iOS
 
