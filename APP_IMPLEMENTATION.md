@@ -356,7 +356,7 @@ Real-time Toronto Transit alerts PWA.
 - **Trigger:** Manual via GitHub Actions UI or scheduled
 - **Data Source:** NextBus API (TTC real-time transit API)
 - **Scripts:** `fix-route-stop-orders.cjs`, `fix-route-branches.cjs`
-- **Output:** Creates PR updating `ttc-route-stop-orders.json` and `ttc-route-branches.json`
+- **Output:** Auto-commits `ttc-route-stop-orders.json` and `ttc-route-branches.json` (no PR)
 - **Updates:** Stop sequences per route, branch definitions, direction labels
 
 #### Schedule Data Refresh Workflow
@@ -367,7 +367,7 @@ Real-time Toronto Transit alerts PWA.
 - **Data Source:** [Toronto Open Data GTFS](https://open.toronto.ca/dataset/ttc-routes-and-schedules/) (~28 MB ZIP)
 - **TTC Update Frequency:** Approximately every 6 weeks
 - **Scripts:** `download-gtfs.ts`, `process-gtfs-schedules.ts`
-- **Output:** Creates PR with updated `ttc-schedules.json` (~9,267 stops)
+- **Output:** Auto-commits `ttc-schedules.json` (~9,267 stops) (no PR)
 - **Data Contents:** First AM/PM departures per route per stop (weekday, Saturday, Sunday)
 
 ### Migrations (`supabase/migrations/`)
