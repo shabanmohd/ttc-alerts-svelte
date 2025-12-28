@@ -20,7 +20,7 @@ When swiping up on iOS (Chrome/Safari), the bottom navigation bar would offset/s
 ```javascript
 // MobileBottomNav.svelte - onMount
 const isIOSChrome = /CriOS/i.test(navigator.userAgent);
-const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || 
+const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches ||
                          (window.navigator as any).standalone === true;
 
 // Only apply viewport fix class for Chrome on iOS in browser mode (not PWA)
@@ -47,6 +47,7 @@ html.ios-chrome-browser body {
 ```
 
 **Why this works:**
+
 - `CriOS` in user agent identifies Chrome on iOS specifically
 - Safari on iOS does NOT have `CriOS` in its user agent
 - PWA mode is excluded via `display-mode: standalone` check
