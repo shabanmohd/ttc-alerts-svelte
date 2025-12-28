@@ -17,7 +17,11 @@
     ChevronLeft,
     ExternalLink,
     Shield,
+    Flag,
+    Lightbulb,
+    Info,
   } from "lucide-svelte";
+  import { openDialog } from "$lib/stores/dialogs";
 
   // Track which accordion items are open
   let openItems = $state<string[]>(["getting-started"]);
@@ -62,9 +66,9 @@
         <!-- Step 1 -->
         <div class="flex gap-3 p-3 rounded-lg bg-muted/50">
           <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-primary"
           >
-            <span class="font-bold">1</span>
+            <span class="font-semibold text-sm">1</span>
           </div>
           <div>
             <h3 class="font-semibold">{$_("help.step1Title")}</h3>
@@ -77,9 +81,9 @@
         <!-- Step 2 -->
         <div class="flex gap-3 p-3 rounded-lg bg-muted/50">
           <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-primary"
           >
-            <span class="font-bold">2</span>
+            <span class="font-semibold text-sm">2</span>
           </div>
           <div>
             <h3 class="font-semibold">{$_("help.step2Title")}</h3>
@@ -92,9 +96,9 @@
         <!-- Step 3 -->
         <div class="flex gap-3 p-3 rounded-lg bg-muted/50">
           <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-primary"
           >
-            <span class="font-bold">3</span>
+            <span class="font-semibold text-sm">3</span>
           </div>
           <div>
             <h3 class="font-semibold">{$_("help.step3Title")}</h3>
@@ -107,9 +111,9 @@
         <!-- Step 4 -->
         <div class="flex gap-3 p-3 rounded-lg bg-muted/50">
           <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-primary"
           >
-            <span class="font-bold">4</span>
+            <span class="font-semibold text-sm">4</span>
           </div>
           <div>
             <h3 class="font-semibold">{$_("help.step4Title")}</h3>
@@ -399,26 +403,32 @@
     </Card.Content>
   </Card.Root>
 
-  <!-- Need More Help? -->
+  <!-- Feedback & Support -->
   <Card.Root>
     <Card.Header>
-      <Card.Title class="text-lg">{$_("help.needMoreHelp")}</Card.Title>
-      <Card.Description>{$_("help.needMoreHelpDesc")}</Card.Description>
+      <Card.Title class="text-lg">{$_("help.getInTouch")}</Card.Title>
+      <Card.Description>{$_("help.getInTouchDesc")}</Card.Description>
     </Card.Header>
-    <Card.Content class="flex flex-col sm:flex-row gap-3">
-      <Button variant="outline" class="gap-2" href="/settings">
-        <Settings class="h-4 w-4" />
-        {$_("help.goToSettings")}
+    <Card.Content class="flex flex-col sm:flex-row flex-wrap gap-3">
+      <Button
+        variant="outline"
+        class="gap-2"
+        onclick={() => openDialog("report-bug")}
+      >
+        <Flag class="h-4 w-4" />
+        {$_("feedback.reportIssue")}
       </Button>
       <Button
         variant="outline"
         class="gap-2"
-        href="https://www.ttc.ca/service-alerts"
-        target="_blank"
-        rel="noopener noreferrer"
+        onclick={() => openDialog("feature-request")}
       >
-        <ExternalLink class="h-4 w-4" />
-        {$_("help.officialTTC")}
+        <Lightbulb class="h-4 w-4" />
+        {$_("feedback.featureRequest")}
+      </Button>
+      <Button variant="outline" class="gap-2" href="/about">
+        <Info class="h-4 w-4" />
+        {$_("sidebar.about")}
       </Button>
     </Card.Content>
   </Card.Root>

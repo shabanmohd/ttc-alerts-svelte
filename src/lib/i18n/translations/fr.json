@@ -708,6 +708,8 @@
     "needMoreHelpDesc": "Vous avez encore des questions ? Voici des ressources supplémentaires.",
     "goToSettings": "Aller aux paramètres",
     "officialTTC": "Site officiel du TTC",
+    "getInTouch": "Contactez-nous",
+    "getInTouchDesc": "Vous avez des commentaires ou souhaitez en savoir plus sur l'appli ?",
     "dataPrivacy": "Données et vie privée",
     "dataContent1": "Vos préférences et vos signets sont stockés localement sur votre appareil à l'aide d'IndexedDB.",
     "dataContent2": "Aucun compte n'est nécessaire. Vos données restent sur votre appareil et ne sont jamais envoyées sur nos serveurs.",

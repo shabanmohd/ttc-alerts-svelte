@@ -124,18 +124,20 @@ Real-time Toronto Transit alerts PWA.
 
 ### Pages (`src/routes/`)
 
-| File                          | Status | Purpose                                                   |
-| ----------------------------- | ------ | --------------------------------------------------------- |
-| `+layout.svelte`              | ✅     | App layout, auth init, dialogs                            |
-| `+error.svelte`               | ✅     | 404 and error page - responsive, i18n, helpful links      |
-| `+page.svelte`                | ✅     | Homepage with alert tabs + ETA                            |
-| `alerts/+page.svelte`         | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3) |
-| `alerts-v3/+page.svelte`      | 📦     | Legacy alerts page (old design, kept for reference)       |
-| `preferences/+page.svelte`    | ✅     | Route/mode preferences                                    |
-| `settings/+page.svelte`       | ✅     | Settings with stops, routes, prefs, location 🅱️           |
-| `routes/+page.svelte`         | ✅     | Route browser by category 🅱️                              |
-| `routes/[route]/+page.svelte` | ✅     | Route detail page with alerts and route changes           |
-| `auth/callback/+page.svelte`  | ✅     | Auth callback handler                                     |
+| File                          | Status | Purpose                                                        |
+| ----------------------------- | ------ | -------------------------------------------------------------- |
+| `+layout.svelte`              | ✅     | App layout, auth init, dialogs                                 |
+| `+error.svelte`               | ✅     | 404 and error page - responsive, i18n, helpful links           |
+| `+page.svelte`                | ✅     | Homepage with alert tabs + ETA                                 |
+| `alerts/+page.svelte`         | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3)      |
+| `alerts-v3/+page.svelte`      | 📦     | Legacy alerts page (old design, kept for reference)            |
+| `help/+page.svelte`           | ✅     | How to Use - Quick Start, Features, FAQ, Get in Touch          |
+| `about/+page.svelte`          | ✅     | About page - app info, data sources, links                     |
+| `preferences/+page.svelte`    | ✅     | Route/mode preferences                                         |
+| `settings/+page.svelte`       | ✅     | Settings with stops, routes, prefs, location 🅱️                |
+| `routes/+page.svelte`         | ✅     | Route browser by category 🅱️                                   |
+| `routes/[route]/+page.svelte` | ✅     | Route detail page with alerts and route changes                |
+| `auth/callback/+page.svelte`  | ✅     | Auth callback handler                                          |
 
 ### Alerts Components (`src/routes/alerts/`)
 

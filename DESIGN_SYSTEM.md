@@ -68594,6 +68594,22 @@ For multi-step wizards/accordions showing completion status. Uses **primary colo
 
 - `preferences/+page.svelte` - Steps 1-4 accordion headers
 
+### Step Number Badges (Quick Start)
+
+For numbered instruction steps. Uses **bordered circles** for visibility in both light/dark modes.
+
+**Pattern:**
+
+```svelte
+<div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-primary">
+  <span class="font-semibold text-sm">1</span>
+</div>
+```
+
+**Usage Locations:**
+
+- `help/+page.svelte` - Quick Start section steps 1-4
+
 ### Accessibility Settings
 
 Text scaling and reduced motion controls in Preferences/Settings.

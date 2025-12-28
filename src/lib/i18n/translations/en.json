@@ -725,7 +725,9 @@
     "needMoreHelp": "Need More Help?",
     "needMoreHelpDesc": "Still have questions? Here are some additional resources.",
     "goToSettings": "Go to Settings",
-    "officialTTC": "Official TTC Website"
+    "officialTTC": "Official TTC Website",
+    "getInTouch": "Get in Touch",
+    "getInTouchDesc": "Have feedback or want to learn more about the app?"
   },
   "about": {
     "pageTitle": "About - TTC Alerts",
