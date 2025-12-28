@@ -20,6 +20,7 @@ Real-time Toronto Transit alerts PWA.
 | **[APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md)** (this file)                     | File inventory, completion status, architecture | New files, status changes, feature completion |
 | **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)**                               | Version B feature roadmap & phases              | Phase progress, Version B feature completion  |
 | **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)**                                           | Colors, typography, spacing, components         | UI/UX changes, new components                 |
+| **[DATA_POLLING_FREQUENCIES.md](DATA_POLLING_FREQUENCIES.md)**                     | All data sources, polling intervals, workflows  | Data source or polling changes                |
 | **[alert-categorization-and-threading.md](alert-categorization-and-threading.md)** | Edge Function logic, threading algorithm        | Alert processing changes                      |
 | **[TTC-ROUTE-CONFLICTS.md](TTC-ROUTE-CONFLICTS.md)**                               | Route number conflicts (39/939, 46/996, etc.)   | Route matching bugs                           |
 | **[TTC-BUS-ROUTES.md](TTC-BUS-ROUTES.md)**                                         | Complete TTC bus route reference                | Route additions/removals                      |
@@ -344,10 +345,10 @@ Real-time Toronto Transit alerts PWA.
 
 ### GitHub Workflows (`.github/workflows/`) 🆕 **Version B Only**
 
-| File                        | Status | Purpose                                                  | Schedule                  |
-| --------------------------- | ------ | -------------------------------------------------------- | ------------------------- |
-| `refresh-route-data.yml`    | ✅     | Refresh route stop orders & branches from NextBus API    | Weekly (Sundays 2 AM UTC) |
-| `refresh-schedule-data.yml` | ✅     | Refresh GTFS schedule data from Toronto Open Data        | Monthly (1st, 4 AM UTC)   |
+| File                        | Status | Purpose                                               | Schedule                  |
+| --------------------------- | ------ | ----------------------------------------------------- | ------------------------- |
+| `refresh-route-data.yml`    | ✅     | Refresh route stop orders & branches from NextBus API | Weekly (Sundays 2 AM UTC) |
+| `refresh-schedule-data.yml` | ✅     | Refresh GTFS schedule data from Toronto Open Data     | Monthly (1st, 4 AM UTC)   |
 
 #### Route Data Refresh Workflow
 
