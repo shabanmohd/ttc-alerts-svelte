@@ -344,25 +344,31 @@ Real-time Toronto Transit alerts PWA.
 
 ### GitHub Workflows (`.github/workflows/`) 🆕 **Version B Only**
 
-| File                        | Status | Purpose                                                 |
-| --------------------------- | ------ | ------------------------------------------------------- |
-| `refresh-route-data.yml`    | ✅     | Weekly automated refresh of route data from NextBus API |
-| `refresh-schedule-data.yml` | ✅     | Monthly automated refresh of GTFS schedule data 🆕      |
+| File                        | Status | Purpose                                                  | Schedule                  |
+| --------------------------- | ------ | -------------------------------------------------------- | ------------------------- |
+| `refresh-route-data.yml`    | ✅     | Refresh route stop orders & branches from NextBus API    | Weekly (Sundays 2 AM UTC) |
+| `refresh-schedule-data.yml` | ✅     | Refresh GTFS schedule data from Toronto Open Data        | Monthly (1st, 4 AM UTC)   |
 
-**Route Data Refresh Workflow:**
+#### Route Data Refresh Workflow
 
+- **Purpose:** Keep route stop sequences and branch info up-to-date
 - **Schedule:** Weekly (Sundays 2:00 AM UTC / Saturday 9:00 PM EST)
-- **Trigger:** Also manually triggerable via GitHub Actions UI
-- **Action:** Runs `fix-route-stop-orders.cjs` and `fix-route-branches.cjs`
-- **Output:** Creates PR if data changes detected
+- **Trigger:** Manual via GitHub Actions UI or scheduled
+- **Data Source:** NextBus API (TTC real-time transit API)
+- **Scripts:** `fix-route-stop-orders.cjs`, `fix-route-branches.cjs`
+- **Output:** Creates PR updating `ttc-route-stop-orders.json` and `ttc-route-branches.json`
+- **Updates:** Stop sequences per route, branch definitions, direction labels
 
-**Schedule Data Refresh Workflow:** 🆕
+#### Schedule Data Refresh Workflow
 
+- **Purpose:** Keep first departure times current with TTC schedules
 - **Schedule:** Monthly (1st of month, 4:00 AM UTC / 11:00 PM EST previous day)
-- **Trigger:** Also manually triggerable via GitHub Actions UI
-- **Data Source:** [Toronto Open Data GTFS](https://open.toronto.ca/dataset/ttc-routes-and-schedules/)
-- **Action:** Runs `download-gtfs.ts` and `process-gtfs-schedules.ts`
-- **Output:** Creates PR with updated `ttc-schedules.json` (~9,270 stops)
+- **Trigger:** Manual via GitHub Actions UI or scheduled
+- **Data Source:** [Toronto Open Data GTFS](https://open.toronto.ca/dataset/ttc-routes-and-schedules/) (~28 MB ZIP)
+- **TTC Update Frequency:** Approximately every 6 weeks
+- **Scripts:** `download-gtfs.ts`, `process-gtfs-schedules.ts`
+- **Output:** Creates PR with updated `ttc-schedules.json` (~9,267 stops)
+- **Data Contents:** First AM/PM departures per route per stop (weekday, Saturday, Sunday)
 
 ### Migrations (`supabase/migrations/`)
 
