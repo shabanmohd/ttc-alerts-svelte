@@ -4,12 +4,12 @@ on:
   schedule:
     # Run monthly on the 1st at 4:00 AM UTC (11:00 PM EST previous day)
     # TTC publishes GTFS updates approximately every 6 weeks
-    - cron: '0 4 1 * *'
+    - cron: "0 4 1 * *"
   workflow_dispatch:
     # Allow manual trigger from GitHub Actions UI
     inputs:
       force_update:
-        description: 'Force update even if no changes detected'
+        description: "Force update even if no changes detected"
         required: false
         type: boolean
         default: false
@@ -31,17 +31,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
       - name: Download latest GTFS data
-        run: npx ts-node scripts/download-gtfs.ts
+        run: npx tsx scripts/download-gtfs.ts
 
       - name: Process GTFS schedules
-        run: npx ts-node scripts/process-gtfs-schedules.ts
+        run: npx tsx scripts/process-gtfs-schedules.ts
 
       - name: Check for changes
         id: changes
@@ -64,8 +64,8 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: refresh TTC schedule data from GTFS'
-          title: '📅 Monthly TTC Schedule Data Refresh'
+          commit-message: "chore: refresh TTC schedule data from GTFS"
+          title: "📅 Monthly TTC Schedule Data Refresh"
           body: |
             ## Automated Schedule Data Refresh
 

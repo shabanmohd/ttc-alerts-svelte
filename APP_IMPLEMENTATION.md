@@ -344,10 +344,10 @@ Real-time Toronto Transit alerts PWA.
 
 ### GitHub Workflows (`.github/workflows/`) 🆕 **Version B Only**
 
-| File                        | Status | Purpose                                                      |
-| --------------------------- | ------ | ------------------------------------------------------------ |
-| `refresh-route-data.yml`    | ✅     | Weekly automated refresh of route data from NextBus API      |
-| `refresh-schedule-data.yml` | ✅     | Monthly automated refresh of GTFS schedule data 🆕           |
+| File                        | Status | Purpose                                                 |
+| --------------------------- | ------ | ------------------------------------------------------- |
+| `refresh-route-data.yml`    | ✅     | Weekly automated refresh of route data from NextBus API |
+| `refresh-schedule-data.yml` | ✅     | Monthly automated refresh of GTFS schedule data 🆕      |
 
 **Route Data Refresh Workflow:**
 
