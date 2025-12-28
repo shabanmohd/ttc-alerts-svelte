@@ -350,8 +350,8 @@
     "via": "via"
   },
   "search": {
-    "placeholderRoute": "Search by route number or name...",
-    "placeholderStop": "Search by name or stop ID...",
+    "placeholderRoute": "Route number or name...",
+    "placeholderStop": "Name or stop ID...",
     "clearSearch": "Clear search",
     "noRoutesFound": "No routes found for \"{query}\"",
     "noStopsFound": "No stops found for \"{query}\"",

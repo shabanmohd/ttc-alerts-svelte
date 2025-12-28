@@ -332,8 +332,8 @@
     "via": "via"
   },
   "search": {
-    "placeholderRoute": "Rechercher par numéro ou nom de ligne...",
-    "placeholderStop": "Rechercher par nom ou numéro d'arrêt...",
+    "placeholderRoute": "Numéro ou nom de ligne...",
+    "placeholderStop": "Nom ou numéro d'arrêt...",
     "clearSearch": "Effacer la recherche",
     "noRoutesFound": "Aucune ligne trouvée pour « {query} »",
     "noStopsFound": "Aucun arrêt trouvé pour « {query} »",
