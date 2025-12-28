@@ -16,7 +16,6 @@
     Settings,
     ChevronLeft,
     ExternalLink,
-    Fingerprint,
     Shield,
   } from "lucide-svelte";
 
@@ -300,16 +299,16 @@
               <div
                 class="flex h-8 w-8 items-center justify-center rounded-full bg-rose-500/10"
               >
-                <Fingerprint class="h-4 w-4 text-rose-500" />
+                <Shield class="h-4 w-4 text-rose-500" />
               </div>
-              <span class="font-medium">{$_("help.accountSecurity")}</span>
+              <span class="font-medium">{$_("help.dataPrivacy")}</span>
             </div>
           </Accordion.Trigger>
           <Accordion.Content class="pb-4">
             <div class="space-y-3 text-sm text-muted-foreground pl-11">
-              <p>{$_("help.accountContent1")}</p>
-              <p>{$_("help.accountContent2")}</p>
-              <p>{$_("help.accountContent3")}</p>
+              <p>{$_("help.dataContent1")}</p>
+              <p>{$_("help.dataContent2")}</p>
+              <p>{$_("help.dataContent3")}</p>
             </div>
           </Accordion.Content>
         </Accordion.Item>

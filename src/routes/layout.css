@@ -334,7 +334,7 @@ header.sticky {
     /* Force total header height to match sidebar-header (3.5rem including border) */
     height: 3.5rem;
   }
-  
+
   .header-container {
     height: 100%;
     justify-content: flex-end;

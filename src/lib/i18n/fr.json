@@ -707,7 +707,11 @@
     "needMoreHelp": "Besoin d'aide supplémentaire ?",
     "needMoreHelpDesc": "Vous avez encore des questions ? Voici des ressources supplémentaires.",
     "goToSettings": "Aller aux paramètres",
-    "officialTTC": "Site officiel du TTC"
+    "officialTTC": "Site officiel du TTC",
+    "dataPrivacy": "Données et vie privée",
+    "dataContent1": "Vos préférences et vos signets sont stockés localement sur votre appareil à l'aide d'IndexedDB.",
+    "dataContent2": "Aucun compte n'est nécessaire. Vos données restent sur votre appareil et ne sont jamais envoyées sur nos serveurs.",
+    "dataContent3": "La localisation n'est utilisée que lorsque vous appuyez sur \"Trouver des arrêts à proximité\" et n'est pas stockée ou suivie."
   },
   "about": {
     "pageTitle": "À propos - Alertes TTC",
