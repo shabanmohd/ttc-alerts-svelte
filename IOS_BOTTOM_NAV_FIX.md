@@ -13,34 +13,45 @@ When swiping up on iOS (Chrome/Safari), the bottom navigation bar would offset/s
 
 ## Solution
 
-### Browser Mode vs PWA Mode
+### Browser Mode vs PWA Mode - Chrome vs Safari
 
-**Key Insight:** The viewport fix works great for browsers but caused issues (bottom gap) in PWA standalone mode. Solution: Use CSS `@media (display-mode: browser)` to apply the fix **only in browser mode**.
+**Key Insight:** The viewport fix works great for Chrome on iOS but breaks Safari's address bar auto-hide feature. Solution: Use JavaScript to detect **Chrome on iOS specifically** and add a CSS class for targeting.
+
+```javascript
+// MobileBottomNav.svelte - onMount
+const isIOSChrome = /CriOS/i.test(navigator.userAgent);
+const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || 
+                         (window.navigator as any).standalone === true;
+
+// Only apply viewport fix class for Chrome on iOS in browser mode (not PWA)
+if (isIOSChrome && !isStandaloneMode) {
+  document.documentElement.classList.add('ios-chrome-browser');
+}
+```
 
 ```css
-/* Only apply viewport fix in browser mode (Chrome, Safari browser, etc.) */
-/* PWA standalone mode doesn't need this and works better without it */
-@media (display-mode: browser) {
-  html {
-    position: fixed;
-    overflow: hidden;
-    height: 100%;
-    width: 100%;
-  }
-  
-  body {
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+/* Only apply viewport fix to Chrome on iOS browser mode */
+/* Safari and PWA keep normal behavior */
+html.ios-chrome-browser {
+  position: fixed;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+html.ios-chrome-browser body {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 ```
 
 **Why this works:**
-- `display-mode: browser` - Only matches when running in a regular browser tab/window
-- `display-mode: standalone` - Matches when running as an installed PWA
-- PWAs have stable viewport (no browser chrome showing/hiding), so they don't need the fix
-- Browsers on iOS have the dynamic viewport issue, so they get the fix
+- `CriOS` in user agent identifies Chrome on iOS specifically
+- Safari on iOS does NOT have `CriOS` in its user agent
+- PWA mode is excluded via `display-mode: standalone` check
+- Safari keeps its native address bar hide/show behavior
+- Only Chrome gets the position:fixed fix it needs
 
 ### 1. Dynamic Viewport Height Tracking
 
@@ -101,9 +112,9 @@ Added `transform: translateZ(0)` to force the nav onto its own GPU layer:
 - Prevents repaints/reflows from affecting the nav
 - Smoother animations and positioning
 
-### 3. Fix HTML/Body Positioning (Browser Mode Only)
+### 3. Fix HTML/Body Positioning (Chrome on iOS Only)
 
-Prevent the viewport from shifting (only in browser mode, not PWA):
+Prevent the viewport from shifting (only for Chrome on iOS, not Safari or PWA):
 
 ```css
 /* layout.css */
@@ -125,20 +136,19 @@ body {
   min-height: 100dvh;
 }
 
-/* Browser mode only - fix viewport shifting */
-@media (display-mode: browser) {
-  html {
-    position: fixed;
-    overflow: hidden;
-    height: 100%;
-    width: 100%;
-  }
+/* Chrome on iOS browser mode only - fix viewport shifting */
+/* Class added via JavaScript detection of CriOS in user agent */
+html.ios-chrome-browser {
+  position: fixed;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
 
-  body {
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+html.ios-chrome-browser body {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
   /* iOS scrolling fixes */
@@ -150,31 +160,37 @@ body {
 
 **Why it works:**
 
-- `@media (display-mode: browser)` only targets browser tabs, not PWA standalone
+- `.ios-chrome-browser` class only added when `CriOS` detected in user agent (Chrome on iOS)
 - `html` is `position: fixed` - Prevents viewport shifts from browser chrome
 - `body` handles scrolling - Maintains smooth scroll behavior
 - `-webkit-overflow-scrolling: touch` - Native iOS momentum scrolling
 - `overscroll-behavior-y: none` - Prevents rubber-band bounce
+- Safari keeps normal behavior - address bar auto-hides on scroll as expected
 - PWA keeps the simpler `min-height: 100dvh` approach which works well in standalone mode
 
 ## Key Concepts
 
-### Display Mode Media Query
+### Chrome vs Safari Detection on iOS
 
-The `display-mode` CSS media feature detects how the app is being displayed:
+Since Chrome and Safari on iOS both match `display-mode: browser`, we use JavaScript user agent detection:
 
-- `display-mode: browser` - Normal browser tab/window (Chrome, Safari, Firefox, etc.)
-- `display-mode: standalone` - PWA installed and running as standalone app
-- `display-mode: fullscreen` - Fullscreen mode
-- `display-mode: minimal-ui` - Some UI elements but not full browser chrome
+```javascript
+// Chrome on iOS has "CriOS" in user agent
+const isIOSChrome = /CriOS/i.test(navigator.userAgent);
 
-**PWA vs Browser differences:**
-| Aspect | Browser | PWA Standalone |
-|--------|---------|----------------|
-| Browser chrome | Shows/hides on scroll | None |
-| Viewport height | Dynamic (100vh varies) | Stable |
-| Safe areas | Handled by browser | App must handle |
-| Need viewport fix | ✅ Yes | ❌ No (causes gap) |
+// Safari on iOS examples:
+// "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605... Safari/604.1"
+
+// Chrome on iOS examples:
+// "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605... CriOS/120.0..."
+```
+
+**Why we need different treatment:**
+| Browser | Address bar behavior | Viewport | Needs fix |
+|---------|---------------------|----------|-----------|
+| Safari iOS | Auto-hide on scroll (good UX) | Dynamic but expected | ❌ No |
+| Chrome iOS | Toolbar can shift content | Dynamic, causes nav shift | ✅ Yes |
+| PWA | No browser chrome | Stable | ❌ No |
 
 ### Position Fixed on iOS
 

@@ -79,6 +79,18 @@
       setTimeout(setViewportHeight, 100);
     });
 
+    // Detect Chrome on iOS and add class for CSS targeting
+    // Chrome on iOS: contains "CriOS" in user agent
+    // Safari on iOS: contains "Safari" but NOT "CriOS" or "Chrome"
+    const isIOSChrome = /CriOS/i.test(navigator.userAgent);
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || 
+                             (window.navigator as any).standalone === true;
+    
+    // Only apply viewport fix class for Chrome on iOS in browser mode (not PWA)
+    if (isIOSChrome && !isStandaloneMode) {
+      document.documentElement.classList.add('ios-chrome-browser');
+    }
+
     // Add scroll listener for compact mode
     // Listen on both window and body since scrolling happens on body
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -88,6 +100,7 @@
       window.removeEventListener("resize", setViewportHeight);
       window.removeEventListener("scroll", handleScroll);
       document.body.removeEventListener("scroll", handleScroll);
+      document.documentElement.classList.remove('ios-chrome-browser');
     };
   });
 </script>

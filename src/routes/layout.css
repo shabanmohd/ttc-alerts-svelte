@@ -263,24 +263,23 @@ body {
 }
 
 /* ============================================
-   iOS BROWSER-ONLY VIEWPORT FIX
+   iOS CHROME BROWSER-ONLY VIEWPORT FIX
    Chrome on iOS: fix bottom nav shifting when browser chrome shows/hides.
-   This only applies to browser mode (not PWA standalone mode).
+   This only applies to Chrome on iOS in browser mode (not PWA, not Safari).
+   The .ios-chrome-browser class is added via JavaScript detection.
    See: IOS_BOTTOM_NAV_FIX.md for details
    ============================================ */
-@media (display-mode: browser) {
-  html {
-    position: fixed;
-    overflow: hidden;
-    height: 100%;
-    width: 100%;
-  }
-  
-  body {
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+html.ios-chrome-browser {
+  position: fixed;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+html.ios-chrome-browser body {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ============================================
