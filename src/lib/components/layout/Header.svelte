@@ -95,7 +95,7 @@
 
 <header
   class="sticky top-0 w-full border-b border-border"
-  style="z-index: 1000; background-color: hsl(var(--background)); padding-top: env(safe-area-inset-top, 0px);"
+  style="z-index: 1000; background-color: hsl(var(--background));"
 >
   <div class="header-container">
     <!-- Logo (mobile only) -->
