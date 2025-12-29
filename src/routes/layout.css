@@ -362,17 +362,49 @@ header.sticky {
 /* =============================================================================
    BANNERS CONTAINER
    Groups status/holiday banners at top of viewport
-   Note: Sticky behavior is on individual banners, not the container
+   Safe-area is applied to first visible banner child
    ============================================================================= */
 .banners-container {
-  /* Container for status/holiday banners - not sticky itself */
+  /* Container for status/holiday banners */
 }
 
-/* On desktop, account for sidebar */
+/* Apply safe-area-inset-top to the first visible banner in the container */
+.banners-container > :first-child {
+  padding-top: calc(0.625rem + env(safe-area-inset-top, 0px));
+}
+
+/* ============================================
+   BANNERS CONTAINER
+   Fixed container for status/holiday banners
+   Banners stack inside, entire container overlays header
+   ============================================ */
+
+.banners-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001; /* Above Header (z-index: 999) */
+  display: flex;
+  flex-direction: column;
+  /* Only visible when it has content */
+  pointer-events: none;
+}
+
+.banners-container > * {
+  pointer-events: auto;
+}
+
+/* On desktop, offset for sidebar */
 @media (min-width: 1024px) {
   .banners-container {
-    margin-left: 16rem;
+    left: 16rem; /* Sidebar width */
   }
+}
+
+/* If no status-banner, holiday-banners needs safe-area padding */
+.banners-container > .holiday-banners:first-child {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Adjust banner margin when container handles sidebar offset */

@@ -868,22 +868,45 @@ Mobile: full width
 
 #### Banners Container & iOS PWA Safe Area
 
-All banners are wrapped in a `.banners-container` div in the main layout. This container handles:
+All banners are wrapped in a `.banners-container` div in the main layout. This container is **fixed positioned** at the top of the viewport and handles:
 
-1. **iOS PWA safe area** - Adds `padding-top: env(safe-area-inset-top)` to prevent banners from being obscured by the iOS status bar in standalone PWA mode
-2. **Desktop sidebar offset** - Shifts banners right to account for the sidebar on large screens
+1. **Fixed positioning** - Container is `position: fixed` at `top: 0` with `z-index: 1001` (above header)
+2. **Banner stacking** - Banners stack vertically inside the container using flexbox
+3. **iOS PWA safe area** - First visible banner gets `padding-top: env(safe-area-inset-top)`
+4. **Desktop sidebar offset** - Container is offset with `left: 16rem` on large screens
 
 ```css
 .banners-container {
-  padding-top: env(safe-area-inset-top, 0);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001; /* Above Header (z-index: 999) */
+  display: flex;
+  flex-direction: column;
+  pointer-events: none; /* Allow clicks through empty areas */
+}
+
+.banners-container > * {
+  pointer-events: auto; /* Re-enable clicks on banner content */
 }
 
 @media (min-width: 1024px) {
   .banners-container {
-    margin-left: 16rem; /* Match sidebar width */
+    left: 16rem; /* Match sidebar width */
   }
 }
 ```
+
+**Banner Z-Index Hierarchy:**
+- `.banners-container`: 1001 (above header)
+- `.app-header`: 999 (below banners)
+- `.sidebar`: 40 (below everything)
+
+**Banner Heights:**
+- All banners use `min-height: 3.5rem` (56px) to match the header height
+- StatusBanner includes safe-area padding: `padding-top: env(safe-area-inset-top)`
+- HolidayBanner gets safe-area padding only when StatusBanner is not visible (via CSS `:first-child`)
 
 **Note:** Individual banners no longer need `margin-left: 16rem` since the container handles it.
 

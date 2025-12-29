@@ -33,6 +33,7 @@
 </script>
 
 {#if showBanner && !dismissed}
+  <!-- Fixed banner at top - overlays the header -->
   <div
     class="status-banner offline"
     transition:slide={{ duration: 200 }}
@@ -76,16 +77,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.625rem 1rem;
-    /* iOS PWA safe area - add padding at top for notch/status bar */
-    padding-top: calc(0.625rem + env(safe-area-inset-top, 0px));
+    /* Match header height: 3.5rem = 56px */
+    min-height: 3.5rem;
+    padding: 0 1rem;
+    /* iOS PWA safe area padding for notch - first banner gets it */
+    padding-top: env(safe-area-inset-top, 0px);
     gap: 0.75rem;
     font-size: calc(0.875rem * var(--text-scale, 1));
     border-bottom: 1px solid;
-    /* Sticky at the very top, above header */
-    position: sticky;
-    top: 0;
-    z-index: 1001; /* Above Header (z-index: 1000) */
+    /* Positioned within banners-container which is fixed */
+    position: relative;
+    z-index: 2; /* Higher than holiday banners within container */
   }
 
   .status-banner.offline {

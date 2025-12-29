@@ -169,13 +169,19 @@
   .holiday-banners {
     display: flex;
     flex-direction: column;
+    /* Positioned within banners-container which is fixed */
+    position: relative;
+    z-index: 1; /* Below status-banner within container */
+    background-color: hsl(var(--background));
   }
 
   .holiday-banner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.625rem 1rem;
+    /* Match header height */
+    min-height: 3.5rem;
+    padding: 0 1rem;
     gap: 0.75rem;
     font-size: calc(0.875rem * var(--text-scale, 1));
     border-bottom: 1px solid;
