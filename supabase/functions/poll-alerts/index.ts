@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// v62: Fix SiteWide alerts to bypass alreadyHasThread check
+// - Add isSiteWide to skip condition alongside isAccessibility and isRSZ
+// - Remove duplicate const isSiteWide declaration
 // v61: SiteWide alerts support (station entrance/facility closures)
 // - Process alertType === 'SiteWide' with effect === null
 // - Extract station name from customHeaderText for affected_routes
@@ -8,7 +11,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // v60: Elevator/Accessibility alerts now properly reconciled with TTC API
 // - Track active accessibility alert IDs and delete stale ones (like RSZ)
 // - Fixes issue where elevator alerts weren't being removed when cleared from API
-const FUNCTION_VERSION = 61;
+const FUNCTION_VERSION = 62;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -587,6 +590,7 @@ serve(async (req) => {
         const routeExact = extractRouteWithBranch(primaryRoute); // e.g., "40B" stays as "40B"
         const isAccessibility = ttcAlert.effect === 'ACCESSIBILITY_ISSUE';
         const isRSZ = ttcAlert.effect === 'SIGNIFICANT_DELAYS';
+        const isSiteWide = ttcAlert.alertType === 'SiteWide';
         const isSubway = /^[1-4]$/.test(primaryRoute);
         
         // For bus routes, check exact match (40B ≠ 40). For subways, check base number.
@@ -594,7 +598,8 @@ serve(async (req) => {
           ? (blueskyActiveRoutes.has(primaryRoute) || blueskyActiveRoutes.has(routeBase))
           : blueskyActiveExactRoutes.has(routeExact);
         
-        if (!isAccessibility && !isRSZ && alreadyHasThread) continue;
+        // Always process SiteWide alerts (like accessibility/RSZ) - don't skip based on route matching
+        if (!isSiteWide && !isAccessibility && !isRSZ && alreadyHasThread) continue;
         
         let ttcAlertId: string;
         if (isRSZ && ttcAlert.stopStart && ttcAlert.stopEnd) {
@@ -610,7 +615,6 @@ serve(async (req) => {
         }
         
         let category = 'DELAY';
-        const isSiteWide = ttcAlert.alertType === 'SiteWide';
         if (isSiteWide) category = 'ACCESSIBILITY';
         else if (ttcAlert.effect === 'NO_SERVICE' || ttcAlert.effect === 'REDUCED_SERVICE') category = 'SERVICE_DISRUPTION';
         else if (ttcAlert.effect === 'DETOUR') category = 'DIVERSION';
