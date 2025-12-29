@@ -94,8 +94,8 @@
 </script>
 
 <header
-  class="sticky top-0 w-full border-b border-border"
-  style="z-index: 1000; background-color: hsl(var(--background));"
+  class="sticky w-full border-b border-border"
+  style="z-index: 1000; background-color: hsl(var(--background)); top: env(safe-area-inset-top, 0px);"
 >
   <div class="header-container">
     <!-- Logo (mobile only) -->

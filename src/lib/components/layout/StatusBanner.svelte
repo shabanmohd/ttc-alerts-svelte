@@ -77,9 +77,15 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.625rem 1rem;
+    /* iOS PWA safe area - add padding at top for notch/status bar */
+    padding-top: calc(0.625rem + env(safe-area-inset-top, 0px));
     gap: 0.75rem;
     font-size: calc(0.875rem * var(--text-scale, 1));
     border-bottom: 1px solid;
+    /* Sticky at the very top, above header */
+    position: sticky;
+    top: 0;
+    z-index: 1001; /* Above Header (z-index: 1000) */
   }
 
   .status-banner.offline {

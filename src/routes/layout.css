@@ -362,20 +362,10 @@ header.sticky {
 /* =============================================================================
    BANNERS CONTAINER
    Groups status/holiday banners at top of viewport
-   Sticky at the very top, above Header, with iOS PWA safe area support
+   Note: Sticky behavior is on individual banners, not the container
    ============================================================================= */
 .banners-container {
-  position: sticky;
-  top: 0;
-  z-index: 1001; /* Above Header (z-index: 1000) */
-  background-color: hsl(var(--background));
-}
-
-/* iOS PWA standalone mode - add safe area padding at top */
-@supports (padding-top: env(safe-area-inset-top)) {
-  .banners-container {
-    padding-top: env(safe-area-inset-top, 0px);
-  }
+  /* Container for status/holiday banners - not sticky itself */
 }
 
 /* On desktop, account for sidebar */
