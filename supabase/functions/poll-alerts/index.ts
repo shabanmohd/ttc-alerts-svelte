@@ -1,15 +1,16 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// v65: Add SiteWide alert cleanup (same as RSZ/Accessibility)
+// - Track activeSiteWideAlertIds for alerts that exist in TTC API
+// - Delete stale ttc-SiteWide-* alerts not in active set
+// - Delete orphaned threads when no alerts remain
 // v64: Strip HTML tags from TTC API alert text
 // - Remove <a href> and other HTML tags from customHeaderText/headerText
 // - Also removes "See other service alerts" boilerplate text
 // v63: Fix SiteWide alerts to bypass alreadyHasThread check
-// - Add isSiteWide to skip condition alongside isAccessibility and isRSZ
-// v62: Fix SiteWide alerts to bypass alreadyHasThread check
-// - Remove duplicate const isSiteWide declaration
-// v61: SiteWide alerts support (station entrance/facility closures)
-const FUNCTION_VERSION = 64;
+// v62: SiteWide alerts support (station entrance/facility closures)
+const FUNCTION_VERSION = 65;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -190,10 +191,12 @@ serve(async (req) => {
     let ttcApiResolvedCount = 0, ttcApiError: string | null = null, ttcApiAlerts: any[] = [];
     let rszDeletedCount = 0;
     let accessibilityDeletedCount = 0;
+    let siteWideDeletedCount = 0;
     
-    // Track active RSZ and Accessibility alerts from TTC API for cleanup
+    // Track active RSZ, Accessibility, and SiteWide alerts from TTC API for cleanup
     const activeRszAlertIds = new Set<string>();
     const activeAccessibilityAlertIds = new Set<string>();
+    const activeSiteWideAlertIds = new Set<string>();
     
     // Fetch TTC Live API
     try {
@@ -225,6 +228,10 @@ serve(async (req) => {
                 const dir = a.direction ? `-${a.direction.replace(/\s+/g, '')}` : '';
                 const rszId = `ttc-RSZ-${primaryRoute}-${a.stopStart}-${a.stopEnd}${dir}`.replace(/\s+/g, '-');
                 activeRszAlertIds.add(rszId);
+              }
+              // Track active SiteWide alert IDs for cleanup
+              if (isSiteWide && a.id) {
+                activeSiteWideAlertIds.add(`ttc-SiteWide-${a.id}`);
               }
             }
           }
@@ -285,6 +292,27 @@ serve(async (req) => {
                   if (count === 0) {
                     await supabase.from('incident_threads').delete().eq('thread_id', accAlert.thread_id);
                   }
+                }
+              }
+            }
+          }
+        }
+        
+        // DELETE stale SiteWide alerts not in TTC API
+        // SiteWide alerts (station entrance closures, facility alerts) should be deleted when cleared
+        const { data: existingSiteWideAlerts } = await supabase.from('alert_cache').select('alert_id, thread_id').like('alert_id', 'ttc-SiteWide-%');
+        if (existingSiteWideAlerts) {
+          for (const swAlert of existingSiteWideAlerts) {
+            if (!activeSiteWideAlertIds.has(swAlert.alert_id)) {
+              // Delete the SiteWide alert
+              await supabase.from('alert_cache').delete().eq('alert_id', swAlert.alert_id);
+              siteWideDeletedCount++;
+              
+              // If thread has no more alerts, delete the thread too
+              if (swAlert.thread_id) {
+                const { count } = await supabase.from('alert_cache').select('alert_id', { count: 'exact', head: true }).eq('thread_id', swAlert.thread_id);
+                if (count === 0) {
+                  await supabase.from('incident_threads').delete().eq('thread_id', swAlert.thread_id);
                 }
               }
             }
@@ -686,7 +714,7 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, newAlerts, updatedThreads, ttcApiResolvedCount, ttcApiNewAlerts, skippedRszAlerts, skippedOrphanedServiceResumed, rszDeletedCount, accessibilityDeletedCount, ttcApiError, version: FUNCTION_VERSION, timestamp: new Date().toISOString() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true, newAlerts, updatedThreads, ttcApiResolvedCount, ttcApiNewAlerts, skippedRszAlerts, skippedOrphanedServiceResumed, rszDeletedCount, accessibilityDeletedCount, siteWideDeletedCount, ttcApiError, version: FUNCTION_VERSION, timestamp: new Date().toISOString() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message, version: FUNCTION_VERSION }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
