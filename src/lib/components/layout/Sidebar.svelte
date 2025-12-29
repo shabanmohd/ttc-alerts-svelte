@@ -40,7 +40,7 @@
 
 <aside class="sidebar">
   <a href="/" class="sidebar-header">
-    <span class="sidebar-logo">🚇</span>
+    <img src="/icons/icon.svg" alt="TTC Alerts" class="sidebar-logo" />
     <span class="sidebar-title">{$_("header.appName")}</span>
   </a>
 

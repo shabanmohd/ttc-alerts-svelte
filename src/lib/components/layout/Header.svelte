@@ -100,7 +100,7 @@
   <div class="header-container">
     <!-- Logo (mobile only) -->
     <a href="/" class="header-left">
-      <span class="text-xl">🚇</span>
+      <img src="/icons/icon.svg" alt="TTC Alerts" class="w-7 h-7 rounded-md" />
       <span class="font-bold tracking-tight">{$_("header.appName")}</span>
     </a>
 
@@ -293,7 +293,7 @@
     style="background-color: hsl(var(--background)); border-color: hsl(var(--border)); padding-top: env(safe-area-inset-top, 0px); height: calc(57px + env(safe-area-inset-top, 0px));"
   >
     <div class="flex items-center gap-2">
-      <span class="text-xl">🚇</span>
+      <img src="/icons/icon.svg" alt="TTC Alerts" class="w-7 h-7 rounded-md" />
       <span
         class="font-bold tracking-tight"
         style="color: hsl(var(--foreground));">{$_("header.appName")}</span
