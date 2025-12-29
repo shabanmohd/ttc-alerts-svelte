@@ -3,7 +3,6 @@
   import RouteBadge from "./RouteBadge.svelte";
   import StatusBadge from "./StatusBadge.svelte";
   import AccessibilityBadge from "./AccessibilityBadge.svelte";
-  import SiteWideBadge from "./SiteWideBadge.svelte";
   import { cn } from "$lib/utils";
   import { _ } from "svelte-i18n";
   import type { ThreadWithAlerts, Alert } from "$lib/types/database";
@@ -49,7 +48,7 @@
   }
 
   /**
-   * Check if this is an accessibility alert (elevator/escalator outages).
+   * Check if this is an accessibility alert (elevator/escalator outages or SiteWide).
    * Accessibility alerts have category "ACCESSIBILITY" or "ACCESSIBILITY_ISSUE"
    * and typically have station names as "routes" (e.g., "Dupont", "Davisville").
    */
@@ -58,25 +57,6 @@
     return cats.some(
       (cat) => cat === "ACCESSIBILITY" || cat === "ACCESSIBILITY_ISSUE"
     );
-  }
-
-  /**
-   * Check if this is a SiteWide alert (general station/facility alerts).
-   * SiteWide alerts have alert_id starting with "ttc-SiteWide-".
-   * These are different from elevator alerts (ttc-ACCESSIBILITY_ISSUE-).
-   */
-  function isSiteWideAlert(): boolean {
-    const alerts = thread.alerts || [];
-    return alerts.some((alert) => alert.alert_id?.startsWith("ttc-SiteWide-"));
-  }
-
-  /**
-   * Check if this is an elevator/escalator alert specifically.
-   * Elevator alerts have alert_id starting with "ttc-ACCESSIBILITY_ISSUE-".
-   */
-  function isElevatorAlert(): boolean {
-    const alerts = thread.alerts || [];
-    return alerts.some((alert) => alert.alert_id?.startsWith("ttc-ACCESSIBILITY_ISSUE-"));
   }
 
   /**
@@ -376,7 +356,7 @@
           [];
   });
 
-  // Check if this is an accessibility alert (elevator/escalator outages)
+  // Check if this is an accessibility alert (elevator/escalator/SiteWide outages)
   const isAccessibility = $derived(isAccessibilityAlert(categories()));
 
   // Get station name for accessibility alerts (displayed as badge instead of route)
@@ -385,7 +365,6 @@
   );
 
   const cardId = $derived(`alert-${thread.thread_id}`);
-  const isSiteWide = $derived(isSiteWideAlert());
 </script>
 
 <article
@@ -402,13 +381,8 @@
       <!-- Badge on left - fixed width for uniform alignment -->
       <div class="w-20 flex flex-col items-center gap-2 flex-shrink-0">
         {#if isAccessibility}
-          {#if isSiteWide}
-            <!-- SiteWide alerts: Show info icon badge -->
-            <SiteWideBadge size="lg" class="alert-badge-fixed" />
-          {:else}
-            <!-- Elevator/escalator alerts: Show wheelchair icon badge -->
-            <AccessibilityBadge size="lg" class="alert-badge-fixed" />
-          {/if}
+          <!-- Elevator/escalator/SiteWide alerts: Show accessibility icon badge -->
+          <AccessibilityBadge size="lg" class="alert-badge-fixed" />
         {:else}
           <!-- Regular alerts: Show single route badge (first/primary route) -->
           {#if displayRoutes.length > 0}

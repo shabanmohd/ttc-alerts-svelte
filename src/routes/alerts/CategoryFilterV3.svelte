@@ -1,6 +1,6 @@
 <script lang="ts">
   import { cn } from "$lib/utils";
-  import { TriangleAlert, Gauge, Building2 } from "lucide-svelte";
+  import { TriangleAlert, Gauge, Accessibility } from "lucide-svelte";
 
   type Category = "disruptions" | "delays" | "station-alerts";
 
@@ -30,9 +30,9 @@
     },
     {
       id: "station-alerts",
-      label: "Facilities",
-      icon: Building2,
-      ariaLabel: "Show station and facility alerts",
+      label: "Elevators",
+      icon: Accessibility,
+      ariaLabel: "Show elevator and accessibility alerts",
     },
     {
       id: "delays",
