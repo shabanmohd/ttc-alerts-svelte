@@ -123,6 +123,8 @@ export const threadsWithAlerts = derived(
   [threads, alerts],
   ([$threads, $alerts]) => {
     return $threads
+      // Filter out hidden threads (threads no longer in TTC API without SERVICE_RESUMED)
+      .filter(thread => !thread.is_hidden)
       .map((thread): ThreadWithAlerts => {
         const threadAlerts = $alerts
           .filter(a => a.thread_id === thread.thread_id)
