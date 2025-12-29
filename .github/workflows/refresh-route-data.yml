@@ -29,6 +29,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Refresh route list from NextBus API
+        run: node scripts/fetch-routes.cjs
+        continue-on-error: true
+
       - name: Refresh route stop orders
         run: node scripts/fix-route-stop-orders.cjs
         continue-on-error: true
@@ -43,14 +47,14 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Check if any route data files changed
-          CHANGED_FILES=$(git diff --name-only -- '**/ttc-route-*.json' | wc -l)
+          CHANGED_FILES=$(git diff --name-only -- '**/ttc-route*.json' | wc -l)
 
           if [ "$CHANGED_FILES" -eq 0 ]; then
             echo "No changes to route data"
           else
             echo "📊 Route data updated: $CHANGED_FILES files changed"
-            git diff --name-only -- '**/ttc-route-*.json'
-            git add src/lib/data/ttc-route-*.json static/data/ttc-route-*.json 2>/dev/null || true
+            git diff --name-only -- '**/ttc-route*.json'
+            git add src/lib/data/ttc-route*.json static/data/ttc-route*.json 2>/dev/null || true
             git commit -m "chore: auto-refresh TTC route data from NextBus API"
             git push
             echo "✅ Changes committed and pushed"

@@ -245,7 +245,8 @@
     "expressBus": "Bus express",
     "blueNightBus": "Bus de nuit",
     "blueNightStreetcar": "Tramway de nuit",
-    "communityBus": "Bus communautaire"
+    "communityBus": "Bus communautaire",
+    "shuttle": "Bus navette"
   },
   "myRoutes": {
     "title": "Mes lignes",

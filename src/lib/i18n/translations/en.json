@@ -263,7 +263,8 @@
     "expressBus": "Express Bus",
     "blueNightBus": "Blue Night Bus",
     "blueNightStreetcar": "Blue Night Streetcar",
-    "communityBus": "Community Bus"
+    "communityBus": "Community Bus",
+    "shuttle": "Shuttle Bus"
   },
   "myRoutes": {
     "title": "My Routes",
