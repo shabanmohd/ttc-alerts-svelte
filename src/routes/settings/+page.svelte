@@ -274,7 +274,7 @@
   </div>
 
   <!-- ==================== SAVED STOPS ==================== -->
-  <Card.Root class="mb-6 animate-fade-in-up overflow-visible relative z-10" style="animation-delay: 50ms">
+  <Card.Root class="mb-6 animate-fade-in-up overflow-visible relative z-20" style="animation-delay: 50ms">
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <MapPin class="h-5 w-5 text-primary" />
