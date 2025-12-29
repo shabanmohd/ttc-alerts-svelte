@@ -14,7 +14,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // - Also removes "See other service alerts" boilerplate text
 // v63: Fix SiteWide alerts to bypass alreadyHasThread check
 // v62: SiteWide alerts support (station entrance/facility closures)
-const FUNCTION_VERSION = 67;
+const FUNCTION_VERSION = 69;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -382,7 +382,20 @@ serve(async (req) => {
             // UNHIDE threads that are still active but were previously hidden (e.g., 939 came back into TTC API)
             if (isStillActive && thread.is_hidden) {
               await supabase.from('incident_threads').update({ is_hidden: false, updated_at: now.toISOString() }).eq('thread_id', thread.thread_id);
+              
+              // Clean up old alerts in the thread (older than 24 hours) to prevent stale data from showing
+              // This handles cases where an old thread is unhidden but has outdated alerts
+              const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+              await supabase.from('alert_cache').delete().eq('thread_id', thread.thread_id).lt('created_at', twentyFourHoursAgo);
+              
               continue; // Thread is active and now unhidden, skip the !isStillActive logic
+            }
+            
+            // For active threads that are NOT hidden, also clean up old alerts (>24h)
+            // This prevents stale alerts from appearing in threads that were recently active
+            if (isStillActive && !thread.is_hidden) {
+              const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+              await supabase.from('alert_cache').delete().eq('thread_id', thread.thread_id).lt('created_at', twentyFourHoursAgo);
             }
             
             if (!isStillActive) {

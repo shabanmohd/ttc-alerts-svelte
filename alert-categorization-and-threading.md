@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 12.4  
+**Version:** 12.5  
 **Date:** December 29, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v67 + Express/Night route conflict prevention + Hidden thread auto-unhide + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
+**Status:** ✅ Implemented and Active (poll-alerts v69 + Express/Night route conflict prevention + Hidden thread auto-unhide + Stale alert cleanup + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -56,7 +56,7 @@ This document describes the alert categorization and threading system designed t
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  Bluesky API    │────▶│  poll-alerts (v67)   │────▶│  Supabase DB    │
+│  Bluesky API    │────▶│  poll-alerts (v69)   │────▶│  Supabase DB    │
 │  @ttcalerts     │     │  (Edge Function)     │     │  alert_cache    │
 │  (PRIMARY)      │     └──────────────────────┘     │  incident_      │
 └─────────────────┘              │   │               │  threads        │
