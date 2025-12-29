@@ -537,9 +537,8 @@ header.sticky {
   bottom: 0;
   left: 0;
   right: 0;
-  background: hsl(var(--background));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* Solid background - not transparent */
+  background-color: hsl(var(--background));
   border-top: 1px solid hsl(var(--border));
   padding-top: 0.5rem;
   /* Simple padding with safe area inset - no fallback needed */
@@ -552,15 +551,13 @@ header.sticky {
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   /* Smooth transitions for compact mode */
-  transition: padding 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Compact mode: reduce padding and slight transparency */
+/* Compact mode: reduce padding only, keep solid background */
 .mobile-bottom-nav.compact {
   padding-top: 0.25rem;
   padding-bottom: calc(0.25rem + env(safe-area-inset-bottom));
-  background: hsl(var(--background) / 0.95);
 }
 
 @media (min-width: 1024px) {
@@ -956,6 +953,7 @@ header.sticky {
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
   line-height: 1.25rem;
+  white-space: nowrap; /* Prevent text wrapping */
 }
 
 /* WCAG 2.2 AA compliant status badges - min 4.5:1 contrast ratio */
