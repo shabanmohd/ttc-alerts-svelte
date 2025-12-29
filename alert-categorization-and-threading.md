@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 12.2  
-**Date:** June 19, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v64 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping)  
+**Version:** 12.3  
+**Date:** December 29, 2025  
+**Status:** ✅ Implemented and Active (poll-alerts v65 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -248,14 +248,21 @@ if (!isStillActive) {
 }
 ```
 
-**Frontend Filter:**
+**Frontend Filter (in threadsWithAlerts derived store):**
 
 ```typescript
-// Combine real alerts with demo alerts (filter out hidden threads)
-let allThreads = $derived(() => {
-  const visibleThreads = $threadsWithAlerts.filter((t) => !t.is_hidden);
-  return visibleThreads;
-});
+// Filter out hidden threads at the store level
+export const threadsWithAlerts = derived(
+  [threads, alerts],
+  ([$threads, $alerts]) => {
+    return $threads
+      // Filter out hidden threads (threads no longer in TTC API without SERVICE_RESUMED)
+      .filter(thread => !thread.is_hidden)
+      .map((thread): ThreadWithAlerts => {
+        // ... map alerts to threads
+      });
+  }
+);
 ```
 
 **State Transitions:**
@@ -1014,11 +1021,11 @@ The frontend provides two levels of filtering for alerts:
 
 Alerts are categorized into three severity levels based on their effect and type:
 
-| Category                  | TTC API Effects                                                                                     | Description                                                                  |
-| ------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| **Disruptions & Delays**  | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance                 |
-| **Slow Zones**            | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")                     |
-| **Elevators** (ACCESSIBILITY) | ACCESSIBILITY_ISSUE (Elevator/Escalator), SiteWide (Station entrance closures)                  | Elevator/escalator outages and station entrance/facility closures (v61/v64)  |
+| Category                      | TTC API Effects                                                                                     | Description                                                                 |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Disruptions & Delays**      | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance                |
+| **Slow Zones**                | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")                    |
+| **Elevators** (ACCESSIBILITY) | ACCESSIBILITY_ISSUE (Elevator/Escalator), SiteWide (Station entrance closures)                      | Elevator/escalator outages and station entrance/facility closures (v61/v64) |
 
 > **Note:** The filter is named "Elevators" in the UI since SiteWide alerts are rare. URL param: `?category=elevators`
 
@@ -1362,11 +1369,40 @@ TTC API sometimes includes HTML tags in alert text (e.g., `<a href="...">See oth
 
 ```typescript
 function stripHtmlTags(text: string): string {
-  if (!text) return '';
+  if (!text) return "";
   return text
-    .replace(/<[^>]*>/g, '') // Remove HTML tags
-    .replace(/\s*See other service alerts\.?/gi, '') // Remove boilerplate
+    .replace(/<[^>]*>/g, "") // Remove HTML tags
+    .replace(/\s*See other service alerts\.?/gi, "") // Remove boilerplate
     .trim();
+}
+```
+
+**SiteWide Alert Cleanup (v65):**
+
+SiteWide alerts (station entrance closures, facility alerts) are tracked and cleaned up like RSZ and Accessibility alerts:
+
+```typescript
+// Track active SiteWide alert IDs from TTC API
+const activeSiteWideAlertIds = new Set<string>();
+
+// When processing TTC API alerts, track SiteWide
+if (isSiteWide && a.id) {
+  activeSiteWideAlertIds.add(`ttc-SiteWide-${a.id}`);
+}
+
+// Delete stale SiteWide alerts not in TTC API
+const { data: existingSiteWideAlerts } = await supabase
+  .from("alert_cache")
+  .select("alert_id, thread_id")
+  .like("alert_id", "ttc-SiteWide-%");
+
+if (existingSiteWideAlerts) {
+  for (const swAlert of existingSiteWideAlerts) {
+    if (!activeSiteWideAlertIds.has(swAlert.alert_id)) {
+      await supabase.from("alert_cache").delete().eq("alert_id", swAlert.alert_id);
+      // Delete orphaned thread if no alerts remain
+    }
+  }
 }
 ```
 
