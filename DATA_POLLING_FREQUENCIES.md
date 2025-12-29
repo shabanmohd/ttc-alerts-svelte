@@ -99,7 +99,39 @@ This document describes all data sources, their polling frequencies, and update 
 - Stop sequencing in UI
 - Branch selection
 
-### 6. Stop Database
+### 6. Route List (Dynamic)
+
+| Property                  | Value                                          |
+| ------------------------- | ---------------------------------------------- |
+| **Source**                | NextBus API (routeList command)                |
+| **Our Refresh Frequency** | Weekly (Sundays, 2:00 AM UTC)                  |
+| **Workflow**              | `.github/workflows/refresh-route-data.yml`     |
+| **Script**                | `scripts/fetch-routes.cjs`                     |
+| **Output Files**          | `ttc-routes.json` (src/lib/data & static/data) |
+| **Total Routes**          | 216 routes (5 subway + 211 from API)           |
+
+**What's included:**
+
+- All active TTC routes from NextBus API
+- Routes categorized by type: subway, streetcar, express, night, nightStreetcar, community, bus, shuttle
+- Route number and title for each route
+
+**Categorization logic:**
+
+- 500-599: Streetcar
+- 900-999: Express (9xx)
+- 300-399: Blue Night
+- 301-311: Night Streetcar (overlaps with Blue Night range)
+- 806: Shuttle
+- Others: Regular bus
+
+**Used for:**
+
+- Routes page category display
+- Auto-detection of new/discontinued routes
+- Keep route list current without manual updates
+
+### 7. Stop Database
 
 | Property             | Value                        |
 | -------------------- | ---------------------------- |
@@ -118,11 +150,11 @@ This document describes all data sources, their polling frequencies, and update 
 
 ## Automated Workflows Summary
 
-| Workflow               | Schedule                | Data Source            | Output                  |
-| ---------------------- | ----------------------- | ---------------------- | ----------------------- |
-| **Schedule Refresh**   | Monthly (1st, 4 AM UTC) | Toronto Open Data GTFS | `ttc-schedules.json`    |
-| **Route Data Refresh** | Weekly (Sun, 2 AM UTC)  | NextBus API            | `ttc-route-*.json`      |
-| **Alert Polling**      | Every 30 seconds        | TTC Service Alerts API | Supabase `alerts` table |
+| Workflow               | Schedule                | Data Source            | Output                                         |
+| ---------------------- | ----------------------- | ---------------------- | ---------------------------------------------- |
+| **Schedule Refresh**   | Monthly (1st, 4 AM UTC) | Toronto Open Data GTFS | `ttc-schedules.json`                           |
+| **Route Data Refresh** | Weekly (Sun, 2 AM UTC)  | NextBus API            | `ttc-routes.json`, `ttc-route-*.json`          |
+| **Alert Polling**      | Every 30 seconds        | TTC Service Alerts API | Supabase `alerts` table                        |
 
 ### Workflow Triggers
 
@@ -172,13 +204,14 @@ When browser tab is backgrounded:
 
 ## Data Freshness Expectations
 
-| Data Type              | Freshness         | Notes                      |
-| ---------------------- | ----------------- | -------------------------- |
-| **Service Alerts**     | Real-time (< 30s) | Push-based via Realtime    |
-| **Bus/Streetcar ETAs** | 30 seconds max    | On-demand with cache       |
-| **Subway ETAs**        | 30 seconds max    | On-demand with cache       |
-| **Schedules**          | Monthly           | TTC updates ~every 6 weeks |
-| **Route Data**         | Weekly            | Stop sequences, branches   |
+| Data Type              | Freshness         | Notes                         |
+| ---------------------- | ----------------- | ----------------------------- |
+| **Service Alerts**     | Real-time (< 30s) | Push-based via Realtime       |
+| **Bus/Streetcar ETAs** | 30 seconds max    | On-demand with cache          |
+| **Subway ETAs**        | 30 seconds max    | On-demand with cache          |
+| **Schedules**          | Monthly           | TTC updates ~every 6 weeks    |
+| **Route Data**         | Weekly            | Stop sequences, branches      |
+| **Route List**         | Weekly            | All routes by category        |
 
 ---
 
@@ -187,7 +220,8 @@ When browser tab is backgrounded:
 | Data                       | URL                                                                                            |
 | -------------------------- | ---------------------------------------------------------------------------------------------- |
 | **TTC Service Alerts**     | `https://alerts.ttc.ca/api/alerts/live-alerts`                                                 |
-| **NextBus API**            | `https://retro.umoiq.com/service/publicXMLFeed`                                                |
+| **NextBus API (XML)**      | `https://retro.umoiq.com/service/publicXMLFeed`                                                |
+| **NextBus API (JSON)**     | `https://retro.umoiq.com/service/publicJSONFeed?command=routeList&a=ttc`                       |
 | **Toronto Open Data GTFS** | `https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/7795b45e-e65a-4465-81fc-c36b9dfff169` |
 | **TTC Subway API**         | `https://www.ttc.ca/ttcapi/...`                                                                |
 
@@ -195,9 +229,18 @@ When browser tab is backgrounded:
 
 ## Maintenance Notes
 
-### When TTC Changes Routes
+### When TTC Adds/Removes Routes
 
-If TTC adds/removes routes or significantly changes stop sequences:
+Route list is now **automatically updated** weekly via `fetch-routes.cjs`:
+
+1. Weekly route refresh fetches current routes from NextBus API
+2. Routes are auto-categorized (subway, streetcar, express, night, bus, shuttle)
+3. Routes page imports from JSON - no manual code changes needed
+4. Manual trigger: GitHub Actions → "Refresh TTC Route Data" → "Run workflow"
+
+### When TTC Changes Stop Sequences
+
+If TTC changes stop sequences or significantly changes routes:
 
 1. Weekly route refresh will catch it automatically
 2. Manual trigger: GitHub Actions → "Refresh TTC Route Data" → "Run workflow"

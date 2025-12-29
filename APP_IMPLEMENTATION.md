@@ -187,6 +187,7 @@ Real-time Toronto Transit alerts PWA.
 | `stops-db.ts`                | ✅     | IndexedDB layer with Dexie.js, GTFS direction/sequence, branch helpers             |
 | `subway-stations.ts`         | ✅     | Station-to-line mapping (69 stations) for elevator alert filtering 🆕              |
 | `ttc-holidays.ts`            | ✅     | TTC holiday schedule data with helper functions 🆕                                 |
+| `ttc-routes.json`            | ✅     | Categorized route list (216 routes, auto-fetched from NextBus API weekly) 🆕       |
 | `ttc-route-stop-orders.json` | ✅     | Route stop ordering (211 routes, auto-generated from NextBus API) 🆕 **V-B**       |
 | `ttc-route-branches.json`    | ✅     | Route branch data - directions with branches (102A/B/C/D, 501 variants) 🆕 **V-B** |
 | `ttc-direction-labels.json`  | ✅     | Direction display labels ("Towards Kennedy", etc.) 🆕 **V-B**                      |
@@ -338,6 +339,7 @@ Real-time Toronto Transit alerts PWA.
 | `translate-i18n.cjs`        | ✅     | Sync i18n source files to translations folder, DeepL API                  |
 | `download-gtfs.ts`          | ✅     | Download and extract GTFS from Toronto Open Data (~28 MB ZIP) 🆕          |
 | `process-gtfs-schedules.ts` | ✅     | Process TTC GTFS data to extract first departure times (AM + PM for 9xx)  |
+| `fetch-routes.cjs`          | ✅     | Fetch route list from NextBus API, categorize by type (216 routes) 🆕     |
 | `fetch-route-sequences.cjs` | ✅     | Fetch sequential stop orders from NextBus API (210 routes)                |
 | `fetch-route-branches.ts`   | ✅     | Fetch branch data from NextBus API (224 routes, direction/branch mapping) |
 | `fix-route-stop-orders.cjs` | ✅     | Convert route stop IDs from NextBus tags to GTFS stopIds (211 routes) 🆕  |
@@ -352,13 +354,13 @@ Real-time Toronto Transit alerts PWA.
 
 #### Route Data Refresh Workflow
 
-- **Purpose:** Keep route stop sequences and branch info up-to-date
+- **Purpose:** Keep route list, stop sequences, and branch info up-to-date
 - **Schedule:** Weekly (Sundays 2:00 AM UTC / Saturday 9:00 PM EST)
 - **Trigger:** Manual via GitHub Actions UI or scheduled
 - **Data Source:** NextBus API (TTC real-time transit API)
-- **Scripts:** `fix-route-stop-orders.cjs`, `fix-route-branches.cjs`
-- **Output:** Auto-commits `ttc-route-stop-orders.json` and `ttc-route-branches.json` (no PR)
-- **Updates:** Stop sequences per route, branch definitions, direction labels
+- **Scripts:** `fetch-routes.cjs`, `fix-route-stop-orders.cjs`, `fix-route-branches.cjs`
+- **Output:** Auto-commits `ttc-routes.json`, `ttc-route-stop-orders.json`, and `ttc-route-branches.json` (no PR)
+- **Updates:** Route list by category, stop sequences per route, branch definitions, direction labels
 
 #### Schedule Data Refresh Workflow
 
