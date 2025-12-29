@@ -38,6 +38,7 @@
 
   // URL param names (user-friendly) vs internal state names
   // URL: slowzones → Internal: delays
+  // URL: elevators → Internal: station-alerts
   const URL_TO_CATEGORY: Record<
     string,
     "disruptions" | "delays" | "station-alerts"
@@ -45,7 +46,7 @@
     disruptions: "disruptions",
     slowzones: "delays",
     elevators: "station-alerts",
-    "station-alerts": "station-alerts",
+    "station-alerts": "station-alerts", // Keep for backwards compatibility
   };
   const CATEGORY_TO_URL: Record<
     "disruptions" | "delays" | "station-alerts",
@@ -53,7 +54,7 @@
   > = {
     disruptions: "disruptions",
     delays: "slowzones",
-    "station-alerts": "station-alerts",
+    "station-alerts": "elevators", // Changed: URL shows "elevators" instead of "station-alerts"
   };
 
   // URL param to subtab mapping
