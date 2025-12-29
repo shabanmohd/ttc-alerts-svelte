@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 12.3  
+**Version:** 12.4  
 **Date:** December 29, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v65 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
+**Status:** ✅ Implemented and Active (poll-alerts v67 + Express/Night route conflict prevention + Hidden thread auto-unhide + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -45,9 +45,10 @@ This document describes the alert categorization and threading system designed t
 5. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
 6. **Effect-based categorization** - Focus on service impact, not cause
 7. **Incident threading** - Group related updates using reply chains + similarity + route matching
-8. **Frontend filtering** - Mutually exclusive category filters in UI
-9. **Planned alert separation** - Maintenance/scheduled alerts excluded from main feed
-10. **TTC API cross-check** - Official TTC Live API used for resolution verification
+8. **Express/Night route separation** - 9XX (express) never merged with XX (regular), 3XX (night) never merged with XX (v66)
+9. **Frontend filtering** - Mutually exclusive category filters in UI
+10. **Planned alert separation** - Maintenance/scheduled alerts excluded from main feed
+11. **TTC API cross-check** - Official TTC Live API used for resolution verification
 
 ---
 
@@ -55,7 +56,7 @@ This document describes the alert categorization and threading system designed t
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  Bluesky API    │────▶│  poll-alerts (v50)   │────▶│  Supabase DB    │
+│  Bluesky API    │────▶│  poll-alerts (v67)   │────▶│  Supabase DB    │
 │  @ttcalerts     │     │  (Edge Function)     │     │  alert_cache    │
 │  (PRIMARY)      │     └──────────────────────┘     │  incident_      │
 └─────────────────┘              │   │               │  threads        │
@@ -255,12 +256,14 @@ if (!isStillActive) {
 export const threadsWithAlerts = derived(
   [threads, alerts],
   ([$threads, $alerts]) => {
-    return $threads
-      // Filter out hidden threads (threads no longer in TTC API without SERVICE_RESUMED)
-      .filter(thread => !thread.is_hidden)
-      .map((thread): ThreadWithAlerts => {
-        // ... map alerts to threads
-      });
+    return (
+      $threads
+        // Filter out hidden threads (threads no longer in TTC API without SERVICE_RESUMED)
+        .filter((thread) => !thread.is_hidden)
+        .map((thread): ThreadWithAlerts => {
+          // ... map alerts to threads
+        })
+    );
   }
 );
 ```
@@ -1399,7 +1402,10 @@ const { data: existingSiteWideAlerts } = await supabase
 if (existingSiteWideAlerts) {
   for (const swAlert of existingSiteWideAlerts) {
     if (!activeSiteWideAlertIds.has(swAlert.alert_id)) {
-      await supabase.from("alert_cache").delete().eq("alert_id", swAlert.alert_id);
+      await supabase
+        .from("alert_cache")
+        .delete()
+        .eq("alert_id", swAlert.alert_id);
       // Delete orphaned thread if no alerts remain
     }
   }

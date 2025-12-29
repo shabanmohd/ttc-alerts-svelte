@@ -1,6 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// v66: Fix express/night route conflicting with regular routes in threading
+// - Add hasConflictingRoutes() to detect 9XX vs XX (express) and 3XX vs XX (night) conflicts
+// - Prevent 939 Finch Express from merging with 39 Finch East thread (and similar conflicts)
+// - Apply conflict check in: Bluesky threading, TTC API threading, thread validation
 // v65: Add SiteWide alert cleanup (same as RSZ/Accessibility)
 // - Track activeSiteWideAlertIds for alerts that exist in TTC API
 // - Delete stale ttc-SiteWide-* alerts not in active set
@@ -10,7 +14,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // - Also removes "See other service alerts" boilerplate text
 // v63: Fix SiteWide alerts to bypass alreadyHasThread check
 // v62: SiteWide alerts support (station entrance/facility closures)
-const FUNCTION_VERSION = 65;
+const FUNCTION_VERSION = 67;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -108,6 +112,35 @@ function extractRouteNumber(route: string): string { return route.match(/^(\d+)/
 function extractRouteWithBranch(route: string): string { 
   const match = route.match(/^(\d+[A-Z]?)/i);
   return match ? match[1].toUpperCase() : route;
+}
+
+// Check if two routes are in the same "family" but different services (express vs regular, night vs regular)
+// Returns true if routes should NOT be merged (e.g., 39 and 939 are related but different services)
+function areConflictingRoutes(route1: string, route2: string): boolean {
+  const num1 = extractRouteNumber(route1);
+  const num2 = extractRouteNumber(route2);
+  if (num1 === num2) return false; // Same route number = not conflicting
+  
+  // Express routes (9XX) vs regular routes (XX): 939 vs 39, 986 vs 86, etc.
+  // Check if one is 9XX and the other is XX where XX matches the last 2 digits
+  if (/^9\d{2}$/.test(num1) && num1.slice(1) === num2) return true; // 939 vs 39
+  if (/^9\d{2}$/.test(num2) && num2.slice(1) === num1) return true; // 39 vs 939
+  
+  // Night routes (3XX) vs regular routes (XX): 329 vs 29, 307 vs 7, etc.
+  if (/^3\d{2}$/.test(num1) && (num1.slice(1) === num2 || num1.slice(2) === num2)) return true; // 329 vs 29, 307 vs 7
+  if (/^3\d{2}$/.test(num2) && (num2.slice(1) === num1 || num2.slice(2) === num1)) return true; // 29 vs 329, 7 vs 307
+  
+  return false;
+}
+
+// Check if any route in alert conflicts with any route in thread (should NOT merge)
+function hasConflictingRoutes(alertRoutes: string[], threadRoutes: string[]): boolean {
+  for (const ar of alertRoutes) {
+    for (const tr of threadRoutes) {
+      if (areConflictingRoutes(ar, tr)) return true;
+    }
+  }
+  return false;
 }
 
 function extractStationName(text: string): string | null {
@@ -345,6 +378,13 @@ serve(async (req) => {
               }
               return false;
             });
+            
+            // UNHIDE threads that are still active but were previously hidden (e.g., 939 came back into TTC API)
+            if (isStillActive && thread.is_hidden) {
+              await supabase.from('incident_threads').update({ is_hidden: false, updated_at: now.toISOString() }).eq('thread_id', thread.thread_id);
+              continue; // Thread is active and now unhidden, skip the !isStillActive logic
+            }
+            
             if (!isStillActive) {
               const hasServiceResumed = (thread.categories || []).includes('SERVICE_RESUMED');
               if (hasServiceResumed) {
@@ -455,6 +495,8 @@ serve(async (req) => {
           const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
           if (!threadRoutes.length) continue;
           const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
+          // CRITICAL: Reject matches between express (9XX) and regular (XX) routes
+          if (hasConflictingRoutes(alertBaseRoutes, threadBaseRoutes)) continue;
           if (alertBaseRoutes.every(ab => threadBaseRoutes.includes(ab))) {
             const sim = enhancedSimilarity(text, thread.title || '');
             if (sim > bestSimilarity) { bestSimilarity = sim; matchedThread = thread; }
@@ -473,6 +515,10 @@ serve(async (req) => {
           // Skip RSZ threads for non-RSZ alerts (RSZ threads have "slower than usual" in title)
           const isRszThread = (thread.title || '').toLowerCase().includes('slower than usual');
           if (isRszThread && !text.toLowerCase().includes('slower than usual')) continue;
+          
+          // CRITICAL: Reject matches between express (9XX) and regular (XX) routes
+          // e.g., 939 Finch Express should NOT merge with 39 Finch East thread
+          if (hasConflictingRoutes(routes, threadRoutes)) continue;
           
           // Use exact branch matching for bus routes (40B must match 40B, not 40)
           // But for subway lines (Line 1, Line 2), use base number matching
@@ -514,20 +560,25 @@ serve(async (req) => {
         const alertHasSubway = routes.some(r => r.toLowerCase().startsWith('line'));
         const threadHasSubway = threadRoutes.some((r: string) => r.toLowerCase().startsWith('line'));
         
-        let hasValidOverlap: boolean;
-        if (alertHasSubway || threadHasSubway) {
-          // Subway: use base number matching
-          const alertBaseRoutes = routes.map(extractRouteNumber);
-          const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
-          hasValidOverlap = alertBaseRoutes.some(b => threadBaseRoutes.includes(b));
+        // CRITICAL: Also reject conflicting routes (9XX vs XX, 3XX vs XX)
+        if (hasConflictingRoutes(routes, threadRoutes)) {
+          matchedThread = null;
         } else {
-          // Bus: use exact branch matching
-          const alertExactRoutes = routes.map(extractRouteWithBranch);
-          const threadExactRoutes = threadRoutes.map(extractRouteWithBranch);
-          hasValidOverlap = alertExactRoutes.some(ae => threadExactRoutes.includes(ae));
+          let hasValidOverlap: boolean;
+          if (alertHasSubway || threadHasSubway) {
+            // Subway: use base number matching
+            const alertBaseRoutes = routes.map(extractRouteNumber);
+            const threadBaseRoutes = threadRoutes.map(extractRouteNumber);
+            hasValidOverlap = alertBaseRoutes.some(b => threadBaseRoutes.includes(b));
+          } else {
+            // Bus: use exact branch matching
+            const alertExactRoutes = routes.map(extractRouteWithBranch);
+            const threadExactRoutes = threadRoutes.map(extractRouteWithBranch);
+            hasValidOverlap = alertExactRoutes.some(ae => threadExactRoutes.includes(ae));
+          }
+          
+          if (!hasValidOverlap && routes.length > 0 && threadRoutes.length > 0) matchedThread = null;
         }
-        
-        if (!hasValidOverlap && routes.length > 0 && threadRoutes.length > 0) matchedThread = null;
       }
       
       if (matchedThread) {
@@ -693,6 +744,9 @@ serve(async (req) => {
         if (isRSZ) {
           const { data: rszThreads } = await supabase.from('incident_threads').select('*, alert_cache!inner(*)').eq('is_resolved', false).contains('affected_routes', routes);
           for (const t of rszThreads || []) {
+            // CRITICAL: Skip threads with conflicting routes (e.g., 939 thread should not match 39 RSZ)
+            const threadRoutes = Array.isArray(t.affected_routes) ? t.affected_routes : [];
+            if (hasConflictingRoutes(routes, threadRoutes)) continue;
             for (const a of t.alert_cache || []) {
               const rd = a.raw_data || {};
               if (rd.stopStart === ttcAlert.stopStart && rd.stopEnd === ttcAlert.stopEnd && rd.direction === ttcAlert.direction) { threadId = t.thread_id; break; }
@@ -701,8 +755,26 @@ serve(async (req) => {
           }
           if (threadId) await supabase.from('alert_cache').update({ thread_id: threadId }).eq('alert_id', ttcAlertId);
         } else {
-          const { data: et } = await supabase.from('incident_threads').select('*').eq('is_resolved', false).contains('affected_routes', routes);
-          if (et?.length) { threadId = et[0].thread_id; await supabase.from('alert_cache').update({ thread_id: threadId }).eq('alert_id', ttcAlertId); }
+          // CRITICAL: When finding matching threads, filter out threads with conflicting routes
+          // This prevents 939 Finch Express from joining 39 Finch East thread (or vice versa)
+          const { data: et } = await supabase.from('incident_threads').select('*').eq('is_resolved', false);
+          let matchingThread = null;
+          for (const t of et || []) {
+            const threadRoutes = Array.isArray(t.affected_routes) ? t.affected_routes : [];
+            // Skip if routes conflict (express vs regular, night vs regular)
+            if (hasConflictingRoutes(routes, threadRoutes)) continue;
+            // Check if thread contains our routes (exact match, not substring)
+            const alertExactRoutes = routes.map(extractRouteWithBranch);
+            const threadExactRoutes = threadRoutes.map(extractRouteWithBranch);
+            if (alertExactRoutes.some(ae => threadExactRoutes.includes(ae))) {
+              matchingThread = t;
+              break;
+            }
+          }
+          if (matchingThread) { 
+            threadId = matchingThread.thread_id; 
+            await supabase.from('alert_cache').update({ thread_id: threadId }).eq('alert_id', ttcAlertId); 
+          }
         }
         
         if (!threadId) {
