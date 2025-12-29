@@ -1,24 +1,14 @@
 <script lang="ts">
   import { _ } from "svelte-i18n";
   import { networkStatus } from "$lib/stores/networkStatus";
-  import { CloudOff, AlertTriangle, RefreshCw, X } from "lucide-svelte";
+  import { CloudOff, RefreshCw, X } from "lucide-svelte";
   import { slide } from "svelte/transition";
 
   // TEST MODE: Set to true to always show banner for testing
   const TEST_MODE = false;
-  const TEST_STATUS: "offline" | "degraded" = "degraded";
 
-  // Only show when offline or degraded (not connecting)
-  let showBanner = $derived(
-    TEST_MODE ||
-      $networkStatus.status === "offline" ||
-      $networkStatus.status === "degraded"
-  );
-
-  // Get effective status (test or real)
-  let effectiveStatus = $derived(
-    TEST_MODE ? TEST_STATUS : $networkStatus.status
-  );
+  // Only show when offline (removed degraded state)
+  let showBanner = $derived(TEST_MODE || $networkStatus.status === "offline");
 
   // Dismiss state - resets when status changes
   let dismissed = $state(false);
@@ -44,27 +34,20 @@
 
 {#if showBanner && !dismissed}
   <div
-    class="status-banner"
-    class:offline={effectiveStatus === "offline"}
-    class:degraded={effectiveStatus === "degraded"}
+    class="status-banner offline"
     transition:slide={{ duration: 200 }}
     role="alert"
   >
     <div class="banner-content">
       <div class="banner-icon">
-        {#if effectiveStatus === "offline"}
-          <CloudOff class="h-4 w-4" />
-        {:else}
-          <AlertTriangle class="h-4 w-4" />
-        {/if}
+        <CloudOff class="h-4 w-4" />
       </div>
       <div class="banner-text">
-        <span class="banner-message"
-          >{$_(`networkStatus.${effectiveStatus}.message`)}</span
+        <span class="banner-message">{$_("networkStatus.offline.message")}</span
         >
         <span class="banner-separator">•</span>
         <span class="banner-description">
-          {$_(`networkStatus.${effectiveStatus}.description`)} —
+          {$_("networkStatus.offline.description")} —
           <button
             class="retry-link"
             onclick={handleRetry}
@@ -103,17 +86,6 @@
     background-color: hsl(var(--muted));
     border-color: hsl(var(--border));
     color: hsl(var(--muted-foreground));
-  }
-
-  .status-banner.degraded {
-    background-color: hsl(45 93% 47% / 0.1);
-    border-color: hsl(45 93% 47% / 0.3);
-    color: hsl(45 93% 35%);
-  }
-
-  :global(.dark) .status-banner.degraded {
-    background-color: hsl(45 93% 47% / 0.15);
-    color: hsl(45 93% 58%);
   }
 
   .banner-content {

@@ -8,15 +8,16 @@ This document describes all data sources, their polling frequencies, and update 
 
 ### 1. Service Alerts
 
-| Property | Value |
-|----------|-------|
-| **Source** | Supabase Edge Function (`poll-alerts`) polling TTC Service Alerts API |
-| **Update Frequency** | Every 30 seconds (server-side) |
-| **Client Delivery** | Supabase Realtime (instant push on changes) |
-| **Data Type** | Service disruptions, delays, detours, closures |
-| **Caching** | No client-side caching - always fresh from server |
+| Property             | Value                                                                 |
+| -------------------- | --------------------------------------------------------------------- |
+| **Source**           | Supabase Edge Function (`poll-alerts`) polling TTC Service Alerts API |
+| **Update Frequency** | Every 30 seconds (server-side)                                        |
+| **Client Delivery**  | Supabase Realtime (instant push on changes)                           |
+| **Data Type**        | Service disruptions, delays, detours, closures                        |
+| **Caching**          | No client-side caching - always fresh from server                     |
 
 **How it works:**
+
 1. Edge Function polls TTC API every 30 seconds
 2. New/changed alerts are inserted into Supabase database
 3. Supabase Realtime pushes changes to connected clients instantly
@@ -24,15 +25,16 @@ This document describes all data sources, their polling frequencies, and update 
 
 ### 2. ETA Predictions (Real-Time GPS)
 
-| Property | Value |
-|----------|-------|
-| **Source** | NextBus API (TTC real-time vehicle positions) |
-| **Update Frequency** | On-demand with 30-second cache |
-| **Client Request** | When user views stop details |
-| **Data Type** | Minutes until next bus/streetcar arrival |
-| **Cache TTL** | 30 seconds |
+| Property             | Value                                         |
+| -------------------- | --------------------------------------------- |
+| **Source**           | NextBus API (TTC real-time vehicle positions) |
+| **Update Frequency** | On-demand with 30-second cache                |
+| **Client Request**   | When user views stop details                  |
+| **Data Type**        | Minutes until next bus/streetcar arrival      |
+| **Cache TTL**        | 30 seconds                                    |
 
 **How it works:**
+
 1. User opens stop details
 2. Client requests ETA from Edge Function
 3. Edge Function checks cache (30s TTL)
@@ -41,12 +43,12 @@ This document describes all data sources, their polling frequencies, and update 
 
 ### 3. Subway ETAs
 
-| Property | Value |
-|----------|-------|
-| **Source** | TTC Subway API |
+| Property             | Value                          |
+| -------------------- | ------------------------------ |
+| **Source**           | TTC Subway API                 |
 | **Update Frequency** | On-demand with 30-second cache |
-| **Data Type** | Minutes until next train |
-| **Cache TTL** | 30 seconds |
+| **Data Type**        | Minutes until next train       |
+| **Cache TTL**        | 30 seconds                     |
 
 ---
 
@@ -54,55 +56,60 @@ This document describes all data sources, their polling frequencies, and update 
 
 ### 4. Schedule Data (GTFS)
 
-| Property | Value |
-|----------|-------|
-| **Source** | [Toronto Open Data GTFS](https://open.toronto.ca/dataset/ttc-routes-and-schedules/) |
-| **TTC Update Frequency** | Approximately every 6 weeks |
-| **Our Refresh Frequency** | Monthly (1st of month, 4:00 AM UTC) |
-| **Workflow** | `.github/workflows/refresh-schedule-data.yml` |
-| **Output** | `static/data/ttc-schedules.json` (~9,267 stops) |
-| **Data Contents** | First AM/PM departures per route per stop |
+| Property                  | Value                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| **Source**                | [Toronto Open Data GTFS](https://open.toronto.ca/dataset/ttc-routes-and-schedules/) |
+| **TTC Update Frequency**  | Approximately every 6 weeks                                                         |
+| **Our Refresh Frequency** | Monthly (1st of month, 4:00 AM UTC)                                                 |
+| **Workflow**              | `.github/workflows/refresh-schedule-data.yml`                                       |
+| **Output**                | `static/data/ttc-schedules.json` (~9,267 stops)                                     |
+| **Data Contents**         | First AM/PM departures per route per stop                                           |
 
 **What's included:**
+
 - First weekday departure time per route per stop
 - First Saturday departure time
 - First Sunday departure time
 - First PM departure (after 3 PM) for express routes (9xx)
 
 **Used for:**
+
 - Fallback when real-time GPS data unavailable
 - "First bus at X:XX" information
 - Schedule-based departure predictions
 
 ### 5. Route Stop Orders & Branches
 
-| Property | Value |
-|----------|-------|
-| **Source** | NextBus API |
-| **Our Refresh Frequency** | Weekly (Sundays, 2:00 AM UTC) |
-| **Workflow** | `.github/workflows/refresh-route-data.yml` |
-| **Output Files** | `ttc-route-stop-orders.json`, `ttc-route-branches.json` |
+| Property                  | Value                                                   |
+| ------------------------- | ------------------------------------------------------- |
+| **Source**                | NextBus API                                             |
+| **Our Refresh Frequency** | Weekly (Sundays, 2:00 AM UTC)                           |
+| **Workflow**              | `.github/workflows/refresh-route-data.yml`              |
+| **Output Files**          | `ttc-route-stop-orders.json`, `ttc-route-branches.json` |
 
 **What's included:**
+
 - Stop sequences for each route (which stops in which order)
 - Branch definitions (route variants like "501 Long Branch")
 - Direction labels
 
 **Used for:**
+
 - Route browser stop lists
 - Stop sequencing in UI
 - Branch selection
 
 ### 6. Stop Database
 
-| Property | Value |
-|----------|-------|
-| **Source** | TTC GTFS `stops.txt` |
-| **Update Frequency** | Manual (with schedule data) |
-| **Total Stops** | 9,346 stops |
-| **Output** | `static/data/ttc-stops.json` |
+| Property             | Value                        |
+| -------------------- | ---------------------------- |
+| **Source**           | TTC GTFS `stops.txt`         |
+| **Update Frequency** | Manual (with schedule data)  |
+| **Total Stops**      | 9,346 stops                  |
+| **Output**           | `static/data/ttc-stops.json` |
 
 **What's included:**
+
 - Stop ID, name, coordinates
 - Accessibility information
 - Stop types (bus, streetcar, subway)
@@ -111,15 +118,16 @@ This document describes all data sources, their polling frequencies, and update 
 
 ## Automated Workflows Summary
 
-| Workflow | Schedule | Data Source | Output |
-|----------|----------|-------------|--------|
-| **Schedule Refresh** | Monthly (1st, 4 AM UTC) | Toronto Open Data GTFS | `ttc-schedules.json` |
-| **Route Data Refresh** | Weekly (Sun, 2 AM UTC) | NextBus API | `ttc-route-*.json` |
-| **Alert Polling** | Every 30 seconds | TTC Service Alerts API | Supabase `alerts` table |
+| Workflow               | Schedule                | Data Source            | Output                  |
+| ---------------------- | ----------------------- | ---------------------- | ----------------------- |
+| **Schedule Refresh**   | Monthly (1st, 4 AM UTC) | Toronto Open Data GTFS | `ttc-schedules.json`    |
+| **Route Data Refresh** | Weekly (Sun, 2 AM UTC)  | NextBus API            | `ttc-route-*.json`      |
+| **Alert Polling**      | Every 30 seconds        | TTC Service Alerts API | Supabase `alerts` table |
 
 ### Workflow Triggers
 
 Both GitHub workflows can be triggered:
+
 1. **Automatically** on schedule (cron)
 2. **Manually** via GitHub Actions UI → "Run workflow"
 
@@ -156,6 +164,7 @@ Close Details → Stop polling
 ### Visibility-Aware Polling
 
 When browser tab is backgrounded:
+
 - Alert Realtime subscription remains active (low overhead)
 - ETA polling pauses (no API calls until tab active)
 
@@ -163,24 +172,24 @@ When browser tab is backgrounded:
 
 ## Data Freshness Expectations
 
-| Data Type | Freshness | Notes |
-|-----------|-----------|-------|
-| **Service Alerts** | Real-time (< 30s) | Push-based via Realtime |
-| **Bus/Streetcar ETAs** | 30 seconds max | On-demand with cache |
-| **Subway ETAs** | 30 seconds max | On-demand with cache |
-| **Schedules** | Monthly | TTC updates ~every 6 weeks |
-| **Route Data** | Weekly | Stop sequences, branches |
+| Data Type              | Freshness         | Notes                      |
+| ---------------------- | ----------------- | -------------------------- |
+| **Service Alerts**     | Real-time (< 30s) | Push-based via Realtime    |
+| **Bus/Streetcar ETAs** | 30 seconds max    | On-demand with cache       |
+| **Subway ETAs**        | 30 seconds max    | On-demand with cache       |
+| **Schedules**          | Monthly           | TTC updates ~every 6 weeks |
+| **Route Data**         | Weekly            | Stop sequences, branches   |
 
 ---
 
 ## Data Source URLs
 
-| Data | URL |
-|------|-----|
-| **TTC Service Alerts** | `https://alerts.ttc.ca/api/alerts/live-alerts` |
-| **NextBus API** | `https://retro.umoiq.com/service/publicXMLFeed` |
+| Data                       | URL                                                                                            |
+| -------------------------- | ---------------------------------------------------------------------------------------------- |
+| **TTC Service Alerts**     | `https://alerts.ttc.ca/api/alerts/live-alerts`                                                 |
+| **NextBus API**            | `https://retro.umoiq.com/service/publicXMLFeed`                                                |
 | **Toronto Open Data GTFS** | `https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/7795b45e-e65a-4465-81fc-c36b9dfff169` |
-| **TTC Subway API** | `https://www.ttc.ca/ttcapi/...` |
+| **TTC Subway API**         | `https://www.ttc.ca/ttcapi/...`                                                                |
 
 ---
 
@@ -189,12 +198,14 @@ When browser tab is backgrounded:
 ### When TTC Changes Routes
 
 If TTC adds/removes routes or significantly changes stop sequences:
+
 1. Weekly route refresh will catch it automatically
 2. Manual trigger: GitHub Actions → "Refresh TTC Route Data" → "Run workflow"
 
 ### When TTC Updates GTFS
 
 TTC publishes new GTFS approximately every 6 weeks:
+
 1. Monthly schedule refresh will catch it within ~4-6 weeks
 2. Manual trigger: GitHub Actions → "Refresh TTC Schedule Data" → "Run workflow"
 
