@@ -2,7 +2,7 @@
   import { cn } from "$lib/utils";
   import { TriangleAlert, Gauge, Accessibility } from "lucide-svelte";
 
-  type Category = "disruptions" | "delays" | "elevators";
+  type Category = "disruptions" | "delays" | "station-alerts";
 
   interface CategoryConfig {
     id: Category;
@@ -13,11 +13,11 @@
 
   let {
     selected = "disruptions",
-    counts = { disruptions: 0, delays: 0, elevators: 0 },
+    counts = { disruptions: 0, delays: 0, stationAlerts: 0 },
     onSelect,
   }: {
     selected: Category;
-    counts?: { disruptions: number; delays: number; elevators: number };
+    counts?: { disruptions: number; delays: number; stationAlerts: number };
     onSelect: (category: Category) => void;
   } = $props();
 
@@ -29,10 +29,10 @@
       ariaLabel: "Show service disruptions and delays",
     },
     {
-      id: "elevators",
-      label: "Elevators",
+      id: "station-alerts",
+      label: "Station Alerts",
       icon: Accessibility,
-      ariaLabel: "Show elevator and escalator status",
+      ariaLabel: "Show station and facility alerts",
     },
     {
       id: "delays",
@@ -57,7 +57,7 @@
     {#each categories as cat}
       {@const isActive = selected === cat.id}
       {@const Icon = cat.icon}
-      {@const count = counts[cat.id] || 0}
+      {@const count = cat.id === 'station-alerts' ? counts.stationAlerts : counts[cat.id] || 0}
       <button
         class={cn("category-pill", cat.id, isActive && "active")}
         role="tab"
@@ -176,14 +176,14 @@
     background-color: hsl(45 93% 57% / 0.15);
   }
 
-  /* Elevators - Blue accent */
-  .category-pill.elevators.active {
+  /* Station Alerts - Blue accent */
+  .category-pill.station-alerts.active {
     color: hsl(217 91% 45%);
     border-color: hsl(217 91% 60% / 0.3);
     background-color: hsl(217 91% 60% / 0.08);
   }
 
-  :global(.dark) .category-pill.elevators.active {
+  :global(.dark) .category-pill.station-alerts.active {
     color: hsl(217 91% 70%);
     border-color: hsl(217 91% 70% / 0.3);
     background-color: hsl(217 91% 70% / 0.15);
@@ -224,7 +224,7 @@
     color: white;
   }
 
-  .category-pill.elevators.active .pill-count {
+  .category-pill.station-alerts.active .pill-count {
     background-color: hsl(217 91% 45%);
     color: white;
   }
@@ -239,7 +239,7 @@
     color: hsl(0 0% 10%);
   }
 
-  :global(.dark) .category-pill.elevators.active .pill-count {
+  :global(.dark) .category-pill.station-alerts.active .pill-count {
     background-color: hsl(217 91% 70%);
     color: hsl(0 0% 10%);
   }

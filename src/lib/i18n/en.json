@@ -686,7 +686,7 @@
     "alertTypeResumed": "Resumed",
     "alertTypeResumedDesc": "Service has returned to normal",
     "filteringSearch": "Filtering & Search",
-    "filteringContent1": "Use the filter buttons at the top of the Alerts page to show specific alert types (Disruptions, Elevators, Slow Zones).",
+    "filteringContent1": "Use the filter buttons at the top of the Alerts page to show specific alert types (Disruptions, Station Alerts, Slow Zones).",
     "filteringContent2": "Switch between Now (active alerts) and Scheduled (planned closures and route changes) tabs.",
     "filteringContent3": "Your filter selections are remembered so you'll see the same view next time.",
     "savingRoutesStops": "Saving Routes & Stops",

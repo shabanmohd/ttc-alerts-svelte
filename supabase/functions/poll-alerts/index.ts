@@ -202,7 +202,8 @@ serve(async (req) => {
               }
             }
             const isPlanned = a.alertType === 'Planned' && ['NO_SERVICE', 'REDUCED_SERVICE'].includes(a.effect);
-            if (!isPlanned && ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'SIGNIFICANT_DELAYS', 'ACCESSIBILITY_ISSUE'].includes(a.effect) && a.route && a.headerText) {
+            const isSiteWide = a.alertType === 'SiteWide' && (a.headerText || a.customHeaderText);
+            if (!isPlanned && (isSiteWide || ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'SIGNIFICANT_DELAYS', 'ACCESSIBILITY_ISSUE'].includes(a.effect)) && a.route && (a.headerText || a.customHeaderText)) {
               ttcApiAlerts.push(a);
               // Track active RSZ alert IDs
               if (a.effect === 'SIGNIFICANT_DELAYS' && a.stopStart && a.stopEnd) {

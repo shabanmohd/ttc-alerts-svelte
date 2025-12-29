@@ -689,7 +689,7 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 **Z-Index Fixes (Settings Page):**
 
 - ✅ **StopSearch dropdown** - Container z-50, dropdown z-[100]
-- ✅ **RouteSearch dropdown** - Container z-50, dropdown z-[100]  
+- ✅ **RouteSearch dropdown** - Container z-50, dropdown z-[100]
 - ✅ **Saved Stops card** - Added `overflow-visible relative z-20`
 - ✅ **Saved Routes card** - Added `overflow-visible relative z-10`
 - ✅ **Preferences card** - Added `relative z-0`
@@ -2154,6 +2154,29 @@ normalizeRouteId(route1) === normalizeRouteId(route2);
 - Language and theme stored in IndexedDB (same system as saved stops/routes)
 - Uses `localPreferences.updatePreference()` for all setting changes
 - Language automatically detects device default (browser language) on first visit
+
+### June 19, 2025 - Station Alerts Category (v61)
+
+**SiteWide Alerts Support:**
+
+- poll-alerts now processes TTC API `alertType: "SiteWide"` alerts for station entrance/facility closures
+- Added `customHeaderText` fallback handling for SiteWide alerts (which may have `effect: null`)
+- SiteWide alerts categorized as ACCESSIBILITY for station-related disruptions
+
+**Filter Category Rename:**
+
+- Renamed "Elevators" filter to "Station Alerts" to include both elevator outages and entrance closures
+- Updated CategoryFilterV3: Changed type from "elevators" to "station-alerts"
+- Updated URL mapping: Both "elevators" and "station-alerts" params map to station-alerts filter
+- Updated counts property from `elevators` to `stationAlerts` (camelCase)
+- Updated translations (en.json files) for filter labels and help text
+
+**Updated Files:**
+
+- `supabase/functions/poll-alerts/index.ts` - Added SiteWide alert handling (line 204)
+- `src/routes/alerts/CategoryFilterV3.svelte` - Renamed category and fixed property access
+- `src/routes/alerts/+page.svelte` - Updated types, counts, URL mappings
+- `src/lib/i18n/en.json` and `translations/en.json` - Updated filter labels
 
 ### Dec 4, 2025 - Schema Adaptation
 

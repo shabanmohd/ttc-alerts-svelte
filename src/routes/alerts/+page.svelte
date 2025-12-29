@@ -40,19 +40,20 @@
   // URL: slowzones → Internal: delays
   const URL_TO_CATEGORY: Record<
     string,
-    "disruptions" | "delays" | "elevators"
+    "disruptions" | "delays" | "station-alerts"
   > = {
     disruptions: "disruptions",
     slowzones: "delays",
-    elevators: "elevators",
+    elevators: "station-alerts",
+    "station-alerts": "station-alerts",
   };
   const CATEGORY_TO_URL: Record<
-    "disruptions" | "delays" | "elevators",
+    "disruptions" | "delays" | "station-alerts",
     string
   > = {
     disruptions: "disruptions",
     delays: "slowzones",
-    elevators: "elevators",
+    "station-alerts": "station-alerts",
   };
 
   // URL param to subtab mapping
@@ -72,7 +73,7 @@
     return params.get("tab") === "scheduled" ? "planned" : "now";
   }
 
-  function getInitialCategory(): "disruptions" | "delays" | "elevators" {
+  function getInitialCategory(): "disruptions" | "delays" | "station-alerts" {
     if (!browser) return "disruptions";
     const params = new URLSearchParams(window.location.search);
     const cat = params.get("category");
@@ -96,8 +97,8 @@
   // Tab state: "now" or "planned" - initialized from URL params
   let activeTab: "now" | "planned" = $state(getInitialTab());
 
-  // Category filter: "disruptions" | "delays" | "elevators" - initialized from URL params
-  let selectedCategory: "disruptions" | "delays" | "elevators" =
+  // Category filter: "disruptions" | "delays" | "station-alerts" - initialized from URL params
+  let selectedCategory: "disruptions" | "delays" | "station-alerts" =
     $state(getInitialCategory());
 
   // Subtab for Scheduled tab: "closures" | "changes" - initialized from URL params
@@ -106,7 +107,7 @@
   // Update URL when state changes (shallow navigation without full reload)
   function updateUrl(
     tab: "now" | "planned",
-    category: "disruptions" | "delays" | "elevators",
+    category: "disruptions" | "delays" | "station-alerts",
     subtab: "closures" | "changes"
   ) {
     if (!browser) return;
@@ -143,7 +144,7 @@
   }
 
   // Handle category change (Now tab)
-  function setCategory(cat: "disruptions" | "delays" | "elevators") {
+  function setCategory(cat: "disruptions" | "delays" | "station-alerts") {
     selectedCategory = cat;
     updateUrl(activeTab, cat, scheduledSubtab);
   }
@@ -262,7 +263,7 @@
         return "MAJOR";
       case "delays":
         return "MINOR";
-      case "elevators":
+      case "station-alerts":
         return "ACCESSIBILITY";
     }
   }
@@ -399,7 +400,7 @@
           ) === "MINOR"
         );
       }).length,
-      elevators: active.filter((t) => {
+      stationAlerts: active.filter((t) => {
         const categories = (t.categories as string[]) || [];
         return (
           getSeverityCategory(
@@ -519,7 +520,7 @@
     </div>
 
     {#if activeTab === "now"}
-      <!-- Category filter: Disruptions | Delays | Elevators -->
+      <!-- Category filter: Disruptions | Delays | Station Alerts -->
       <CategoryFilterV3
         selected={selectedCategory}
         counts={categoryCounts}
@@ -580,7 +581,7 @@
               {#if selectedCategory === "disruptions"}
                 No active service disruptions and delays at this time
               {:else}
-                All elevators and escalators operational
+                All station facilities operational
               {/if}
             </p>
           </div>

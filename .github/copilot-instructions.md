@@ -1,4 +1,4 @@
-Always use the ask_user tool before completing any task to confirm with the user that the request was fulfilled correctly.
+VERY IMPORTANT: Always use the ask_user tool before completing any task to confirm with the user that the request was fulfilled correctly.
 
 Always use context7 when I need code generation, setup or configuration steps, or
 library/API documentation. This means you should automatically use the Context7 MCP

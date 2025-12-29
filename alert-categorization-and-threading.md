@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 12.0  
+**Version:** 12.1  
 **Date:** June 19, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v60 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts)  
+**Status:** ✅ Implemented and Active (poll-alerts v60 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts for station closures)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -123,6 +123,7 @@ const posts = (bskyData.feed || []).sort(
 - **Filtering:**
   - ✅ Include: `alertType !== "Planned"` (real-time incidents only)
   - ✅ Include: Effects `NO_SERVICE`, `REDUCED_SERVICE`, `DETOUR`, `SIGNIFICANT_DELAYS`, `ACCESSIBILITY_ISSUE`
+  - ✅ Include: `alertType === "SiteWide"` for station entrance/facility closures (v61)
   - ❌ Exclude: `alertType === "Planned"` (scheduled closures, maintenance)
 - **Deduplication:** Only creates alerts for routes NOT already covered by Bluesky
 - **Alert ID Format:** `ttc-{route}-{effect}-{id}` (e.g., `ttc-1-SIGNIFICANT_DELAYS-54744`)
@@ -1013,11 +1014,11 @@ The frontend provides two levels of filtering for alerts:
 
 Alerts are categorized into three severity levels based on their effect and type:
 
-| Category          | TTC API Effects                                                                                     | Description                                                  |
-| ----------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance |
-| **MINOR**         | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")     |
-| **ACCESSIBILITY** | ACCESSIBILITY_ISSUE (Elevator/Escalator)                                                            | Elevator and escalator outages                               |
+| Category              | TTC API Effects                                                                                     | Description                                                             |
+| --------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **MAJOR**             | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance            |
+| **MINOR**             | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")                |
+| **STATION_ALERTS** 🆕 | ACCESSIBILITY_ISSUE (Elevator/Escalator), SiteWide (Station entrance closures)                      | Elevator/escalator outages and station entrance/facility closures (v61) |
 
 **Categorization Logic (`getSeverityCategory()` in alerts.ts):**
 
@@ -1031,15 +1032,16 @@ export function getSeverityCategory(
   const upperEffect = (effect || "").toUpperCase();
   const lowerHeader = (headerText || "").toLowerCase();
 
-  // Check for accessibility alerts first (elevator/escalator)
+  // Check for station alerts first (elevator/escalator/station closures)
   if (
     upperCategories.includes("ACCESSIBILITY_ISSUE") ||
     upperCategories.includes("ACCESSIBILITY") ||
     upperEffect.includes("ACCESSIBILITY") ||
     lowerHeader.includes("elevator") ||
-    lowerHeader.includes("escalator")
+    lowerHeader.includes("escalator") ||
+    lowerHeader.includes("entrance")
   ) {
-    return "ACCESSIBILITY";
+    return "STATION_ALERTS";
   }
 
   // Check for RSZ (Reduced Speed Zone) alerts FIRST - these are MINOR
