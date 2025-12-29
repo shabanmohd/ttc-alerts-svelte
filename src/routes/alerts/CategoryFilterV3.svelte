@@ -57,7 +57,10 @@
     {#each categories as cat}
       {@const isActive = selected === cat.id}
       {@const Icon = cat.icon}
-      {@const count = cat.id === 'station-alerts' ? counts.stationAlerts : counts[cat.id] || 0}
+      {@const count =
+        cat.id === "station-alerts"
+          ? counts.stationAlerts
+          : counts[cat.id] || 0}
       <button
         class={cn("category-pill", cat.id, isActive && "active")}
         role="tab"

@@ -1014,11 +1014,11 @@ The frontend provides two levels of filtering for alerts:
 
 Alerts are categorized into three severity levels based on their effect and type:
 
-| Category           | TTC API Effects                                                                                     | Description                                                                |
-| ------------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **MAJOR**          | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance               |
-| **MINOR**          | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")                   |
-| **FACILITIES** 🆕  | ACCESSIBILITY_ISSUE (Elevator/Escalator), SiteWide (Station entrance closures)                      | Elevator/escalator outages and station entrance/facility closures (v61)    |
+| Category          | TTC API Effects                                                                                     | Description                                                             |
+| ----------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance            |
+| **MINOR**         | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")                |
+| **FACILITIES** 🆕 | ACCESSIBILITY_ISSUE (Elevator/Escalator), SiteWide (Station entrance closures)                      | Elevator/escalator outages and station entrance/facility closures (v61) |
 
 **Categorization Logic (`getSeverityCategory()` in alerts.ts):**
 

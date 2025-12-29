@@ -596,6 +596,8 @@ serve(async (req) => {
         if (isRSZ && ttcAlert.stopStart && ttcAlert.stopEnd) {
           const dir = ttcAlert.direction ? `-${ttcAlert.direction.replace(/\s+/g, '')}` : '';
           ttcAlertId = `ttc-RSZ-${primaryRoute}-${ttcAlert.stopStart}-${ttcAlert.stopEnd}${dir}`.replace(/\s+/g, '-');
+        } else if (ttcAlert.alertType === 'SiteWide') {
+          ttcAlertId = `ttc-SiteWide-${ttcAlert.id}`;
         } else { ttcAlertId = `ttc-${ttcAlert.effect}-${ttcAlert.id}`; }
         
         if (existingAlertIds.has(ttcAlertId)) {
@@ -604,21 +606,32 @@ serve(async (req) => {
         }
         
         let category = 'DELAY';
-        if (ttcAlert.effect === 'NO_SERVICE' || ttcAlert.effect === 'REDUCED_SERVICE') category = 'SERVICE_DISRUPTION';
+        const isSiteWide = ttcAlert.alertType === 'SiteWide';
+        if (isSiteWide) category = 'ACCESSIBILITY';
+        else if (ttcAlert.effect === 'NO_SERVICE' || ttcAlert.effect === 'REDUCED_SERVICE') category = 'SERVICE_DISRUPTION';
         else if (ttcAlert.effect === 'DETOUR') category = 'DIVERSION';
         else if (ttcAlert.effect === 'ACCESSIBILITY_ISSUE') category = 'ACCESSIBILITY';
         
         const routes: string[] = [];
-        if (isAccessibility && routeParts.length > 0) {
+        if (isSiteWide) {
+          // Extract station name from customHeaderText (e.g., "Yorkdale Station - ...")
+          const text = ttcAlert.customHeaderText || ttcAlert.headerText || '';
+          const stationMatch = text.match(/^([^-:]+)/);
+          if (stationMatch) {
+            routes.push(stationMatch[1].trim());
+          } else {
+            routes.push('Station Alert');
+          }
+        } else if (isAccessibility && routeParts.length > 0) {
           const sm = ttcAlert.headerText?.match(/^([^:]+):/);
           if (sm) routes.push(sm[1].trim());
           else for (const r of routeParts) { if (/^[1-4]$/.test(r)) { routes.push(`Line ${r}`); break; } }
         } else if (/^[1-4]$/.test(primaryRoute)) { routes.push(`Line ${primaryRoute}`); }
         else { routes.push(primaryRoute); }
         
-        const headerText = ttcAlert.headerText || ttcAlert.title || `Route ${primaryRoute} service alert`;
+        const headerText = ttcAlert.customHeaderText || ttcAlert.headerText || ttcAlert.title || `Route ${primaryRoute} service alert`;
         const alert = {
-          alert_id: ttcAlertId, bluesky_uri: null, header_text: headerText.substring(0, 200), description_text: ttcAlert.customHeaderText || headerText,
+          alert_id: ttcAlertId, bluesky_uri: null, header_text: headerText.substring(0, 200), description_text: ttcAlert.customHeaderText || ttcAlert.headerText || headerText,
           categories: JSON.parse(JSON.stringify([category])), affected_routes: JSON.parse(JSON.stringify(routes)),
           created_at: ttcAlert.lastUpdated || now.toISOString(), is_latest: true, effect: ttcAlert.effect,
           raw_data: { source: 'ttc-api', ttcAlertId: ttcAlert.id, severity: ttcAlert.severity, cause: ttcAlert.cause, causeDescription: ttcAlert.causeDescription, stopStart: ttcAlert.stopStart, stopEnd: ttcAlert.stopEnd, direction: ttcAlert.direction }
