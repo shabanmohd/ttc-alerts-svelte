@@ -267,7 +267,7 @@
   }
 </script>
 
-<div class="relative w-full z-0" bind:this={containerRef}>
+<div class="relative w-full z-50" bind:this={containerRef}>
   {#if onClose}
     <div class="flex items-center justify-between mb-3 p-3 pb-0">
       <h3 class="font-semibold">Add a Stop</h3>
@@ -346,7 +346,7 @@
   {#if showResults}
     <div
       data-stop-results
-      class="absolute top-full z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-md border shadow-lg stop-results-list"
+      class="absolute top-full z-[100] mt-1 max-h-72 w-full overflow-y-auto rounded-md border shadow-lg stop-results-list"
       style="background-color: hsl(var(--popover)); color: hsl(var(--popover-foreground)); border-color: hsl(var(--border));"
       role="listbox"
     >
