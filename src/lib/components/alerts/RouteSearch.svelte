@@ -461,7 +461,7 @@
   }
 </script>
 
-<div class="relative w-full" bind:this={containerRef}>
+<div class="relative w-full z-50" bind:this={containerRef}>
   <!-- Search Input -->
   <div class="relative flex items-center">
     <Search
@@ -498,7 +498,7 @@
   <!-- Results Dropdown -->
   {#if showResults && filteredRoutes.length > 0}
     <div
-      class="absolute top-full z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-md border shadow-lg route-results-list"
+      class="absolute top-full z-[100] mt-1 max-h-72 w-full overflow-y-auto rounded-md border shadow-lg route-results-list"
       style="background-color: hsl(var(--popover)); color: hsl(var(--popover-foreground)); border-color: hsl(var(--border));"
       id="route-results"
       role="listbox"

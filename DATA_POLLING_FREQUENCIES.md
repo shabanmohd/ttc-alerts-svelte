@@ -150,11 +150,11 @@ This document describes all data sources, their polling frequencies, and update 
 
 ## Automated Workflows Summary
 
-| Workflow               | Schedule                | Data Source            | Output                                         |
-| ---------------------- | ----------------------- | ---------------------- | ---------------------------------------------- |
-| **Schedule Refresh**   | Monthly (1st, 4 AM UTC) | Toronto Open Data GTFS | `ttc-schedules.json`                           |
-| **Route Data Refresh** | Weekly (Sun, 2 AM UTC)  | NextBus API            | `ttc-routes.json`, `ttc-route-*.json`          |
-| **Alert Polling**      | Every 30 seconds        | TTC Service Alerts API | Supabase `alerts` table                        |
+| Workflow               | Schedule                | Data Source            | Output                                |
+| ---------------------- | ----------------------- | ---------------------- | ------------------------------------- |
+| **Schedule Refresh**   | Monthly (1st, 4 AM UTC) | Toronto Open Data GTFS | `ttc-schedules.json`                  |
+| **Route Data Refresh** | Weekly (Sun, 2 AM UTC)  | NextBus API            | `ttc-routes.json`, `ttc-route-*.json` |
+| **Alert Polling**      | Every 30 seconds        | TTC Service Alerts API | Supabase `alerts` table               |
 
 ### Workflow Triggers
 
@@ -204,14 +204,14 @@ When browser tab is backgrounded:
 
 ## Data Freshness Expectations
 
-| Data Type              | Freshness         | Notes                         |
-| ---------------------- | ----------------- | ----------------------------- |
-| **Service Alerts**     | Real-time (< 30s) | Push-based via Realtime       |
-| **Bus/Streetcar ETAs** | 30 seconds max    | On-demand with cache          |
-| **Subway ETAs**        | 30 seconds max    | On-demand with cache          |
-| **Schedules**          | Monthly           | TTC updates ~every 6 weeks    |
-| **Route Data**         | Weekly            | Stop sequences, branches      |
-| **Route List**         | Weekly            | All routes by category        |
+| Data Type              | Freshness         | Notes                      |
+| ---------------------- | ----------------- | -------------------------- |
+| **Service Alerts**     | Real-time (< 30s) | Push-based via Realtime    |
+| **Bus/Streetcar ETAs** | 30 seconds max    | On-demand with cache       |
+| **Subway ETAs**        | 30 seconds max    | On-demand with cache       |
+| **Schedules**          | Monthly           | TTC updates ~every 6 weeks |
+| **Route Data**         | Weekly            | Stop sequences, branches   |
+| **Route List**         | Weekly            | All routes by category     |
 
 ---
 

@@ -19,19 +19,20 @@
   import { activeFilters, setRouteFilter } from "$lib/stores/alerts";
   import { savedRoutes } from "$lib/stores/savedRoutes";
   import { goto } from "$app/navigation";
-  
+
   // Import route data from JSON (auto-updated weekly from NextBus API)
   import routeData from "$lib/data/ttc-routes.json";
 
   // Type for route entries
   type RouteEntry = { route: string; name: string };
-  
+
   // Route data from JSON file (updated weekly via GitHub Actions)
   const SUBWAY_LINES: RouteEntry[] = routeData.categories.subway;
   const STREETCAR_ROUTES: RouteEntry[] = routeData.categories.streetcar;
   const EXPRESS_ROUTES: RouteEntry[] = routeData.categories.express;
   const NIGHT_ROUTES: RouteEntry[] = routeData.categories.night;
-  const NIGHT_STREETCAR_ROUTES: RouteEntry[] = routeData.categories.nightStreetcar;
+  const NIGHT_STREETCAR_ROUTES: RouteEntry[] =
+    routeData.categories.nightStreetcar;
   const COMMUNITY_ROUTES: RouteEntry[] = routeData.categories.community;
   const REGULAR_BUS_ROUTES: RouteEntry[] = routeData.categories.bus;
   const SHUTTLE_ROUTES: RouteEntry[] = routeData.categories.shuttle;
@@ -132,19 +133,27 @@
       routes: NIGHT_STREETCAR_ROUTES,
     },
     // Community routes - only show if any exist
-    ...(COMMUNITY_ROUTES.length > 0 ? [{
-      id: "community",
-      labelKey: "routeCategories.communityBus",
-      icon: Users,
-      routes: COMMUNITY_ROUTES,
-    }] : []),
-    // Shuttle routes - only show if any exist  
-    ...(SHUTTLE_ROUTES.length > 0 ? [{
-      id: "shuttle",
-      labelKey: "routeCategories.shuttle",
-      icon: Bus,
-      routes: SHUTTLE_ROUTES,
-    }] : []),
+    ...(COMMUNITY_ROUTES.length > 0
+      ? [
+          {
+            id: "community",
+            labelKey: "routeCategories.communityBus",
+            icon: Users,
+            routes: COMMUNITY_ROUTES,
+          },
+        ]
+      : []),
+    // Shuttle routes - only show if any exist
+    ...(SHUTTLE_ROUTES.length > 0
+      ? [
+          {
+            id: "shuttle",
+            labelKey: "routeCategories.shuttle",
+            icon: Bus,
+            routes: SHUTTLE_ROUTES,
+          },
+        ]
+      : []),
   ];
 
   // Filtered categories based on selection (skip "all" for section display)
