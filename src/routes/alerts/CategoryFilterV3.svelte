@@ -30,7 +30,7 @@
     },
     {
       id: "station-alerts",
-      label: "Station Alerts",
+      label: "Facilities",
       icon: Accessibility,
       ariaLabel: "Show station and facility alerts",
     },

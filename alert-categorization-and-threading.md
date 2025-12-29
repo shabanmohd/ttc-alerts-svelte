@@ -2,7 +2,7 @@
 
 **Version:** 12.1  
 **Date:** June 19, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v60 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts for station closures)  
+**Status:** ✅ Implemented and Active (poll-alerts v60 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts for Facilities category)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -1014,11 +1014,11 @@ The frontend provides two levels of filtering for alerts:
 
 Alerts are categorized into three severity levels based on their effect and type:
 
-| Category              | TTC API Effects                                                                                     | Description                                                             |
-| --------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| **MAJOR**             | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance            |
-| **MINOR**             | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")                |
-| **STATION_ALERTS** 🆕 | ACCESSIBILITY_ISSUE (Elevator/Escalator), SiteWide (Station entrance closures)                      | Elevator/escalator outages and station entrance/facility closures (v61) |
+| Category           | TTC API Effects                                                                                     | Description                                                                |
+| ------------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **MAJOR**          | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance               |
+| **MINOR**          | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")                   |
+| **FACILITIES** 🆕  | ACCESSIBILITY_ISSUE (Elevator/Escalator), SiteWide (Station entrance closures)                      | Elevator/escalator outages and station entrance/facility closures (v61)    |
 
 **Categorization Logic (`getSeverityCategory()` in alerts.ts):**
 
@@ -1041,7 +1041,7 @@ export function getSeverityCategory(
     lowerHeader.includes("escalator") ||
     lowerHeader.includes("entrance")
   ) {
-    return "STATION_ALERTS";
+    return "FACILITIES";
   }
 
   // Check for RSZ (Reduced Speed Zone) alerts FIRST - these are MINOR

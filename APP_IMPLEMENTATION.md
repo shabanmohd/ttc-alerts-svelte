@@ -2155,7 +2155,7 @@ normalizeRouteId(route1) === normalizeRouteId(route2);
 - Uses `localPreferences.updatePreference()` for all setting changes
 - Language automatically detects device default (browser language) on first visit
 
-### June 19, 2025 - Station Alerts Category (v61)
+### June 19, 2025 - Facilities Category (v61)
 
 **SiteWide Alerts Support:**
 
@@ -2165,18 +2165,18 @@ normalizeRouteId(route1) === normalizeRouteId(route2);
 
 **Filter Category Rename:**
 
-- Renamed "Elevators" filter to "Station Alerts" to include both elevator outages and entrance closures
-- Updated CategoryFilterV3: Changed type from "elevators" to "station-alerts"
-- Updated URL mapping: Both "elevators" and "station-alerts" params map to station-alerts filter
+- Renamed "Elevators" filter to "Facilities" to include elevator outages and entrance/facility closures
+- Updated CategoryFilterV3: Changed type from "elevators" to "station-alerts", label to "Facilities"
+- Updated URL mapping: Both "elevators" and "station-alerts" params map to Facilities filter
 - Updated counts property from `elevators` to `stationAlerts` (camelCase)
-- Updated translations (en.json files) for filter labels and help text
+- Updated translations (en.json) for filter labels and help text
 
 **Updated Files:**
 
 - `supabase/functions/poll-alerts/index.ts` - Added SiteWide alert handling (line 204)
 - `src/routes/alerts/CategoryFilterV3.svelte` - Renamed category and fixed property access
 - `src/routes/alerts/+page.svelte` - Updated types, counts, URL mappings
-- `src/lib/i18n/en.json` and `translations/en.json` - Updated filter labels
+- `src/lib/i18n/en.json` - Updated filter labels
 
 ### Dec 4, 2025 - Schema Adaptation
 
