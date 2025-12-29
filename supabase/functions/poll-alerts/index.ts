@@ -1,10 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// v61: SiteWide alerts support (station entrance/facility closures)
+// - Process alertType === 'SiteWide' with effect === null
+// - Extract station name from customHeaderText for affected_routes
+// - Categorize as ACCESSIBILITY for Facilities filter
 // v60: Elevator/Accessibility alerts now properly reconciled with TTC API
 // - Track active accessibility alert IDs and delete stale ones (like RSZ)
 // - Fixes issue where elevator alerts weren't being removed when cleared from API
-const FUNCTION_VERSION = 60;
+const FUNCTION_VERSION = 61;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
