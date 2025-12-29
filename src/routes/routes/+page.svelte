@@ -9,6 +9,7 @@
     Zap,
     Users,
     LayoutGrid,
+    ArrowRightLeft,
   } from "lucide-svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
@@ -149,7 +150,7 @@
           {
             id: "shuttle",
             labelKey: "routeCategories.shuttle",
-            icon: Bus,
+            icon: ArrowRightLeft,
             routes: SHUTTLE_ROUTES,
           },
         ]
