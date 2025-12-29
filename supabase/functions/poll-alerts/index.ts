@@ -1,17 +1,15 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// v62: Fix SiteWide alerts to bypass alreadyHasThread check
+// v64: Strip HTML tags from TTC API alert text
+// - Remove <a href> and other HTML tags from customHeaderText/headerText
+// - Also removes "See other service alerts" boilerplate text
+// v63: Fix SiteWide alerts to bypass alreadyHasThread check
 // - Add isSiteWide to skip condition alongside isAccessibility and isRSZ
+// v62: Fix SiteWide alerts to bypass alreadyHasThread check
 // - Remove duplicate const isSiteWide declaration
 // v61: SiteWide alerts support (station entrance/facility closures)
-// - Process alertType === 'SiteWide' with effect === null
-// - Extract station name from customHeaderText for affected_routes
-// - Categorize as ACCESSIBILITY for Facilities filter
-// v60: Elevator/Accessibility alerts now properly reconciled with TTC API
-// - Track active accessibility alert IDs and delete stale ones (like RSZ)
-// - Fixes issue where elevator alerts weren't being removed when cleared from API
-const FUNCTION_VERSION = 62;
+const FUNCTION_VERSION = 64;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -24,6 +22,15 @@ const ALERT_CATEGORIES: Record<string, { keywords: string[]; priority: number }>
   PLANNED_CLOSURE: { keywords: ['planned', 'scheduled', 'maintenance', 'this weekend'], priority: 5 },
   ACCESSIBILITY: { keywords: ['elevator', 'escalator', 'accessible', 'wheelchair', 'out of service'], priority: 6 }
 };
+
+// Strip HTML tags from TTC API text (removes <a>, <b>, etc.) and clean up "See other service alerts" text
+function stripHtmlTags(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/\s*See other service alerts\.?/gi, '') // Remove "See other service alerts" boilerplate
+    .trim();
+}
 
 function extractReplyInfo(record: any): { parentUri: string | null; parentPostId: string | null; rootUri: string | null } {
   const reply = record?.reply;
@@ -637,9 +644,13 @@ serve(async (req) => {
         } else if (/^[1-4]$/.test(primaryRoute)) { routes.push(`Line ${primaryRoute}`); }
         else { routes.push(primaryRoute); }
         
-        const headerText = ttcAlert.customHeaderText || ttcAlert.headerText || ttcAlert.title || `Route ${primaryRoute} service alert`;
+        // Strip HTML tags from TTC API text (e.g., <a href="...">See other service alerts.</a>)
+        const rawHeaderText = ttcAlert.customHeaderText || ttcAlert.headerText || ttcAlert.title || `Route ${primaryRoute} service alert`;
+        const headerText = stripHtmlTags(rawHeaderText);
+        const descriptionText = stripHtmlTags(ttcAlert.customHeaderText || ttcAlert.headerText || rawHeaderText);
+        
         const alert = {
-          alert_id: ttcAlertId, bluesky_uri: null, header_text: headerText.substring(0, 200), description_text: ttcAlert.customHeaderText || ttcAlert.headerText || headerText,
+          alert_id: ttcAlertId, bluesky_uri: null, header_text: headerText.substring(0, 200), description_text: descriptionText,
           categories: JSON.parse(JSON.stringify([category])), affected_routes: JSON.parse(JSON.stringify(routes)),
           created_at: ttcAlert.lastUpdated || now.toISOString(), is_latest: true, effect: ttcAlert.effect,
           raw_data: { source: 'ttc-api', ttcAlertId: ttcAlert.id, severity: ttcAlert.severity, cause: ttcAlert.cause, causeDescription: ttcAlert.causeDescription, stopStart: ttcAlert.stopStart, stopEnd: ttcAlert.stopEnd, direction: ttcAlert.direction }
