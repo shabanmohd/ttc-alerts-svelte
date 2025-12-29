@@ -2155,28 +2155,35 @@ normalizeRouteId(route1) === normalizeRouteId(route2);
 - Uses `localPreferences.updatePreference()` for all setting changes
 - Language automatically detects device default (browser language) on first visit
 
-### June 19, 2025 - Facilities Category (v61)
+### June 19, 2025 - SiteWide Alerts & HTML Stripping (v64)
 
 **SiteWide Alerts Support:**
 
 - poll-alerts now processes TTC API `alertType: "SiteWide"` alerts for station entrance/facility closures
 - Added `customHeaderText` fallback handling for SiteWide alerts (which may have `effect: null`)
-- SiteWide alerts categorized as ACCESSIBILITY for station-related disruptions
+- SiteWide alerts categorized as ACCESSIBILITY and appear in "Elevators" filter
+- Fixed: SiteWide alerts now bypass the `alreadyHasThread` check (like accessibility/RSZ alerts)
 
-**Filter Category Rename:**
+**HTML Stripping (v64):**
 
-- Renamed "Elevators" filter to "Facilities" to include elevator outages and entrance/facility closures
-- Updated CategoryFilterV3: Changed type from "elevators" to "station-alerts", label to "Facilities"
-- Updated URL mapping: Both "elevators" and "station-alerts" params map to Facilities filter
-- Updated counts property from `elevators` to `stationAlerts` (camelCase)
-- Updated translations (en.json) for filter labels and help text
+- Added `stripHtmlTags()` function to remove HTML tags and boilerplate text from TTC API alerts
+- Strips `<a href>`, `<b>`, etc. tags from `customHeaderText` and `headerText`
+- Removes "See other service alerts" boilerplate text
+- Cleaned existing database records with SQL UPDATE
+
+**Filter Category & URL:**
+
+- Filter label: "Elevators" (unchanged - SiteWide alerts are rare)
+- URL parameter changed from `station-alerts` to `elevators` for consistency
+- Both `?category=elevators` and `?category=station-alerts` work (backwards compatible)
+- All alerts in filter (elevator + SiteWide) use ♿ Accessibility badge
 
 **Updated Files:**
 
-- `supabase/functions/poll-alerts/index.ts` - Added SiteWide alert handling (line 204)
-- `src/routes/alerts/CategoryFilterV3.svelte` - Renamed category and fixed property access
-- `src/routes/alerts/+page.svelte` - Updated types, counts, URL mappings
-- `src/lib/i18n/en.json` - Updated filter labels
+- `supabase/functions/poll-alerts/index.ts` - v64: SiteWide + HTML stripping
+- `src/routes/alerts/CategoryFilterV3.svelte` - Using Accessibility icon
+- `src/routes/alerts/+page.svelte` - URL param outputs "elevators"
+- `src/lib/components/alerts/AlertCard.svelte` - AccessibilityBadge for all accessibility alerts
 
 ### Dec 4, 2025 - Schema Adaptation
 

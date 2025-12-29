@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 12.1  
+**Version:** 12.2  
 **Date:** June 19, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v60 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts for Facilities category)  
+**Status:** ✅ Implemented and Active (poll-alerts v64 + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -1014,11 +1014,13 @@ The frontend provides two levels of filtering for alerts:
 
 Alerts are categorized into three severity levels based on their effect and type:
 
-| Category          | TTC API Effects                                                                                     | Description                                                             |
-| ----------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| **MAJOR**         | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance            |
-| **MINOR**         | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")                |
-| **FACILITIES** 🆕 | ACCESSIBILITY_ISSUE (Elevator/Escalator), SiteWide (Station entrance closures)                      | Elevator/escalator outages and station entrance/facility closures (v61) |
+| Category                  | TTC API Effects                                                                                     | Description                                                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **Disruptions & Delays**  | NO_SERVICE, REDUCED_SERVICE, DETOUR, MODIFIED_SERVICE, SCHEDULED_CLOSURE, DELAY, SIGNIFICANT_DELAYS | Closures, detours, shuttles, no service, delays, maintenance                 |
+| **Slow Zones**            | RSZ (Reduced Speed Zone) only                                                                       | Subway slow zones ("slower than usual", "reduced speed")                     |
+| **Elevators** (ACCESSIBILITY) | ACCESSIBILITY_ISSUE (Elevator/Escalator), SiteWide (Station entrance closures)                  | Elevator/escalator outages and station entrance/facility closures (v61/v64)  |
+
+> **Note:** The filter is named "Elevators" in the UI since SiteWide alerts are rare. URL param: `?category=elevators`
 
 **Categorization Logic (`getSeverityCategory()` in alerts.ts):**
 
@@ -1041,10 +1043,10 @@ export function getSeverityCategory(
     lowerHeader.includes("escalator") ||
     lowerHeader.includes("entrance")
   ) {
-    return "FACILITIES";
+    return "ELEVATORS"; // Shows in "Elevators" filter
   }
 
-  // Check for RSZ (Reduced Speed Zone) alerts FIRST - these are MINOR
+  // Check for RSZ (Reduced Speed Zone) alerts FIRST - these are Slow Zones
   // RSZ alerts are specifically about subway slow zones, not general delays
   const isRSZ =
     lowerHeader.includes("slower than usual") ||
@@ -1055,7 +1057,7 @@ export function getSeverityCategory(
     lowerHeader.includes("speed restriction");
 
   if (isRSZ) {
-    return "MINOR";
+    return "SLOWZONES"; // Shows in "Slow Zones" filter
   }
 
   // Check for major disruptions (closures, detours, no service, shuttles, delays)
@@ -1314,7 +1316,7 @@ CREATE TABLE planned_maintenance (
 
 **Trigger:** Cron schedule (every 30 seconds)  
 **Purpose:** Fetch, categorize, thread alerts from Bluesky + TTC Live API secondary source + cross-check resolution
-**Version:** v43 (January 2025)
+**Version:** v64 (June 2025)
 
 **Flow:**
 
@@ -1322,6 +1324,8 @@ CREATE TABLE planned_maintenance (
 
    - Fetch active alerts from `https://alerts.ttc.ca/api/alerts/live-alerts`
    - **Save non-planned alerts** for later processing (v39)
+   - **Include SiteWide alerts** for station entrance/facility closures (v61)
+   - **Strip HTML tags** from alert text (v64)
    - Extract all routes with active disruptions
    - Query unresolved threads in our database
    - Mark threads as resolved if their routes are NOT in TTC's active alerts
@@ -1344,11 +1348,27 @@ CREATE TABLE planned_maintenance (
    - Process saved non-planned TTC alerts
    - For each TTC alert:
      - Skip if route already has active Bluesky thread (deduplication)
+     - **SiteWide alerts bypass route deduplication** (v63)
      - Map TTC effect to internal category
+     - **Strip HTML tags and "See other service alerts" boilerplate** (v64)
      - Create thread using same rules as Bluesky alerts
-     - Store with `alert_id = ttc-{route}-{effect}-{id}`
+     - Store with `alert_id = ttc-{route}-{effect}-{id}` or `ttc-SiteWide-{id}`
 
 4. Update Realtime subscriptions
+
+**HTML Stripping (v64):**
+
+TTC API sometimes includes HTML tags in alert text (e.g., `<a href="...">See other service alerts.</a>`). The `stripHtmlTags()` function removes these:
+
+```typescript
+function stripHtmlTags(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/\s*See other service alerts\.?/gi, '') // Remove boilerplate
+    .trim();
+}
+```
 
 **TTC Live API Dual-Use (v39):**
 
