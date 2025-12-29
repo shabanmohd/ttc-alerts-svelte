@@ -170,6 +170,7 @@ async function loadStopsData(): Promise<void> {
 /**
  * Search stops by name or ID (fuzzy search)
  * Subway stations are boosted to appear higher in results
+ * Stops with "Station" in name are also boosted (major transit hubs)
  */
 export async function searchStops(query: string, limit = 20): Promise<TTCStop[]> {
 	if (!query || query.length < 2) return [];
@@ -182,16 +183,18 @@ export async function searchStops(query: string, limit = 20): Promise<TTCStop[]>
 
 	// Score and filter stops - with defensive checks for malformed data
 	// Supports searching by name OR stop ID
-	// Subway stations get a boost to appear higher in results
+	// Subway stations and major transit hubs get a boost to appear higher in results
 	const scored = stops
 		.filter((stop) => stop && typeof stop.name === 'string' && stop.name.trim())
 		.map((stop) => {
 			const baseScore = getSearchScore(stop.name.toLowerCase().trim(), stop.id, normalizedQuery);
 			// Boost subway stations by 25 points (they're often what users want)
 			const typeBonus = stop.type === 'subway' ? 25 : 0;
+			// Boost stops with "Station" in name (major transit hubs like Scarborough Centre Station)
+			const stationBonus = stop.name.toLowerCase().includes('station') ? 20 : 0;
 			return {
 				stop,
-				score: baseScore + typeBonus
+				score: baseScore + typeBonus + stationBonus
 			};
 		})
 		.filter((item) => item.score > 0)
