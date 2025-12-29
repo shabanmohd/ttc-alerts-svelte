@@ -195,6 +195,7 @@ export const ROUTE_NAMES: Record<string, string> = {
   "336": "Finch West",
   "337": "Islington",
   "339": "Finch East",
+  "340": "Junction",
   "341": "Keele",
   "343": "Kennedy",
   "352": "Lawrence West",
@@ -202,8 +203,13 @@ export const ROUTE_NAMES: Record<string, string> = {
   "354": "Lawrence East",
   "360": "Steeles West",
   "363": "Ossington",
+  "365": "Parliament",
   "368": "Warden",
+  "384": "Sheppard West",
   "385": "Sheppard East",
+  "386": "Scarborough",
+  "395": "York Mills",
+  "396": "Wilson",
 
   // Community Routes (400-406)
   "400": "Lawrence Manor",
@@ -213,10 +219,15 @@ export const ROUTE_NAMES: Record<string, string> = {
   "405": "Etobicoke",
   "406": "Scarborough-Guildwood",
 
+  // Shuttle Routes
+  "806": "Line 6 Shuttle",
+
   // Express Routes (900-999)
   "882": "Operator Shuttles",
   "900": "Airport Express",
   "902": "Markham Rd Express",
+  "903": "Kennedy Stn-Scarborough Express",
+  "904": "Sheppard-Kennedy Express",
   "905": "Eglinton East Express",
   "907": "Dufferin Express",
   "913": "Jane Express",
@@ -226,8 +237,11 @@ export const ROUTE_NAMES: Record<string, string> = {
   "929": "Dufferin Express",
   "935": "Jane Express",
   "936": "Finch West Express",
+  "937": "Islington Express",
   "939": "Finch Express",
   "941": "Keele Express",
+  "944": "Kipling South Express",
+  "945": "Kipling Express",
   "952": "Lawrence West Express",
   "953": "Steeles East Express",
   "954": "Lawrence East Express",
@@ -235,6 +249,7 @@ export const ROUTE_NAMES: Record<string, string> = {
   "968": "Warden Express",
   "984": "Sheppard West Express",
   "985": "Sheppard East Express",
+  "986": "Scarborough Express",
   "989": "Weston Express",
   "995": "York Mills Express",
   "996": "Wilson Express",
