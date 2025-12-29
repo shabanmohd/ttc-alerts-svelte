@@ -1426,6 +1426,26 @@ The Maintenance Widget displays planned subway closures. Each maintenance item u
 </button>
 ```
 
+### Route Category Filter Chips
+
+**Location:** `src/routes/routes/+page.svelte`
+
+The Routes page uses filter chips to filter routes by category. Each chip has an associated Lucide icon.
+
+| Category             | Icon (Lucide)      | Translation Key                     |
+| -------------------- | ------------------ | ----------------------------------- |
+| All                  | `LayoutGrid`       | `routeCategories.all`               |
+| Subway               | `TrainFrontTunnel` | `routeCategories.subway`            |
+| Streetcars           | `TramFront`        | `routeCategories.streetcar`         |
+| Regular Bus          | `Bus`              | `routeCategories.regularBus`        |
+| Express Bus          | `Zap`              | `routeCategories.expressBus`        |
+| Blue Night Bus       | `Moon`             | `routeCategories.blueNightBus`      |
+| Blue Night Streetcar | `Moon`             | `routeCategories.blueNightStreetcar`|
+| Community Bus        | `Users`            | `routeCategories.communityBus`      |
+| Shuttle Bus          | `ArrowRightLeft`   | `routeCategories.shuttle`           |
+
+**Note:** Shuttle Bus uses `ArrowRightLeft` (↔️) instead of `Bus` to visually distinguish replacement/shuttle services from regular bus routes.
+
 ### Cards
 
 **Global Card Border Standard**: All cards use `2px` borders for better visual separation when stacked vertically.

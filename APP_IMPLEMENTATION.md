@@ -677,6 +677,36 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Dec 27, 2025 - Search Improvements & UI Fixes
+
+**Purpose:** Improve stop/route search UX and fix dropdown z-index issues on settings page.
+
+**Search Improvements:**
+
+- ✅ **Station prioritization** - Added +20 score bonus for stops with "Station" in name (e.g., "Scarborough Centre Station" now ranks higher)
+- ✅ **Shuttle bus icon** - Changed from `Bus` to `ArrowRightLeft` (↔️) to visually distinguish replacement services
+
+**Z-Index Fixes (Settings Page):**
+
+- ✅ **StopSearch dropdown** - Container z-50, dropdown z-[100]
+- ✅ **RouteSearch dropdown** - Container z-50, dropdown z-[100]  
+- ✅ **Saved Stops card** - Added `overflow-visible relative z-20`
+- ✅ **Saved Routes card** - Added `overflow-visible relative z-10`
+- ✅ **Preferences card** - Added `relative z-0`
+
+**Issue:** CSS animations with transforms (`animate-fade-in-up`) create new stacking contexts, requiring explicit z-index on parent cards for dropdowns to appear above subsequent cards.
+
+**Files Changed:**
+
+- `src/lib/data/stops-db.ts` - Station bonus in search scoring
+- `src/lib/components/stops/StopSearch.svelte` - Z-index updates
+- `src/lib/components/alerts/RouteSearch.svelte` - Z-index updates
+- `src/routes/settings/+page.svelte` - Card z-index hierarchy
+- `src/routes/routes/+page.svelte` - Shuttle bus icon change
+- `DESIGN_SYSTEM.md` - Added Route Category Filter Chips documentation
+
+---
+
 ### Dec 26, 2025 - Page Entrance Animations & Skeleton Loading
 
 **Purpose:** Add smooth entrance animations to static pages (About, Help, Settings, Preferences) and skeleton loading state for ETA cards to eliminate jarring content jumps.
