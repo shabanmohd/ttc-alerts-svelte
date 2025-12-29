@@ -274,7 +274,7 @@
   </div>
 
   <!-- ==================== SAVED STOPS ==================== -->
-  <Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 50ms">
+  <Card.Root class="mb-6 animate-fade-in-up overflow-visible" style="animation-delay: 50ms">
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <MapPin class="h-5 w-5 text-primary" />
@@ -284,9 +284,9 @@
         {$_("settings.savedStopsDesc")}
       </Card.Description>
     </Card.Header>
-    <Card.Content class="space-y-4">
+    <Card.Content class="space-y-4 overflow-visible">
       <!-- Search to add stops -->
-      <div>
+      <div class="relative z-50">
         <p class="text-sm text-muted-foreground mb-2">
           {$_("settings.addStop")}
         </p>
