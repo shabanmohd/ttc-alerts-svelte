@@ -739,6 +739,7 @@
     "tagline": "Real-time Toronto transit alerts",
     "aboutDeveloper": "About the Developer",
     "developerBio": "rideTO is a passion project built by a Toronto transit rider who is an engineer turned UX designer. The goal is to build an app which is free to use and continuously improved based on user feedback.",
+    "moreAboutMe": "More about me",
     "dataSources": "Data Sources",
     "dataSourcesDesc": "rideTO uses open data and public APIs.",
     "sourceTTC": "TTC Service Alerts",
