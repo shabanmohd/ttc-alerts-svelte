@@ -170,6 +170,33 @@ html.reduce-motion *::after {
   scroll-behavior: auto !important;
 }
 
+/* ============================================
+   ACCESSIBILITY - SKIP TO CONTENT LINK (WCAG 2.4.1)
+   ============================================ */
+
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  z-index: 9999;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: top 0.15s ease-out;
+  white-space: nowrap;
+}
+
+.skip-link:focus {
+  top: 1rem;
+  outline: 3px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -242,6 +269,9 @@ html {
   scrollbar-gutter: stable;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
+  /* WCAG 2.4.11 Focus Not Obscured - ensure focused elements aren't hidden behind sticky elements */
+  scroll-padding-top: 5rem; /* Header height + buffer */
+  scroll-padding-bottom: 6rem; /* Mobile nav height + buffer */
 }
 
 html.dark {

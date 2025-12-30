@@ -946,6 +946,9 @@
 <Header onOpenDialog={handleOpenDialog} />
 
 <main class="content-area">
+  <!-- Visually hidden h1 for screen readers (WCAG 1.3.1 heading hierarchy) -->
+  <h1 class="sr-only">{$_("pages.alerts.title").replace(" - rideTO", "")}</h1>
+
   <!-- Active/Resolved/Scheduled Tabs -->
   <div class="alerts-tabs" role="tablist" aria-label="Alert sections">
     <button
@@ -987,6 +990,19 @@
         <span class="tab-count">{scheduledClosuresCount()}</span>
       {/if}
     </button>
+  </div>
+
+  <!-- Aria-live region for screen reader announcements (WCAG 4.1.3) -->
+  <div aria-live="polite" aria-atomic="true" class="sr-only">
+    {#if $isLoading}
+      Loading alerts...
+    {:else if currentTab === "active"}
+      {activeAlerts().length} active alert{activeAlerts().length === 1 ? "" : "s"} found
+    {:else if currentTab === "resolved"}
+      {resolvedAlerts().length} resolved alert{resolvedAlerts().length === 1 ? "" : "s"} found
+    {:else}
+      {scheduledClosuresCount()} scheduled item{scheduledClosuresCount() === 1 ? "" : "s"} found
+    {/if}
   </div>
 
   {#if currentTab === "active"}

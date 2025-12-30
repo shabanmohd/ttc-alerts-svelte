@@ -86,12 +86,15 @@
   />
 </svelte:head>
 
+<!-- Skip to main content link (WCAG 2.4.1) -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
 <!-- Desktop Sidebar -->
 <Sidebar onOpenDialog={openDialog} />
 
 <!-- Main wrapper with pull-to-refresh -->
 <PullToRefresh onRefresh={handlePullRefresh}>
-  <div class="main-wrapper">
+  <div class="main-wrapper" id="main-content" tabindex="-1">
     <!-- Banners at top of main content -->
     <div class="banners-container">
       <!-- Network Status Banner (shows when offline - overlays header) -->

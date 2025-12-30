@@ -490,6 +490,9 @@
 <Header />
 
 <main class="alerts-v3-container">
+  <!-- Visually hidden h1 for screen readers (WCAG 1.3.1 heading hierarchy) -->
+  <h1 class="sr-only">{$_("pages.alerts.title").replace(" - rideTO", "")}</h1>
+
   <div class="alerts-main">
     <!-- Subway status grid - same UI for mobile and desktop -->
     <div class="subway-status-section">
@@ -521,6 +524,17 @@
     </div>
 
     {#if activeTab === "now"}
+      <!-- Aria-live region for screen reader announcements (WCAG 4.1.3) -->
+      <div aria-live="polite" aria-atomic="true" class="sr-only">
+        {#if $isLoading}
+          Loading alerts...
+        {:else if activeAlerts.length > 0}
+          {activeAlerts.length} {selectedCategory} alert{activeAlerts.length === 1 ? "" : "s"} found
+        {:else}
+          No {selectedCategory} alerts at this time
+        {/if}
+      </div>
+
       <!-- Category filter: Disruptions | Delays | Station Alerts -->
       <CategoryFilterV3
         selected={selectedCategory}
