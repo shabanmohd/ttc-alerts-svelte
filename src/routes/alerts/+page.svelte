@@ -484,7 +484,7 @@
 </script>
 
 <svelte:head>
-  <title>Alerts v3 - TTC Service Alerts</title>
+  <title>{$_("pages.alerts.title")}</title>
 </svelte:head>
 
 <Header />
