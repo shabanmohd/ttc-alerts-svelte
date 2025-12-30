@@ -89,7 +89,7 @@
           rel="noopener noreferrer"
         >
           <Globe class="h-4 w-4" />
-          Website
+          {$_("about.moreAboutMe")}
         </Button>
       </div>
     </Card.Content>

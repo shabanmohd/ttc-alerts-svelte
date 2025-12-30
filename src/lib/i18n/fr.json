@@ -725,6 +725,7 @@
     "tagline": "Alertes de transport en temps réel pour Toronto",
     "aboutDeveloper": "À propos du développeur",
     "developerBio": "rideTO est un projet personnel créé par un usager du transport en commun de Toronto, ingénieur devenu designer UX. L'objectif est de créer une application gratuite et continuellement améliorée grâce aux commentaires des utilisateurs.",
+    "moreAboutMe": "En savoir plus sur moi",
     "dataSources": "Sources de données",
     "dataSourcesDesc": "rideTO utilise des données ouvertes et des API publiques.",
     "sourceTTC": "Alertes de service TTC",
