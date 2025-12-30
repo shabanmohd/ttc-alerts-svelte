@@ -127,6 +127,14 @@ Real-time Toronto Transit alerts PWA.
 | `utils/fetch-with-retry.ts`                      | ✅     | Network retry utility with exponential backoff 🆕                            |
 | `utils/ttc-service-info.ts`                      | ✅     | TTC service hours, holidays, suspended lines 🅱️                              |
 
+### Root Files (`src/`)
+
+| File               | Status | Purpose                                                                      |
+| ------------------ | ------ | ---------------------------------------------------------------------------- |
+| `hooks.client.ts`  | ✅ 🆕  | Sentry error monitoring - client-side SDK init, error filtering              |
+| `app.html`         | ✅     | Main HTML template - fonts, PWA meta, SEO, DNS prefetch                      |
+| `app.d.ts`         | ✅     | TypeScript declarations                                                      |
+
 ### Pages (`src/routes/`)
 
 | File                          | Status | Purpose                                                      |
@@ -636,19 +644,23 @@ const cleanStopId = stopId.replace(/_ar$/, "");
 Client-side error tracking is configured via `@sentry/sveltekit`.
 
 **Configuration files:**
+
 - `src/hooks.client.ts` - Sentry SDK initialization
 - `vite.config.ts` - Source map upload config (requires auth token)
 
 **Environment variables:**
+
 - `PUBLIC_SENTRY_DSN` - Required for error tracking
 - `SENTRY_AUTH_TOKEN` - Optional, enables source map upload for readable stack traces
 
 **Free tier limits:**
+
 - 5,000 errors/month
 - 50 session replays/month
 - 30-day data retention
 
 **To get an auth token for source maps:**
+
 1. Go to https://sentry.io/settings/auth-tokens/
 2. Create new token with `org:read`, `project:releases`, `project:write` scopes
 3. Add as `SENTRY_AUTH_TOKEN` environment variable in Cloudflare Pages
@@ -709,6 +721,41 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 ---
 
 ## Changelog
+
+### Dec 31, 2024 - Sentry Error Monitoring Integration
+
+**Purpose:** Add client-side error monitoring with Sentry for production debugging.
+
+**New Files:**
+
+| File                 | Purpose                                                    |
+| -------------------- | ---------------------------------------------------------- |
+| `src/hooks.client.ts` | Sentry SDK initialization, error filtering, session replay |
+
+**Configuration:**
+
+| Setting                   | Value                           | Notes                      |
+| ------------------------- | ------------------------------- | -------------------------- |
+| `tracesSampleRate`        | 0.1 (10%)                       | Free tier friendly         |
+| `replaysOnErrorSampleRate`| 1.0 (100%)                      | Always capture error replays |
+| `replaysSessionSampleRate`| 0.01 (1%)                       | 50 replays/month on free   |
+| Environment detection     | beta/development/production     | Based on hostname          |
+
+**Error Filtering:**
+
+- Browser extension errors (chrome-extension, moz-extension)
+- Expected offline network failures
+- AbortController cancellations
+- Safari QuotaExceededError
+
+**Environment Variables:**
+
+- `PUBLIC_SENTRY_DSN` - Required for error tracking (Cloudflare Pages)
+- `SENTRY_AUTH_TOKEN` - Optional for source map uploads
+
+**Documentation:** See Sentry Error Monitoring section for setup details.
+
+---
 
 ### Dec 31, 2024 - Lighthouse Mobile Performance Audit Fixes
 
