@@ -25,7 +25,7 @@ The rideTO PWA has significant SEO gaps that prevent search engine discoverabili
 
 ## 📄 Page Inventory
 
-### All Routes (10 pages)
+### All Routes (9 pages)
 
 | Page | URL | Title | Description | Canonical | OG Tags | Indexable |
 |------|-----|-------|-------------|-----------|---------|-----------|
@@ -38,7 +38,6 @@ The rideTO PWA has significant SEO gaps that prevent search engine discoverabili
 | Settings | `/settings` | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Help | `/help` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
 | About | `/about` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
-| Auth Callback | `/auth/callback` | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 **Legend:**
 - ✅ Present and correct
@@ -148,7 +147,7 @@ Also update `static/robots.txt`:
 User-agent: *
 Disallow: /preferences
 Disallow: /settings
-Disallow: /auth/
+Disallow: /alerts-v3
 
 Sitemap: https://ttc-alerts-svelte.pages.dev/sitemap.xml
 ```
@@ -375,9 +374,8 @@ Add to `app.html` or page-level:
 User-agent: *
 Allow: /
 
-# Testing/internal pages - do not index
+# Testing pages - do not index
 Disallow: /alerts-v3
-Disallow: /auth/
 
 # User-specific pages - do not index
 Disallow: /preferences

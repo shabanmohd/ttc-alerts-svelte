@@ -2,9 +2,8 @@
 User-agent: *
 Allow: /
 
-# Testing/internal pages - do not index
+# Testing pages - do not index
 Disallow: /alerts-v3
-Disallow: /auth/
 
 # User-specific pages - do not index
 Disallow: /preferences

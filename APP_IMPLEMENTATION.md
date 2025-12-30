@@ -140,7 +140,6 @@ Real-time Toronto Transit alerts PWA.
 | `settings/+page.svelte`       | ✅     | Settings with stops, routes, prefs, location 🅱️           |
 | `routes/+page.svelte`         | ✅     | Route browser by category 🅱️                              |
 | `routes/[route]/+page.svelte` | ✅     | Route detail page with alerts and route changes           |
-| `auth/callback/+page.svelte`  | ✅     | Auth callback handler                                     |
 
 ### Alerts Components (`src/routes/alerts/`)
 
@@ -2238,5 +2237,4 @@ normalizeRouteId(route1) === normalizeRouteId(route2);
 - All layout components (Header, Sidebar, MobileBottomNav)
 - All alert components (AlertCard, FilterChips, etc.)
 - All dialog components
-- Homepage, Preferences page, Auth callback
-- PWA manifest and service worker
+- Homepage, Preferences page
