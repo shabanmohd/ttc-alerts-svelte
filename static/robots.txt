@@ -1,3 +1,11 @@
-# allow crawling everything by default
+# rideTO PWA - Robots.txt
 User-agent: *
-Disallow:
+Allow: /
+
+# Testing/internal pages - do not index
+Disallow: /alerts-v3
+Disallow: /auth/
+
+# User-specific pages - do not index
+Disallow: /preferences
+Disallow: /settings

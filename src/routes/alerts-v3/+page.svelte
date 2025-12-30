@@ -937,6 +937,7 @@
 
 <svelte:head>
   <title>{$_("pages.alerts.title")}</title>
+  <meta name="robots" content="noindex, nofollow" />
   <meta
     name="description"
     content="Real-time TTC transit service alerts for Toronto"

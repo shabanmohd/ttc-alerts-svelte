@@ -31,7 +31,7 @@ The rideTO PWA has significant SEO gaps that prevent search engine discoverabili
 |------|-----|-------|-------------|-----------|---------|-----------|
 | Home | `/` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
 | Alerts | `/alerts` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
-| Alerts v3 | `/alerts-v3` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
+| Alerts v3 | `/alerts-v3` | ✅ | ✅ | ❌ | ❌ | ✅ noindex |
 | Routes | `/routes` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
 | Route Detail | `/routes/[route]` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
 | Preferences | `/preferences` | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -369,22 +369,23 @@ Add to `app.html` or page-level:
 **Impact:** Search engines may miss sitemap  
 **Location:** [static/robots.txt](static/robots.txt)
 
-**Current Content:**
-```
-User-agent: *
-Disallow:
-```
-
-**Recommended Update:**
+**Current Content:** ✅ UPDATED
 ```
 # rideTO PWA - Robots.txt
 User-agent: *
 Allow: /
+
+# Testing/internal pages - do not index
+Disallow: /alerts-v3
+Disallow: /auth/
+
+# User-specific pages - do not index
 Disallow: /preferences
 Disallow: /settings
-Disallow: /auth/
-Disallow: /alerts-v3
+```
 
+**Still Needed:** Add sitemap reference once sitemap.xml is created:
+```
 # Sitemap
 Sitemap: https://ttc-alerts-svelte.pages.dev/sitemap.xml
 ```
