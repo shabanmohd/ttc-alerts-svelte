@@ -60,6 +60,8 @@
     <img
       src={isDark ? "/DARK-LOGO.svg" : "/LOGO.svg"}
       alt="rideTO"
+      width="85"
+      height="32"
       class="sidebar-logo"
     />
   </a>

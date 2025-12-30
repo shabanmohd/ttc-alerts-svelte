@@ -10,8 +10,9 @@
   import { isVisible } from "$lib/stores/visibility";
   import SEO from "$lib/components/SEO.svelte";
 
-  // Import dialogs
-  import { HowToUseDialog, InstallPWADialog } from "$lib/components/dialogs";
+  // Lazy load dialogs to reduce initial bundle size
+  const HowToUseDialogPromise = import("$lib/components/dialogs/HowToUseDialog.svelte");
+  const InstallPWADialogPromise = import("$lib/components/dialogs/InstallPWADialog.svelte");
 
   type HomeTab = "stops" | "routes";
 
@@ -82,17 +83,25 @@
   {/if}
 </main>
 
-<!-- Dialogs -->
-<HowToUseDialog
-  open={activeDialog === "how-to-use"}
-  onOpenChange={(open) => {
-    if (!open) activeDialog = null;
-  }}
-/>
+<!-- Lazy-loaded Dialogs -->
+{#if activeDialog === "how-to-use"}
+  {#await HowToUseDialogPromise then { default: HowToUseDialog }}
+    <HowToUseDialog
+      open={true}
+      onOpenChange={(open) => {
+        if (!open) activeDialog = null;
+      }}
+    />
+  {/await}
+{/if}
 
-<InstallPWADialog
-  open={activeDialog === "install-pwa"}
-  onOpenChange={(open) => {
-    if (!open) activeDialog = null;
-  }}
-/>
+{#if activeDialog === "install-pwa"}
+  {#await InstallPWADialogPromise then { default: InstallPWADialog }}
+    <InstallPWADialog
+      open={true}
+      onOpenChange={(open) => {
+        if (!open) activeDialog = null;
+      }}
+    />
+  {/await}
+{/if}

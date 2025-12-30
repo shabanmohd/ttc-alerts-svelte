@@ -283,7 +283,7 @@
     </div>
   {/if}
   <div class="relative flex items-center gap-2 {onClose ? 'px-3 pb-3' : ''}">
-    <div class="relative flex-1">
+    <div class="relative flex-1" role="combobox" aria-expanded={showResults} aria-haspopup="listbox" aria-controls="stop-search-results">
       <Search
         class="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 flex-shrink-0 -translate-y-1/2"
       />
@@ -300,7 +300,7 @@
         class="pl-9 pr-8 {isHighlighted ? 'focus-highlight' : ''}"
         aria-label="Search for a TTC stop"
         aria-autocomplete="list"
-        aria-expanded={showResults}
+        aria-controls="stop-search-results"
         aria-activedescendant={highlightedIndex >= 0
           ? `stop-option-${highlightedIndex}`
           : undefined}
@@ -345,6 +345,7 @@
 
   {#if showResults}
     <div
+      id="stop-search-results"
       data-stop-results
       class="absolute top-full z-[100] mt-1 max-h-72 w-full overflow-y-auto rounded-md border shadow-lg stop-results-list"
       style="background-color: hsl(var(--popover)); color: hsl(var(--popover-foreground)); border-color: hsl(var(--border));"

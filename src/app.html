@@ -4,6 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     
+    <!-- DNS Prefetch for faster resource loading -->
+    <link rel="dns-prefetch" href="https://wmchvmegxcpyfjcuzqzk.supabase.co">
+    <link rel="preconnect" href="https://wmchvmegxcpyfjcuzqzk.supabase.co" crossorigin>
+    
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#C8102E" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -23,10 +27,12 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     
-    <!-- Google Fonts - Lexend (dyslexic-friendly) -->
+    <!-- Google Fonts - Lexend (dyslexic-friendly) - optimized loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300..700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300..700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300..700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300..700&display=swap" rel="stylesheet"></noscript>
     
     <!-- Blocking language script to set lang from saved preference -->
     <script>

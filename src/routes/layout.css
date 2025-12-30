@@ -648,7 +648,7 @@ header.sticky {
 }
 
 .mobile-bottom-nav .nav-item.active {
-  color: hsl(217 91% 60%);
+  color: hsl(217 91% 67%);
   background: hsl(217 91% 60% / 0.1);
 }
 
@@ -668,7 +668,7 @@ header.sticky {
   transform: translateX(-50%);
   width: 32px;
   height: 3px;
-  background: hsl(217 91% 60%);
+  background: hsl(217 91% 67%);
   border-radius: 0 0 3px 3px;
   transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }

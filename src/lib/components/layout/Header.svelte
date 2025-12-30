@@ -103,6 +103,8 @@
       <img
         src={isDark ? "/DARK-LOGO.svg" : "/LOGO.svg"}
         alt="rideTO"
+        width="85"
+        height="32"
         class="h-8 w-auto"
       />
     </a>
@@ -299,6 +301,8 @@
       <img
         src={isDark ? "/DARK-LOGO.svg" : "/LOGO.svg"}
         alt="rideTO"
+        width="85"
+        height="32"
         class="h-8 w-auto"
       />
     </div>

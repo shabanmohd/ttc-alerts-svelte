@@ -356,7 +356,7 @@
       <div class="flex items-start gap-2.5 min-w-0 flex-1">
         <MapPin class="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
         <div class="min-w-0 flex-1">
-          <h4 class="font-medium text-base leading-tight">{crossStreets}</h4>
+          <p class="font-medium text-base leading-tight">{crossStreets}</p>
           <div class="flex items-center gap-2 mt-1">
             {#if primaryDirection}
               {@const dirColor = primaryDirection.toLowerCase().includes("east")
@@ -395,7 +395,7 @@
       <div class="flex items-start gap-2.5 min-w-0 flex-1">
         <MapPin class="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
         <div class="min-w-0 flex-1">
-          <h4 class="font-medium text-base leading-tight">{crossStreets}</h4>
+          <p class="font-medium text-base leading-tight">{crossStreets}</p>
           <div class="flex items-center gap-2 mt-1">
             {#if primaryDirection}
               {@const dirColor = primaryDirection.toLowerCase().includes("east")
