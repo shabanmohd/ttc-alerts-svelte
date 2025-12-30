@@ -22,6 +22,7 @@ Real-time Toronto Transit alerts PWA.
 | **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)**                                           | Colors, typography, spacing, components         | UI/UX changes, new components                 |
 | **[WCAG_DESIGN_AUDIT.md](WCAG_DESIGN_AUDIT.md)**                                   | WCAG 2.2 accessibility audit and compliance     | Accessibility changes, compliance updates     |
 | **[SEO_AUDIT.md](SEO_AUDIT.md)**                                                   | SEO audit, meta tags, structured data           | SEO fixes, meta tag changes, sitemap updates  |
+| **[DATABASE_ANALYSIS.md](DATABASE_ANALYSIS.md)**                                   | Supabase database optimization analysis         | Database changes, cleanup, optimization       |
 | **[DATA_POLLING_FREQUENCIES.md](DATA_POLLING_FREQUENCIES.md)**                     | All data sources, polling intervals, workflows  | Data source or polling changes                |
 | **[alert-categorization-and-threading.md](alert-categorization-and-threading.md)** | Edge Function logic, threading algorithm        | Alert processing changes                      |
 | **[TTC-ROUTE-CONFLICTS.md](TTC-ROUTE-CONFLICTS.md)**                               | Route number conflicts (39/939, 46/996, etc.)   | Route matching bugs                           |
@@ -117,7 +118,8 @@ Real-time Toronto Transit alerts PWA.
 | `components/ui/turnstile/`                       | ✅     | Cloudflare Turnstile captcha component                                       |
 | `stores/alerts.ts`                               | ✅     | Alerts state + parallelized queries + 30-day accessibility window            |
 | `stores/dialogs.ts`                              | ✅     | Shared dialog state (hamburger menu → dialogs)                               |
-| `stores/preferences.ts`                          | ✅     | User preferences state                                                       |
+| ~~`stores/preferences.ts`~~                      | 🔴     | ~~User preferences state~~ **DEAD CODE** (not imported - use localPreferences) |
+| `stores/localPreferences.ts`                     | ✅     | Local preferences (IndexedDB) - theme, text size, animations, language 🅱️   |
 | `stores/savedStops.ts`                           | ✅     | Bookmarked stops (IndexedDB) - replaces deprecated bookmarks.ts 🅱️           |
 | `types/database.ts`                              | ✅     | Database types (JSONB fields)                                                |
 | `supabase.ts`                                    | ✅     | Supabase client config                                                       |
@@ -264,7 +266,7 @@ Real-time Toronto Transit alerts PWA.
 | File                  | Status | Purpose                                                               | Version |
 | --------------------- | ------ | --------------------------------------------------------------------- | ------- |
 | `alerts.ts`           | ✅     | Alerts state + parallelized queries + date validation filter          | A & B   |
-| `preferences.ts`      | ✅     | User preferences state (cloud sync)                                   | A & B   |
+| ~~`preferences.ts`~~  | 🔴     | ~~User preferences state (cloud sync)~~ **DEAD CODE - DELETE**        | ❌      |
 | `dialogs.ts`          | ✅     | Dialog state management (hamburger menu → dialogs)                    | A & B   |
 | `localPreferences.ts` | ✅     | Local preferences (theme, text size, reduce motion, i18n)             | **B**   |
 | `visibility.ts`       | ✅     | Track document visibility for polling control                         | **B**   |
@@ -275,6 +277,8 @@ Real-time Toronto Transit alerts PWA.
 | `route-changes.ts`    | ✅     | TTC service changes from ttc.ca (5-min polling, visibility-aware)     | **B**   |
 | `language.ts`         | ✅     | Language selection state                                              | **B**   |
 | `networkStatus.ts`    | ✅     | Network connectivity monitoring                                       | **B**   |
+
+> **Note:** `preferences.ts` is dead code (not imported anywhere). All user preferences are now handled by `localPreferences.ts` using IndexedDB. See [DATABASE_ANALYSIS.md](DATABASE_ANALYSIS.md) for cleanup instructions.
 
 ### Services (`src/lib/services/`)
 
@@ -681,6 +685,32 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Jan 2025 - Supabase Database Analysis & Optimization
+
+**Purpose:** Comprehensive database analysis for free tier optimization.
+
+**New Documentation:**
+- `DATABASE_ANALYSIS.md` - Complete database analysis report with findings and recommendations
+
+**Key Findings:**
+
+| Metric | Value | Status |
+| ------ | ----- | ------ |
+| Total DB Size | 135 MB | ✅ 27% of 500 MB limit |
+| incident_threads | 97 MB (959 rows) | ⚠️ 72% of total DB |
+| Unused Indexes | 15+ identified | ⚠️ ~10-15 MB wasted |
+| Dead Rows | 300+ | ⚠️ Needs VACUUM |
+
+**Recommendations:**
+- Drop unused indexes (save 10-15 MB)
+- Archive resolved threads older than 14 days (save 30-50 MB)
+- Set up automated cleanup Edge Function
+- Potential savings: 40-70 MB (30-50% reduction)
+
+**Documentation:** See [DATABASE_ANALYSIS.md](DATABASE_ANALYSIS.md) for full report.
+
+---
+
 ### Dec 28, 2025 - Comprehensive SEO Implementation
 
 **Purpose:** Implement all SEO fixes identified in SEO audit to improve search engine discoverability.
@@ -694,18 +724,18 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 **Implementations:**
 
-| Feature                  | Status | Details                                     |
-| ------------------------ | ------ | ------------------------------------------- |
-| Sitemap.xml              | ✅     | 5 public pages with changefreq/priority     |
-| Canonical URLs           | ✅     | All pages via SEO component                 |
-| Meta descriptions        | ✅     | Unique descriptions per page                |
-| Open Graph tags          | ✅     | Complete og:url, og:site_name, og:locale    |
-| Twitter Card tags        | ✅     | summary_large_image with all properties     |
-| JSON-LD structured data  | ✅     | WebApplication schema in app.html           |
-| hreflang tags            | ✅     | en/fr support in SEO component              |
-| robots.txt sitemap       | ✅     | Added sitemap reference                     |
-| noindex pages            | ✅     | /settings, /alerts-v3                       |
-| Dedicated OG image       | ✅     | 1200x630px branded social share image       |
+| Feature                 | Status | Details                                  |
+| ----------------------- | ------ | ---------------------------------------- |
+| Sitemap.xml             | ✅     | 5 public pages with changefreq/priority  |
+| Canonical URLs          | ✅     | All pages via SEO component              |
+| Meta descriptions       | ✅     | Unique descriptions per page             |
+| Open Graph tags         | ✅     | Complete og:url, og:site_name, og:locale |
+| Twitter Card tags       | ✅     | summary_large_image with all properties  |
+| JSON-LD structured data | ✅     | WebApplication schema in app.html        |
+| hreflang tags           | ✅     | en/fr support in SEO component           |
+| robots.txt sitemap      | ✅     | Added sitemap reference                  |
+| noindex pages           | ✅     | /settings, /alerts-v3                    |
+| Dedicated OG image      | ✅     | 1200x630px branded social share image    |
 
 **SEO Score:** 35/100 → 85/100
 

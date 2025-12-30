@@ -9,7 +9,13 @@
     noindex?: boolean;
   }
 
-  let { title, description, image = "/icons/og-image.png", type = "website", noindex = false }: Props = $props();
+  let {
+    title,
+    description,
+    image = "/icons/og-image.png",
+    type = "website",
+    noindex = false,
+  }: Props = $props();
 
   const baseUrl = "https://rideto.ca";
 
@@ -17,7 +23,9 @@
   let canonicalUrl = $derived(`${baseUrl}${$page.url.pathname}`);
 
   // Ensure image is absolute
-  let imageUrl = $derived(image.startsWith("http") ? image : `${baseUrl}${image}`);
+  let imageUrl = $derived(
+    image.startsWith("http") ? image : `${baseUrl}${image}`
+  );
 </script>
 
 <svelte:head>
