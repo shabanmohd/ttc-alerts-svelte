@@ -109,7 +109,7 @@
         <div
           class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10"
         >
-          <Train class="h-5 w-5 text-red-500" />
+          <AlertTriangle class="h-5 w-5 text-red-500" />
         </div>
         <div class="flex-1 min-w-0">
           <h4 class="font-medium">{$_("about.sourceTTC")}</h4>
