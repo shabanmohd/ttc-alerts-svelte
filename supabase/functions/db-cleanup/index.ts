@@ -1,5 +1,13 @@
+// deno-lint-ignore-file no-explicit-any
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// Deno environment
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+};
 
 /**
  * Database Cleanup Edge Function
@@ -112,7 +120,7 @@ serve(async (req: Request) => {
       }
       
       console.log(`[db-cleanup] Deleted ${stats.deletedAlerts} old alerts`);
-    } catch (e) {
+    } catch (e: any) {
       stats.errors.push(`Alert cleanup: ${e.message}`);
     }
 
@@ -128,7 +136,7 @@ serve(async (req: Request) => {
         .or(`and(is_resolved.eq.true,updated_at.lt.${cutoff24h}),updated_at.lt.${cutoff12h}`);
       
       if (staleThreads && staleThreads.length > 0) {
-        const threadIds = staleThreads.map(t => t.thread_id);
+        const threadIds = staleThreads.map((t: { thread_id: string }) => t.thread_id);
         
         // Unlink alerts from these threads first
         await supabase
@@ -150,7 +158,7 @@ serve(async (req: Request) => {
       }
       
       console.log(`[db-cleanup] Deleted ${stats.deletedThreads} stale threads`);
-    } catch (e) {
+    } catch (e: any) {
       stats.errors.push(`Thread cleanup: ${e.message}`);
     }
 
@@ -170,7 +178,7 @@ serve(async (req: Request) => {
       }
       
       console.log(`[db-cleanup] Deleted ${stats.deletedNotifications} old notifications`);
-    } catch (e) {
+    } catch (e: any) {
       stats.errors.push(`Notification cleanup: ${e.message}`);
     }
 
@@ -195,7 +203,7 @@ serve(async (req: Request) => {
       });
       
       stats.vacuumRan = true;
-    } catch (e) {
+    } catch (e: any) {
       // VACUUM/ANALYZE may not be available via RPC, that's okay
       console.log(`[db-cleanup] VACUUM note: ${e.message}`);
     }
@@ -210,7 +218,7 @@ serve(async (req: Request) => {
       status: 200
     });
 
-  } catch (error) {
+  } catch (error: any) {
     stats.errors.push(`Fatal: ${error.message}`);
     stats.duration_ms = Date.now() - startTime;
     
