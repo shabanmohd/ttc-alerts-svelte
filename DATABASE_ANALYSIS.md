@@ -12,39 +12,40 @@
 
 ### Before vs After
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| **Total Database Size** | 135 MB | **39 MB** | **-71%** ✅ |
-| **incident_threads** | 97 MB | 696 kB | **-99.3%** ✅ |
-| **Tables Count** | 13 | 6 | -7 tables |
-| **Unused Indexes** | 23 | 0 | -23 indexes |
-| **Free Tier Usage** | 27% | **7.8%** | -19.2% |
+| Metric                  | Before | After     | Change        |
+| ----------------------- | ------ | --------- | ------------- |
+| **Total Database Size** | 135 MB | **39 MB** | **-71%** ✅   |
+| **incident_threads**    | 97 MB  | 696 kB    | **-99.3%** ✅ |
+| **Tables Count**        | 13     | 6         | -7 tables     |
+| **Unused Indexes**      | 23     | 0         | -23 indexes   |
+| **Free Tier Usage**     | 27%    | **7.8%**  | -19.2%        |
 
 ### Actions Completed
 
-| Action | Result |
-|--------|--------|
-| ✅ `VACUUM FULL incident_threads` | 97 MB → 696 kB |
-| ✅ Dropped 7 auth tables | ~680 kB saved |
-| ✅ Dropped 10+ unused indexes | ~400 kB saved |
+| Action                                | Result           |
+| ------------------------------------- | ---------------- |
+| ✅ `VACUUM FULL incident_threads`     | 97 MB → 696 kB   |
+| ✅ Dropped 7 auth tables              | ~680 kB saved    |
+| ✅ Dropped 10+ unused indexes         | ~400 kB saved    |
 | ✅ Deleted dead code `preferences.ts` | Codebase cleanup |
-| ✅ `VACUUM ANALYZE` all tables | Stats refreshed |
+| ✅ `VACUUM ANALYZE` all tables        | Stats refreshed  |
 
 ### Current Table Sizes (Post-Optimization)
 
-| Table | Total Size | Data Size | Rows |
-|-------|-----------|-----------|------|
-| `alert_cache` | 3.7 MB | 2.0 MB | 2,175 |
-| `incident_threads` | 696 kB | 296 kB | 960 |
-| `notification_history` | 136 kB | 48 kB | 70 |
-| `planned_maintenance` | 96 kB | 8 kB | 13 |
-| `gtfs_routes` | 80 kB | 8 kB | 20 |
-| `gtfs_stations` | 16 kB | 0 | 0 |
-| **Total** | **~4.7 MB** | | |
+| Table                  | Total Size  | Data Size | Rows  |
+| ---------------------- | ----------- | --------- | ----- |
+| `alert_cache`          | 3.7 MB      | 2.0 MB    | 2,175 |
+| `incident_threads`     | 696 kB      | 296 kB    | 960   |
+| `notification_history` | 136 kB      | 48 kB     | 70    |
+| `planned_maintenance`  | 96 kB       | 8 kB      | 13    |
+| `gtfs_routes`          | 80 kB       | 8 kB      | 20    |
+| `gtfs_stations`        | 16 kB       | 0         | 0     |
+| **Total**              | **~4.7 MB** |           |       |
 
 ### Current Index Usage (All Active)
 
 All remaining indexes have significant scan counts:
+
 - `idx_alert_thread`: 5B+ scans (heavily used)
 - `idx_alert_cache_thread_created`: 504M scans
 - `idx_incident_threads_id`: 17M scans
@@ -58,14 +59,14 @@ All remaining indexes have significant scan counts:
 
 ### Overall Database Stats (Before)
 
-| Metric | Value |
-|--------|-------|
-| **Database Size** | 135 MB |
-| **Total Index Size** | 47 MB |
-| **Total Table Size** | 54 MB |
-| **WAL Size** | 176 MB |
-| **Index Hit Rate** | 100% ✅ |
-| **Table Hit Rate** | 100% ✅ |
+| Metric                     | Value   |
+| -------------------------- | ------- |
+| **Database Size**          | 135 MB  |
+| **Total Index Size**       | 47 MB   |
+| **Total Table Size**       | 54 MB   |
+| **WAL Size**               | 176 MB  |
+| **Index Hit Rate**         | 100% ✅ |
+| **Table Hit Rate**         | 100% ✅ |
 | **Time Since Stats Reset** | 37 days |
 
 ---
@@ -78,13 +79,13 @@ All remaining indexes have significant scan counts:
 
 ### Bloat Statistics Before Fix
 
-| Table | Type | Bloat Factor | Wasted | Total Size |
-|-------|------|--------------|--------|------------|
-| `incident_threads` | table | **188.6x** | **51 MB** | 52 MB |
-| `incident_threads_pkey` | index | **61.8x** | **32 MB** | 32 MB |
-| `idx_incident_threads_status` | index | **39.4x** | 800 kB | 824 kB |
-| `idx_threads_created_at` | index | 26.0x | 600 kB | 624 kB |
-| `idx_threads_route_ids` | index | 14.9x | 1.9 MB | 2 MB |
+| Table                         | Type  | Bloat Factor | Wasted    | Total Size |
+| ----------------------------- | ----- | ------------ | --------- | ---------- |
+| `incident_threads`            | table | **188.6x**   | **51 MB** | 52 MB      |
+| `incident_threads_pkey`       | index | **61.8x**    | **32 MB** | 32 MB      |
+| `idx_incident_threads_status` | index | **39.4x**    | 800 kB    | 824 kB     |
+| `idx_threads_created_at`      | index | 26.0x        | 600 kB    | 624 kB     |
+| `idx_threads_route_ids`       | index | 14.9x        | 1.9 MB    | 2 MB       |
 
 **Key Finding:** ~~The `incident_threads` table has grown to 97 MB total (52 MB data + 45 MB indexes), but only needs ~1-2 MB.~~ **FIXED:** Now 696 kB total.
 
@@ -117,17 +118,17 @@ The app now uses **local IndexedDB storage only** for user preferences. The old 
 
 ### Active Stores (IndexedDB - Local Only)
 
-| Store File | Purpose | Status |
-|------------|---------|--------|
+| Store File                           | Purpose                                | Status    |
+| ------------------------------------ | -------------------------------------- | --------- |
 | `src/lib/stores/localPreferences.ts` | Theme, text size, animations, language | ✅ Active |
-| `src/lib/stores/savedStops.ts` | My Stops (max 20) | ✅ Active |
-| `src/lib/stores/savedRoutes.ts` | My Routes | ✅ Active |
-| `src/lib/services/storage.ts` | IndexedDB wrapper | ✅ Active |
+| `src/lib/stores/savedStops.ts`       | My Stops (max 20)                      | ✅ Active |
+| `src/lib/stores/savedRoutes.ts`      | My Routes                              | ✅ Active |
+| `src/lib/services/storage.ts`        | IndexedDB wrapper                      | ✅ Active |
 
 ### Dead Code ✅ DELETED
 
-| File | Purpose | Status |
-|------|---------|--------|
+| File                                | Purpose                       | Status         |
+| ----------------------------------- | ----------------------------- | -------------- |
 | ~~`src/lib/stores/preferences.ts`~~ | Old Supabase auth preferences | ✅ **DELETED** |
 
 This file contained `supabase.auth.getUser()` and queries to `user_preferences`/`device_preferences` tables, but nothing in the codebase imported it.
@@ -136,16 +137,16 @@ This file contained `supabase.auth.getUser()` and queries to `user_preferences`/
 
 All auth-related tables have been dropped:
 
-| Table | Rows | Size | Purpose | Status |
-|-------|------|------|---------|--------|
-| ~~`user_profiles`~~ | 8 | ~64 kB | Legacy user accounts | ✅ Dropped |
-| ~~`user_preferences`~~ | 2 | ~16 kB | Legacy cloud preferences | ✅ Dropped |
-| ~~`device_preferences`~~ | 6 | ~48 kB | Legacy device prefs | ✅ Dropped |
-| ~~`webauthn_credentials`~~ | 7 | ~56 kB | Legacy passkeys | ✅ Dropped |
-| ~~`webauthn_challenges`~~ | 0 | ~8 kB | Legacy WebAuthn temp | ✅ Dropped |
-| ~~`recovery_codes`~~ | 60 | ~480 kB | Legacy recovery codes | ✅ Dropped |
-| ~~`preference_migrations`~~ | 1 | ~8 kB | Legacy migration tracking | ✅ Dropped |
-| **Total Saved** | **84** | **~680 kB** | | ✅ |
+| Table                       | Rows   | Size        | Purpose                   | Status     |
+| --------------------------- | ------ | ----------- | ------------------------- | ---------- |
+| ~~`user_profiles`~~         | 8      | ~64 kB      | Legacy user accounts      | ✅ Dropped |
+| ~~`user_preferences`~~      | 2      | ~16 kB      | Legacy cloud preferences  | ✅ Dropped |
+| ~~`device_preferences`~~    | 6      | ~48 kB      | Legacy device prefs       | ✅ Dropped |
+| ~~`webauthn_credentials`~~  | 7      | ~56 kB      | Legacy passkeys           | ✅ Dropped |
+| ~~`webauthn_challenges`~~   | 0      | ~8 kB       | Legacy WebAuthn temp      | ✅ Dropped |
+| ~~`recovery_codes`~~        | 60     | ~480 kB     | Legacy recovery codes     | ✅ Dropped |
+| ~~`preference_migrations`~~ | 1      | ~8 kB       | Legacy migration tracking | ✅ Dropped |
+| **Total Saved**             | **84** | **~680 kB** |                           | ✅         |
 
 ### SQL Executed (December 30, 2025)
 
@@ -170,15 +171,15 @@ DROP FUNCTION IF EXISTS migrate_device_to_user_preferences CASCADE;
 
 ## 📊 Executive Summary
 
-| Metric | Value | Status |
-|--------|-------|--------|
-| **Total Database Size** | 135 MB | ✅ 27% of 500 MB limit |
-| **Largest Table** | incident_threads (97 MB) | 🔴 **188.6x bloat** |
-| **Total Rows** | ~5,000 across all tables | ✅ Healthy |
-| **Unused Indexes** | 23 identified | ⚠️ ~400 kB wasted |
-| **Dead Auth Tables** | 7 tables (84 rows) | 🔴 ~680 kB wasted |
-| **Dead Code** | `preferences.ts` | 🔴 Not imported |
-| **Duplicate Key Errors** | Every minute | 🔴 Edge Function issue |
+| Metric                   | Value                    | Status                 |
+| ------------------------ | ------------------------ | ---------------------- |
+| **Total Database Size**  | 135 MB                   | ✅ 27% of 500 MB limit |
+| **Largest Table**        | incident_threads (97 MB) | 🔴 **188.6x bloat**    |
+| **Total Rows**           | ~5,000 across all tables | ✅ Healthy             |
+| **Unused Indexes**       | 23 identified            | ⚠️ ~400 kB wasted      |
+| **Dead Auth Tables**     | 7 tables (84 rows)       | 🔴 ~680 kB wasted      |
+| **Dead Code**            | `preferences.ts`         | 🔴 Not imported        |
+| **Duplicate Key Errors** | Every minute             | 🔴 Edge Function issue |
 
 ---
 
@@ -187,6 +188,7 @@ DROP FUNCTION IF EXISTS migrate_device_to_user_preferences CASCADE;
 **Found in PostgreSQL logs:** Frequent `duplicate key value violates unique constraint "alert_cache_pkey"` errors occurring every minute during polling.
 
 ### Impact
+
 - Wasted Edge Function invocations
 - Increased WAL log writes
 - Contributes to dead rows and table bloat
@@ -210,15 +212,15 @@ Update both BlueSky and TTC API insert operations:
 ```typescript
 // Line 471 - BlueSky alerts
 const { data: newAlert, error: insertError } = await supabase
-  .from('alert_cache')
-  .upsert(alert, { onConflict: 'alert_id' })
+  .from("alert_cache")
+  .upsert(alert, { onConflict: "alert_id" })
   .select()
   .single();
 
 // Line 755 - TTC API alerts
 const { error: insertError } = await supabase
-  .from('alert_cache')
-  .upsert(alert, { onConflict: 'alert_id' })
+  .from("alert_cache")
+  .upsert(alert, { onConflict: "alert_id" })
   .select()
   .single();
 ```
@@ -229,14 +231,19 @@ Change line 438 to fetch more alerts:
 
 ```typescript
 // Before: 24 hours
-const { data: existingAlerts } = await supabase.from('alert_cache')
-  .select('alert_id, thread_id')
-  .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+const { data: existingAlerts } = await supabase
+  .from("alert_cache")
+  .select("alert_id, thread_id")
+  .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
 // After: 7 days (covers all TTC API alert scenarios)
-const { data: existingAlerts } = await supabase.from('alert_cache')
-  .select('alert_id, thread_id')
-  .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+const { data: existingAlerts } = await supabase
+  .from("alert_cache")
+  .select("alert_id, thread_id")
+  .gte(
+    "created_at",
+    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  );
 ```
 
 **Option C: Add Ignore Conflict (Quick Fix)**
@@ -245,14 +252,14 @@ Add error handling to silently ignore duplicate key errors:
 
 ```typescript
 const { data: newAlert, error: insertError } = await supabase
-  .from('alert_cache')
+  .from("alert_cache")
   .insert(alert)
   .select()
   .single();
 
 // Currently continues on any error, but logs as error
 // Consider: Check if error is duplicate key and handle differently
-if (insertError?.code === '23505') {
+if (insertError?.code === "23505") {
   // Duplicate key - alert already exists, skip
   continue;
 }
@@ -260,26 +267,26 @@ if (insertError?.code === '23505') {
 
 ### File Locations
 
-| Location | Line | Issue |
-|----------|------|-------|
-| `supabase/functions/poll-alerts/index.ts` | 438 | `existingAlerts` only fetches 24h |
-| `supabase/functions/poll-alerts/index.ts` | 471 | BlueSky insert without upsert |
-| `supabase/functions/poll-alerts/index.ts` | 755 | TTC API insert without upsert |
+| Location                                  | Line | Issue                             |
+| ----------------------------------------- | ---- | --------------------------------- |
+| `supabase/functions/poll-alerts/index.ts` | 438  | `existingAlerts` only fetches 24h |
+| `supabase/functions/poll-alerts/index.ts` | 471  | BlueSky insert without upsert     |
+| `supabase/functions/poll-alerts/index.ts` | 755  | TTC API insert without upsert     |
 
 ---
 
 ## 📁 Table Size Analysis
 
-| Table | Size | Rows | Dead Rows | Notes |
-|-------|------|------|-----------|-------|
-| `incident_threads` | 97 MB (52 MB data + 45 MB indexes) | 959 | 39 | ⚠️ Primary concern - 72% of DB |
-| `alert_cache` | 3.8 MB | 2,174 | 261 | 1,083 non-latest records |
-| `notification_history` | ~2 MB | 70 | - | Notification tracking |
-| `device_preferences` | <1 MB | 6 | - | User settings |
-| `webauthn_credentials` | <1 MB | 7 | - | Passkey storage |
-| `user_profiles` | <1 MB | 8 | - | User accounts |
-| `planned_maintenance` | <1 MB | 13 | - | Scheduled closures |
-| Other tables | <1 MB each | - | - | Minimal impact |
+| Table                  | Size                               | Rows  | Dead Rows | Notes                          |
+| ---------------------- | ---------------------------------- | ----- | --------- | ------------------------------ |
+| `incident_threads`     | 97 MB (52 MB data + 45 MB indexes) | 959   | 39        | ⚠️ Primary concern - 72% of DB |
+| `alert_cache`          | 3.8 MB                             | 2,174 | 261       | 1,083 non-latest records       |
+| `notification_history` | ~2 MB                              | 70    | -         | Notification tracking          |
+| `device_preferences`   | <1 MB                              | 6     | -         | User settings                  |
+| `webauthn_credentials` | <1 MB                              | 7     | -         | Passkey storage                |
+| `user_profiles`        | <1 MB                              | 8     | -         | User accounts                  |
+| `planned_maintenance`  | <1 MB                              | 13    | -         | Scheduled closures             |
+| Other tables           | <1 MB each                         | -     | -         | Minimal impact                 |
 
 ### 🚨 Key Finding: `incident_threads` Table
 
@@ -334,18 +341,18 @@ VACUUM ANALYZE;
 
 ### Rarely Used Indexes (< 10 scans)
 
-| Index | Scans | Recommendation |
-|-------|-------|----------------|
-| `idx_incident_threads_is_hidden` | 5 | Consider dropping |
-| `idx_alert_cache_route_id` | 8 | Monitor usage |
+| Index                            | Scans | Recommendation    |
+| -------------------------------- | ----- | ----------------- |
+| `idx_incident_threads_is_hidden` | 5     | Consider dropping |
+| `idx_alert_cache_route_id`       | 8     | Monitor usage     |
 
 ### High-Value Indexes (Keep)
 
-| Index | Scans | Purpose |
-|-------|-------|---------|
-| `idx_alert_cache_is_latest` | 1,200+ | Core query filter |
-| `idx_incident_threads_status` | 500+ | Thread filtering |
-| `idx_incident_threads_created_at` | 300+ | Date queries |
+| Index                             | Scans  | Purpose           |
+| --------------------------------- | ------ | ----------------- |
+| `idx_alert_cache_is_latest`       | 1,200+ | Core query filter |
+| `idx_incident_threads_status`     | 500+   | Thread filtering  |
+| `idx_incident_threads_created_at` | 300+   | Date queries      |
 
 ---
 
@@ -353,40 +360,41 @@ VACUUM ANALYZE;
 
 ### Performance Advisors (via `mcp_supabase_get_advisors`)
 
-| Issue | Table | Status |
-|-------|-------|--------|
-| **Table Bloat** | `incident_threads` | 🔴 Excessive bloat detected |
-| Unused Index | `idx_user_profiles_email` | ⚠️ Never used |
-| Unused Index | `idx_user_profiles_updated_at` | ⚠️ Never used |
-| Unused Index | `idx_user_preferences_updated_at` | ⚠️ Never used |
-| Unused Index | `idx_user_preferences_device_id` | ⚠️ Never used |
-| Unused Index | `idx_notification_history_device_id` | ⚠️ Never used |
-| Unused Index | `idx_notification_history_success` | ⚠️ Never used |
-| Unused Index | `idx_route_type` | ⚠️ Never used |
-| Unused Index | `idx_station_name` | ⚠️ Never used |
-| Unused Index | `idx_station_source` | ⚠️ Never used |
-| Unused Index | `idx_maintenance_active` | ⚠️ Never used |
-| Unused Index | `idx_maintenance_line` | ⚠️ Never used |
-| Unused Index | `idx_preference_migrations_device_id` | ⚠️ Never used |
-| Unused Index | `idx_preference_migrations_migrated_at` | ⚠️ Never used |
-| Unused Index | `idx_preference_migrations_status` | ⚠️ Never used |
-| Unused Index | `idx_webauthn_credentials_active` | ⚠️ Never used |
-| Unused Index | `idx_recovery_codes_unused` | ⚠️ Never used |
-| Unused Index | `idx_device_preferences_created_at` | ⚠️ Never used |
-| Unused Index | `idx_webauthn_challenges_user_id` | ⚠️ Never used |
+| Issue           | Table                                   | Status                      |
+| --------------- | --------------------------------------- | --------------------------- |
+| **Table Bloat** | `incident_threads`                      | 🔴 Excessive bloat detected |
+| Unused Index    | `idx_user_profiles_email`               | ⚠️ Never used               |
+| Unused Index    | `idx_user_profiles_updated_at`          | ⚠️ Never used               |
+| Unused Index    | `idx_user_preferences_updated_at`       | ⚠️ Never used               |
+| Unused Index    | `idx_user_preferences_device_id`        | ⚠️ Never used               |
+| Unused Index    | `idx_notification_history_device_id`    | ⚠️ Never used               |
+| Unused Index    | `idx_notification_history_success`      | ⚠️ Never used               |
+| Unused Index    | `idx_route_type`                        | ⚠️ Never used               |
+| Unused Index    | `idx_station_name`                      | ⚠️ Never used               |
+| Unused Index    | `idx_station_source`                    | ⚠️ Never used               |
+| Unused Index    | `idx_maintenance_active`                | ⚠️ Never used               |
+| Unused Index    | `idx_maintenance_line`                  | ⚠️ Never used               |
+| Unused Index    | `idx_preference_migrations_device_id`   | ⚠️ Never used               |
+| Unused Index    | `idx_preference_migrations_migrated_at` | ⚠️ Never used               |
+| Unused Index    | `idx_preference_migrations_status`      | ⚠️ Never used               |
+| Unused Index    | `idx_webauthn_credentials_active`       | ⚠️ Never used               |
+| Unused Index    | `idx_recovery_codes_unused`             | ⚠️ Never used               |
+| Unused Index    | `idx_device_preferences_created_at`     | ⚠️ Never used               |
+| Unused Index    | `idx_webauthn_challenges_user_id`       | ⚠️ Never used               |
 
 ### Security Advisors
 
-| Issue | Entity | Level |
-|-------|--------|-------|
-| Mutable search_path | `find_or_create_thread` | ⚠️ WARN |
-| Mutable search_path | `cleanup_old_alerts` | ⚠️ WARN |
-| Mutable search_path | `cleanup_old_alerts_toronto` | ⚠️ WARN |
-| Mutable search_path | `invoke_poll_alerts` | ⚠️ WARN |
-| Mutable search_path | + 10 other functions | ⚠️ WARN |
-| Leaked Password Protection | Auth | ⚠️ WARN - Disabled |
+| Issue                      | Entity                       | Level              |
+| -------------------------- | ---------------------------- | ------------------ |
+| Mutable search_path        | `find_or_create_thread`      | ⚠️ WARN            |
+| Mutable search_path        | `cleanup_old_alerts`         | ⚠️ WARN            |
+| Mutable search_path        | `cleanup_old_alerts_toronto` | ⚠️ WARN            |
+| Mutable search_path        | `invoke_poll_alerts`         | ⚠️ WARN            |
+| Mutable search_path        | + 10 other functions         | ⚠️ WARN            |
+| Leaked Password Protection | Auth                         | ⚠️ WARN - Disabled |
 
 **Fix for search_path:**
+
 ```sql
 -- Add search_path to functions to prevent schema hijacking
 ALTER FUNCTION public.find_or_create_thread() SET search_path = public;
@@ -403,11 +411,11 @@ Enable in Supabase Dashboard → Authentication → Settings → Password Streng
 
 Previously broken functions have been fixed:
 
-| Function | Issue | Fix |
-|----------|-------|-----|
-| `get_thread_with_alerts(text)` | `SET search_path TO ''` broke table references | Changed to `SET search_path = public` |
-| `get_threads_with_alerts_bulk(text[])` | Same search_path issue | Changed to `SET search_path = public` |  
-| `cleanup_old_data()` | Referenced dropped `webauthn_challenges` table, wrong type `uuid[]` instead of `text[]`, wrong column `created_at` vs `sent_at` | Removed webauthn reference, fixed types and column names |
+| Function                               | Issue                                                                                                                           | Fix                                                      |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `get_thread_with_alerts(text)`         | `SET search_path TO ''` broke table references                                                                                  | Changed to `SET search_path = public`                    |
+| `get_threads_with_alerts_bulk(text[])` | Same search_path issue                                                                                                          | Changed to `SET search_path = public`                    |
+| `cleanup_old_data()`                   | Referenced dropped `webauthn_challenges` table, wrong type `uuid[]` instead of `text[]`, wrong column `created_at` vs `sent_at` | Removed webauthn reference, fixed types and column names |
 
 **All functions now work correctly** - verified with test calls.
 
@@ -417,19 +425,19 @@ Previously broken functions have been fixed:
 
 ### `incident_threads`
 
-| Category | Count | Notes |
-|----------|-------|-------|
-| Active threads | 35 | Currently visible |
-| Resolved threads | 924 | Historical |
-| Older than 30 days | 1 | ✅ Good retention |
+| Category           | Count | Notes             |
+| ------------------ | ----- | ----------------- |
+| Active threads     | 35    | Currently visible |
+| Resolved threads   | 924   | Historical        |
+| Older than 30 days | 1     | ✅ Good retention |
 
 ### `alert_cache`
 
-| Category | Count | Notes |
-|----------|-------|-------|
-| `is_latest = true` | 1,091 | Current alerts |
+| Category            | Count | Notes               |
+| ------------------- | ----- | ------------------- |
+| `is_latest = true`  | 1,091 | Current alerts      |
 | `is_latest = false` | 1,083 | Historical versions |
-| Older than 30 days | 1 | ✅ Good retention |
+| Older than 30 days  | 1     | ✅ Good retention   |
 
 ---
 
@@ -454,26 +462,26 @@ Keep only recent resolved threads (e.g., last 7-14 days):
 
 ```sql
 -- Preview: Count threads to be archived
-SELECT COUNT(*) 
-FROM incident_threads 
-WHERE status = 'resolved' 
+SELECT COUNT(*)
+FROM incident_threads
+WHERE status = 'resolved'
 AND resolved_at < NOW() - INTERVAL '14 days';
 
 -- Option A: Delete old resolved threads
-DELETE FROM incident_threads 
-WHERE status = 'resolved' 
+DELETE FROM incident_threads
+WHERE status = 'resolved'
 AND resolved_at < NOW() - INTERVAL '14 days';
 
 -- Option B: Move to archive table first (safer)
 CREATE TABLE IF NOT EXISTS incident_threads_archive (LIKE incident_threads INCLUDING ALL);
 
-INSERT INTO incident_threads_archive 
-SELECT * FROM incident_threads 
-WHERE status = 'resolved' 
+INSERT INTO incident_threads_archive
+SELECT * FROM incident_threads
+WHERE status = 'resolved'
 AND resolved_at < NOW() - INTERVAL '14 days';
 
-DELETE FROM incident_threads 
-WHERE status = 'resolved' 
+DELETE FROM incident_threads
+WHERE status = 'resolved'
 AND resolved_at < NOW() - INTERVAL '14 days';
 ```
 
@@ -481,8 +489,8 @@ AND resolved_at < NOW() - INTERVAL '14 days';
 
 ```sql
 -- Delete old non-latest alerts (keep last 3 days for history)
-DELETE FROM alert_cache 
-WHERE is_latest = false 
+DELETE FROM alert_cache
+WHERE is_latest = false
 AND fetched_at < NOW() - INTERVAL '3 days';
 ```
 
@@ -508,7 +516,7 @@ The `alerts` JSONB column in `incident_threads` is likely causing bloat:
 
 ```sql
 -- Check average JSONB sizes
-SELECT 
+SELECT
     AVG(pg_column_size(alerts)) as avg_alerts_bytes,
     MAX(pg_column_size(alerts)) as max_alerts_bytes
 FROM incident_threads;
@@ -522,12 +530,12 @@ Based on your app's query patterns, these might help:
 
 ```sql
 -- Composite index for common thread queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_threads_status_created 
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_threads_status_created
 ON incident_threads(status, created_at DESC);
 
 -- Partial index for active threads only (smaller, faster)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_threads_active 
-ON incident_threads(created_at DESC) 
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_threads_active
+ON incident_threads(created_at DESC)
 WHERE status = 'active';
 ```
 
@@ -540,13 +548,13 @@ Track slow queries:
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 
 -- View slowest queries
-SELECT 
+SELECT
     query,
     calls,
     mean_exec_time,
     total_exec_time
-FROM pg_stat_statements 
-ORDER BY mean_exec_time DESC 
+FROM pg_stat_statements
+ORDER BY mean_exec_time DESC
 LIMIT 10;
 ```
 
@@ -560,28 +568,30 @@ Create a scheduled Edge Function to run cleanup daily:
 
 ```typescript
 // supabase/functions/db-cleanup/index.ts
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 Deno.serve(async () => {
   const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
   // Clean old resolved threads (keep 14 days)
-  const { error: threadError } = await supabase.rpc('cleanup_old_threads', {
-    days_to_keep: 14
+  const { error: threadError } = await supabase.rpc("cleanup_old_threads", {
+    days_to_keep: 14,
   });
 
   // Clean old alert cache (keep 3 days of non-latest)
-  const { error: cacheError } = await supabase.rpc('cleanup_old_alerts', {
-    days_to_keep: 3
+  const { error: cacheError } = await supabase.rpc("cleanup_old_alerts", {
+    days_to_keep: 3,
   });
 
-  return new Response(JSON.stringify({
-    threads_cleanup: threadError ? 'failed' : 'success',
-    alerts_cleanup: cacheError ? 'failed' : 'success'
-  }));
+  return new Response(
+    JSON.stringify({
+      threads_cleanup: threadError ? "failed" : "success",
+      alerts_cleanup: cacheError ? "failed" : "success",
+    })
+  );
 });
 ```
 
@@ -593,17 +603,17 @@ CREATE OR REPLACE FUNCTION cleanup_old_data()
 RETURNS void AS $$
 BEGIN
     -- Delete old resolved threads
-    DELETE FROM incident_threads 
-    WHERE status = 'resolved' 
+    DELETE FROM incident_threads
+    WHERE status = 'resolved'
     AND resolved_at < NOW() - INTERVAL '14 days';
-    
+
     -- Delete old non-latest alerts
-    DELETE FROM alert_cache 
-    WHERE is_latest = false 
+    DELETE FROM alert_cache
+    WHERE is_latest = false
     AND fetched_at < NOW() - INTERVAL '3 days';
-    
+
     -- Cleanup notification history
-    DELETE FROM notification_history 
+    DELETE FROM notification_history
     WHERE sent_at < NOW() - INTERVAL '30 days';
 END;
 $$ LANGUAGE plpgsql;
@@ -618,27 +628,27 @@ SELECT cron.schedule('cleanup-daily', '0 3 * * *', 'SELECT cleanup_old_data();')
 
 ### Immediate (This Week)
 
-| Priority | Action | Expected Savings |
-|----------|--------|------------------|
-| 🔴 High | Drop unused indexes | 10-15 MB |
-| 🔴 High | Run VACUUM ANALYZE | Reclaim dead rows |
-| 🟡 Medium | Clean old resolved threads | 30-50 MB |
+| Priority  | Action                     | Expected Savings  |
+| --------- | -------------------------- | ----------------- |
+| 🔴 High   | Drop unused indexes        | 10-15 MB          |
+| 🔴 High   | Run VACUUM ANALYZE         | Reclaim dead rows |
+| 🟡 Medium | Clean old resolved threads | 30-50 MB          |
 
 ### Short-Term (This Month)
 
-| Priority | Action | Benefit |
-|----------|--------|---------|
-| 🟡 Medium | Set up automated cleanup | Prevent future bloat |
-| 🟡 Medium | Add partial indexes | Faster queries |
-| 🟢 Low | Analyze JSONB sizes | Identify normalization needs |
+| Priority  | Action                   | Benefit                      |
+| --------- | ------------------------ | ---------------------------- |
+| 🟡 Medium | Set up automated cleanup | Prevent future bloat         |
+| 🟡 Medium | Add partial indexes      | Faster queries               |
+| 🟢 Low    | Analyze JSONB sizes      | Identify normalization needs |
 
 ### Long-Term (If Approaching Limits)
 
-| Priority | Action | When Needed |
-|----------|--------|-------------|
-| 🟢 Low | Archive to external storage | > 400 MB |
-| 🟢 Low | Consider upgrading plan | > 450 MB |
-| 🟢 Low | Normalize JSONB to tables | If alerts > 10KB avg |
+| Priority | Action                      | When Needed          |
+| -------- | --------------------------- | -------------------- |
+| 🟢 Low   | Archive to external storage | > 400 MB             |
+| 🟢 Low   | Consider upgrading plan     | > 450 MB             |
+| 🟢 Low   | Normalize JSONB to tables   | If alerts > 10KB avg |
 
 ---
 
@@ -651,14 +661,14 @@ Save these for periodic checks:
 SELECT pg_size_pretty(pg_database_size(current_database()));
 
 -- Check table sizes
-SELECT 
+SELECT
     relname as table,
     pg_size_pretty(pg_total_relation_size(relid)) as total_size
 FROM pg_stat_user_tables
 ORDER BY pg_total_relation_size(relid) DESC;
 
 -- Check for bloat (high dead row count)
-SELECT 
+SELECT
     relname,
     n_live_tup,
     n_dead_tup,
@@ -668,7 +678,7 @@ WHERE n_dead_tup > 100
 ORDER BY n_dead_tup DESC;
 
 -- Check unused indexes
-SELECT 
+SELECT
     indexrelname,
     idx_scan,
     pg_size_pretty(pg_relation_size(indexrelid)) as size
@@ -687,33 +697,33 @@ All optimizations have been executed successfully!
 
 ### Final Results
 
-| Metric | Before | After | Savings |
-|--------|--------|-------|---------|
-| **Total Database Size** | 135 MB | **39 MB** | **96 MB (71%)** |
-| **incident_threads** | 97 MB | 696 kB | **96.3 MB (99.3%)** |
-| **Auth tables** | ~680 kB | 0 | 680 kB |
-| **Unused indexes** | ~400 kB | 0 | ~400 kB |
-| **Free Tier Usage** | 27% | **7.8%** | -19.2% |
+| Metric                  | Before  | After     | Savings             |
+| ----------------------- | ------- | --------- | ------------------- |
+| **Total Database Size** | 135 MB  | **39 MB** | **96 MB (71%)**     |
+| **incident_threads**    | 97 MB   | 696 kB    | **96.3 MB (99.3%)** |
+| **Auth tables**         | ~680 kB | 0         | 680 kB              |
+| **Unused indexes**      | ~400 kB | 0         | ~400 kB             |
+| **Free Tier Usage**     | 27%     | **7.8%**  | -19.2%              |
 
 ### Actions Completed
 
-| Priority | Action | Status |
-|----------|--------|--------|
-| ✅ **P0** | `VACUUM FULL incident_threads` | Done |
-| ✅ **P1** | Drop 10+ unused indexes | Done |
-| ✅ **P2** | Drop 7 auth tables | Done |
-| ✅ **P3** | Delete dead code `preferences.ts` | Done |
-| ✅ **P4** | `VACUUM ANALYZE` all tables | Done |
-| ✅ **P5** | Fix poll-alerts duplicate key errors | Done (2025-01-18) |
-| ✅ **P6** | Fix 3 broken database functions | Done (2025-01-18) |
+| Priority  | Action                                 | Status            |
+| --------- | -------------------------------------- | ----------------- |
+| ✅ **P0** | `VACUUM FULL incident_threads`         | Done              |
+| ✅ **P1** | Drop 10+ unused indexes                | Done              |
+| ✅ **P2** | Drop 7 auth tables                     | Done              |
+| ✅ **P3** | Delete dead code `preferences.ts`      | Done              |
+| ✅ **P4** | `VACUUM ANALYZE` all tables            | Done              |
+| ✅ **P5** | Fix poll-alerts duplicate key errors   | Done (2025-01-18) |
+| ✅ **P6** | Fix 3 broken database functions        | Done (2025-01-18) |
 | ✅ **P7** | Create automated cleanup Edge Function | Done (2025-01-18) |
 
 ### Remaining Recommendations (Low Priority)
 
-| Priority | Action | Notes |
-|----------|--------|-------|
-| 🟢 **P8** | Deploy db-cleanup Edge Function | Created, needs Supabase cron schedule |
-| 🟢 **P9** | Enable leaked password protection | Dashboard → Auth → Settings |
+| Priority  | Action                            | Notes                                 |
+| --------- | --------------------------------- | ------------------------------------- |
+| 🟢 **P8** | Deploy db-cleanup Edge Function   | Created, needs Supabase cron schedule |
+| 🟢 **P9** | Enable leaked password protection | Dashboard → Auth → Settings           |
 
 ---
 
@@ -724,12 +734,14 @@ All optimizations have been executed successfully!
 Created `supabase/functions/db-cleanup/index.ts` for automated maintenance:
 
 **Operations:**
+
 1. Delete old alerts (>48h non-latest, >7d all)
 2. Clean up stale/resolved threads (>24h resolved, >12h stale)
 3. Delete old notification history (>7 days)
 4. Call `cleanup_old_data()` RPC for additional cleanup
 
 **To deploy and schedule:**
+
 ```bash
 # Deploy the function
 supabase functions deploy db-cleanup
@@ -745,11 +757,11 @@ supabase functions deploy db-cleanup
 
 Fixed duplicate key constraint errors in `poll-alerts` Edge Function:
 
-| Change | Before | After |
-|--------|--------|-------|
-| existingAlerts lookback | 24 hours | 7 days |
-| BlueSky insert | `.insert(alert)` | `.upsert(alert, { onConflict: 'alert_id' })` |
-| TTC API insert | `.insert(alert)` | `.upsert(alert, { onConflict: 'alert_id' })` |
+| Change                  | Before           | After                                        |
+| ----------------------- | ---------------- | -------------------------------------------- |
+| existingAlerts lookback | 24 hours         | 7 days                                       |
+| BlueSky insert          | `.insert(alert)` | `.upsert(alert, { onConflict: 'alert_id' })` |
+| TTC API insert          | `.insert(alert)` | `.upsert(alert, { onConflict: 'alert_id' })` |
 
 This prevents "duplicate key value violates unique constraint" errors when alerts reappear.
 
@@ -766,4 +778,4 @@ VACUUM ANALYZE;
 
 ---
 
-*Report generated from Supabase database analysis. Initial optimization: December 30, 2025. Additional fixes: January 18, 2025.*
+_Report generated from Supabase database analysis. Initial optimization: December 30, 2025. Additional fixes: January 18, 2025._
