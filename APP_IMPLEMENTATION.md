@@ -136,7 +136,6 @@ Real-time Toronto Transit alerts PWA.
 | `alerts-v3/+page.svelte`      | 📦     | Legacy alerts page (old design, kept for reference)       |
 | `help/+page.svelte`           | ✅     | How to Use - Quick Start, Features, FAQ, Get in Touch     |
 | `about/+page.svelte`          | ✅     | About page - app info, data sources, links                |
-| `preferences/+page.svelte`    | ✅     | Route/mode preferences                                    |
 | `settings/+page.svelte`       | ✅     | Settings with stops, routes, prefs, location 🅱️           |
 | `routes/+page.svelte`         | ✅     | Route browser by category 🅱️                              |
 | `routes/[route]/+page.svelte` | ✅     | Route detail page with alerts and route changes           |

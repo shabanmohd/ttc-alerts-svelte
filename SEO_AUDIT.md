@@ -25,7 +25,7 @@ The rideTO PWA has significant SEO gaps that prevent search engine discoverabili
 
 ## 📄 Page Inventory
 
-### All Routes (9 pages)
+### All Routes (8 pages)
 
 | Page | URL | Title | Description | Canonical | OG Tags | Indexable |
 |------|-----|-------|-------------|-----------|---------|-----------|
@@ -34,7 +34,6 @@ The rideTO PWA has significant SEO gaps that prevent search engine discoverabili
 | Alerts v3 | `/alerts-v3` | ✅ | ✅ | ❌ | ❌ | ✅ noindex |
 | Routes | `/routes` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
 | Route Detail | `/routes/[route]` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
-| Preferences | `/preferences` | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Settings | `/settings` | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Help | `/help` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
 | About | `/about` | ✅ | ❌ | ❌ | ❌ | ⚠️ |
@@ -53,7 +52,6 @@ All pages use consistent title format: `{Page Name} - rideTO`
 | Home | "Home - rideTO" |
 | Alerts | "Service Alerts - rideTO" |
 | Routes | "Routes - rideTO" |
-| Preferences | "Preferences - rideTO" |
 | Settings | "Settings - rideTO" |
 | Help | "How to Use - rideTO" |
 | About | "About - rideTO" |
@@ -95,7 +93,7 @@ export const ssr = true;
 // Create page-specific +page.ts files with ssr: true for:
 // - Home, Alerts, Routes, Help, About
 // Keep ssr: false for user-specific pages:
-// - Preferences, Settings
+// - Settings
 ```
 
 ---
@@ -145,7 +143,6 @@ Create `static/sitemap.xml`:
 Also update `static/robots.txt`:
 ```
 User-agent: *
-Disallow: /preferences
 Disallow: /settings
 Disallow: /alerts-v3
 
@@ -378,7 +375,6 @@ Allow: /
 Disallow: /alerts-v3
 
 # User-specific pages - do not index
-Disallow: /preferences
 Disallow: /settings
 ```
 

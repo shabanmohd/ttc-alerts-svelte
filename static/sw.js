@@ -6,7 +6,7 @@ const ETA_CACHE = 'ttc-eta-cache-v1';
 
 const STATIC_ASSETS = [
   '/',
-  '/preferences',
+  '/settings',
   '/manifest.json',
   '/icons/icon-72x72.png',
   '/icons/icon-96x96.png',

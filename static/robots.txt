@@ -6,5 +6,4 @@ Allow: /
 Disallow: /alerts-v3
 
 # User-specific pages - do not index
-Disallow: /preferences
 Disallow: /settings
