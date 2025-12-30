@@ -439,10 +439,34 @@ export async function migrateFromLocalStorage(): Promise<boolean> {
 }
 
 /**
+ * Request persistent storage using the modern Storage API
+ * This helps ensure IndexedDB data survives browser storage pressure
+ */
+async function requestPersistentStorage(): Promise<void> {
+  if (typeof navigator === 'undefined' || !navigator.storage?.persist) {
+    return;
+  }
+
+  try {
+    const isPersisted = await navigator.storage.persisted();
+    if (!isPersisted) {
+      const granted = await navigator.storage.persist();
+      console.log(`Persistent storage ${granted ? 'granted' : 'denied'}`);
+    }
+  } catch (error) {
+    // Silently fail - persistent storage is a nice-to-have
+    console.debug('Persistent storage request failed:', error);
+  }
+}
+
+/**
  * Initialize storage - call on app startup
  */
 export async function initializeStorage(): Promise<void> {
   try {
+    // Request persistent storage (modern API, replaces deprecated StorageType.persistent)
+    await requestPersistentStorage();
+    
     // Ensure DB is ready
     await getDB();
     
