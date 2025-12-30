@@ -16,7 +16,6 @@
     MapPin,
     Navigation,
     HardDrive,
-    Train,
     Clock,
   } from "lucide-svelte";
 </script>
@@ -52,11 +51,11 @@
   <Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 50ms">
     <Card.Content>
       <div class="flex items-center gap-4">
-        <div
-          class="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10"
-        >
-          <Train class="h-7 w-7 text-primary" />
-        </div>
+        <img
+          src="/bus-rocket-1.png"
+          alt="rideTO logo"
+          class="h-14 w-14 rounded-xl"
+        />
         <div>
           <h2 class="text-xl font-bold">{$_("header.appName")}</h2>
           <p class="text-sm text-muted-foreground">{$_("about.tagline")}</p>
