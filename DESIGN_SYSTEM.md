@@ -719,6 +719,25 @@ border-color: hsl(var(--border));
 
 **Note:** Due to Tailwind 4 color handling differences, the Input component uses inline `style` attributes rather than utility classes for background and border colors.
 
+#### iOS Auto-Zoom Prevention
+
+**Critical:** Input fields must use `font-size: 1rem` (16px) minimum on mobile to prevent iOS Safari auto-zoom.
+
+```css
+/* BAD - causes iOS zoom on focus */
+.search-input {
+  font-size: 0.875rem; /* 14px - DO NOT USE */
+}
+
+/* GOOD - prevents iOS zoom */
+.search-input {
+  font-size: 1rem; /* 16px minimum on mobile */
+}
+```
+
+The shadcn-ui Input component already handles this with `text-base md:text-sm` (16px on mobile, 14px on desktop).
+For custom inputs, always use minimum 16px font-size.
+
 #### Placeholder Text Styling
 
 Placeholders use a consistent mid-gray color (`zinc-500` / `#71717a`) across all inputs and textareas:
@@ -1778,6 +1797,12 @@ Status priority determines card background color when multiple statuses are pres
 | -        | **ok**         | `CheckCircle` | Green tint       | "Normal service" |
 
 > **Note:** Slow zone status was removed from the subway status cards. Slow zones are still available as a filter category but no longer shown as a subway line status.
+
+#### Card Styling
+
+- **No borders** - Cards use background color only for status indication (not clickable)
+- **Background-only status** - Uses subtle tinted backgrounds instead of borders
+- **2x2 grid on mobile** - Responsive layout with 4 columns on desktop
 
 #### CSS Classes
 

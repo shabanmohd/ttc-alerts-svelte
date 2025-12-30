@@ -142,13 +142,13 @@ Real-time Toronto Transit alerts PWA.
 
 ### Alerts Components (`src/routes/alerts/`)
 
-| File                      | Status | Purpose                                                                                           |
-| ------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
-| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs, URL param sync (tab/category), TTC attribution link, 600px layout  |
-| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile) - no slowzone status, minmax(0, 1fr) grid                   |
-| `CategoryFilterV3.svelte` | ✅     | Compact pill filter with fade indicator on mobile (Disruptions & Delays / Elevators / Slow Zones) |
-| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)                            |
-| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)                                      |
+| File                      | Status | Purpose                                                                                              |
+| ------------------------- | ------ | ---------------------------------------------------------------------------------------------------- |
+| `+page.svelte`            | ✅     | Main page: Now/Scheduled tabs, URL param sync (tab/category), TTC attribution link, 600px layout     |
+| `SubwayStatusBar.svelte`  | ✅     | 4-col subway status grid (2x2 mobile), borderless cards, background-only status colors               |
+| `CategoryFilterV3.svelte` | ✅     | Compact pill filter with fade indicator on mobile (Disruptions & Delays / Elevators / Slow Zones)    |
+| `PlannedContent.svelte`   | ✅     | Sub-tabs: Closures (from DB) / Route Changes (fetched from TTC.ca API)                               |
+| `ResolvedSection.svelte`  | ✅     | Collapsible recently resolved section (SERVICE_RESUMED only)                                         |
 
 ### Backend (`supabase/`)
 
@@ -197,15 +197,15 @@ Real-time Toronto Transit alerts PWA.
 
 | File                        | Status | Purpose                                                       |
 | --------------------------- | ------ | ------------------------------------------------------------- |
-| `StopSearch.svelte`         | ✅     | Stop search with autocomplete, direction badges, ID search    |
-| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops                              |
-| `BranchDropdown.svelte`     | ✅     | Branch selection dropdown for multi-branch routes (102, 501)  |
-| `MyStops.svelte`            | ✅     | Full-page My Stops list                                       |
-| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                          |
-| `RouteDirectionTabs.svelte` | ✅     | Direction tabs (cardinal directions) for route pages          |
-| `RouteStopItem.svelte`      | ✅     | Stop item with ETA, platform badges, subway direction parsing |
-| `RouteStopsList.svelte`     | ✅     | List of stops with ETA expand/collapse, routeFilter prop      |
-| `index.ts`                  | ✅     | Component exports                                             |
+| `StopSearch.svelte`         | ✅     | Stop search with autocomplete, direction badges, ID search             |
+| `BookmarkStopButton.svelte` | ✅     | Bookmark toggle button for stops                                       |
+| `BranchDropdown.svelte`     | ✅     | Branch selection dropdown for multi-branch routes (102, 501)           |
+| `MyStops.svelte`            | ✅     | Full-page My Stops list, auto-expands newly added stops                |
+| `MyStopsWidget.svelte`      | ✅     | Display bookmarked stops on homepage                                   |
+| `RouteDirectionTabs.svelte` | ✅     | Direction tabs (cardinal directions) for route pages                   |
+| `RouteStopItem.svelte`      | ✅     | Stop item with ETA, platform badges, subway direction parsing          |
+| `RouteStopsList.svelte`     | ✅     | List of stops with ETA expand/collapse, search filter, iOS zoom fix    |
+| `index.ts`                  | ✅     | Component exports                                                      |
 
 ### ETA Components (`src/lib/components/eta/`) 🆕 **Version B Only**
 
