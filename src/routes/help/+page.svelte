@@ -38,11 +38,11 @@
   <div class="mb-6 animate-fade-in-up" style="animation-delay: 0ms">
     <Button
       variant="ghost"
-      href="/settings"
+      onclick={() => history.back()}
       class="mb-4 -ml-2 gap-1 text-muted-foreground"
     >
       <ChevronLeft class="h-4 w-4" />
-      {$_("settings.title")}
+      {$_("common.back")}
     </Button>
     <h1
       class="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2"

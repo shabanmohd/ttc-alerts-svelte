@@ -57,17 +57,15 @@
           class="h-14 w-14 rounded-xl"
         />
         <div>
-          <img
-            src="/LOGO.svg"
-            alt="rideTO"
-            class="h-6 w-auto dark:hidden"
-          />
+          <img src="/LOGO.svg" alt="rideTO" class="h-6 w-auto dark:hidden" />
           <img
             src="/DARK-LOGO.svg"
             alt="rideTO"
             class="h-6 w-auto hidden dark:block"
           />
-          <p class="text-sm text-muted-foreground mt-1">{$_("about.tagline")}</p>
+          <p class="text-sm text-muted-foreground mt-1">
+            {$_("about.tagline")}
+          </p>
         </div>
       </div>
     </Card.Content>
