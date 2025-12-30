@@ -435,7 +435,8 @@ serve(async (req) => {
     );
     
     let newAlerts = 0, updatedThreads = 0, skippedRszAlerts = 0, skippedOrphanedServiceResumed = 0;
-    const { data: existingAlerts } = await supabase.from('alert_cache').select('alert_id, thread_id').gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+    // Extend lookback to 7 days to prevent duplicate key errors for long-running TTC alerts
+    const { data: existingAlerts } = await supabase.from('alert_cache').select('alert_id, thread_id').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
     const existingAlertIds = new Set(existingAlerts?.map(a => a.alert_id) || []);
     const alertToThreadMap = new Map<string, string>();
     existingAlerts?.forEach(a => { if (a.thread_id) alertToThreadMap.set(a.alert_id, a.thread_id); });
@@ -468,7 +469,7 @@ serve(async (req) => {
         raw_data: { replyParentPostId: replyInfo.parentPostId, replyRootPostId: replyInfo.rootUri ? `bsky-${replyInfo.rootUri.split('/').pop()}` : null, replyParentUri: replyInfo.parentUri }
       };
 
-      const { data: newAlert, error: insertError } = await supabase.from('alert_cache').insert(alert).select().single();
+      const { data: newAlert, error: insertError } = await supabase.from('alert_cache').upsert(alert, { onConflict: 'alert_id' }).select().single();
       if (insertError) continue;
       newAlerts++;
       existingAlertIds.add(alertId);
@@ -748,7 +749,7 @@ serve(async (req) => {
           raw_data: { source: 'ttc-api', ttcAlertId: ttcAlert.id, severity: ttcAlert.severity, cause: ttcAlert.cause, causeDescription: ttcAlert.causeDescription, stopStart: ttcAlert.stopStart, stopEnd: ttcAlert.stopEnd, direction: ttcAlert.direction }
         };
         
-        const { error: insertError } = await supabase.from('alert_cache').insert(alert).select().single();
+        const { error: insertError } = await supabase.from('alert_cache').upsert(alert, { onConflict: 'alert_id' }).select().single();
         if (insertError) continue;
         ttcApiNewAlerts++;
         existingAlertIds.add(ttcAlertId);

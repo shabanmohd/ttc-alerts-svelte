@@ -399,29 +399,17 @@ Enable in Supabase Dashboard → Authentication → Settings → Password Streng
 
 ---
 
-## 🔴 Broken Database Functions
+## ✅ Fixed Database Functions (2025-01-18)
 
-From `supabase db lint --linked`:
+Previously broken functions have been fixed:
 
-| Function | Error |
-|----------|-------|
-| `get_thread_with_alerts(uuid)` | SQL syntax error |
-| `get_threads_with_alerts_bulk(uuid[])` | SQL syntax error |  
-| `cleanup_old_data()` | SQL syntax error |
+| Function | Issue | Fix |
+|----------|-------|-----|
+| `get_thread_with_alerts(text)` | `SET search_path TO ''` broke table references | Changed to `SET search_path = public` |
+| `get_threads_with_alerts_bulk(text[])` | Same search_path issue | Changed to `SET search_path = public` |  
+| `cleanup_old_data()` | Referenced dropped `webauthn_challenges` table, wrong type `uuid[]` instead of `text[]`, wrong column `created_at` vs `sent_at` | Removed webauthn reference, fixed types and column names |
 
-These functions exist but have SQL errors. Either fix or drop them:
-
-```sql
--- Check function definitions
-\df+ get_thread_with_alerts
-\df+ get_threads_with_alerts_bulk
-\df+ cleanup_old_data
-
--- If not needed, drop them
-DROP FUNCTION IF EXISTS get_thread_with_alerts(uuid);
-DROP FUNCTION IF EXISTS get_threads_with_alerts_bulk(uuid[]);
-DROP FUNCTION IF EXISTS cleanup_old_data();
-```
+**All functions now work correctly** - verified with test calls.
 
 ---
 
@@ -716,14 +704,54 @@ All optimizations have been executed successfully!
 | ✅ **P2** | Drop 7 auth tables | Done |
 | ✅ **P3** | Delete dead code `preferences.ts` | Done |
 | ✅ **P4** | `VACUUM ANALYZE` all tables | Done |
+| ✅ **P5** | Fix poll-alerts duplicate key errors | Done (2025-01-18) |
+| ✅ **P6** | Fix 3 broken database functions | Done (2025-01-18) |
+| ✅ **P7** | Create automated cleanup Edge Function | Done (2025-01-18) |
 
 ### Remaining Recommendations (Low Priority)
 
-| Priority | Action | Status |
-|----------|--------|--------|
-| 🟡 **P5** | Fix poll-alerts duplicate key errors | TODO |
-| 🟡 **P6** | Fix 3 broken database functions | TODO |
-| 🟢 **P7** | Set up automated monthly cleanup | Optional |
+| Priority | Action | Notes |
+|----------|--------|-------|
+| 🟢 **P8** | Deploy db-cleanup Edge Function | Created, needs Supabase cron schedule |
+| 🟢 **P9** | Enable leaked password protection | Dashboard → Auth → Settings |
+
+---
+
+## 🔧 Automated Cleanup System (2025-01-18)
+
+### Edge Function: `db-cleanup`
+
+Created `supabase/functions/db-cleanup/index.ts` for automated maintenance:
+
+**Operations:**
+1. Delete old alerts (>48h non-latest, >7d all)
+2. Clean up stale/resolved threads (>24h resolved, >12h stale)
+3. Delete old notification history (>7 days)
+4. Call `cleanup_old_data()` RPC for additional cleanup
+
+**To deploy and schedule:**
+```bash
+# Deploy the function
+supabase functions deploy db-cleanup
+
+# Schedule via Supabase Dashboard or pg_cron:
+# Dashboard → Database → Cron Jobs → Create Job
+# - Name: db-cleanup-daily
+# - Schedule: 0 4 * * * (4 AM daily)
+# - Command: SELECT net.http_post('https://[project-ref].supabase.co/functions/v1/db-cleanup', ...)
+```
+
+### poll-alerts Fixes (2025-01-18)
+
+Fixed duplicate key constraint errors in `poll-alerts` Edge Function:
+
+| Change | Before | After |
+|--------|--------|-------|
+| existingAlerts lookback | 24 hours | 7 days |
+| BlueSky insert | `.insert(alert)` | `.upsert(alert, { onConflict: 'alert_id' })` |
+| TTC API insert | `.insert(alert)` | `.upsert(alert, { onConflict: 'alert_id' })` |
+
+This prevents "duplicate key value violates unique constraint" errors when alerts reappear.
 
 ### Prevention: Schedule Periodic VACUUM FULL
 
@@ -738,4 +766,4 @@ VACUUM ANALYZE;
 
 ---
 
-*Report generated from Supabase database analysis. Optimization completed December 30, 2025.*
+*Report generated from Supabase database analysis. Initial optimization: December 30, 2025. Additional fixes: January 18, 2025.*
