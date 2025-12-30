@@ -18,11 +18,13 @@
     HardDrive,
     Clock,
   } from "lucide-svelte";
+  import SEO from "$lib/components/SEO.svelte";
 </script>
 
-<svelte:head>
-  <title>{$_("about.pageTitle")}</title>
-</svelte:head>
+<SEO
+  title={$_("about.pageTitle")}
+  description="About rideTO - A free, community-driven app for real-time TTC service alerts in Toronto. Learn about our data sources, privacy policy, and how we keep you informed."
+/>
 <Header />
 
 <main class="content-area pb-24">

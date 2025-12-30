@@ -8,6 +8,7 @@
   import MyRouteAlerts from "$lib/components/alerts/MyRouteAlerts.svelte";
   import { fetchAlerts, subscribeToAlerts } from "$lib/stores/alerts";
   import { isVisible } from "$lib/stores/visibility";
+  import SEO from "$lib/components/SEO.svelte";
 
   // Import dialogs
   import { HowToUseDialog, InstallPWADialog } from "$lib/components/dialogs";
@@ -60,10 +61,10 @@
   }
 </script>
 
-<svelte:head>
-  <title>{$_("pages.home.title")}</title>
-  <meta name="description" content={$_("pages.home.description")} />
-</svelte:head>
+<SEO
+  title={$_("pages.home.title")}
+  description="Track your TTC stops and routes with real-time service alerts. Get instant updates on delays, disruptions, and service changes in Toronto."
+/>
 
 <Header onOpenDialog={handleOpenDialog} />
 

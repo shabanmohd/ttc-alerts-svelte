@@ -22,14 +22,16 @@
     Info,
   } from "lucide-svelte";
   import { openDialog } from "$lib/stores/dialogs";
+  import SEO from "$lib/components/SEO.svelte";
 
   // Track which accordion items are open
   let openItems = $state<string[]>(["getting-started"]);
 </script>
 
-<svelte:head>
-  <title>{$_("help.pageTitle")}</title>
-</svelte:head>
+<SEO
+  title={$_("help.pageTitle")}
+  description="Learn how to use rideTO - save favorite stops, track TTC routes, understand alert types, and get help with the app. FAQ and user guide for Toronto transit riders."
+/>
 
 <Header />
 

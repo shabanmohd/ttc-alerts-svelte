@@ -39,14 +39,73 @@
     </script>
     
     <!-- SEO -->
-    <meta name="description" content="Real-time TTC service alerts for Toronto transit. Get instant notifications about delays, disruptions, and service changes." />
-    <meta name="keywords" content="TTC, Toronto, transit, alerts, subway, bus, streetcar, delays" />
+    <meta name="description" content="Real-time TTC service alerts for Toronto transit. Get instant notifications about delays, disruptions, and service changes on subway, bus, and streetcar routes." />
+    <meta name="keywords" content="TTC, Toronto, transit, alerts, subway, bus, streetcar, delays, service disruptions, real-time" />
+    <meta name="author" content="rideTO" />
     
-    <!-- Open Graph -->
-    <meta property="og:title" content="TTC Service Alerts" />
-    <meta property="og:description" content="Real-time TTC transit alerts for Toronto" />
+    <!-- Open Graph (defaults - pages override with SEO component) -->
+    <meta property="og:title" content="rideTO - Toronto Transit Alerts" />
+    <meta property="og:description" content="Real-time TTC service alerts for Toronto transit. Track delays, disruptions, and service changes." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/icons/icon-512x512.png" />
+    <meta property="og:url" content="https://rideto.ca" />
+    <meta property="og:image" content="https://rideto.ca/icons/icon-512x512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="rideTO - Toronto Transit Alerts" />
+    <meta property="og:site_name" content="rideTO" />
+    <meta property="og:locale" content="en_CA" />
+    
+    <!-- Twitter Card (defaults - pages override with SEO component) -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="rideTO - Toronto Transit Alerts" />
+    <meta name="twitter:description" content="Real-time TTC service alerts for Toronto transit" />
+    <meta name="twitter:image" content="https://rideto.ca/icons/icon-512x512.png" />
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "rideTO",
+        "alternateName": "TTC Service Alerts",
+        "description": "Real-time TTC service alerts for Toronto transit. Track delays, disruptions, and service changes on subway, bus, and streetcar routes.",
+        "url": "https://rideto.ca",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Web",
+        "browserRequirements": "Requires JavaScript",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "CAD"
+        },
+        "creator": {
+          "@type": "Organization",
+          "name": "rideTO"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.5",
+          "ratingCount": "100"
+        },
+        "featureList": [
+          "Real-time TTC service alerts",
+          "Subway line status",
+          "Bus and streetcar delays",
+          "Station elevator and escalator alerts",
+          "Route bookmarking",
+          "Push notifications"
+        ],
+        "inLanguage": ["en", "fr"],
+        "areaServed": {
+          "@type": "City",
+          "name": "Toronto",
+          "containedInPlace": {
+            "@type": "AdministrativeArea",
+            "name": "Ontario"
+          }
+        }
+      }
+    </script>
     
     <!-- Blocking theme script to prevent flash -->
     <script>

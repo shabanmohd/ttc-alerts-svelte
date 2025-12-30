@@ -23,6 +23,7 @@
   import BookmarkRouteButton from "$lib/components/alerts/BookmarkRouteButton.svelte";
   import { Button } from "$lib/components/ui/button";
   import { Skeleton } from "$lib/components/ui/skeleton";
+  import SEO from "$lib/components/SEO.svelte";
   import {
     threadsWithAlerts,
     isLoading,
@@ -859,15 +860,17 @@
   function handleOpenDialog(dialog: string) {
     activeDialog = dialog;
   }
+
+  // Dynamic SEO description based on route
+  let seoDescription = $derived(
+    `Service alerts, stop schedules, and real-time updates for TTC ${routeId} ${routeName || ""}. Track delays and disruptions on this Toronto transit route.`.trim()
+  );
 </script>
 
-<svelte:head>
-  <title>{routeId} {routeName ? `- ${routeName}` : ""} - rideTO</title>
-  <meta
-    name="description"
-    content="Service alerts for TTC route {routeId} {routeName}"
-  />
-</svelte:head>
+<SEO
+  title="{routeId} {routeName ? `- ${routeName}` : ''} - rideTO"
+  description={seoDescription}
+/>
 
 <Header onOpenDialog={handleOpenDialog} />
 

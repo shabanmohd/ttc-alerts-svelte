@@ -20,6 +20,7 @@
   import ClosuresView from "$lib/components/alerts/ClosuresView.svelte";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { Button } from "$lib/components/ui/button";
+  import SEO from "$lib/components/SEO.svelte";
   import {
     formatTimeDisplay,
     formatDateDisplay,
@@ -935,14 +936,11 @@
   }
 </script>
 
-<svelte:head>
-  <title>{$_("pages.alerts.title")}</title>
-  <meta name="robots" content="noindex, nofollow" />
-  <meta
-    name="description"
-    content="Real-time TTC transit service alerts for Toronto"
-  />
-</svelte:head>
+<SEO
+  title={$_("pages.alerts.title")}
+  description="Real-time TTC transit service alerts for Toronto"
+  noindex={true}
+/>
 
 <Header onOpenDialog={handleOpenDialog} />
 

@@ -20,6 +20,7 @@
   import { activeFilters, setRouteFilter } from "$lib/stores/alerts";
   import { savedRoutes } from "$lib/stores/savedRoutes";
   import { goto } from "$app/navigation";
+  import SEO from "$lib/components/SEO.svelte";
 
   // Import route data from JSON (auto-updated weekly from NextBus API)
   import routeData from "$lib/data/ttc-routes.json";
@@ -170,13 +171,10 @@
   );
 </script>
 
-<svelte:head>
-  <title>{$_("pages.routes.title")}</title>
-  <meta
-    name="description"
-    content="Browse all TTC routes - subway, streetcar, bus, express, and night service"
-  />
-</svelte:head>
+<SEO
+  title={$_("pages.routes.title")}
+  description="Browse all TTC routes - subway lines, streetcar routes, express buses, regular bus service, and Blue Night routes. Save your favorites for quick access."
+/>
 
 <Header />
 

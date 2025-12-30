@@ -7,3 +7,6 @@ Disallow: /alerts-v3
 
 # User-specific pages - do not index
 Disallow: /settings
+
+# Sitemap
+Sitemap: https://rideto.ca/sitemap.xml

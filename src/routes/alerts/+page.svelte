@@ -17,6 +17,7 @@
   import RSZAlertCard from "$lib/components/alerts/RSZAlertCard.svelte";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { Button } from "$lib/components/ui/button";
+  import SEO from "$lib/components/SEO.svelte";
   import {
     threadsWithAlerts,
     isLoading,
@@ -483,9 +484,10 @@
   });
 </script>
 
-<svelte:head>
-  <title>{$_("pages.alerts.title")}</title>
-</svelte:head>
+<SEO
+  title={$_("pages.alerts.title")}
+  description="Live TTC service alerts - subway delays, bus detours, streetcar disruptions, and elevator outages. Real-time updates for Toronto transit riders."
+/>
 
 <Header />
 

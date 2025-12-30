@@ -38,6 +38,7 @@
   import type { TTCStop } from "$lib/data/stops-db";
   import { savedStops, type SavedStop } from "$lib/stores/savedStops";
   import { savedRoutes, type SavedRoute } from "$lib/stores/savedRoutes";
+  import SEO from "$lib/components/SEO.svelte";
   import {
     localPreferences,
     type UserPreferences,
@@ -245,9 +246,11 @@
   }
 </script>
 
-<svelte:head>
-  <title>{$_("pages.settings.title")}</title>
-</svelte:head>
+<SEO
+  title={$_("pages.settings.title")}
+  description="Customize your rideTO experience - manage saved stops and routes, change language, theme settings, and clear app data."
+  noindex={true}
+/>
 
 <Header />
 
