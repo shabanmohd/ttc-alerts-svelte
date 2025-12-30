@@ -1,6 +1,6 @@
 # WCAG 2.2 Design System Audit Report
 
-> **Audit Date:** December 2024 (Updated December 30, 2025)  
+> **Audit Date:** December 2024 (Updated December 31, 2024)  
 > **Auditor:** GitHub Copilot  
 > **Scope:** TTC Alerts PWA (Version B)  
 > **Standard:** WCAG 2.2 AA Compliance  
@@ -102,6 +102,82 @@ html {
 
 - Increased padding from `p-1` to `p-2` (now 36x36px touch target)
 - Adjusted position from `end-4` to `end-3` to compensate
+
+---
+
+### Issue: Mobile Nav Color Contrast (WCAG 1.4.3)
+
+**Status:** ✅ FIXED (December 31, 2024 - Lighthouse Audit)  
+**Location:** [layout.css](src/routes/layout.css#L648-L668)
+
+**Problem:** Active navigation item color `hsl(217 91% 60%)` had 4.32:1 contrast ratio against dark background, failing WCAG AA for normal text.
+
+**Fix Applied:**
+
+```css
+/* Before: hsl(217 91% 60%) - 4.32:1 contrast */
+/* After: hsl(217 91% 67%) - ~5:1 contrast */
+.mobile-bottom-nav .nav-item.active {
+  color: hsl(217 91% 67%);
+}
+```
+
+---
+
+### Issue: ARIA Combobox Structure (WCAG 4.1.2)
+
+**Status:** ✅ FIXED (December 31, 2024 - Lighthouse Audit)  
+**Location:** [StopSearch.svelte](src/lib/components/stops/StopSearch.svelte#L286-L305)
+
+**Problem:** Improper ARIA combobox pattern - `aria-expanded` was on input instead of combobox wrapper.
+
+**Fix Applied:**
+
+```svelte
+<!-- Wrapper now has combobox role and aria-expanded -->
+<div role="combobox" aria-expanded={showResults} aria-haspopup="listbox" aria-controls="stop-search-results">
+  <Input
+    aria-label="Search for a TTC stop"
+    aria-autocomplete="list"
+    aria-controls="stop-search-results"
+    aria-activedescendant={...}
+  />
+</div>
+<!-- Listbox now has id for aria-controls reference -->
+<div id="stop-search-results" role="listbox">
+```
+
+---
+
+### Issue: Heading Order Violation (WCAG 1.3.1)
+
+**Status:** ✅ FIXED (December 31, 2024 - Lighthouse Audit)  
+**Location:** [ETACard.svelte](src/lib/components/eta/ETACard.svelte#L356-L395)
+
+**Problem:** Stop cross-streets were using `<h4>` elements, creating heading order violations when cards appeared in different contexts.
+
+**Fix Applied:**
+
+```svelte
+<!-- Before: improper heading usage -->
+<h4 class="font-medium text-base leading-tight">{crossStreets}</h4>
+
+<!-- After: semantic paragraph with same styling -->
+<p class="font-medium text-base leading-tight">{crossStreets}</p>
+```
+
+---
+
+### Issue: Image Elements Without Explicit Dimensions (CLS/Performance)
+
+**Status:** ✅ FIXED (December 31, 2024 - Lighthouse Audit)  
+**Locations:**
+
+- [Header.svelte](src/lib/components/layout/Header.svelte#L103-L109)
+- [Sidebar.svelte](src/lib/components/layout/Sidebar.svelte#L60-L65)
+- [about/+page.svelte](src/routes/about/+page.svelte#L56-L68)
+
+**Fix Applied:** Added `width` and `height` attributes to all logo images to prevent layout shift.
 
 ---
 

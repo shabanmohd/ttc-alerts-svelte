@@ -88,59 +88,59 @@ Real-time Toronto Transit alerts PWA.
 
 ### Frontend (`src/lib/`)
 
-| File                                             | Status | Purpose                                                                        |
-| ------------------------------------------------ | ------ | ------------------------------------------------------------------------------ |
-| `components/alerts/AccessibilityBadge.svelte`    | ✅     | Wheelchair icon badge for elevator/escalator alerts                            |
-| `components/alerts/AlertCard.svelte`             | ✅     | Alert cards w/ accessibility badge, route deduplication (v50)                  |
-| `components/alerts/RSZAlertCard.svelte`          | ✅     | Reduced Speed Zone alerts - grouped table display                              |
-| `components/alerts/BookmarkRouteButton.svelte`   | ✅     | Save route button with feedback animation 🅱️                                   |
-| `components/alerts/CategoryFilter.svelte`        | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA                   |
-| `components/alerts/ClosuresView.svelte`          | ✅     | Scheduled tab with closure type badges (nightly/weekend), uses $derived.by()   |
-| `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes: AlertCard-style (2px border, hover), title case route names     |
-| `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                                        |
-| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with elevator alerts, section headings, dividers                 |
-| `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                                  |
-| `components/alerts/RouteSearch.svelte`           | ✅     | Route search component                                                         |
-| `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                               |
-| `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile                            |
-| `components/dialogs/AboutDialog.svelte`          | ✅     | App info, version, links                                                       |
-| `components/dialogs/ReportIssueDialog.svelte`    | ✅     | Bug/issue report form with Turnstile + Resend                                  |
-| `components/dialogs/FeatureRequestDialog.svelte` | ✅     | Feature suggestion form with Turnstile + Resend                                |
-| `components/dialogs/InstallPWADialog.svelte`     | ✅     | PWA install prompt                                                             |
-| `components/layout/Header.svelte`                | ✅     | App header - language toggle, hamburger menu w/ iOS safe area                  |
-| `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header                          |
-| `components/layout/Sidebar.svelte`               | ✅     | Desktop sidebar - nav + footer links (no How to Use)                           |
-| `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom                          |
-| `components/layout/StatusBanner.svelte`          | ✅     | Fixed offline banner - overlays header, stacks with holiday banner             |
-| `components/layout/HolidayBanner.svelte`         | ✅     | Fixed holiday banner - stacks below status banner when both visible            |
-| `components/SEO.svelte`                          | ✅ 🆕  | Reusable SEO component - canonical URLs, OG tags, Twitter cards, hreflang      |
-| `components/ui/*`                                | ✅     | shadcn-svelte base components                                                  |
-| `components/ui/turnstile/`                       | ✅     | Cloudflare Turnstile captcha component                                         |
-| `stores/alerts.ts`                               | ✅     | Alerts state + parallelized queries + 30-day accessibility window              |
-| `stores/dialogs.ts`                              | ✅     | Shared dialog state (hamburger menu → dialogs)                                 |
-| `stores/localPreferences.ts`                     | ✅     | Local preferences (IndexedDB) - theme, text size, animations, language 🅱️      |
-| `stores/savedStops.ts`                           | ✅     | Bookmarked stops (IndexedDB) - replaces deprecated bookmarks.ts 🅱️             |
-| `types/database.ts`                              | ✅     | Database types (JSONB fields)                                                  |
-| `supabase.ts`                                    | ✅     | Supabase client config                                                         |
-| `utils.ts`                                       | ✅     | Utility functions                                                              |
-| `utils/date-formatters.ts`                       | ✅     | Shared date/time formatting utilities (extracted Jan 2025) 🆕                  |
-| `utils/fetch-with-retry.ts`                      | ✅     | Network retry utility with exponential backoff 🆕                              |
-| `utils/ttc-service-info.ts`                      | ✅     | TTC service hours, holidays, suspended lines 🅱️                                |
+| File                                             | Status | Purpose                                                                      |
+| ------------------------------------------------ | ------ | ---------------------------------------------------------------------------- |
+| `components/alerts/AccessibilityBadge.svelte`    | ✅     | Wheelchair icon badge for elevator/escalator alerts                          |
+| `components/alerts/AlertCard.svelte`             | ✅     | Alert cards w/ accessibility badge, route deduplication (v50)                |
+| `components/alerts/RSZAlertCard.svelte`          | ✅     | Reduced Speed Zone alerts - grouped table display                            |
+| `components/alerts/BookmarkRouteButton.svelte`   | ✅     | Save route button with feedback animation 🅱️                                 |
+| `components/alerts/CategoryFilter.svelte`        | ✅     | Severity category tabs (Major/Minor/Accessibility) - WCAG AA                 |
+| `components/alerts/ClosuresView.svelte`          | ✅     | Scheduled tab with closure type badges (nightly/weekend), uses $derived.by() |
+| `components/alerts/RouteChangesView.svelte`      | ✅     | Route changes: AlertCard-style (2px border, hover), title case route names   |
+| `components/alerts/FilterChips.svelte`           | ✅     | Category filter buttons                                                      |
+| `components/alerts/MyRouteAlerts.svelte`         | ✅     | My Routes tab with elevator alerts, section headings, dividers               |
+| `components/alerts/RouteBadge.svelte`            | ✅     | TTC-branded route badges (full names, colors)                                |
+| `components/alerts/RouteSearch.svelte`           | ✅     | Route search component                                                       |
+| `components/alerts/StatusBadge.svelte`           | ✅     | Status indicators (Delay, Detour, Resumed, etc.)                             |
+| `components/dialogs/HowToUseDialog.svelte`       | ✅     | User guide with sections and bottom sheet on mobile                          |
+| `components/dialogs/AboutDialog.svelte`          | ✅     | App info, version, links                                                     |
+| `components/dialogs/ReportIssueDialog.svelte`    | ✅     | Bug/issue report form with Turnstile + Resend                                |
+| `components/dialogs/FeatureRequestDialog.svelte` | ✅     | Feature suggestion form with Turnstile + Resend                              |
+| `components/dialogs/InstallPWADialog.svelte`     | ✅     | PWA install prompt                                                           |
+| `components/layout/Header.svelte`                | ✅     | App header - language toggle, hamburger menu w/ iOS safe area                |
+| `components/layout/PullToRefresh.svelte`         | ✅     | Touch-based pull-to-refresh - preserves sticky header                        |
+| `components/layout/Sidebar.svelte`               | ✅     | Desktop sidebar - nav + footer links (no How to Use)                         |
+| `components/layout/MobileBottomNav.svelte`       | ✅     | Mobile navigation with iOS PWA safe-area-inset-bottom                        |
+| `components/layout/StatusBanner.svelte`          | ✅     | Fixed offline banner - overlays header, stacks with holiday banner           |
+| `components/layout/HolidayBanner.svelte`         | ✅     | Fixed holiday banner - stacks below status banner when both visible          |
+| `components/SEO.svelte`                          | ✅ 🆕  | Reusable SEO component - canonical URLs, OG tags, Twitter cards, hreflang    |
+| `components/ui/*`                                | ✅     | shadcn-svelte base components                                                |
+| `components/ui/turnstile/`                       | ✅     | Cloudflare Turnstile captcha component                                       |
+| `stores/alerts.ts`                               | ✅     | Alerts state + parallelized queries + 30-day accessibility window            |
+| `stores/dialogs.ts`                              | ✅     | Shared dialog state (hamburger menu → dialogs)                               |
+| `stores/localPreferences.ts`                     | ✅     | Local preferences (IndexedDB) - theme, text size, animations, language 🅱️    |
+| `stores/savedStops.ts`                           | ✅     | Bookmarked stops (IndexedDB) - replaces deprecated bookmarks.ts 🅱️           |
+| `types/database.ts`                              | ✅     | Database types (JSONB fields)                                                |
+| `supabase.ts`                                    | ✅     | Supabase client config                                                       |
+| `utils.ts`                                       | ✅     | Utility functions                                                            |
+| `utils/date-formatters.ts`                       | ✅     | Shared date/time formatting utilities (extracted Jan 2025) 🆕                |
+| `utils/fetch-with-retry.ts`                      | ✅     | Network retry utility with exponential backoff 🆕                            |
+| `utils/ttc-service-info.ts`                      | ✅     | TTC service hours, holidays, suspended lines 🅱️                              |
 
 ### Pages (`src/routes/`)
 
-| File                          | Status | Purpose                                                   |
-| ----------------------------- | ------ | --------------------------------------------------------- |
-| `+layout.svelte`              | ✅     | App layout, auth init, dialogs                            |
-| `+error.svelte`               | ✅     | 404 and error page - responsive, i18n, helpful links      |
-| `+page.svelte`                | ✅     | Homepage with alert tabs + ETA                            |
-| `alerts/+page.svelte`         | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3) |
-| `alerts-v3/+page.svelte`      | 📦     | Legacy alerts page (old design, kept for reference)       |
-| `help/+page.svelte`           | ✅     | How to Use - Quick Start, Features, FAQ, Get in Touch     |
-| `about/+page.svelte`          | ✅     | About page - app info, data sources, links                |
-| `settings/+page.svelte`       | ✅     | Settings with stops, routes, prefs, location 🅱️           |
-| `routes/+page.svelte`         | ✅     | Route browser by category 🅱️                              |
-| `routes/[route]/+page.svelte` | ✅     | Route detail page with alerts and route changes           |
+| File                          | Status | Purpose                                                           |
+| ----------------------------- | ------ | ----------------------------------------------------------------- |
+| `+layout.svelte`              | ✅     | App layout, auth init, dialogs                                    |
+| `+error.svelte`               | ✅     | 404 and error page - responsive, i18n, helpful links              |
+| `+page.svelte`                | ✅     | Homepage with alert tabs + ETA, lazy-loaded dialogs               |
+| `alerts/+page.svelte`         | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3)         |
+| `alerts-v3/+page.svelte`      | 📦     | Legacy alerts page (old design, kept for reference)               |
+| `help/+page.svelte`           | ✅     | How to Use - Quick Start, Features, FAQ, Get in Touch             |
+| `about/+page.svelte`          | ✅     | About page - app info, data sources, links, image dimensions      |
+| `settings/+page.svelte`       | ✅     | Settings with stops, routes, prefs, location 🅱️                   |
+| `routes/+page.svelte`         | ✅     | Route browser by category 🅱️                                      |
+| `routes/[route]/+page.svelte` | ✅     | Route detail page with alerts and route changes                   |
 
 ### Alerts Components (`src/routes/alerts/`)
 
@@ -165,13 +165,13 @@ Real-time Toronto Transit alerts PWA.
 
 ### Database (EXISTING in Supabase)
 
-| Table                 | Size   | Purpose                                                  |
-| --------------------- | ------ | -------------------------------------------------------- |
-| `alert_cache`         | 3.7 MB | Alerts from Bluesky (header_text, categories, is_latest) |
-| `incident_threads`    | 704 kB | Grouped alert threads (title, is_resolved, is_hidden)    |
-| `planned_maintenance` | 96 kB  | Scheduled maintenance                                    |
-| `notification_history`| 72 kB  | Push notification history                                |
-| **Total DB Size**     | **39 MB** | 7.8% of 500 MB free tier                              |
+| Table                  | Size      | Purpose                                                  |
+| ---------------------- | --------- | -------------------------------------------------------- |
+| `alert_cache`          | 3.7 MB    | Alerts from Bluesky (header_text, categories, is_latest) |
+| `incident_threads`     | 704 kB    | Grouped alert threads (title, is_resolved, is_hidden)    |
+| `planned_maintenance`  | 96 kB     | Scheduled maintenance                                    |
+| `notification_history` | 72 kB     | Push notification history                                |
+| **Total DB Size**      | **39 MB** | 7.8% of 500 MB free tier                                 |
 
 ### Static (`static/`)
 
@@ -645,18 +645,18 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Deployed Edge Functions
 
-| Function           | Status | URL                                                                        |
-| ------------------ | ------ | -------------------------------------------------------------------------- |
-| auth-register      | ⚠️     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register` (deprecated - auth removed)      |
-| auth-challenge     | ⚠️     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge` (deprecated - auth removed)    |
-| auth-verify        | ⚠️     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify` (deprecated - auth removed)       |
-| auth-session       | ⚠️     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session` (deprecated - auth removed)      |
-| auth-recover       | ⚠️     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover` (deprecated - auth removed)      |
-| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v69)  |
-| get-eta            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`            |
-| scrape-maintenance | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance` |
-| submit-feedback    | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/submit-feedback`    |
-| db-cleanup         | 🆕     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/db-cleanup` (not yet deployed) |
+| Function           | Status | URL                                                                                                |
+| ------------------ | ------ | -------------------------------------------------------------------------------------------------- |
+| auth-register      | ⚠️     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register` (deprecated - auth removed)  |
+| auth-challenge     | ⚠️     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge` (deprecated - auth removed) |
+| auth-verify        | ⚠️     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify` (deprecated - auth removed)    |
+| auth-session       | ⚠️     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session` (deprecated - auth removed)   |
+| auth-recover       | ⚠️     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover` (deprecated - auth removed)   |
+| poll-alerts        | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts` (v69)                          |
+| get-eta            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/get-eta`                                    |
+| scrape-maintenance | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/scrape-maintenance`                         |
+| submit-feedback    | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/submit-feedback`                            |
+| db-cleanup         | 🆕     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/db-cleanup` (not yet deployed)              |
 
 ### submit-feedback Edge Function
 
@@ -686,36 +686,66 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Dec 31, 2024 - Lighthouse Mobile Performance Audit Fixes
+
+**Purpose:** Address performance and accessibility issues identified in Lighthouse mobile audit.
+
+**Lighthouse Scores (Before):**
+
+| Category       | Score |
+| -------------- | ----- |
+| Performance    | 71    |
+| Accessibility  | 90    |
+| Best Practices | 81    |
+| SEO            | 92    |
+
+**Issues Fixed:**
+
+| Issue                        | Fix Applied                                                    | Files Changed                                   |
+| ---------------------------- | -------------------------------------------------------------- | ----------------------------------------------- |
+| Render-blocking Google Fonts | Preload + `media="print"` onload trick                         | `src/app.html`                                  |
+| DNS prefetch missing         | Added Supabase API prefetch                                    | `src/app.html`                                  |
+| Unsized images (CLS)         | Added `width`/`height` to logos                                | Header, Sidebar, About page                     |
+| Color contrast (mobile nav)  | `hsl(217 91% 60%)` → `hsl(217 91% 67%)` (~5:1 ratio)           | `src/routes/layout.css`                         |
+| ARIA combobox structure      | Proper `role="combobox"` + `aria-controls` on wrapper          | `StopSearch.svelte`                             |
+| Heading order violation      | `<h4>` → `<p>` for stop cross-streets                          | `ETACard.svelte`                                |
+| Unused JavaScript (72KB)     | Lazy load dialogs with dynamic imports                         | `src/routes/+page.svelte`                       |
+
+**Documentation:** See [WCAG_DESIGN_AUDIT.md](WCAG_DESIGN_AUDIT.md) for accessibility details.
+
+---
+
 ### Jan 18, 2025 - Database Optimization Execution & Automated Cleanup
 
 **Purpose:** Execute all database optimizations and implement automated maintenance.
 
 **Optimizations Executed:**
 
-| Action | Before | After | Savings |
-|--------|--------|-------|---------|
-| VACUUM FULL incident_threads | 97 MB | 696 kB | **96.3 MB (99.3%)** |
-| Drop 7 auth tables | 680 kB | 0 | 680 kB |
-| Drop unused indexes | 400 kB | 0 | ~400 kB |
-| **Total DB Size** | **135 MB** | **39 MB** | **96 MB (71%)** |
+| Action                       | Before     | After     | Savings             |
+| ---------------------------- | ---------- | --------- | ------------------- |
+| VACUUM FULL incident_threads | 97 MB      | 696 kB    | **96.3 MB (99.3%)** |
+| Drop 7 auth tables           | 680 kB     | 0         | 680 kB              |
+| Drop unused indexes          | 400 kB     | 0         | ~400 kB             |
+| **Total DB Size**            | **135 MB** | **39 MB** | **96 MB (71%)**     |
 
 **Code Changes:**
 
-| File | Change |
-|------|--------|
+| File                                      | Change                                                                      |
+| ----------------------------------------- | --------------------------------------------------------------------------- |
 | `supabase/functions/poll-alerts/index.ts` | Fix duplicate key errors: `insert()` → `upsert()`, extend lookback 24h → 7d |
-| `supabase/functions/db-cleanup/index.ts` | 🆕 Automated cleanup Edge Function |
-| `src/lib/stores/preferences.ts` | ❌ DELETED (dead code - was Supabase auth store) |
+| `supabase/functions/db-cleanup/index.ts`  | 🆕 Automated cleanup Edge Function                                          |
+| `src/lib/stores/preferences.ts`           | ❌ DELETED (dead code - was Supabase auth store)                            |
 
 **Database Function Fixes:**
 
-| Function | Issue | Fix |
-|----------|-------|-----|
-| `get_thread_with_alerts(text)` | `SET search_path TO ''` | Changed to `SET search_path = public` |
-| `get_threads_with_alerts_bulk(text[])` | Same search_path issue | Changed to `SET search_path = public` |
-| `cleanup_old_data()` | Wrong type, column, referenced dropped table | Fixed types and removed webauthn reference |
+| Function                               | Issue                                        | Fix                                        |
+| -------------------------------------- | -------------------------------------------- | ------------------------------------------ |
+| `get_thread_with_alerts(text)`         | `SET search_path TO ''`                      | Changed to `SET search_path = public`      |
+| `get_threads_with_alerts_bulk(text[])` | Same search_path issue                       | Changed to `SET search_path = public`      |
+| `cleanup_old_data()`                   | Wrong type, column, referenced dropped table | Fixed types and removed webauthn reference |
 
 **New Edge Function - db-cleanup:**
+
 - Deletes old alerts (>48h non-latest, >7d all)
 - Cleans stale/resolved threads
 - Deletes old notification history (>7d)
