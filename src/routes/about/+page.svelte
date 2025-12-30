@@ -8,7 +8,6 @@
     ChevronLeft,
     ExternalLink,
     Globe,
-    Linkedin,
     Heart,
     Coffee,
     Database,
@@ -91,16 +90,6 @@
         >
           <Globe class="h-4 w-4" />
           Website
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          href="https://www.linkedin.com/in/shabanmohammed"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Linkedin class="h-4 w-4" />
-          LinkedIn
         </Button>
       </div>
     </Card.Content>
