@@ -178,7 +178,8 @@
     flex: 1;
     border: none;
     background: transparent;
-    font-size: 0.875rem;
+    /* Use 16px to prevent iOS auto-zoom on focus */
+    font-size: 1rem;
     color: hsl(var(--foreground));
     outline: none;
   }
