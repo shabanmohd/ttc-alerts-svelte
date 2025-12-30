@@ -23,6 +23,7 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts.
 | `APP_IMPLEMENTATION.md`                 | File inventory, completion status, architecture | New files, status changes, feature completion                |
 | `IMPLEMENTATION_PLAN.md`                | **Version B ONLY** - Feature roadmap & phases   | Phase progress, Version B feature completion                 |
 | `DESIGN_SYSTEM.md`                      | Colors, typography, spacing, components         | Colors, typography, spacing, components, layout changes      |
+| `WCAG_DESIGN_AUDIT.md`                  | WCAG 2.2 accessibility audit and compliance     | Accessibility changes, a11y fixes, compliance updates        |
 | `alert-categorization-and-threading.md` | Edge Function logic, threading algorithm        | Categorization logic, threading algorithm, filtering changes |
 | `TTC-ROUTE-CONFLICTS.md`                | Route number conflicts (39/939, 46/996, etc.)   | Route matching bugs, new conflict patterns                   |
 | `TTC-BUS-ROUTES.md`                     | Complete TTC bus route reference                | Route additions/removals                                     |
@@ -40,8 +41,9 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts.
 
 1. `APP_IMPLEMENTATION.md` - Understand current project state and file locations
 2. `DESIGN_SYSTEM.md` - Understand UI patterns and styling conventions
-3. `alert-categorization-and-threading.md` - Understand Edge Function and threading logic
-4. `TTC-ROUTE-CONFLICTS.md` - Understand route matching edge cases
+3. `WCAG_DESIGN_AUDIT.md` - Understand accessibility requirements and compliance status
+4. `alert-categorization-and-threading.md` - Understand Edge Function and threading logic
+5. `TTC-ROUTE-CONFLICTS.md` - Understand route matching edge cases
 
 **These docs are your context restoration system. Use them before asking questions or making assumptions.**
 

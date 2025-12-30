@@ -20,6 +20,7 @@ Real-time Toronto Transit alerts PWA.
 | **[APP_IMPLEMENTATION.md](APP_IMPLEMENTATION.md)** (this file)                     | File inventory, completion status, architecture | New files, status changes, feature completion |
 | **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)**                               | Version B feature roadmap & phases              | Phase progress, Version B feature completion  |
 | **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)**                                           | Colors, typography, spacing, components         | UI/UX changes, new components                 |
+| **[WCAG_DESIGN_AUDIT.md](WCAG_DESIGN_AUDIT.md)**                                   | WCAG 2.2 accessibility audit and compliance     | Accessibility changes, compliance updates     |
 | **[DATA_POLLING_FREQUENCIES.md](DATA_POLLING_FREQUENCIES.md)**                     | All data sources, polling intervals, workflows  | Data source or polling changes                |
 | **[alert-categorization-and-threading.md](alert-categorization-and-threading.md)** | Edge Function logic, threading algorithm        | Alert processing changes                      |
 | **[TTC-ROUTE-CONFLICTS.md](TTC-ROUTE-CONFLICTS.md)**                               | Route number conflicts (39/939, 46/996, etc.)   | Route matching bugs                           |
@@ -676,6 +677,30 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 ---
 
 ## Changelog
+
+### Dec 28, 2025 - WCAG 2.2 Accessibility Fixes
+
+**Purpose:** Implement WCAG 2.2 AA accessibility compliance improvements.
+
+**Fixes Applied:**
+
+| Fix | WCAG Criterion | Files Modified |
+|-----|----------------|----------------|
+| Skip-to-content link | 2.4.1 Bypass Blocks | `+layout.svelte`, `layout.css` |
+| Scroll-padding | 2.4.11 Focus Not Obscured | `layout.css` |
+| Heading hierarchy (sr-only h1) | 1.3.1 Info and Relationships | `alerts/+page.svelte`, `alerts-v3/+page.svelte` |
+| Aria-live regions | 4.1.3 Status Messages | `alerts/+page.svelte`, `alerts-v3/+page.svelte` |
+| Dialog close button size | 2.5.8 Target Size | `dialog-content.svelte` |
+
+**Compliance Scores Improved:**
+- Keyboard Navigation: 75% → 90%
+- Focus States: 80% → 95%
+- ARIA/Semantic HTML: 70% → 90%
+- Touch Targets: 78% → 95%
+
+**Documentation:** See [WCAG_DESIGN_AUDIT.md](WCAG_DESIGN_AUDIT.md) for full audit details.
+
+---
 
 ### Dec 27, 2025 - Search Improvements & UI Fixes
 
