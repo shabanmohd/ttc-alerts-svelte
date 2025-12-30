@@ -9,7 +9,7 @@
     noindex?: boolean;
   }
 
-  let { title, description, image = "/icons/icon-512x512.png", type = "website", noindex = false }: Props = $props();
+  let { title, description, image = "/icons/og-image.png", type = "website", noindex = false }: Props = $props();
 
   const baseUrl = "https://rideto.ca";
 
