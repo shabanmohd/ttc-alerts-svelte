@@ -129,18 +129,18 @@ Real-time Toronto Transit alerts PWA.
 
 ### Pages (`src/routes/`)
 
-| File                          | Status | Purpose                                                           |
-| ----------------------------- | ------ | ----------------------------------------------------------------- |
-| `+layout.svelte`              | ✅     | App layout, auth init, dialogs                                    |
-| `+error.svelte`               | ✅     | 404 and error page - responsive, i18n, helpful links              |
-| `+page.svelte`                | ✅     | Homepage with alert tabs + ETA, lazy-loaded dialogs               |
-| `alerts/+page.svelte`         | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3)         |
-| `alerts-v3/+page.svelte`      | 📦     | Legacy alerts page (old design, kept for reference)               |
-| `help/+page.svelte`           | ✅     | How to Use - Quick Start, Features, FAQ, Get in Touch             |
-| `about/+page.svelte`          | ✅     | About page - app info, data sources, links, image dimensions      |
-| `settings/+page.svelte`       | ✅     | Settings with stops, routes, prefs, location 🅱️                   |
-| `routes/+page.svelte`         | ✅     | Route browser by category 🅱️                                      |
-| `routes/[route]/+page.svelte` | ✅     | Route detail page with alerts and route changes                   |
+| File                          | Status | Purpose                                                      |
+| ----------------------------- | ------ | ------------------------------------------------------------ |
+| `+layout.svelte`              | ✅     | App layout, auth init, dialogs                               |
+| `+error.svelte`               | ✅     | 404 and error page - responsive, i18n, helpful links         |
+| `+page.svelte`                | ✅     | Homepage with alert tabs + ETA, lazy-loaded dialogs          |
+| `alerts/+page.svelte`         | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3)    |
+| `alerts-v3/+page.svelte`      | 📦     | Legacy alerts page (old design, kept for reference)          |
+| `help/+page.svelte`           | ✅     | How to Use - Quick Start, Features, FAQ, Get in Touch        |
+| `about/+page.svelte`          | ✅     | About page - app info, data sources, links, image dimensions |
+| `settings/+page.svelte`       | ✅     | Settings with stops, routes, prefs, location 🅱️              |
+| `routes/+page.svelte`         | ✅     | Route browser by category 🅱️                                 |
+| `routes/[route]/+page.svelte` | ✅     | Route detail page with alerts and route changes              |
 
 ### Alerts Components (`src/routes/alerts/`)
 
@@ -624,10 +624,34 @@ const cleanStopId = stopId.replace(/_ar$/, "");
    - **Environment variables** (⚠️ CRITICAL - must match Supabase project):
      - `VITE_SUPABASE_URL` = `https://wmchvmegxcpyfjcuzqzk.supabase.co`
      - `VITE_SUPABASE_ANON_KEY` = (your anon key from Supabase project settings)
+     - `PUBLIC_SENTRY_DSN` = (your Sentry DSN for error monitoring)
+     - `SENTRY_AUTH_TOKEN` = (optional - for source map uploads)
 4. Deploy!
 
 > ⚠️ **IMPORTANT**: Ensure `VITE_SUPABASE_URL` matches the project where Edge Functions are deployed.
 > Current production Supabase: `wmchvmegxcpyfjcuzqzk` (NOT `ttgytjgpbmkobqvrtbvx`)
+
+### Sentry Error Monitoring
+
+Client-side error tracking is configured via `@sentry/sveltekit`.
+
+**Configuration files:**
+- `src/hooks.client.ts` - Sentry SDK initialization
+- `vite.config.ts` - Source map upload config (requires auth token)
+
+**Environment variables:**
+- `PUBLIC_SENTRY_DSN` - Required for error tracking
+- `SENTRY_AUTH_TOKEN` - Optional, enables source map upload for readable stack traces
+
+**Free tier limits:**
+- 5,000 errors/month
+- 50 session replays/month
+- 30-day data retention
+
+**To get an auth token for source maps:**
+1. Go to https://sentry.io/settings/auth-tokens/
+2. Create new token with `org:read`, `project:releases`, `project:write` scopes
+3. Add as `SENTRY_AUTH_TOKEN` environment variable in Cloudflare Pages
 
 ### Environment Variables (Set in Supabase Dashboard)
 
@@ -701,15 +725,15 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 **Issues Fixed:**
 
-| Issue                        | Fix Applied                                                    | Files Changed                                   |
-| ---------------------------- | -------------------------------------------------------------- | ----------------------------------------------- |
-| Render-blocking Google Fonts | Preload + `media="print"` onload trick                         | `src/app.html`                                  |
-| DNS prefetch missing         | Added Supabase API prefetch                                    | `src/app.html`                                  |
-| Unsized images (CLS)         | Added `width`/`height` to logos                                | Header, Sidebar, About page                     |
-| Color contrast (mobile nav)  | `hsl(217 91% 60%)` → `hsl(217 91% 67%)` (~5:1 ratio)           | `src/routes/layout.css`                         |
-| ARIA combobox structure      | Proper `role="combobox"` + `aria-controls` on wrapper          | `StopSearch.svelte`                             |
-| Heading order violation      | `<h4>` → `<p>` for stop cross-streets                          | `ETACard.svelte`                                |
-| Unused JavaScript (72KB)     | Lazy load dialogs with dynamic imports                         | `src/routes/+page.svelte`                       |
+| Issue                        | Fix Applied                                           | Files Changed               |
+| ---------------------------- | ----------------------------------------------------- | --------------------------- |
+| Render-blocking Google Fonts | Preload + `media="print"` onload trick                | `src/app.html`              |
+| DNS prefetch missing         | Added Supabase API prefetch                           | `src/app.html`              |
+| Unsized images (CLS)         | Added `width`/`height` to logos                       | Header, Sidebar, About page |
+| Color contrast (mobile nav)  | `hsl(217 91% 60%)` → `hsl(217 91% 67%)` (~5:1 ratio)  | `src/routes/layout.css`     |
+| ARIA combobox structure      | Proper `role="combobox"` + `aria-controls` on wrapper | `StopSearch.svelte`         |
+| Heading order violation      | `<h4>` → `<p>` for stop cross-streets                 | `ETACard.svelte`            |
+| Unused JavaScript (72KB)     | Lazy load dialogs with dynamic imports                | `src/routes/+page.svelte`   |
 
 **Documentation:** See [WCAG_DESIGN_AUDIT.md](WCAG_DESIGN_AUDIT.md) for accessibility details.
 
