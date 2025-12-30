@@ -1371,27 +1371,22 @@
     padding: 0.625rem;
     border-radius: var(--radius);
     background-color: hsl(var(--card));
-    border: 2px solid hsl(var(--border));
     text-align: left;
   }
 
   .subway-status-card.status-ok {
-    border-color: hsl(142.1 76.2% 36.3% / 0.3);
-    background-color: hsl(142.1 76.2% 36.3% / 0.05);
+    background-color: hsl(142.1 76.2% 36.3% / 0.1);
   }
 
   .subway-status-card.status-delay {
-    border-color: hsl(38 80% 50% / 0.4);
     background-color: hsl(38 80% 94%);
   }
 
   .subway-status-card.status-disruption {
-    border-color: hsl(0 70% 50% / 0.4);
     background-color: hsl(0 70% 96%);
   }
 
   .subway-status-card.status-scheduled {
-    border-color: hsl(270 60% 60% / 0.4);
     background-color: hsl(270 60% 95%);
   }
 

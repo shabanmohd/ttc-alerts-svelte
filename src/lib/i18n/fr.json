@@ -340,7 +340,9 @@
     "noStopsFound": "Aucun arrêt trouvé pour « {query} »",
     "tryDifferentSearch": "Essayez un autre terme de recherche.",
     "failed": "Échec de la recherche",
-    "searchRoutes": "Rechercher des lignes..."
+    "searchRoutes": "Rechercher des lignes...",
+    "filterStops": "Filtrer les arrêts...",
+    "noStopsMatch": "Aucun arrêt ne correspond à votre recherche"
   },
   "location": {
     "notSupported": "Géolocalisation non prise en charge",

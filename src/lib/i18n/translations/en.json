@@ -358,7 +358,9 @@
     "noStopsFound": "No stops found for \"{query}\"",
     "tryDifferentSearch": "Try a different search term.",
     "failed": "Search failed",
-    "searchRoutes": "Search routes..."
+    "searchRoutes": "Search routes...",
+    "filterStops": "Filter stops...",
+    "noStopsMatch": "No stops match your search"
   },
   "location": {
     "notSupported": "Geolocation not supported",

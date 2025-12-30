@@ -126,6 +126,12 @@
         }),
       });
     } else {
+      // Auto-expand the newly added stop
+      const newSet = new Set(expandedStops);
+      newSet.add(stop.id);
+      expandedStops = newSet;
+      saveExpandedStops(newSet);
+
       toast.success($_("toasts.stopAdded"), {
         description: stop.name,
       });
@@ -153,7 +159,7 @@
   }
 
   let hasStops = $derived(count > 0);
-  
+
   // Initial loading = has stops but no ETA data yet
   let isInitialLoading = $derived(hasStops && etas.length === 0 && loading);
 
@@ -514,7 +520,13 @@
   }
 
   /* Stagger animation classes */
-  .stagger-1 { animation-delay: 0ms; }
-  .stagger-2 { animation-delay: 100ms; }
-  .stagger-3 { animation-delay: 200ms; }
+  .stagger-1 {
+    animation-delay: 0ms;
+  }
+  .stagger-2 {
+    animation-delay: 100ms;
+  }
+  .stagger-3 {
+    animation-delay: 200ms;
+  }
 </style>
