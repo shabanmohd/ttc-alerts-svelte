@@ -862,7 +862,7 @@
 </script>
 
 <svelte:head>
-  <title>{routeId} {routeName ? `- ${routeName}` : ""} - TTC Alerts</title>
+  <title>{routeId} {routeName ? `- ${routeName}` : ""} - rideTO</title>
   <meta
     name="description"
     content="Service alerts for TTC route {routeId} {routeName}"

@@ -100,8 +100,11 @@
   <div class="header-container">
     <!-- Logo (mobile only) -->
     <a href="/" class="header-left">
-      <img src="/logo.png" alt="TTC Alerts" class="w-7 h-7 rounded-md" />
-      <span class="font-bold tracking-tight">{$_("header.appName")}</span>
+      <img
+        src={isDark ? "/DARK-LOGO.svg" : "/LOGO.svg"}
+        alt="rideTO"
+        class="h-8 w-auto"
+      />
     </a>
 
     <!-- Right side actions -->
@@ -293,11 +296,11 @@
     style="background-color: hsl(var(--background)); border-color: hsl(var(--border)); padding-top: env(safe-area-inset-top, 0px); height: calc(57px + env(safe-area-inset-top, 0px));"
   >
     <div class="flex items-center gap-2">
-      <img src="/logo.png" alt="TTC Alerts" class="w-7 h-7 rounded-md" />
-      <span
-        class="font-bold tracking-tight"
-        style="color: hsl(var(--foreground));">{$_("header.appName")}</span
-      >
+      <img
+        src={isDark ? "/DARK-LOGO.svg" : "/LOGO.svg"}
+        alt="rideTO"
+        class="h-8 w-auto"
+      />
     </div>
     <button
       class="flex items-center justify-center w-9 h-9 rounded-full bg-foreground text-background hover:opacity-80 transition-opacity"

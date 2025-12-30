@@ -936,7 +936,7 @@
 </script>
 
 <svelte:head>
-  <title>Service Alerts - TTC Alerts</title>
+  <title>Service Alerts - rideTO</title>
   <meta
     name="description"
     content="Real-time TTC transit service alerts for Toronto"

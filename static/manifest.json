@@ -1,7 +1,7 @@
 {
-  "name": "TTC Alerts Beta",
-  "short_name": "TTC Beta",
-  "description": "Beta version - Real-time TTC transit alerts with new features",
+  "name": "rideTO",
+  "short_name": "rideTO",
+  "description": "Real-time Toronto transit alerts and trip planning",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#C8102E",

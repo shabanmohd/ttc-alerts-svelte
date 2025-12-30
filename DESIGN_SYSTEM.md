@@ -1,4 +1,4 @@
-# TTC Alerts Design System
+# rideTO Design System
 
 > **Single Source of Truth** for UI consistency, scalability, and efficiency.  
 > Built on **shadcn-svelte** + **Tailwind CSS** + **Lexend** typography.

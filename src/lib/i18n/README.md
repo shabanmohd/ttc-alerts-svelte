@@ -1,4 +1,4 @@
-# TTC Alerts i18n (Internationalization)
+# rideTO i18n (Internationalization)
 
 ## 🚀 Fully Automated Translation Workflow
 

@@ -1,4 +1,4 @@
-# TTC Alerts PWA - Implementation Status
+# rideTO PWA - Implementation Status
 
 ## Overview
 
@@ -37,7 +37,7 @@ Real-time Toronto Transit alerts PWA.
 | ------------ | ----------------------------------- | --------------------------------------------- |
 | **Branch**   | `main`                              | `version-b`                                   |
 | **URL**      | https://ttc-alerts-svelte.pages.dev | https://version-b.ttc-alerts-svelte.pages.dev |
-| **PWA Name** | "TTC Alerts"                        | "TTC Alerts Beta"                             |
+| **PWA Name** | "rideTO"                        | "rideTO Beta"                             |
 | **SW Cache** | `ttc-alerts-v2`                     | `ttc-alerts-beta-v1`                          |
 | **Status**   | ✅ Production                       | 🚧 Development                                |
 
@@ -173,7 +173,7 @@ Real-time Toronto Transit alerts PWA.
 
 | File                              | Status | Purpose                                                                               |
 | --------------------------------- | ------ | ------------------------------------------------------------------------------------- |
-| `manifest.json`                   | ✅     | PWA manifest (Version B: "TTC Alerts Beta")                                           |
+| `manifest.json`                   | ✅     | PWA manifest (Version B: "rideTO Beta")                                           |
 | `sw.js`                           | ✅     | Service worker (Version B: beta cache prefix)                                         |
 | `icons/*`                         | ✅     | All PWA icons (72-512px)                                                              |
 | `data/ttc-stops.json`             | ✅     | TTC stops database (9,346 stops, 184 subway w/ sequence) 🆕 **V-B**                   |
@@ -627,7 +627,7 @@ Go to: **Project Settings → Edge Functions → Secrets**
 
 ```
 WEBAUTHN_RP_ID=ttc-alerts-svelte.pages.dev
-WEBAUTHN_RP_NAME=TTC Alerts
+WEBAUTHN_RP_NAME=rideTO
 WEBAUTHN_ORIGIN=https://ttc-alerts-svelte.pages.dev
 ```
 

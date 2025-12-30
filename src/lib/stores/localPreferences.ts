@@ -1,5 +1,5 @@
 /**
- * Local Preferences Store for TTC Alerts PWA
+ * Local Preferences Store for rideTO PWA
  * 
  * Simple local-only preferences using IndexedDB
  * No cloud sync - uses Export/Import for backup

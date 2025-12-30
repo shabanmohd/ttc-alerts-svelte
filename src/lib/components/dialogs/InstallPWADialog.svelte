@@ -25,7 +25,7 @@
 <Dialog.Root bind:open onOpenChange={(v) => onOpenChange?.(v)}>
   <Dialog.Content class="max-w-sm">
     <Dialog.Header>
-      <Dialog.Title class="text-xl">Install TTC Alerts</Dialog.Title>
+      <Dialog.Title class="text-xl">Install rideTO</Dialog.Title>
       <Dialog.Description>
         Add to your home screen for quick access
       </Dialog.Description>
@@ -53,7 +53,7 @@
           </div>
           <p class="font-medium">Already installed!</p>
           <p class="text-sm text-muted-foreground">
-            You're using the installed version of TTC Alerts.
+            You're using the installed version of rideTO.
           </p>
         </div>
       {:else if isIOS}

@@ -1,4 +1,4 @@
-# TTC Alerts PWA - Feature Implementation Plan
+# rideTO PWA - Feature Implementation Plan
 
 Comprehensive plan for ETA feature, stop search, accessibility enhancements, and UX improvements.
 
@@ -46,7 +46,7 @@ Deploy the current stable app as **Version A** (production) while developing new
 | Supabase Database       | Shared                        | Shared                                  |
 | Supabase Edge Functions | Shared                        | Shared                                  |
 | WebAuthn Auth           | Separate credentials          | Separate credentials                    |
-| PWA Name                | "TTC Alerts"                  | "TTC Alerts Beta"                       |
+| PWA Name                | "rideTO"                  | "rideTO Beta"                       |
 | SW Cache Prefix         | `ttc-alerts-v2`               | `ttc-alerts-beta-v1`                    |
 
 > ⚠️ **Note:** WebAuthn credentials are domain-specific. Users must register separately on each version.
@@ -74,7 +74,7 @@ git push -u origin version-b
 ### 0.2 Update PWA Manifest for Version B
 
 - [x] Modify `static/manifest.json` to distinguish beta version
-- [x] Change `name` to "TTC Alerts Beta"
+- [x] Change `name` to "rideTO Beta"
 - [x] Change `short_name` to "TTC Beta"
 - [x] Optionally add beta indicator to `description`
 
@@ -82,7 +82,7 @@ git push -u origin version-b
 
 ```json
 {
-  "name": "TTC Alerts Beta",
+  "name": "rideTO Beta",
   "short_name": "TTC Beta",
   "description": "Beta version - Real-time TTC service alerts with new features",
   "start_url": "/",
@@ -170,7 +170,7 @@ export function getWebAuthnConfig(requestOrigin: string) {
   const rpId = new URL(origin).hostname;
   return {
     rpId,
-    rpName: rpId.includes("version-b") ? "TTC Alerts Beta" : "TTC Alerts",
+    rpName: rpId.includes("version-b") ? "rideTO Beta" : "rideTO",
     origin,
   };
 }
@@ -242,7 +242,7 @@ git push origin version-b
 
 ## Executive Summary
 
-Transform TTC Alerts from an alerts-focused app into a comprehensive Toronto transit companion with:
+Transform rideTO from an alerts-focused app into a comprehensive Toronto transit companion with:
 
 - Real-time ETA predictions for bookmarked stops
 - Stop search with autocomplete (11K stops in IndexedDB)
@@ -1212,7 +1212,7 @@ if (browser) {
 ```json
 // src/lib/i18n/en.json
 {
-  "app.name": "TTC Alerts",
+  "app.name": "rideTO",
   "nav.home": "Home",
   "nav.preferences": "Preferences",
   "nav.routes": "Routes",

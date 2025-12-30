@@ -1,4 +1,4 @@
-# Security Audit Report - TTC Alerts PWA
+# Security Audit Report - rideTO PWA
 
 **Audit Date:** $(date +%Y-%m-%d)  
 **Branch:** version-b  
@@ -344,7 +344,7 @@ None
 
 ## Summary
 
-The TTC Alerts PWA has a **LOW-MEDIUM security risk profile**, which is appropriate for its purpose as a public transit information app.
+The rideTO PWA has a **LOW-MEDIUM security risk profile**, which is appropriate for its purpose as a public transit information app.
 
 **Key Strengths:**
 

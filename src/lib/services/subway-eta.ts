@@ -1,5 +1,5 @@
 /**
- * Subway ETA Service for TTC Alerts PWA
+ * Subway ETA Service for rideTO PWA
  *
  * Fetches real-time subway arrival predictions via the Edge Function proxy.
  * The Edge Function calls the TTC NTAS (Next Train Arrival System) API.

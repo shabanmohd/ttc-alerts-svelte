@@ -29,7 +29,7 @@ async function getDeviceFingerprint(): Promise<string> {
   if (ctx) {
     ctx.textBaseline = 'top';
     ctx.font = '14px Arial';
-    ctx.fillText('TTC Alerts', 2, 2);
+    ctx.fillText('rideTO', 2, 2);
   }
   
   const components = [

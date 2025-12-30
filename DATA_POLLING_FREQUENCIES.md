@@ -1,6 +1,6 @@
-# TTC Alerts - Data Polling & Refresh Frequencies
+# rideTO - Data Polling & Refresh Frequencies
 
-This document describes all data sources, their polling frequencies, and update mechanisms in the TTC Alerts PWA.
+This document describes all data sources, their polling frequencies, and update mechanisms in the rideTO PWA.
 
 ---
 

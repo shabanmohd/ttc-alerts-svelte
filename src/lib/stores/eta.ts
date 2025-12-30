@@ -1,5 +1,5 @@
 /**
- * ETA Store for TTC Alerts PWA
+ * ETA Store for rideTO PWA
  *
  * Manages real-time arrival predictions:
  * - Fetches ETAs for all bookmarked stops

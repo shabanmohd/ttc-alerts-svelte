@@ -1,5 +1,5 @@
 /**
- * Saved Stops Store for TTC Alerts PWA
+ * Saved Stops Store for rideTO PWA
  * 
  * Uses IndexedDB for robust local storage
  * No cloud sync - uses Export/Import for backup

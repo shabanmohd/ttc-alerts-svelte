@@ -58,7 +58,7 @@
     "sunday": "Sunday"
   },
   "header": {
-    "appName": "TTC Alerts",
+    "appName": "rideTO",
     "updated": "Updated {time}",
     "justNow": "Updated just now",
     "liveUpdates": "Live updates active",
@@ -530,8 +530,8 @@
     "extraLarge": "Extra Large"
   },
   "howToUse": {
-    "title": "How to Use TTC Alerts",
-    "description": "Get the most out of your TTC Alerts experience.",
+    "title": "How to Use rideTO",
+    "description": "Get the most out of your rideTO experience.",
     "filterAlerts": {
       "title": "Filter Alerts",
       "description": "Use the filter chips to show only the types of alerts you care about."
@@ -550,10 +550,10 @@
     }
   },
   "installPWA": {
-    "title": "Install TTC Alerts",
+    "title": "Install rideTO",
     "description": "Add to your home screen for quick access",
     "alreadyInstalled": "Already installed!",
-    "usingInstalled": "You're using the installed version of TTC Alerts.",
+    "usingInstalled": "You're using the installed version of rideTO.",
     "ios": {
       "step1": "Tap the Share button",
       "step1Desc": "Look for the share icon at the bottom of Safari",
@@ -572,20 +572,20 @@
   },
   "pages": {
     "home": {
-      "title": "Home - TTC Alerts",
+      "title": "Home - rideTO",
       "description": "Your personalized TTC transit dashboard with live alerts and arrival times."
     },
     "alerts": {
-      "title": "Service Alerts - TTC Alerts"
+      "title": "Service Alerts - rideTO"
     },
     "routes": {
-      "title": "Routes - TTC Alerts"
+      "title": "Routes - rideTO"
     },
     "preferences": {
-      "title": "Preferences - TTC Alerts"
+      "title": "Preferences - rideTO"
     },
     "settings": {
-      "title": "Settings - TTC Alerts"
+      "title": "Settings - rideTO"
     }
   },
   "errors": {
@@ -656,9 +656,9 @@
     "willReview": "We'll review your feedback soon."
   },
   "help": {
-    "pageTitle": "How to Use - TTC Alerts",
+    "pageTitle": "How to Use - rideTO",
     "title": "How to Use",
-    "subtitle": "Learn how to get the most out of TTC Alerts.",
+    "subtitle": "Learn how to get the most out of rideTO.",
     "quickStart": "Quick Start",
     "quickStartDesc": "Get up and running in 4 simple steps.",
     "step1Title": "Install the App",
@@ -670,9 +670,9 @@
     "step4Title": "Check Alerts",
     "step4Desc": "View real-time alerts filtered for your routes.",
     "featuresGuide": "Features Guide",
-    "featuresGuideDesc": "Explore all the features TTC Alerts has to offer.",
+    "featuresGuideDesc": "Explore all the features rideTO has to offer.",
     "gettingStarted": "Getting Started",
-    "gettingStartedContent1": "TTC Alerts provides real-time service alerts for all TTC routes including subway, streetcar, and bus services.",
+    "gettingStartedContent1": "rideTO provides real-time service alerts for all TTC routes including subway, streetcar, and bus services.",
     "gettingStartedContent2": "The Home tab shows your saved stops with live arrival times and alerts for your saved routes. Use the bottom tabs to navigate.",
     "gettingStartedContent3": "Browse the Routes page to explore all TTC routes, or use the search feature to find specific stops.",
     "understandingAlerts": "Understanding Alerts",
@@ -694,7 +694,7 @@
     "savingContent2": "The Home tab shows alerts only for your saved routes in the 'My Routes' section.",
     "savingContent3": "You can save up to 20 routes and 20 stops. View live arrival times for your saved stops.",
     "installApp": "Install as App",
-    "installContent1": "TTC Alerts works great as a standalone app on your device.",
+    "installContent1": "rideTO works great as a standalone app on your device.",
     "installIOS": "Tap the Share button, then 'Add to Home Screen'",
     "installAndroid": "Tap the menu, then 'Install app' or 'Add to Home screen'",
     "installDesktop": "Look for the install icon in your browser's address bar",
@@ -731,14 +731,14 @@
     "getInTouchDesc": "Have feedback or want to learn more about the app?"
   },
   "about": {
-    "pageTitle": "About - TTC Alerts",
+    "pageTitle": "About - rideTO",
     "title": "About",
-    "subtitle": "Learn more about TTC Alerts and its data sources.",
+    "subtitle": "Learn more about rideTO and its data sources.",
     "tagline": "Real-time Toronto transit alerts",
     "aboutDeveloper": "About the Developer",
-    "developerBio": "TTC Alerts is a passion project built by a Toronto transit rider who is an engineer turned UX designer. The goal is to build an app which is free to use and continuously improved based on user feedback.",
+    "developerBio": "rideTO is a passion project built by a Toronto transit rider who is an engineer turned UX designer. The goal is to build an app which is free to use and continuously improved based on user feedback.",
     "dataSources": "Data Sources",
-    "dataSourcesDesc": "TTC Alerts uses open data and public APIs.",
+    "dataSourcesDesc": "rideTO uses open data and public APIs.",
     "sourceTTC": "TTC Service Alerts",
     "sourceTTCDesc": "Real-time service alerts from the Toronto Transit Commission.",
     "sourceGTFS": "TTC GTFS Data",
@@ -746,10 +746,10 @@
     "sourceRealtime": "Real-Time Predictions",
     "sourceRealtimeDesc": "Live arrival predictions from the NextBus API.",
     "disclaimer": "Disclaimer",
-    "disclaimerText": "This app is not affiliated with, endorsed by, or sponsored by the Toronto Transit Commission (TTC). TTC Alerts is an independent project. While we strive to provide accurate information, data may be delayed or incorrect.",
+    "disclaimerText": "This app is not affiliated with, endorsed by, or sponsored by the Toronto Transit Commission (TTC). rideTO is an independent project. While we strive to provide accurate information, data may be delayed or incorrect.",
     "disclaimerImportant": "Always verify critical travel information on the official TTC website or contact TTC directly.",
     "privacy": "Privacy & Location",
-    "privacyText": "Your privacy matters to us. TTC Alerts uses location services only to find nearby stops and show relevant alerts.",
+    "privacyText": "Your privacy matters to us. rideTO uses location services only to find nearby stops and show relevant alerts.",
     "privacyLocation": "Location Data",
     "privacyLocationDetails": "Location is only accessed when you use features like \"Find Nearby Stops\". We never track your location in the background or store your location history. Location data stays on your device and is not sent to any server.",
     "privacyLocationControl": "You can enable or disable location access anytime in your device settings or in the app's Settings page.",
@@ -763,12 +763,12 @@
   },
   "error": {
     "notFound": {
-      "pageTitle": "Page Not Found - TTC Alerts",
+      "pageTitle": "Page Not Found - rideTO",
       "title": "Page Not Found",
       "description": "The page you're looking for doesn't exist or may have been moved."
     },
     "generic": {
-      "pageTitle": "Error - TTC Alerts",
+      "pageTitle": "Error - rideTO",
       "title": "Something Went Wrong",
       "description": "An unexpected error occurred. Please try again."
     },

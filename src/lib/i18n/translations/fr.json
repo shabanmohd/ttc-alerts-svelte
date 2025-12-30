@@ -58,7 +58,7 @@
     "sunday": "Dimanche"
   },
   "header": {
-    "appName": "Alertes TTC",
+    "appName": "rideTO",
     "updated": "Mis à jour {time}",
     "justNow": "Mis à jour à l'instant",
     "liveUpdates": "Mises à jour en direct actives",
@@ -492,8 +492,8 @@
     "extraLarge": "Très grand"
   },
   "howToUse": {
-    "title": "Comment utiliser Alertes TTC",
-    "description": "Tirez le meilleur parti de votre expérience Alertes TTC.",
+    "title": "Comment utiliser rideTO",
+    "description": "Tirez le meilleur parti de votre expérience rideTO.",
     "filterAlerts": {
       "title": "Filtrer les alertes",
       "description": "Utilisez les filtres pour n'afficher que les types d'alertes qui vous intéressent."
@@ -512,10 +512,10 @@
     }
   },
   "installPWA": {
-    "title": "Installer Alertes TTC",
+    "title": "Installer rideTO",
     "description": "Ajoutez à votre écran d'accueil pour la meilleure expérience.",
     "alreadyInstalled": "Déjà installé!",
-    "usingInstalled": "Vous utilisez la version installée d'Alertes TTC.",
+    "usingInstalled": "Vous utilisez la version installée d'rideTO.",
     "ios": {
       "step1": "Appuyez sur le bouton Partager",
       "step1Desc": "Recherchez l'icône de partage en bas de votre écran.",
@@ -534,20 +534,20 @@
   },
   "pages": {
     "home": {
-      "title": "Accueil - Alertes TTC",
+      "title": "Accueil - rideTO",
       "description": "Votre tableau de bord de transport en commun TTC personnalisé avec alertes en direct et temps d'arrivée."
     },
     "alerts": {
-      "title": "Alertes de service - Alertes TTC"
+      "title": "Alertes de service - rideTO"
     },
     "routes": {
-      "title": "Lignes - Alertes TTC"
+      "title": "Lignes - rideTO"
     },
     "preferences": {
-      "title": "Préférences - Alertes TTC"
+      "title": "Préférences - rideTO"
     },
     "settings": {
-      "title": "Paramètres - Alertes TTC"
+      "title": "Paramètres - rideTO"
     }
   },
   "errors": {
@@ -638,9 +638,9 @@
     "willReview": "Nous examinerons vos commentaires bientôt."
   },
   "help": {
-    "pageTitle": "Mode d'emploi - Alertes TTC",
+    "pageTitle": "Mode d'emploi - rideTO",
     "title": "Mode d'emploi",
-    "subtitle": "Apprenez à tirer le meilleur parti d'Alertes TTC.",
+    "subtitle": "Apprenez à tirer le meilleur parti d'rideTO.",
     "quickStart": "Démarrage rapide",
     "quickStartDesc": "Commencez en 4 étapes simples.",
     "step1Title": "Consulter les alertes",
@@ -652,9 +652,9 @@
     "step4Title": "Installer l'appli",
     "step4Desc": "Ajoutez à l'écran d'accueil pour un accès rapide.",
     "featuresGuide": "Guide des fonctionnalités",
-    "featuresGuideDesc": "Explorez toutes les fonctionnalités d'Alertes TTC.",
+    "featuresGuideDesc": "Explorez toutes les fonctionnalités d'rideTO.",
     "gettingStarted": "Pour commencer",
-    "gettingStartedContent1": "Alertes TTC fournit des alertes de service en temps réel pour toutes les lignes TTC, y compris le métro, les tramways et les bus.",
+    "gettingStartedContent1": "rideTO fournit des alertes de service en temps réel pour toutes les lignes TTC, y compris le métro, les tramways et les bus.",
     "gettingStartedContent2": "La page d'accueil affiche l'état actuel des lignes de métro et les alertes de service actives. Les alertes sont mises à jour automatiquement toutes les quelques minutes.",
     "gettingStartedContent3": "Vous pouvez parcourir toutes les lignes, enregistrer vos favoris et filtrer les alertes pour voir uniquement ce qui est pertinent pour votre trajet.",
     "understandingAlerts": "Comprendre les alertes",
@@ -676,7 +676,7 @@
     "savingContent2": "L'onglet « Mes alertes » affiche uniquement les alertes pour vos lignes enregistrées.",
     "savingContent3": "Vous pouvez enregistrer jusqu'à 20 lignes et 20 arrêts.",
     "installApp": "Installer comme appli",
-    "installContent1": "Alertes TTC fonctionne très bien comme application autonome sur votre appareil.",
+    "installContent1": "rideTO fonctionne très bien comme application autonome sur votre appareil.",
     "installIOS": "Appuyez sur le bouton Partager, puis « Ajouter à l'écran d'accueil »",
     "installAndroid": "Appuyez sur le menu, puis « Installer l'appli » ou « Ajouter à l'écran d'accueil »",
     "installDesktop": "Cherchez l'icône d'installation dans la barre d'adresse de votre navigateur",
@@ -717,14 +717,14 @@
     "dataContent3": "La localisation n'est utilisée que lorsque vous appuyez sur \"Trouver des arrêts à proximité\" et n'est pas stockée ou suivie."
   },
   "about": {
-    "pageTitle": "À propos - Alertes TTC",
+    "pageTitle": "À propos - rideTO",
     "title": "À propos",
-    "subtitle": "En savoir plus sur Alertes TTC et ses sources de données.",
+    "subtitle": "En savoir plus sur rideTO et ses sources de données.",
     "tagline": "Alertes de transport en temps réel pour Toronto",
     "aboutDeveloper": "À propos du développeur",
-    "developerBio": "Alertes TTC est un projet personnel créé par un usager du transport en commun de Toronto, ingénieur devenu designer UX. L'objectif est de créer une application gratuite et continuellement améliorée grâce aux commentaires des utilisateurs.",
+    "developerBio": "rideTO est un projet personnel créé par un usager du transport en commun de Toronto, ingénieur devenu designer UX. L'objectif est de créer une application gratuite et continuellement améliorée grâce aux commentaires des utilisateurs.",
     "dataSources": "Sources de données",
-    "dataSourcesDesc": "Alertes TTC utilise des données ouvertes et des API publiques.",
+    "dataSourcesDesc": "rideTO utilise des données ouvertes et des API publiques.",
     "sourceTTC": "Alertes de service TTC",
     "sourceTTCDesc": "Alertes de service en temps réel de la Commission de transport de Toronto.",
     "sourceGTFS": "Données GTFS du TTC",
@@ -732,10 +732,10 @@
     "sourceRealtime": "Prédictions en temps réel",
     "sourceRealtimeDesc": "Prédictions d'arrivée en direct de l'API NextBus.",
     "disclaimer": "Avertissement",
-    "disclaimerText": "Cette application n'est pas affiliée, approuvée ou sponsorisée par la Commission de transport de Toronto (TTC). Alertes TTC est un projet indépendant. Bien que nous nous efforcions de fournir des informations exactes, les données peuvent être retardées ou incorrectes.",
+    "disclaimerText": "Cette application n'est pas affiliée, approuvée ou sponsorisée par la Commission de transport de Toronto (TTC). rideTO est un projet indépendant. Bien que nous nous efforcions de fournir des informations exactes, les données peuvent être retardées ou incorrectes.",
     "disclaimerImportant": "Vérifiez toujours les informations de voyage critiques sur le site officiel du TTC ou contactez directement le TTC.",
     "privacy": "Confidentialité et localisation",
-    "privacyText": "Votre vie privée nous importe. Alertes TTC utilise les services de localisation uniquement pour trouver les arrêts à proximité et afficher les alertes pertinentes.",
+    "privacyText": "Votre vie privée nous importe. rideTO utilise les services de localisation uniquement pour trouver les arrêts à proximité et afficher les alertes pertinentes.",
     "privacyLocation": "Données de localisation",
     "privacyLocationDetails": "La localisation n'est utilisée que lorsque vous utilisez des fonctionnalités comme « Trouver des arrêts à proximité ». Nous ne suivons jamais votre position en arrière-plan et ne stockons pas votre historique de localisation. Les données de localisation restent sur votre appareil et ne sont envoyées à aucun serveur.",
     "privacyLocationControl": "Vous pouvez activer ou désactiver l'accès à la localisation à tout moment dans les paramètres de votre appareil ou dans la page Paramètres de l'application.",
@@ -749,12 +749,12 @@
   },
   "error": {
     "notFound": {
-      "pageTitle": "Page non trouvée - Alertes TTC",
+      "pageTitle": "Page non trouvée - rideTO",
       "title": "Page non trouvée",
       "description": "La page que vous recherchez n'existe pas ou a été déplacée."
     },
     "generic": {
-      "pageTitle": "Erreur - Alertes TTC",
+      "pageTitle": "Erreur - rideTO",
       "title": "Une erreur s'est produite",
       "description": "Une erreur inattendue s'est produite. Veuillez réessayer."
     },

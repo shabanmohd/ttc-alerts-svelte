@@ -67,7 +67,10 @@
   </Card.Root>
 
   <!-- About Me -->
-  <Card.Root class="mb-6 gap-4 animate-fade-in-up" style="animation-delay: 100ms">
+  <Card.Root
+    class="mb-6 gap-4 animate-fade-in-up"
+    style="animation-delay: 100ms"
+  >
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <Heart class="h-5 w-5 text-rose-500" />
@@ -188,7 +191,10 @@
   </Card.Root>
 
   <!-- Privacy & Location -->
-  <Card.Root class="mb-6 border-blue-500/50 animate-fade-in-up" style="animation-delay: 200ms">
+  <Card.Root
+    class="mb-6 border-blue-500/50 animate-fade-in-up"
+    style="animation-delay: 200ms"
+  >
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <Shield class="h-5 w-5 text-blue-500" />
@@ -233,7 +239,10 @@
   </Card.Root>
 
   <!-- Disclaimer -->
-  <Card.Root class="mb-6 gap-4 border-amber-500/50 animate-fade-in-up" style="animation-delay: 250ms">
+  <Card.Root
+    class="mb-6 gap-4 border-amber-500/50 animate-fade-in-up"
+    style="animation-delay: 250ms"
+  >
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <AlertTriangle class="h-5 w-5 text-amber-500" />
@@ -281,12 +290,15 @@
   </Card.Root>
 
   <!-- Footer -->
-  <div class="text-center text-sm text-muted-foreground space-y-1 animate-fade-in-up" style="animation-delay: 350ms">
+  <div
+    class="text-center text-sm text-muted-foreground space-y-1 animate-fade-in-up"
+    style="animation-delay: 350ms"
+  >
     <p class="inline-flex items-center gap-1">
       {$_("about.madeWith")}
       <Heart class="h-3.5 w-3.5 text-rose-500 fill-rose-500" />
       {$_("about.inToronto")}
     </p>
-    <p>© {new Date().getFullYear()} TTC Alerts</p>
+    <p>© {new Date().getFullYear()} rideTO</p>
   </div>
 </main>

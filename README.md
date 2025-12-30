@@ -1,4 +1,4 @@
-# TTC Alerts PWA
+# rideTO PWA
 
 Real-time Toronto Transit Commission service alerts progressive web app.
 

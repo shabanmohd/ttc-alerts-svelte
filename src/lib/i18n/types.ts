@@ -374,7 +374,7 @@ export interface TranslationKeys {
     home: string;
     alerts: string;
     routes: string;
-    routeDetail: string; // "{route} - TTC Alerts"
+    routeDetail: string; // "{route} - rideTO"
     settings: string;
     preferences: string;
   };

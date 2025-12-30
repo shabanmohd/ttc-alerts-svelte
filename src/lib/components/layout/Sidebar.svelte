@@ -13,6 +13,23 @@
 
   let { onOpenDialog }: { onOpenDialog?: (dialog: string) => void } = $props();
 
+  let isDark = $state(false);
+
+  // Track dark mode state reactively
+  $effect(() => {
+    if (typeof document !== "undefined") {
+      const observer = new MutationObserver(() => {
+        isDark = document.documentElement.classList.contains("dark");
+      });
+      isDark = document.documentElement.classList.contains("dark");
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+      return () => observer.disconnect();
+    }
+  });
+
   function handleDialog(dialog: string) {
     onOpenDialog?.(dialog);
   }
@@ -40,8 +57,11 @@
 
 <aside class="sidebar">
   <a href="/" class="sidebar-header">
-    <img src="/logo.png" alt="TTC Alerts" class="sidebar-logo" />
-    <span class="sidebar-title">{$_("header.appName")}</span>
+    <img
+      src={isDark ? "/DARK-LOGO.svg" : "/LOGO.svg"}
+      alt="rideTO"
+      class="sidebar-logo"
+    />
   </a>
 
   <nav class="sidebar-nav">
