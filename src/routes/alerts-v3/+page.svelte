@@ -997,11 +997,17 @@
     {#if $isLoading}
       Loading alerts...
     {:else if currentTab === "active"}
-      {activeAlerts().length} active alert{activeAlerts().length === 1 ? "" : "s"} found
+      {activeAlerts().length} active alert{activeAlerts().length === 1
+        ? ""
+        : "s"} found
     {:else if currentTab === "resolved"}
-      {resolvedAlerts().length} resolved alert{resolvedAlerts().length === 1 ? "" : "s"} found
+      {resolvedAlerts().length} resolved alert{resolvedAlerts().length === 1
+        ? ""
+        : "s"} found
     {:else}
-      {scheduledClosuresCount()} scheduled item{scheduledClosuresCount() === 1 ? "" : "s"} found
+      {scheduledClosuresCount()} scheduled item{scheduledClosuresCount() === 1
+        ? ""
+        : "s"} found
     {/if}
   </div>
 

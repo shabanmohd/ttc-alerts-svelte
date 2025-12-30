@@ -529,7 +529,8 @@
         {#if $isLoading}
           Loading alerts...
         {:else if activeAlerts.length > 0}
-          {activeAlerts.length} {selectedCategory} alert{activeAlerts.length === 1 ? "" : "s"} found
+          {activeAlerts.length}
+          {selectedCategory} alert{activeAlerts.length === 1 ? "" : "s"} found
         {:else}
           No {selectedCategory} alerts at this time
         {/if}

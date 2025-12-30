@@ -14,17 +14,17 @@ This audit identifies accessibility issues and their resolution status. The TTC 
 
 ### Overall Assessment: ✅ MOSTLY COMPLIANT
 
-| Category                       | Status | Score | Change |
-| ------------------------------ | ------ | ----- | ------ |
-| **Color Contrast**             | ✅     | 92%   | —      |
-| **Animation/Motion**           | ✅     | 95%   | —      |
-| **Typography Consistency**     | ✅     | 90%   | —      |
-| **Keyboard Navigation**        | ✅     | 90%   | ↑15%   |
-| **Focus States**               | ✅     | 95%   | ↑15%   |
-| **ARIA/Semantic HTML**         | ✅     | 90%   | ↑20%   |
-| **Touch Targets**              | ✅     | 95%   | ↑17%   |
-| **Screen Reader Support**      | ✅     | 92%   | ↑20%   |
-| **WCAG 2.2 New Criteria**      | ✅     | 95%   | ↑30%   |
+| Category                   | Status | Score | Change |
+| -------------------------- | ------ | ----- | ------ |
+| **Color Contrast**         | ✅     | 92%   | —      |
+| **Animation/Motion**       | ✅     | 95%   | —      |
+| **Typography Consistency** | ✅     | 90%   | —      |
+| **Keyboard Navigation**    | ✅     | 90%   | ↑15%   |
+| **Focus States**           | ✅     | 95%   | ↑15%   |
+| **ARIA/Semantic HTML**     | ✅     | 90%   | ↑20%   |
+| **Touch Targets**          | ✅     | 95%   | ↑17%   |
+| **Screen Reader Support**  | ✅     | 92%   | ↑20%   |
+| **WCAG 2.2 New Criteria**  | ✅     | 95%   | ↑30%   |
 
 ---
 
@@ -36,6 +36,7 @@ This audit identifies accessibility issues and their resolution status. The TTC 
 **Location:** [+layout.svelte](src/routes/+layout.svelte#L89)
 
 **Fix Applied:**
+
 - Added skip-link as first focusable element
 - Added `id="main-content"` to main wrapper with `tabindex="-1"`
 - Added skip-link styles to [layout.css](src/routes/layout.css#L172-L196)
@@ -48,6 +49,7 @@ This audit identifies accessibility issues and their resolution status. The TTC 
 **Location:** [layout.css](src/routes/layout.css#L241-L243)
 
 **Fix Applied:**
+
 ```css
 html {
   scroll-padding-top: 5rem;
@@ -61,10 +63,12 @@ html {
 
 **Status:** ✅ FIXED  
 **Locations:**
+
 - [alerts/+page.svelte](src/routes/alerts/+page.svelte#L494)
 - [alerts-v3/+page.svelte](src/routes/alerts-v3/+page.svelte#L951)
 
 **Fix Applied:**
+
 ```svelte
 <h1 class="sr-only">{$_("pages.alerts.title").replace(" - rideTO", "")}</h1>
 ```
@@ -75,10 +79,12 @@ html {
 
 **Status:** ✅ FIXED  
 **Locations:**
+
 - [alerts/+page.svelte](src/routes/alerts/+page.svelte#L530-L540)
 - [alerts-v3/+page.svelte](src/routes/alerts-v3/+page.svelte#L994-L1006)
 
 **Fix Applied:**
+
 ```svelte
 <div aria-live="polite" aria-atomic="true" class="sr-only">
   {alertCount} alerts found
@@ -93,6 +99,7 @@ html {
 **Location:** [dialog-content.svelte](src/lib/components/ui/dialog/dialog-content.svelte#L37)
 
 **Fix Applied:**
+
 - Increased padding from `p-1` to `p-2` (now 36x36px touch target)
 - Adjusted position from `end-4` to `end-3` to compensate
 
@@ -178,11 +185,11 @@ The following issues are lower priority but should be addressed for full WCAG 2.
 
 **Problem Files:**
 
-| File                                                         | Element              | Current Size | Required |
-| ------------------------------------------------------------ | -------------------- | ------------ | -------- |
-| [alerts/+page.svelte](src/routes/alerts/+page.svelte#L614)   | External link icons  | 12px (h-3)   | 24px     |
-| [about/+page.svelte](src/routes/about/+page.svelte#L133)     | External link icons  | 12px (h-3)   | 24px     |
-| [routes/[route]/+page.svelte](src/routes/routes/[route]/+page.svelte#L1146) | External link icons  | 12px (h-3)   | 24px     |
+| File                                                                        | Element             | Current Size | Required |
+| --------------------------------------------------------------------------- | ------------------- | ------------ | -------- |
+| [alerts/+page.svelte](src/routes/alerts/+page.svelte#L614)                  | External link icons | 12px (h-3)   | 24px     |
+| [about/+page.svelte](src/routes/about/+page.svelte#L133)                    | External link icons | 12px (h-3)   | 24px     |
+| [routes/[route]/+page.svelte](src/routes/routes/[route]/+page.svelte#L1146) | External link icons | 12px (h-3)   | 24px     |
 
 **Required Fix:** Increase clickable area:
 
@@ -226,11 +233,11 @@ This ensures focused elements are never obscured by the sticky header or bottom 
 
 **Affected Files:**
 
-| File                                                         | Line  | Icon Component             |
-| ------------------------------------------------------------ | ----- | -------------------------- |
+| File                                                                            | Line  | Icon Component                        |
+| ------------------------------------------------------------------------------- | ----- | ------------------------------------- |
 | [MobileBottomNav.svelte](src/lib/components/layout/MobileBottomNav.svelte#L104) | 104   | `<Home />`, `<AlertTriangle />`, etc. |
-| [Sidebar.svelte](src/lib/components/layout/Sidebar.svelte#L69-L93) | 69-93 | All nav icons              |
-| [HomeSubTabs.svelte](src/lib/components/layout/HomeSubTabs.svelte#L40) | 40    | Tab icons                  |
+| [Sidebar.svelte](src/lib/components/layout/Sidebar.svelte#L69-L93)              | 69-93 | All nav icons                         |
+| [HomeSubTabs.svelte](src/lib/components/layout/HomeSubTabs.svelte#L40)          | 40    | Tab icons                             |
 
 **Required Fix:**
 
@@ -247,16 +254,17 @@ This ensures focused elements are never obscured by the sticky header or bottom 
 **Problem:** Alert counts, loading states, and ETA updates don't announce to screen readers.
 
 **✅ Fixed Locations:**
+
 - [alerts/+page.svelte](src/routes/alerts/+page.svelte) - Added `aria-live="polite"` region for alert count announcements
 - [alerts-v3/+page.svelte](src/routes/alerts-v3/+page.svelte) - Added `aria-live="polite"` region for alert count announcements
 
 **⚠️ Still Needs Work:**
 
-| Location                                                     | Content Type         | Suggested `aria-live` |
-| ------------------------------------------------------------ | -------------------- | -------------------- |
-| [CategoryFilterV3.svelte](src/routes/alerts/CategoryFilterV3.svelte#L65) | Alert counts         | `aria-live="polite"` |
-| [ETACard.svelte](src/lib/components/eta/ETACard.svelte#L440) | ETA predictions      | `aria-live="polite"` |
-| [MyStops.svelte](src/lib/components/stops/MyStops.svelte#L186) | Loading/empty states | `aria-live="polite"` |
+| Location                                                                 | Content Type         | Suggested `aria-live` |
+| ------------------------------------------------------------------------ | -------------------- | --------------------- |
+| [CategoryFilterV3.svelte](src/routes/alerts/CategoryFilterV3.svelte#L65) | Alert counts         | `aria-live="polite"`  |
+| [ETACard.svelte](src/lib/components/eta/ETACard.svelte#L440)             | ETA predictions      | `aria-live="polite"`  |
+| [MyStops.svelte](src/lib/components/stops/MyStops.svelte#L186)           | Loading/empty states | `aria-live="polite"`  |
 
 **Example Fix:**
 
@@ -356,12 +364,12 @@ This ensures focused elements are never obscured by the sticky header or bottom 
 
 **Affected Patterns:**
 
-| Pattern                    | Usage                | Concern                    |
-| -------------------------- | -------------------- | -------------------------- |
-| `text-muted-foreground/60` | Character counts     | May fall below 4.5:1       |
-| `bg-muted/50`              | Background overlays  | May affect text contrast   |
-| `border-*-500/20`          | Subtle borders       | May not be perceivable     |
-| `text-xs opacity-50`       | Help text            | Definitely below 4.5:1     |
+| Pattern                    | Usage               | Concern                  |
+| -------------------------- | ------------------- | ------------------------ |
+| `text-muted-foreground/60` | Character counts    | May fall below 4.5:1     |
+| `bg-muted/50`              | Background overlays | May affect text contrast |
+| `border-*-500/20`          | Subtle borders      | May not be perceivable   |
+| `text-xs opacity-50`       | Help text           | Definitely below 4.5:1   |
 
 **Locations:**
 
@@ -393,10 +401,10 @@ This ensures focused elements are never obscured by the sticky header or bottom 
 
 **Needs Review:**
 
-| File                                                         | Element                 | Has onclick | Has keydown |
-| ------------------------------------------------------------ | ----------------------- | ----------- | ----------- |
-| [routes/+page.svelte](src/routes/routes/+page.svelte#L216)   | Route card buttons      | ✅          | ✅ (button) |
-| [ETACard.svelte](src/lib/components/eta/ETACard.svelte#L350) | Collapsible header      | ✅          | ✅ (button) |
+| File                                                         | Element            | Has onclick | Has keydown |
+| ------------------------------------------------------------ | ------------------ | ----------- | ----------- |
+| [routes/+page.svelte](src/routes/routes/+page.svelte#L216)   | Route card buttons | ✅          | ✅ (button) |
+| [ETACard.svelte](src/lib/components/eta/ETACard.svelte#L350) | Collapsible header | ✅          | ✅ (button) |
 
 **Note:** Most interactive elements correctly use `<button>` elements, which have keyboard support built-in. This is well-implemented.
 
@@ -409,12 +417,12 @@ This ensures focused elements are never obscured by the sticky header or bottom 
 
 **Audit Results:**
 
-| Page                | First Heading | Issue                |
-| ------------------- | ------------- | -------------------- |
-| +page.svelte (Home) | h2            | ✅ OK (h1 in header) |
-| alerts/+page.svelte | h3            | ⚠️ Missing h1, h2    |
-| settings/+page.svelte | h2          | ✅ OK                |
-| help/+page.svelte   | h1            | ✅ OK                |
+| Page                  | First Heading | Issue                |
+| --------------------- | ------------- | -------------------- |
+| +page.svelte (Home)   | h2            | ✅ OK (h1 in header) |
+| alerts/+page.svelte   | h3            | ⚠️ Missing h1, h2    |
+| settings/+page.svelte | h2            | ✅ OK                |
+| help/+page.svelte     | h1            | ✅ OK                |
 
 **Location:** [alerts/+page.svelte](src/routes/alerts/+page.svelte#L573) starts with h3.
 
@@ -501,22 +509,22 @@ This ensures focused elements are never obscured by the sticky header or bottom 
 
 ### High Priority
 
-| File                        | Issues  | Effort |
-| --------------------------- | ------- | ------ |
-| `+layout.svelte`            | C1, C5  | Low    |
-| `MobileBottomNav.svelte`    | C2, M1  | Low    |
-| `Sidebar.svelte`            | C2, M1  | Low    |
-| `RouteSearch.svelte`        | C3      | Low    |
-| `alerts/+page.svelte`       | M3, M7, C4 | Medium |
-| `ETACard.svelte`            | M2      | Low    |
-| `CategoryFilterV3.svelte`   | M2      | Low    |
-| `ReportIssueDialog.svelte`  | M4, M5  | Low    |
-| `FeatureRequestDialog.svelte` | M4, M5 | Low   |
+| File                          | Issues     | Effort |
+| ----------------------------- | ---------- | ------ |
+| `+layout.svelte`              | C1, C5     | Low    |
+| `MobileBottomNav.svelte`      | C2, M1     | Low    |
+| `Sidebar.svelte`              | C2, M1     | Low    |
+| `RouteSearch.svelte`          | C3         | Low    |
+| `alerts/+page.svelte`         | M3, M7, C4 | Medium |
+| `ETACard.svelte`              | M2         | Low    |
+| `CategoryFilterV3.svelte`     | M2         | Low    |
+| `ReportIssueDialog.svelte`    | M4, M5     | Low    |
+| `FeatureRequestDialog.svelte` | M4, M5     | Low    |
 
 ### CSS Updates Needed
 
-| File         | Change                           |
-| ------------ | -------------------------------- |
+| File         | Change                               |
+| ------------ | ------------------------------------ |
 | `layout.css` | Add skip-link styles, scroll-padding |
 
 ---

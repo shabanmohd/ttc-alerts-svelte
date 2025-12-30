@@ -24,6 +24,7 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts.
 | `IMPLEMENTATION_PLAN.md`                | **Version B ONLY** - Feature roadmap & phases   | Phase progress, Version B feature completion                 |
 | `DESIGN_SYSTEM.md`                      | Colors, typography, spacing, components         | Colors, typography, spacing, components, layout changes      |
 | `WCAG_DESIGN_AUDIT.md`                  | WCAG 2.2 accessibility audit and compliance     | Accessibility changes, a11y fixes, compliance updates        |
+| `SEO_AUDIT.md`                          | SEO audit, meta tags, structured data           | SEO fixes, meta tag changes, sitemap updates                 |
 | `alert-categorization-and-threading.md` | Edge Function logic, threading algorithm        | Categorization logic, threading algorithm, filtering changes |
 | `TTC-ROUTE-CONFLICTS.md`                | Route number conflicts (39/939, 46/996, etc.)   | Route matching bugs, new conflict patterns                   |
 | `TTC-BUS-ROUTES.md`                     | Complete TTC bus route reference                | Route additions/removals                                     |

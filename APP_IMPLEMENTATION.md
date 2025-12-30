@@ -21,6 +21,7 @@ Real-time Toronto Transit alerts PWA.
 | **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)**                               | Version B feature roadmap & phases              | Phase progress, Version B feature completion  |
 | **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)**                                           | Colors, typography, spacing, components         | UI/UX changes, new components                 |
 | **[WCAG_DESIGN_AUDIT.md](WCAG_DESIGN_AUDIT.md)**                                   | WCAG 2.2 accessibility audit and compliance     | Accessibility changes, compliance updates     |
+| **[SEO_AUDIT.md](SEO_AUDIT.md)**                                                   | SEO audit, meta tags, structured data           | SEO fixes, meta tag changes, sitemap updates  |
 | **[DATA_POLLING_FREQUENCIES.md](DATA_POLLING_FREQUENCIES.md)**                     | All data sources, polling intervals, workflows  | Data source or polling changes                |
 | **[alert-categorization-and-threading.md](alert-categorization-and-threading.md)** | Edge Function logic, threading algorithm        | Alert processing changes                      |
 | **[TTC-ROUTE-CONFLICTS.md](TTC-ROUTE-CONFLICTS.md)**                               | Route number conflicts (39/939, 46/996, etc.)   | Route matching bugs                           |
@@ -684,15 +685,16 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 **Fixes Applied:**
 
-| Fix | WCAG Criterion | Files Modified |
-|-----|----------------|----------------|
-| Skip-to-content link | 2.4.1 Bypass Blocks | `+layout.svelte`, `layout.css` |
-| Scroll-padding | 2.4.11 Focus Not Obscured | `layout.css` |
+| Fix                            | WCAG Criterion               | Files Modified                                  |
+| ------------------------------ | ---------------------------- | ----------------------------------------------- |
+| Skip-to-content link           | 2.4.1 Bypass Blocks          | `+layout.svelte`, `layout.css`                  |
+| Scroll-padding                 | 2.4.11 Focus Not Obscured    | `layout.css`                                    |
 | Heading hierarchy (sr-only h1) | 1.3.1 Info and Relationships | `alerts/+page.svelte`, `alerts-v3/+page.svelte` |
-| Aria-live regions | 4.1.3 Status Messages | `alerts/+page.svelte`, `alerts-v3/+page.svelte` |
-| Dialog close button size | 2.5.8 Target Size | `dialog-content.svelte` |
+| Aria-live regions              | 4.1.3 Status Messages        | `alerts/+page.svelte`, `alerts-v3/+page.svelte` |
+| Dialog close button size       | 2.5.8 Target Size            | `dialog-content.svelte`                         |
 
 **Compliance Scores Improved:**
+
 - Keyboard Navigation: 75% → 90%
 - Focus States: 80% → 95%
 - ARIA/Semantic HTML: 70% → 90%
