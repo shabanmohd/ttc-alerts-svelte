@@ -729,6 +729,7 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 **Solution:** Added automatic refresh on two scenarios:
 
 1. **Visibility Refresh** (`visibilitychange` event):
+
    - When app becomes visible again, automatically fetches latest alerts
    - Catches any updates that occurred while app was backgrounded
    - Uses `document.visibilityState === 'visible'` check
@@ -752,11 +753,13 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 **Solution:** Implemented a proactive update notification system:
 
 1. **Detection** (`app.html`):
+
    - Listen for `updatefound` event on service worker registration
    - When new SW is installing, dispatch custom `sw-update-available` event
    - On `controllerchange`, auto-reload to activate new version
 
 2. **Notification** (`+layout.svelte`):
+
    - Listen for `sw-update-available` custom event
    - Show persistent toast notification with refresh action
    - User can tap toast or wait for automatic reload on next navigation

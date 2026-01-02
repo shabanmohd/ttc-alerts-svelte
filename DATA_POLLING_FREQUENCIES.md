@@ -8,15 +8,15 @@ This document describes all data sources, their polling frequencies, and update 
 
 ### 1. Service Alerts
 
-| Property                | Value                                                                 |
-| ----------------------- | --------------------------------------------------------------------- |
-| **Source**              | Supabase Edge Function (`poll-alerts`) polling TTC Service Alerts API |
-| **Update Frequency**    | Every 30 seconds (server-side)                                        |
-| **Client Delivery**     | Supabase Realtime (instant push on changes)                           |
-| **Visibility Refresh**  | Auto-refresh when app becomes visible (catches missed updates)        |
-| **Reconnection Refresh**| Auto-refresh when Realtime reconnects after disconnect                |
-| **Data Type**           | Service disruptions, delays, detours, closures                        |
-| **Caching**             | No client-side caching - always fresh from server                     |
+| Property                 | Value                                                                 |
+| ------------------------ | --------------------------------------------------------------------- |
+| **Source**               | Supabase Edge Function (`poll-alerts`) polling TTC Service Alerts API |
+| **Update Frequency**     | Every 30 seconds (server-side)                                        |
+| **Client Delivery**      | Supabase Realtime (instant push on changes)                           |
+| **Visibility Refresh**   | Auto-refresh when app becomes visible (catches missed updates)        |
+| **Reconnection Refresh** | Auto-refresh when Realtime reconnects after disconnect                |
+| **Data Type**            | Service disruptions, delays, detours, closures                        |
+| **Caching**              | No client-side caching - always fresh from server                     |
 
 **How it works:**
 

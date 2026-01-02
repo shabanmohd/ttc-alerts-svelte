@@ -1,6 +1,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// v72: Performance optimizations
+// - Parallelize TTC API and Bluesky API calls (~1s savings)
+// - Batch cleanup operations for RSZ, Accessibility, SiteWide alerts
+// - Reduce sequential DB queries in cleanup loops
+// v71: Fix RSZ ID generation for proper deduplication
+// - Check effectDesc for RSZ detection in ID generation (not just effect)
 // v70: Fix regular DELAY alerts being incorrectly hidden
 // - SIGNIFICANT_DELAYS with effectDesc="Delays" are real delays (keep visible)
 // - SIGNIFICANT_DELAYS with effectDesc="Reduced Speed Zone" are RSZ (handle separately)
@@ -18,7 +24,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // - Also removes "See other service alerts" boilerplate text
 // v63: Fix SiteWide alerts to bypass alreadyHasThread check
 // v62: SiteWide alerts support (station entrance/facility closures)
-const FUNCTION_VERSION = 71;
+const FUNCTION_VERSION = 72;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -235,10 +241,17 @@ serve(async (req) => {
     const activeAccessibilityAlertIds = new Set<string>();
     const activeSiteWideAlertIds = new Set<string>();
     
-    // Fetch TTC Live API
+    // OPTIMIZATION: Parallelize external API calls (~1s savings)
+    // Both APIs are fetched simultaneously, but processed sequentially
+    const [ttcResponse, bskyResponse] = await Promise.allSettled([
+      fetch('https://alerts.ttc.ca/api/alerts/live-alerts', { headers: { 'Accept': 'application/json' } }),
+      fetch(`${BLUESKY_API}?actor=ttcalerts.bsky.social&limit=50`, { headers: { 'Accept': 'application/json' } })
+    ]);
+    
+    // Process TTC API response
     try {
-      const ttcRes = await fetch('https://alerts.ttc.ca/api/alerts/live-alerts', { headers: { 'Accept': 'application/json' } });
-      if (ttcRes.ok) {
+      if (ttcResponse.status === 'fulfilled' && ttcResponse.value.ok) {
+        const ttcRes = ttcResponse.value;
         const ttcData = await ttcRes.json();
         const activeRoutes = new Set<string>(); // All routes with any alert
         const activeDisruptionRoutes = new Set<string>(); // Routes with NO_SERVICE, DETOUR, regular DELAYS (not RSZ)
@@ -293,69 +306,88 @@ serve(async (req) => {
           }
         }
         
-        // DELETE stale RSZ alerts not in TTC API (instead of marking resolved)
-        // RSZ alerts should vanish when resolved, not appear in Resolved tab
-        const { data: existingRszAlerts } = await supabase.from('alert_cache').select('alert_id, thread_id').like('alert_id', 'ttc-RSZ-%');
-        if (existingRszAlerts) {
-          for (const rszAlert of existingRszAlerts) {
-            if (!activeRszAlertIds.has(rszAlert.alert_id)) {
-              // Delete the RSZ alert
-              await supabase.from('alert_cache').delete().eq('alert_id', rszAlert.alert_id);
-              rszDeletedCount++;
-              
-              // If thread has no more alerts, delete the thread too
-              if (rszAlert.thread_id) {
-                const { count } = await supabase.from('alert_cache').select('alert_id', { count: 'exact', head: true }).eq('thread_id', rszAlert.thread_id);
-                if (count === 0) {
-                  await supabase.from('incident_threads').delete().eq('thread_id', rszAlert.thread_id);
-                }
-              }
-            }
+        // OPTIMIZATION: Batch cleanup operations for RSZ, Accessibility, SiteWide alerts
+        // Instead of individual DELETE queries per alert, collect IDs and batch delete
+        
+        // Collect all existing special alerts in parallel
+        const [existingRszResult, existingAccessibilityResult, existingSiteWideResult] = await Promise.all([
+          supabase.from('alert_cache').select('alert_id, thread_id').like('alert_id', 'ttc-RSZ-%'),
+          supabase.from('alert_cache').select('alert_id, thread_id').like('alert_id', 'ttc-ACCESSIBILITY_ISSUE-%'),
+          supabase.from('alert_cache').select('alert_id, thread_id').like('alert_id', 'ttc-SiteWide-%')
+        ]);
+        
+        const existingRszAlerts = existingRszResult.data || [];
+        const existingAccessibilityAlerts = existingAccessibilityResult.data || [];
+        const existingSiteWideAlerts = existingSiteWideResult.data || [];
+        
+        // Identify stale alerts (not in active set)
+        const staleRszIds: string[] = [];
+        const staleRszThreadIds = new Set<string>();
+        for (const alert of existingRszAlerts) {
+          if (!activeRszAlertIds.has(alert.alert_id)) {
+            staleRszIds.push(alert.alert_id);
+            if (alert.thread_id) staleRszThreadIds.add(alert.thread_id);
           }
         }
         
-        // DELETE stale Accessibility/Elevator alerts not in TTC API
-        // Elevator alerts should be deleted (not marked resolved) when cleared from API
-        // This ensures elevator counts exactly match TTC website
+        const staleAccessibilityIds: string[] = [];
+        const staleAccessibilityThreadIds = new Set<string>();
         if (activeAccessibilityAlertIds.size > 0) {
-          const { data: existingAccessibilityAlerts } = await supabase.from('alert_cache').select('alert_id, thread_id').like('alert_id', 'ttc-ACCESSIBILITY_ISSUE-%');
-          if (existingAccessibilityAlerts) {
-            for (const accAlert of existingAccessibilityAlerts) {
-              if (!activeAccessibilityAlertIds.has(accAlert.alert_id)) {
-                // Delete the accessibility alert
-                await supabase.from('alert_cache').delete().eq('alert_id', accAlert.alert_id);
-                accessibilityDeletedCount++;
-                
-                // If thread has no more alerts, delete the thread too
-                if (accAlert.thread_id) {
-                  const { count } = await supabase.from('alert_cache').select('alert_id', { count: 'exact', head: true }).eq('thread_id', accAlert.thread_id);
-                  if (count === 0) {
-                    await supabase.from('incident_threads').delete().eq('thread_id', accAlert.thread_id);
-                  }
-                }
-              }
+          for (const alert of existingAccessibilityAlerts) {
+            if (!activeAccessibilityAlertIds.has(alert.alert_id)) {
+              staleAccessibilityIds.push(alert.alert_id);
+              if (alert.thread_id) staleAccessibilityThreadIds.add(alert.thread_id);
             }
           }
         }
         
-        // DELETE stale SiteWide alerts not in TTC API
-        // SiteWide alerts (station entrance closures, facility alerts) should be deleted when cleared
-        const { data: existingSiteWideAlerts } = await supabase.from('alert_cache').select('alert_id, thread_id').like('alert_id', 'ttc-SiteWide-%');
-        if (existingSiteWideAlerts) {
-          for (const swAlert of existingSiteWideAlerts) {
-            if (!activeSiteWideAlertIds.has(swAlert.alert_id)) {
-              // Delete the SiteWide alert
-              await supabase.from('alert_cache').delete().eq('alert_id', swAlert.alert_id);
-              siteWideDeletedCount++;
-              
-              // If thread has no more alerts, delete the thread too
-              if (swAlert.thread_id) {
-                const { count } = await supabase.from('alert_cache').select('alert_id', { count: 'exact', head: true }).eq('thread_id', swAlert.thread_id);
-                if (count === 0) {
-                  await supabase.from('incident_threads').delete().eq('thread_id', swAlert.thread_id);
-                }
-              }
-            }
+        const staleSiteWideIds: string[] = [];
+        const staleSiteWideThreadIds = new Set<string>();
+        for (const alert of existingSiteWideAlerts) {
+          if (!activeSiteWideAlertIds.has(alert.alert_id)) {
+            staleSiteWideIds.push(alert.alert_id);
+            if (alert.thread_id) staleSiteWideThreadIds.add(alert.thread_id);
+          }
+        }
+        
+        // Batch delete stale alerts (single query per type instead of N queries)
+        if (staleRszIds.length > 0) {
+          await supabase.from('alert_cache').delete().in('alert_id', staleRszIds);
+          rszDeletedCount = staleRszIds.length;
+        }
+        if (staleAccessibilityIds.length > 0) {
+          await supabase.from('alert_cache').delete().in('alert_id', staleAccessibilityIds);
+          accessibilityDeletedCount = staleAccessibilityIds.length;
+        }
+        if (staleSiteWideIds.length > 0) {
+          await supabase.from('alert_cache').delete().in('alert_id', staleSiteWideIds);
+          siteWideDeletedCount = staleSiteWideIds.length;
+        }
+        
+        // Clean up orphaned threads (threads with no remaining alerts)
+        // Combine all potentially orphaned thread IDs
+        const potentialOrphanThreadIds = new Set([
+          ...staleRszThreadIds,
+          ...staleAccessibilityThreadIds,
+          ...staleSiteWideThreadIds
+        ]);
+        
+        if (potentialOrphanThreadIds.size > 0) {
+          // Check which threads still have alerts
+          const { data: threadsWithAlerts } = await supabase
+            .from('alert_cache')
+            .select('thread_id')
+            .in('thread_id', Array.from(potentialOrphanThreadIds));
+          
+          const threadsStillWithAlerts = new Set(threadsWithAlerts?.map(a => a.thread_id) || []);
+          
+          // Delete threads that have no remaining alerts
+          const orphanedThreadIds = Array.from(potentialOrphanThreadIds).filter(
+            tid => !threadsStillWithAlerts.has(tid)
+          );
+          
+          if (orphanedThreadIds.length > 0) {
+            await supabase.from('incident_threads').delete().in('thread_id', orphanedThreadIds);
           }
         }
         
@@ -429,13 +461,18 @@ serve(async (req) => {
             }
           }
         }
-      } else { ttcApiError = `TTC API returned ${ttcRes.status}`; }
+      } else if (ttcResponse.status === 'fulfilled') { 
+        ttcApiError = `TTC API returned ${ttcResponse.value.status}`; 
+      } else { 
+        ttcApiError = `TTC API fetch failed`; 
+      }
     } catch (e: any) { ttcApiError = e.message; }
 
-    // Fetch Bluesky
-    const bskyRes = await fetch(`${BLUESKY_API}?actor=ttcalerts.bsky.social&limit=50`, { headers: { 'Accept': 'application/json' } });
-    if (!bskyRes.ok) throw new Error(`Bluesky API error: ${bskyRes.status}`);
-    const bskyData = await bskyRes.json();
+    // Process Bluesky response (already fetched in parallel above)
+    if (bskyResponse.status !== 'fulfilled' || !bskyResponse.value.ok) {
+      throw new Error(`Bluesky API error: ${bskyResponse.status === 'fulfilled' ? bskyResponse.value.status : 'fetch failed'}`);
+    }
+    const bskyData = await bskyResponse.value.json();
     // Sort posts by createdAt ascending (oldest first) so DELAY creates thread before SERVICE_RESUMED
     const posts = (bskyData.feed || []).sort((a: any, b: any) => 
       new Date(a.post?.record?.createdAt || 0).getTime() - new Date(b.post?.record?.createdAt || 0).getTime()

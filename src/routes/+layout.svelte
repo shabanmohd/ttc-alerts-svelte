@@ -48,7 +48,9 @@
   // Handle app update available
   function handleAppUpdate() {
     toast.info($_("app.updateAvailable") || "App update available", {
-      description: $_("app.updateDescription") || "Tap to refresh and get the latest version",
+      description:
+        $_("app.updateDescription") ||
+        "Tap to refresh and get the latest version",
       duration: Infinity, // Don't auto-dismiss
       action: {
         label: $_("common.refresh") || "Refresh",
@@ -111,6 +113,13 @@
 
 <!-- Desktop Sidebar -->
 <Sidebar onOpenDialog={openDialog} />
+
+<!-- iOS PWA Safe Area Cover - fixed background behind translucent status bar -->
+<div
+  class="fixed top-0 left-0 right-0 pointer-events-none safe-area-cover"
+  style="height: env(safe-area-inset-top, 0px); background-color: hsl(var(--background)); z-index: 9999;"
+  aria-hidden="true"
+></div>
 
 <!-- Main wrapper with pull-to-refresh -->
 <PullToRefresh onRefresh={handlePullRefresh}>
