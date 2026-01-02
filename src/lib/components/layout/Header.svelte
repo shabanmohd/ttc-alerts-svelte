@@ -142,7 +142,7 @@
 </script>
 
 <header
-  class="sticky top-0 w-full border-b border-border app-header transition-transform duration-200"
+  class="sticky top-0 w-full border-b border-border app-header"
   class:header-hidden={isHeaderHidden}
   style="z-index: 999; background-color: hsl(var(--background)); padding-top: env(safe-area-inset-top, 0px);"
 >

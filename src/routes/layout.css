@@ -348,6 +348,10 @@ html.ios-chrome-browser body {
 /* Header Layout */
 header.sticky {
   background-color: hsl(var(--background));
+  /* GPU acceleration for smooth animations */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
 }
 
 .header-container {
@@ -358,8 +362,13 @@ header.sticky {
   padding: 0 1rem;
 }
 
-/* Header hidden state on mobile - slides up when scrolling down */
+/* Header hidden state on mobile - smooth slide animation */
 @media (max-width: 1023px) {
+  header.sticky {
+    /* Smooth Material Design ease-out transition */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
   header.sticky.header-hidden {
     transform: translateY(calc(-100% - env(safe-area-inset-top, 0px)));
   }

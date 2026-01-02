@@ -731,13 +731,15 @@ Fixed logo flash during theme transitions by changing from JavaScript-based to C
 **Problem:** Logo SVGs (`LOGO.svg` for light, `DARK-LOGO.svg` for dark) showed the wrong version during initial page load because JavaScript `$effect()` runs after first render.
 
 **Solution:**
+
 - Changed from `{isDark ? '/DARK-LOGO.svg' : '/LOGO.svg'}` to CSS-based switching
 - Uses Tailwind's `dark:hidden` and `hidden dark:block` classes
 - Both logos in DOM, CSS instantly shows correct one based on `.dark` class
 
 **Files Updated:**
+
 - `src/lib/components/layout/Header.svelte` - CSS-based logo switching
-- `src/lib/components/layout/Sidebar.svelte` - CSS-based logo switching  
+- `src/lib/components/layout/Sidebar.svelte` - CSS-based logo switching
 - `src/app.html` - Added `<link rel="preload">` for both logo SVGs
 
 **Header Hide-on-Scroll (Mobile):**
@@ -753,11 +755,13 @@ Added header hide/show behavior on scroll for more screen real estate on mobile.
 | Desktop (≥1024px) | Always visible |
 
 **Implementation:**
+
 - Matches existing `MobileBottomNav` compact mode behavior
 - Smooth 200ms CSS transition
 - Accounts for iOS safe-area padding
 
 **Files Updated:**
+
 - `src/lib/components/layout/Header.svelte` - Scroll tracking, `header-hidden` class
 - `src/routes/layout.css` - `header-hidden` CSS with mobile-only media query
 
