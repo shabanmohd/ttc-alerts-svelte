@@ -63,6 +63,8 @@ Sentry.init({
     'QuotaExceededError',
     // SvelteKit CSS preload errors (happens when user has stale cache after deployment)
     /Unable to preload CSS/,
+    // Dynamic module load failures (stale cache after deployment)
+    /Failed to fetch dynamically imported module/,
   ],
 
   // Add breadcrumbs for debugging

@@ -134,6 +134,17 @@
   <body data-sveltekit-preload-data="hover">
     <div style="display: contents">%sveltekit.body%</div>
     
+    <!-- Handle stale module errors from deployment cache mismatch -->
+    <script>
+      window.addEventListener('error', (event) => {
+        if (event.message && event.message.includes('Failed to fetch dynamically imported module')) {
+          // Stale cache after deployment - reload to get new version
+          console.log('🔄 Stale module detected, reloading...');
+          window.location.reload();
+        }
+      });
+    </script>
+    
     <!-- Register Service Worker with Update Detection -->
     <script>
       if ('serviceWorker' in navigator) {
