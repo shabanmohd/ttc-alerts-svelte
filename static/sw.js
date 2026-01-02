@@ -1,13 +1,13 @@
-const CACHE_NAME = 'ttc-alerts-beta-v3';
-const STATIC_CACHE = 'ttc-static-beta-v3';
-const DYNAMIC_CACHE = 'ttc-dynamic-beta-v3';
+const CACHE_NAME = 'ttc-alerts-beta-v4';
+const STATIC_CACHE = 'ttc-static-beta-v4';
+const DYNAMIC_CACHE = 'ttc-dynamic-beta-v4';
 const ALERTS_CACHE = 'ttc-alerts-cache-v1';
 const ETA_CACHE = 'ttc-eta-cache-v1';
 // Separate cache for SvelteKit immutable assets (hashed, never change)
 const IMMUTABLE_CACHE = 'ttc-immutable-v1';
 
 // SW Version for logging and debugging
-const SW_VERSION = '3.0.0';
+const SW_VERSION = '4.0.0';
 
 const STATIC_ASSETS = [
   '/',
@@ -82,8 +82,8 @@ self.addEventListener('install', (event) => {
       return cache.addAll(STATIC_ASSETS);
     })
   );
-  // Skip waiting immediately to activate new SW
-  self.skipWaiting();
+  // DON'T call skipWaiting() here - let the user choose when to update via toast
+  // The message handler below will call skipWaiting when user taps "Refresh"
 });
 
 // Activate event - clean old caches

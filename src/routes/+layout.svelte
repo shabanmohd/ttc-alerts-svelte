@@ -54,8 +54,16 @@
       duration: Infinity, // Don't auto-dismiss
       action: {
         label: $_("common.refresh") || "Refresh",
-        onClick: () => {
-          window.location.reload();
+        onClick: async () => {
+          // Get the waiting service worker and tell it to activate
+          const registration = await navigator.serviceWorker?.getRegistration();
+          if (registration?.waiting) {
+            // Tell the waiting SW to skip waiting and take over
+            registration.waiting.postMessage({ type: "SKIP_WAITING" });
+          } else {
+            // No waiting SW, just reload
+            window.location.reload();
+          }
         },
       },
     });
