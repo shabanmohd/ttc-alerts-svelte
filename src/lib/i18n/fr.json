@@ -1,4 +1,8 @@
 {
+  "app": {
+    "updateAvailable": "Mise à jour disponible",
+    "updateDescription": "Appuyez pour actualiser et obtenir la dernière version"
+  },
   "common": {
     "loading": "Chargement...",
     "error": "Erreur",

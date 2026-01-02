@@ -134,13 +134,43 @@
   <body data-sveltekit-preload-data="hover">
     <div style="display: contents">%sveltekit.body%</div>
     
-    <!-- Register Service Worker -->
+    <!-- Register Service Worker with Update Detection -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => {
-            console.log('SW registration failed:', err);
-          });
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              // Check for updates every 60 seconds
+              setInterval(() => {
+                registration.update();
+              }, 60000);
+              
+              // Listen for new service worker installation
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (!newWorker) return;
+                
+                newWorker.addEventListener('statechange', () => {
+                  // When new SW is installed and waiting
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // Dispatch custom event for Svelte components to listen to
+                    window.dispatchEvent(new CustomEvent('sw-update-available'));
+                  }
+                });
+              });
+            })
+            .catch(err => {
+              console.log('SW registration failed:', err);
+            });
+        });
+        
+        // Listen for SW taking control (after skipWaiting)
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
         });
       }
     </script>

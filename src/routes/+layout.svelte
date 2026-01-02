@@ -26,6 +26,8 @@
   import { initI18n } from "$lib/i18n";
   import { activeDialog, openDialog, closeDialog } from "$lib/stores/dialogs";
   import { initNetworkListeners } from "$lib/stores/networkStatus";
+  import { toast } from "svelte-sonner";
+  import { _ } from "svelte-i18n";
 
   // Initialize i18n translations
   initI18n();
@@ -43,10 +45,27 @@
     await Promise.all([refreshAlerts(), etaStore.refreshAll()]);
   }
 
+  // Handle app update available
+  function handleAppUpdate() {
+    toast.info($_("app.updateAvailable") || "App update available", {
+      description: $_("app.updateDescription") || "Tap to refresh and get the latest version",
+      duration: Infinity, // Don't auto-dismiss
+      action: {
+        label: $_("common.refresh") || "Refresh",
+        onClick: () => {
+          window.location.reload();
+        },
+      },
+    });
+  }
+
   // Initialize app on mount
   onMount(async () => {
     // Initialize network status listeners
     cleanupNetworkListeners = initNetworkListeners();
+
+    // Listen for service worker updates
+    window.addEventListener("sw-update-available", handleAppUpdate);
 
     // Initialize IndexedDB storage (with migration from old localStorage)
     await initializeStorage();
@@ -70,6 +89,7 @@
     // Cleanup subscriptions
     if (unsubscribeAlerts) unsubscribeAlerts();
     if (cleanupNetworkListeners) cleanupNetworkListeners();
+    window.removeEventListener("sw-update-available", handleAppUpdate);
   });
 </script>
 

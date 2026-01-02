@@ -1,4 +1,8 @@
 {
+  "app": {
+    "updateAvailable": "App update available",
+    "updateDescription": "Tap to refresh and get the latest version"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",
