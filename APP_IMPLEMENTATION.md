@@ -722,6 +722,47 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Jan 2, 2026 - Logo Theme Switching & Header Hide-on-Scroll
+
+**Logo Theme Switching Fix:**
+
+Fixed logo flash during theme transitions by changing from JavaScript-based to CSS-based logo switching.
+
+**Problem:** Logo SVGs (`LOGO.svg` for light, `DARK-LOGO.svg` for dark) showed the wrong version during initial page load because JavaScript `$effect()` runs after first render.
+
+**Solution:**
+- Changed from `{isDark ? '/DARK-LOGO.svg' : '/LOGO.svg'}` to CSS-based switching
+- Uses Tailwind's `dark:hidden` and `hidden dark:block` classes
+- Both logos in DOM, CSS instantly shows correct one based on `.dark` class
+
+**Files Updated:**
+- `src/lib/components/layout/Header.svelte` - CSS-based logo switching
+- `src/lib/components/layout/Sidebar.svelte` - CSS-based logo switching  
+- `src/app.html` - Added `<link rel="preload">` for both logo SVGs
+
+**Header Hide-on-Scroll (Mobile):**
+
+Added header hide/show behavior on scroll for more screen real estate on mobile.
+
+**Behavior:**
+| Action | Header State |
+|--------|--------------|
+| Scroll down past 100px | Slides up, hidden |
+| Scroll up | Slides back down |
+| At top (< 10px) | Always visible |
+| Desktop (≥1024px) | Always visible |
+
+**Implementation:**
+- Matches existing `MobileBottomNav` compact mode behavior
+- Smooth 200ms CSS transition
+- Accounts for iOS safe-area padding
+
+**Files Updated:**
+- `src/lib/components/layout/Header.svelte` - Scroll tracking, `header-hidden` class
+- `src/routes/layout.css` - `header-hidden` CSS with mobile-only media query
+
+---
+
 ### Jan 2, 2026 - TTC Holiday Service Data Update & CSS Preload Fix
 
 **Holiday Data Updated:**
@@ -751,6 +792,7 @@ Fixed Sentry error `Unable to preload CSS for /_app/immutable/assets/...` that o
 **Fixes Applied:**
 
 1. **Sentry Error Filtering** (`src/hooks.client.ts`):
+
    - Added `/Unable to preload CSS/` to `ignoreErrors` - non-actionable user error
 
 2. **Service Worker Improvements** (`static/sw.js`):

@@ -33,6 +33,45 @@
   let isRefreshing = $state(false);
   let mobileMenuOpen = $state(false);
   let tick = $state(0); // Force re-render for relative time
+  let isHeaderHidden = $state(false); // Track header visibility on scroll
+
+  // Scroll tracking state
+  let lastScrollY = 0;
+  let scrollThreshold = 100; // Pixels scrolled before hiding header
+
+  // Handle scroll for header hide/show on mobile
+  function handleScroll() {
+    // Only apply on mobile (< 1024px breakpoint)
+    if (window.innerWidth >= 1024) {
+      isHeaderHidden = false;
+      return;
+    }
+
+    const currentScrollY = document.body.scrollTop || window.scrollY;
+    const scrollDelta = currentScrollY - lastScrollY;
+
+    // If at top (within 10px), always show header
+    if (currentScrollY < 10) {
+      isHeaderHidden = false;
+      lastScrollY = currentScrollY;
+      return;
+    }
+
+    // Scrolling down past threshold - hide header
+    if (scrollDelta > 0 && currentScrollY > scrollThreshold) {
+      if (scrollDelta > 5) {
+        isHeaderHidden = true;
+      }
+    }
+    // Scrolling up - show header
+    else if (scrollDelta < 0) {
+      if (Math.abs(scrollDelta) > 5) {
+        isHeaderHidden = false;
+      }
+    }
+
+    lastScrollY = currentScrollY;
+  }
 
   // Track dark mode state reactively
   $effect(() => {
@@ -59,12 +98,21 @@
     };
   });
 
-  // Update relative time every 30 seconds
+  // Update relative time every 30 seconds + setup scroll listeners
   onMount(() => {
     const interval = setInterval(() => {
       tick++;
     }, 30000);
-    return () => clearInterval(interval);
+
+    // Add scroll listeners for header hide/show
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    document.body.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("scroll", handleScroll);
+      document.body.removeEventListener("scroll", handleScroll);
+    };
   });
 
   async function toggleTheme() {
@@ -94,18 +142,26 @@
 </script>
 
 <header
-  class="sticky top-0 w-full border-b border-border app-header"
+  class="sticky top-0 w-full border-b border-border app-header transition-transform duration-200"
+  class:header-hidden={isHeaderHidden}
   style="z-index: 999; background-color: hsl(var(--background)); padding-top: env(safe-area-inset-top, 0px);"
 >
   <div class="header-container">
-    <!-- Logo (mobile only) -->
+    <!-- Logo (mobile only) - CSS-based theme switching to prevent flash -->
     <a href="/" class="header-left">
       <img
-        src={isDark ? "/DARK-LOGO.svg" : "/LOGO.svg"}
+        src="/LOGO.svg"
         alt="rideTO"
         width="85"
         height="32"
-        class="h-8 w-auto"
+        class="h-8 w-auto dark:hidden"
+      />
+      <img
+        src="/DARK-LOGO.svg"
+        alt="rideTO"
+        width="85"
+        height="32"
+        class="h-8 w-auto hidden dark:block"
       />
     </a>
 
@@ -299,11 +355,18 @@
   >
     <div class="flex items-center gap-2">
       <img
-        src={isDark ? "/DARK-LOGO.svg" : "/LOGO.svg"}
+        src="/LOGO.svg"
         alt="rideTO"
         width="85"
         height="32"
-        class="h-8 w-auto"
+        class="h-8 w-auto dark:hidden"
+      />
+      <img
+        src="/DARK-LOGO.svg"
+        alt="rideTO"
+        width="85"
+        height="32"
+        class="h-8 w-auto hidden dark:block"
       />
     </div>
     <button

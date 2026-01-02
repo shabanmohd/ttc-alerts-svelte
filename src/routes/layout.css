@@ -358,6 +358,13 @@ header.sticky {
   padding: 0 1rem;
 }
 
+/* Header hidden state on mobile - slides up when scrolling down */
+@media (max-width: 1023px) {
+  header.sticky.header-hidden {
+    transform: translateY(calc(-100% - env(safe-area-inset-top, 0px)));
+  }
+}
+
 /* On desktop, align header border with sidebar-header border */
 @media (min-width: 1024px) {
   header.sticky {

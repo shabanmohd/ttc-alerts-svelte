@@ -58,11 +58,18 @@
 <aside class="sidebar">
   <a href="/" class="sidebar-header">
     <img
-      src={isDark ? "/DARK-LOGO.svg" : "/LOGO.svg"}
+      src="/LOGO.svg"
       alt="rideTO"
       width="85"
       height="32"
-      class="sidebar-logo"
+      class="sidebar-logo dark:hidden"
+    />
+    <img
+      src="/DARK-LOGO.svg"
+      alt="rideTO"
+      width="85"
+      height="32"
+      class="sidebar-logo hidden dark:block"
     />
   </a>
 
