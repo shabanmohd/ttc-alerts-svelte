@@ -65,6 +65,8 @@ Sentry.init({
     /Unable to preload CSS/,
     // Dynamic module load failures (stale cache after deployment)
     /Failed to fetch dynamically imported module/,
+    // MIME type errors when CDN returns HTML instead of JS (stale cache after deployment)
+    /is not a valid JavaScript MIME type/,
   ],
 
   // Add breadcrumbs for debugging

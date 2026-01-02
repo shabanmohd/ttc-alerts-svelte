@@ -137,8 +137,12 @@
     <!-- Handle stale module errors from deployment cache mismatch -->
     <script>
       window.addEventListener('error', (event) => {
-        if (event.message && event.message.includes('Failed to fetch dynamically imported module')) {
-          // Stale cache after deployment - reload to get new version
+        // Stale cache after deployment - module doesn't exist or CDN returns HTML
+        const isStaleModuleError = event.message && (
+          event.message.includes('Failed to fetch dynamically imported module') ||
+          event.message.includes('is not a valid JavaScript MIME type')
+        );
+        if (isStaleModuleError) {
           console.log('🔄 Stale module detected, reloading...');
           window.location.reload();
         }
