@@ -283,7 +283,13 @@
     </div>
   {/if}
   <div class="relative flex items-center gap-2 {onClose ? 'px-3 pb-3' : ''}">
-    <div class="relative flex-1" role="combobox" aria-expanded={showResults} aria-haspopup="listbox" aria-controls="stop-search-results">
+    <div
+      class="relative flex-1"
+      role="combobox"
+      aria-expanded={showResults}
+      aria-haspopup="listbox"
+      aria-controls="stop-search-results"
+    >
       <Search
         class="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 flex-shrink-0 -translate-y-1/2"
       />

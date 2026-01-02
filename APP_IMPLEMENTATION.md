@@ -41,7 +41,7 @@ Real-time Toronto Transit alerts PWA.
 | **Branch**   | `main`                              | `version-b`                                   |
 | **URL**      | https://ttc-alerts-svelte.pages.dev | https://version-b.ttc-alerts-svelte.pages.dev |
 | **PWA Name** | "rideTO"                            | "rideTO Beta"                                 |
-| **SW Cache** | `ttc-alerts-v2`                     | `ttc-alerts-beta-v1`                          |
+| **SW Cache** | `ttc-alerts-v2`                     | `ttc-alerts-beta-v2`                          |
 | **Status**   | ✅ Production                       | 🚧 Development                                |
 
 > ⚠️ **This document tracks Version B (`version-b` branch)**. Version A features are a subset.
@@ -129,11 +129,11 @@ Real-time Toronto Transit alerts PWA.
 
 ### Root Files (`src/`)
 
-| File               | Status | Purpose                                                                      |
-| ------------------ | ------ | ---------------------------------------------------------------------------- |
-| `hooks.client.ts`  | ✅ 🆕  | Sentry error monitoring - client-side SDK init, error filtering              |
-| `app.html`         | ✅     | Main HTML template - fonts, PWA meta, SEO, DNS prefetch                      |
-| `app.d.ts`         | ✅     | TypeScript declarations                                                      |
+| File              | Status | Purpose                                                         |
+| ----------------- | ------ | --------------------------------------------------------------- |
+| `hooks.client.ts` | ✅ 🆕  | Sentry error monitoring - client-side SDK init, error filtering |
+| `app.html`        | ✅     | Main HTML template - fonts, PWA meta, SEO, DNS prefetch         |
+| `app.d.ts`        | ✅     | TypeScript declarations                                         |
 
 ### Pages (`src/routes/`)
 
@@ -722,24 +722,70 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Jan 2, 2026 - TTC Holiday Service Data Update & CSS Preload Fix
+
+**Holiday Data Updated:**
+
+Updated `src/lib/data/ttc-holidays.ts` with 2026 holidays from official TTC holiday service page:
+
+| Date       | Holiday          | Service Level   |
+| ---------- | ---------------- | --------------- |
+| 2026-01-01 | New Year's Day   | Sunday service  |
+| 2026-02-16 | Family Day       | Holiday service |
+| 2026-04-03 | Good Friday      | Holiday service |
+| 2026-05-18 | Victoria Day     | Holiday service |
+| 2026-07-01 | Canada Day       | Holiday service |
+| 2026-08-03 | Civic Holiday    | Holiday service |
+| 2026-09-07 | Labour Day       | Holiday service |
+| 2026-10-12 | Thanksgiving Day | Holiday service |
+| 2026-12-25 | Christmas Day    | Sunday service  |
+| 2026-12-26 | Boxing Day       | Holiday service |
+| 2027-01-01 | New Year's Day   | Sunday service  |
+
+**CSS Preload Error Fix:**
+
+Fixed Sentry error `Unable to preload CSS for /_app/immutable/assets/...` that occurred after deployments when users had stale cached HTML.
+
+**Root Cause:** Service worker "cache first" strategy for CSS files caused stale HTML to reference old content-hashed CSS files that no longer exist after new deployments.
+
+**Fixes Applied:**
+
+1. **Sentry Error Filtering** (`src/hooks.client.ts`):
+   - Added `/Unable to preload CSS/` to `ignoreErrors` - non-actionable user error
+
+2. **Service Worker Improvements** (`static/sw.js`):
+   - Bumped cache versions (v1 → v2) to clear stale caches on deploy
+   - Added `IMMUTABLE_CACHE` for SvelteKit `/_app/immutable/` assets
+   - Changed immutable assets to cache forever (content-hashed, safe)
+   - Changed regular CSS/JS to network-first (prevents stale issues)
+   - Icons/manifest stay cache-first (rarely change)
+
+**Files Updated:**
+
+- `src/lib/data/ttc-holidays.ts` - 2026 holidays + New Year's Day 2027
+- `src/hooks.client.ts` - Added CSS preload to Sentry ignoreErrors
+- `static/sw.js` - Cache strategy improvements, version bump
+
+---
+
 ### Dec 31, 2024 - Sentry Error Monitoring Integration
 
 **Purpose:** Add client-side error monitoring with Sentry for production debugging.
 
 **New Files:**
 
-| File                 | Purpose                                                    |
-| -------------------- | ---------------------------------------------------------- |
+| File                  | Purpose                                                    |
+| --------------------- | ---------------------------------------------------------- |
 | `src/hooks.client.ts` | Sentry SDK initialization, error filtering, session replay |
 
 **Configuration:**
 
-| Setting                   | Value                           | Notes                      |
-| ------------------------- | ------------------------------- | -------------------------- |
-| `tracesSampleRate`        | 0.1 (10%)                       | Free tier friendly         |
-| `replaysOnErrorSampleRate`| 1.0 (100%)                      | Always capture error replays |
-| `replaysSessionSampleRate`| 0.01 (1%)                       | 50 replays/month on free   |
-| Environment detection     | beta/development/production     | Based on hostname          |
+| Setting                    | Value                       | Notes                        |
+| -------------------------- | --------------------------- | ---------------------------- |
+| `tracesSampleRate`         | 0.1 (10%)                   | Free tier friendly           |
+| `replaysOnErrorSampleRate` | 1.0 (100%)                  | Always capture error replays |
+| `replaysSessionSampleRate` | 0.01 (1%)                   | 50 replays/month on free     |
+| Environment detection      | beta/development/production | Based on hostname            |
 
 **Error Filtering:**
 

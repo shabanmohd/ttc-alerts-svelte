@@ -11,8 +11,12 @@
   import SEO from "$lib/components/SEO.svelte";
 
   // Lazy load dialogs to reduce initial bundle size
-  const HowToUseDialogPromise = import("$lib/components/dialogs/HowToUseDialog.svelte");
-  const InstallPWADialogPromise = import("$lib/components/dialogs/InstallPWADialog.svelte");
+  const HowToUseDialogPromise = import(
+    "$lib/components/dialogs/HowToUseDialog.svelte"
+  );
+  const InstallPWADialogPromise = import(
+    "$lib/components/dialogs/InstallPWADialog.svelte"
+  );
 
   type HomeTab = "stops" | "routes";
 

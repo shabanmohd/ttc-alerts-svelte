@@ -61,6 +61,8 @@ Sentry.init({
     'cancelled',
     // Safari private browsing
     'QuotaExceededError',
+    // SvelteKit CSS preload errors (happens when user has stale cache after deployment)
+    /Unable to preload CSS/,
   ],
 
   // Add breadcrumbs for debugging

@@ -5,7 +5,7 @@
  * Update annually by providing the new TTC holiday page URL.
  * 
  * Source: https://www.ttc.ca/riding-the-ttc/Updates/holiday-service
- * Last Updated: December 2024
+ * Last Updated: January 2026
  * 
  * Service Levels:
  * - "sunday": Regular Sunday service (subway starts ~8 AM)
@@ -46,8 +46,20 @@ export const TTC_HOLIDAYS: TTCHoliday[] = [
   { date: '2025-12-25', name: 'Christmas Day', nameFr: 'Jour de Noël', service: 'sunday' },
   { date: '2025-12-26', name: 'Boxing Day', nameFr: 'Lendemain de Noël', service: 'holiday' },
   
-  // 2026 Holidays (add as TTC publishes)
+  // 2026 Holidays (from TTC holiday page)
   { date: '2026-01-01', name: "New Year's Day", nameFr: 'Jour de l\'An', service: 'sunday' },
+  { date: '2026-02-16', name: 'Family Day', nameFr: 'Jour de la famille', service: 'holiday' },
+  { date: '2026-04-03', name: 'Good Friday', nameFr: 'Vendredi saint', service: 'holiday' },
+  { date: '2026-05-18', name: 'Victoria Day', nameFr: 'Fête de la Reine', service: 'holiday' },
+  { date: '2026-07-01', name: 'Canada Day', nameFr: 'Fête du Canada', service: 'holiday' },
+  { date: '2026-08-03', name: 'Civic Holiday', nameFr: 'Congé civique', service: 'holiday' },
+  { date: '2026-09-07', name: 'Labour Day', nameFr: 'Fête du travail', service: 'holiday' },
+  { date: '2026-10-12', name: 'Thanksgiving Day', nameFr: 'Action de grâce', service: 'holiday' },
+  { date: '2026-12-25', name: 'Christmas Day', nameFr: 'Jour de Noël', service: 'sunday' },
+  { date: '2026-12-26', name: 'Boxing Day', nameFr: 'Lendemain de Noël', service: 'holiday' },
+  
+  // 2027 Holidays (from TTC holiday page)
+  { date: '2027-01-01', name: "New Year's Day", nameFr: 'Jour de l\'An', service: 'sunday' },
 ];
 
 /**

@@ -1,8 +1,10 @@
-const CACHE_NAME = 'ttc-alerts-beta-v1';
-const STATIC_CACHE = 'ttc-static-beta-v1';
-const DYNAMIC_CACHE = 'ttc-dynamic-beta-v1';
+const CACHE_NAME = 'ttc-alerts-beta-v2';
+const STATIC_CACHE = 'ttc-static-beta-v2';
+const DYNAMIC_CACHE = 'ttc-dynamic-beta-v2';
 const ALERTS_CACHE = 'ttc-alerts-cache-v1';
 const ETA_CACHE = 'ttc-eta-cache-v1';
+// Separate cache for SvelteKit immutable assets (hashed, never change)
+const IMMUTABLE_CACHE = 'ttc-immutable-v1';
 
 const STATIC_ASSETS = [
   '/',
@@ -83,7 +85,7 @@ self.addEventListener('install', (event) => {
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating service worker...');
-  const validCaches = [STATIC_CACHE, DYNAMIC_CACHE, CACHE_NAME, ALERTS_CACHE, ETA_CACHE];
+  const validCaches = [STATIC_CACHE, DYNAMIC_CACHE, CACHE_NAME, ALERTS_CACHE, ETA_CACHE, IMMUTABLE_CACHE];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -206,11 +208,39 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets - Cache first
+  // SvelteKit immutable assets (content-hashed, safe to cache forever)
+  // These are in /_app/immutable/ and have unique hashes in filenames
+  if (url.pathname.startsWith('/_app/immutable/')) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) {
+          return cached;
+        }
+        // Not in cache, fetch and cache forever (immutable)
+        return fetch(request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(IMMUTABLE_CACHE).then((cache) => {
+              cache.put(request, clone);
+            });
+          }
+          return response;
+        }).catch(() => {
+          // If fetch fails for an immutable asset, there's nothing we can do
+          // This typically means the asset no longer exists (old deployment)
+          // Return a minimal error response instead of failing silently
+          console.log('[SW] Failed to fetch immutable asset:', url.pathname);
+          return new Response('Asset not found', { status: 404 });
+        });
+      })
+    );
+    return;
+  }
+
+  // Static assets (icons, manifest) - Cache first with background update
+  // Note: Regular CSS/JS NOT in /_app/immutable/ are network-first to avoid stale issues
   if (STATIC_ASSETS.includes(url.pathname) || 
-      url.pathname.startsWith('/icons/') ||
-      url.pathname.endsWith('.css') ||
-      url.pathname.endsWith('.js')) {
+      url.pathname.startsWith('/icons/')) {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) {
@@ -235,6 +265,26 @@ self.addEventListener('fetch', (event) => {
           return response;
         });
       })
+    );
+    return;
+  }
+
+  // Non-immutable CSS/JS - Network first to avoid stale asset issues
+  if (url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(STATIC_CACHE).then((cache) => {
+              cache.put(request, clone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request);
+        })
     );
     return;
   }

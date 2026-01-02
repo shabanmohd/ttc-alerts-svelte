@@ -61,7 +61,13 @@
           class="h-14 w-14 rounded-xl"
         />
         <div>
-          <img src="/LOGO.svg" alt="rideTO" width="64" height="24" class="h-6 w-auto dark:hidden" />
+          <img
+            src="/LOGO.svg"
+            alt="rideTO"
+            width="64"
+            height="24"
+            class="h-6 w-auto dark:hidden"
+          />
           <img
             src="/DARK-LOGO.svg"
             alt="rideTO"
