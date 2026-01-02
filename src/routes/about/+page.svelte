@@ -307,5 +307,6 @@
       {$_("about.inToronto")}
     </p>
     <p>© {new Date().getFullYear()} rideTO</p>
+    <p class="text-xs text-muted-foreground/60 mt-2">v2.0.0 (PWA Update Test)</p>
   </div>
 </main>
