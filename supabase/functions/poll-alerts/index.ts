@@ -18,7 +18,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // - Also removes "See other service alerts" boilerplate text
 // v63: Fix SiteWide alerts to bypass alreadyHasThread check
 // v62: SiteWide alerts support (station entrance/facility closures)
-const FUNCTION_VERSION = 70;
+const FUNCTION_VERSION = 71;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -696,7 +696,9 @@ serve(async (req) => {
         const routeBase = extractRouteNumber(primaryRoute);
         const routeExact = extractRouteWithBranch(primaryRoute); // e.g., "40B" stays as "40B"
         const isAccessibility = ttcAlert.effect === 'ACCESSIBILITY_ISSUE';
-        const isRSZ = ttcAlert.effect === 'SIGNIFICANT_DELAYS';
+        // CRITICAL: RSZ is ONLY when effectDesc === 'Reduced Speed Zone'
+        // Regular delays have effectDesc === 'Delays' and should NOT be treated as RSZ
+        const isRSZ = ttcAlert.effect === 'SIGNIFICANT_DELAYS' && ttcAlert.effectDesc === 'Reduced Speed Zone';
         const isSiteWide = ttcAlert.alertType === 'SiteWide';
         const isSubway = /^[1-4]$/.test(primaryRoute);
         
