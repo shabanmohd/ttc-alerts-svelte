@@ -204,12 +204,25 @@
         });
         
         // Listen for SW taking control (after skipWaiting)
+        // We only reload when the user explicitly requests it via toast
+        // The toast handler in +layout.svelte will trigger the reload after sending SKIP_WAITING
         let refreshing = false;
+        let userRequestedRefresh = false;
+        
+        // Expose function for layout to call when user clicks refresh
+        window.__swRefreshRequested = () => {
+          userRequestedRefresh = true;
+        };
+        
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
+          // Only auto-reload if user requested it (clicked toast button)
+          // This prevents abrupt reloads when SW updates automatically
+          if (!refreshing && userRequestedRefresh) {
             refreshing = true;
-            console.log('[App] New SW active, reloading...');
+            console.log('[App] User requested refresh, reloading...');
             window.location.reload();
+          } else {
+            console.log('[App] SW changed but not reloading (waiting for user action)');
           }
         });
       }
