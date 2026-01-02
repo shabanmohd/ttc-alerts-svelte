@@ -1,6 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// v70: Fix regular DELAY alerts being incorrectly hidden
+// - SIGNIFICANT_DELAYS with effectDesc="Delays" are real delays (keep visible)
+// - SIGNIFICANT_DELAYS with effectDesc="Reduced Speed Zone" are RSZ (handle separately)
+// - Previously all SIGNIFICANT_DELAYS were excluded from activeDisruptionRoutes
 // v66: Fix express/night route conflicting with regular routes in threading
 // - Add hasConflictingRoutes() to detect 9XX vs XX (express) and 3XX vs XX (night) conflicts
 // - Prevent 939 Finch Express from merging with 39 Finch East thread (and similar conflicts)
@@ -14,7 +18,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // - Also removes "See other service alerts" boilerplate text
 // v63: Fix SiteWide alerts to bypass alreadyHasThread check
 // v62: SiteWide alerts support (station entrance/facility closures)
-const FUNCTION_VERSION = 69;
+const FUNCTION_VERSION = 70;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -237,7 +241,7 @@ serve(async (req) => {
       if (ttcRes.ok) {
         const ttcData = await ttcRes.json();
         const activeRoutes = new Set<string>(); // All routes with any alert
-        const activeDisruptionRoutes = new Set<string>(); // Routes with NO_SERVICE, DETOUR, etc. (not RSZ)
+        const activeDisruptionRoutes = new Set<string>(); // Routes with NO_SERVICE, DETOUR, regular DELAYS (not RSZ)
         
         if (ttcData.routes?.length) {
           for (const a of ttcData.routes) {
@@ -245,8 +249,11 @@ serve(async (req) => {
               activeRoutes.add(a.route.toString()); 
               if (/^[1-4]$/.test(a.route.toString())) activeRoutes.add(`Line ${a.route}`); 
               
-              // Track disruption routes separately (exclude RSZ = SIGNIFICANT_DELAYS)
-              if (['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR'].includes(a.effect)) {
+              // Track disruption routes separately
+              // Include: NO_SERVICE, REDUCED_SERVICE, DETOUR, and regular DELAYS (effectDesc === "Delays")
+              // Exclude: RSZ (effectDesc === "Reduced Speed Zone")
+              const isRegularDelay = a.effect === 'SIGNIFICANT_DELAYS' && a.effectDesc === 'Delays';
+              if (['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR'].includes(a.effect) || isRegularDelay) {
                 activeDisruptionRoutes.add(a.route.toString());
                 if (/^[1-4]$/.test(a.route.toString())) activeDisruptionRoutes.add(`Line ${a.route}`);
               }
@@ -255,8 +262,8 @@ serve(async (req) => {
             const isSiteWide = a.alertType === 'SiteWide' && (a.headerText || a.customHeaderText);
             if (!isPlanned && (isSiteWide || ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'SIGNIFICANT_DELAYS', 'ACCESSIBILITY_ISSUE'].includes(a.effect)) && a.route && (a.headerText || a.customHeaderText)) {
               ttcApiAlerts.push(a);
-              // Track active RSZ alert IDs
-              if (a.effect === 'SIGNIFICANT_DELAYS' && a.stopStart && a.stopEnd) {
+              // Track active RSZ alert IDs (RSZ has effectDesc "Reduced Speed Zone", not "Delays")
+              if (a.effect === 'SIGNIFICANT_DELAYS' && a.effectDesc === 'Reduced Speed Zone' && a.stopStart && a.stopEnd) {
                 const primaryRoute = a.route?.toString().split(',')[0]?.trim() || '';
                 const dir = a.direction ? `-${a.direction.replace(/\s+/g, '')}` : '';
                 const rszId = `ttc-RSZ-${primaryRoute}-${a.stopStart}-${a.stopEnd}${dir}`.replace(/\s+/g, '-');
