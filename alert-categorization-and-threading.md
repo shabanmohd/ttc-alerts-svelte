@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 12.5  
-**Date:** December 29, 2025  
-**Status:** ✅ Implemented and Active (poll-alerts v69 + Express/Night route conflict prevention + Hidden thread auto-unhide + Stale alert cleanup + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
+**Version:** 12.6  
+**Date:** January 2, 2026  
+**Status:** ✅ Implemented and Active (poll-alerts v70 + Regular DELAY vs RSZ distinction + Express/Night route conflict prevention + Hidden thread auto-unhide + Stale alert cleanup + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -41,14 +41,15 @@ This document describes the alert categorization and threading system designed t
 1. **Bluesky integration** - Primary source from @ttcalerts.bsky.social
 2. **TTC Live API secondary source** - Fills gaps when Bluesky hasn't posted yet (v39)
 3. **TTC API is authoritative for RSZ alerts** - Skip redundant BlueSky speed reduction posts (v46)
-4. **Bluesky reply threading** - Priority to reply chain relationships (v31)
-5. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
-6. **Effect-based categorization** - Focus on service impact, not cause
-7. **Incident threading** - Group related updates using reply chains + similarity + route matching
-8. **Express/Night route separation** - 9XX (express) never merged with XX (regular), 3XX (night) never merged with XX (v66)
-9. **Frontend filtering** - Mutually exclusive category filters in UI
-10. **Planned alert separation** - Maintenance/scheduled alerts excluded from main feed
-11. **TTC API cross-check** - Official TTC Live API used for resolution verification
+4. **Regular DELAY vs RSZ distinction** - Use `effectDesc` to differentiate real delays from RSZ (v70)
+5. **Bluesky reply threading** - Priority to reply chain relationships (v31)
+6. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
+7. **Effect-based categorization** - Focus on service impact, not cause
+8. **Incident threading** - Group related updates using reply chains + similarity + route matching
+9. **Express/Night route separation** - 9XX (express) never merged with XX (regular), 3XX (night) never merged with XX (v66)
+10. **Frontend filtering** - Mutually exclusive category filters in UI
+11. **Planned alert separation** - Maintenance/scheduled alerts excluded from main feed
+12. **TTC API cross-check** - Official TTC Live API used for resolution verification
 
 ---
 
@@ -56,7 +57,7 @@ This document describes the alert categorization and threading system designed t
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  Bluesky API    │────▶│  poll-alerts (v69)   │────▶│  Supabase DB    │
+│  Bluesky API    │────▶│  poll-alerts (v70)   │────▶│  Supabase DB    │
 │  @ttcalerts     │     │  (Edge Function)     │     │  alert_cache    │
 │  (PRIMARY)      │     └──────────────────────┘     │  incident_      │
 └─────────────────┘              │   │               │  threads        │
@@ -276,6 +277,44 @@ export const threadsWithAlerts = derived(
 | Hidden (stale, no SERVICE_RESUMED)      | ❌ Hidden  | ❌ Hidden    | Waiting up to 6h for Bluesky           |
 | Resolved (has SERVICE_RESUMED)          | ❌ Hidden  | ✅ Visible   | Proper resolution with SERVICE_RESUMED |
 | Deleted (6h passed, no SERVICE_RESUMED) | ❌ Gone    | ❌ Gone      | Cleaned up silently                    |
+
+### Regular DELAY vs RSZ Distinction (v70)
+
+**Problem:** TTC API uses `effect: "SIGNIFICANT_DELAYS"` for both:
+1. **Real delays** (mechanical problems, incidents) - `effectDesc: "Delays"`
+2. **RSZ (Reduced Speed Zone)** alerts - `effectDesc: "Reduced Speed Zone"`
+
+Before v70, all `SIGNIFICANT_DELAYS` were excluded from `activeDisruptionRoutes`, causing real delay threads to be incorrectly hidden when cross-checking against TTC API.
+
+**Solution (v70):** Use `effectDesc` to distinguish:
+
+```typescript
+// Include: NO_SERVICE, REDUCED_SERVICE, DETOUR, and regular DELAYS
+// Exclude: RSZ (Reduced Speed Zone)
+const isRegularDelay = a.effect === 'SIGNIFICANT_DELAYS' && a.effectDesc === 'Delays';
+if (['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR'].includes(a.effect) || isRegularDelay) {
+  activeDisruptionRoutes.add(a.route.toString());
+}
+```
+
+**TTC API Alert Types with SIGNIFICANT_DELAYS:**
+
+| effectDesc           | Effect             | Include in activeDisruptionRoutes? | Treatment                     |
+| -------------------- | ------------------ | ---------------------------------- | ----------------------------- |
+| "Delays"             | SIGNIFICANT_DELAYS | ✅ Yes                             | Real delay, keep thread visible |
+| "Reduced Speed Zone" | SIGNIFICANT_DELAYS | ❌ No                              | RSZ, handle via deletion      |
+
+**RSZ Alert ID Generation (also fixed in v70):**
+
+RSZ alert IDs now only generated for actual RSZ alerts:
+
+```typescript
+// Only generate RSZ ID if effectDesc confirms it's actually RSZ
+if (a.effect === 'SIGNIFICANT_DELAYS' && a.effectDesc === 'Reduced Speed Zone' && a.stopStart && a.stopEnd) {
+  const rszId = `ttc-RSZ-${primaryRoute}-${a.stopStart}-${a.stopEnd}${dir}`;
+  activeRszAlertIds.add(rszId);
+}
+```
 
 ### RSZ (Reduced Speed Zone) Handling (v48)
 
