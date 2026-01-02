@@ -34,6 +34,12 @@ export const maintenanceItems = writable<PlannedMaintenance[]>([]);
 // Track active Realtime channel
 let realtimeChannel: RealtimeChannel | null = null;
 
+// Track visibility change handler for cleanup
+let visibilityChangeHandler: (() => void) | null = null;
+
+// Track if we were disconnected and need to refresh on reconnect
+let wasDisconnected = false;
+
 // Helper to extract categories from JSONB or array
 function extractCategories(data: unknown): string[] {
   if (!data) return [];
@@ -484,24 +490,49 @@ export function subscribeToAlerts(): () => void {
     .subscribe((status) => {
       console.log('Realtime subscription status:', status);
       if (status === 'SUBSCRIBED') {
+        // If we were disconnected before, refresh to catch missed updates
+        if (wasDisconnected) {
+          console.log('🔄 Reconnected - refreshing alerts to catch missed updates');
+          wasDisconnected = false;
+          fetchAlerts();
+        }
         isConnected.set(true);
         connectionError.set(null);
       } else if (status === 'CHANNEL_ERROR') {
         isConnected.set(false);
+        wasDisconnected = true;
         connectionError.set('Failed to connect to realtime updates');
       } else if (status === 'TIMED_OUT') {
         isConnected.set(false);
+        wasDisconnected = true;
         connectionError.set('Connection timed out');
       } else if (status === 'CLOSED') {
         isConnected.set(false);
+        wasDisconnected = true;
       }
     });
+  
+  // Set up visibility change handler to refresh when app becomes visible
+  // This catches missed updates when user backgrounds the app/tab
+  if (typeof document !== 'undefined') {
+    visibilityChangeHandler = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👁️ App became visible - refreshing alerts');
+        fetchAlerts();
+      }
+    };
+    document.addEventListener('visibilitychange', visibilityChangeHandler);
+  }
   
   // Return cleanup function
   return () => {
     if (realtimeChannel) {
       supabase.removeChannel(realtimeChannel);
       realtimeChannel = null;
+    }
+    if (visibilityChangeHandler && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', visibilityChangeHandler);
+      visibilityChangeHandler = null;
     }
     isConnected.set(false);
   };
