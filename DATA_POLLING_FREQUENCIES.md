@@ -8,13 +8,15 @@ This document describes all data sources, their polling frequencies, and update 
 
 ### 1. Service Alerts
 
-| Property             | Value                                                                 |
-| -------------------- | --------------------------------------------------------------------- |
-| **Source**           | Supabase Edge Function (`poll-alerts`) polling TTC Service Alerts API |
-| **Update Frequency** | Every 30 seconds (server-side)                                        |
-| **Client Delivery**  | Supabase Realtime (instant push on changes)                           |
-| **Data Type**        | Service disruptions, delays, detours, closures                        |
-| **Caching**          | No client-side caching - always fresh from server                     |
+| Property                | Value                                                                 |
+| ----------------------- | --------------------------------------------------------------------- |
+| **Source**              | Supabase Edge Function (`poll-alerts`) polling TTC Service Alerts API |
+| **Update Frequency**    | Every 30 seconds (server-side)                                        |
+| **Client Delivery**     | Supabase Realtime (instant push on changes)                           |
+| **Visibility Refresh**  | Auto-refresh when app becomes visible (catches missed updates)        |
+| **Reconnection Refresh**| Auto-refresh when Realtime reconnects after disconnect                |
+| **Data Type**           | Service disruptions, delays, detours, closures                        |
+| **Caching**             | No client-side caching - always fresh from server                     |
 
 **How it works:**
 
@@ -22,6 +24,8 @@ This document describes all data sources, their polling frequencies, and update 
 2. New/changed alerts are inserted into Supabase database
 3. Supabase Realtime pushes changes to connected clients instantly
 4. Client receives updates without polling
+5. If app is backgrounded and returns visible, alerts are refreshed to catch missed updates
+6. If Realtime connection drops and reconnects, alerts are refreshed automatically
 
 ### 2. ETA Predictions (Real-Time GPS)
 

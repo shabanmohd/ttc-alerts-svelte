@@ -722,6 +722,29 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Jan 2, 2026 - Alerts Store Visibility & Reconnection Refresh
+
+**Problem:** When the app was backgrounded (user switches to another tab/app) or the Realtime connection dropped, users could miss alert updates. Returning to the app would show stale data until a manual refresh.
+
+**Solution:** Added automatic refresh on two scenarios:
+
+1. **Visibility Refresh** (`visibilitychange` event):
+   - When app becomes visible again, automatically fetches latest alerts
+   - Catches any updates that occurred while app was backgrounded
+   - Uses `document.visibilityState === 'visible'` check
+
+2. **Reconnection Refresh** (Supabase Realtime status):
+   - Tracks `wasDisconnected` flag when connection drops (CHANNEL_ERROR, TIMED_OUT, CLOSED)
+   - On SUBSCRIBED status after disconnect, automatically fetches latest alerts
+   - Ensures no missed updates during connection gaps
+
+**Files Updated:**
+
+- `src/lib/stores/alerts.ts` - Added visibility handler and reconnection refresh logic
+- `DATA_POLLING_FREQUENCIES.md` - Updated documentation
+
+---
+
 ### Jan 2, 2026 - PWA Update Notification System
 
 **Problem:** When the PWA is updated (new service worker deployed), users with the app installed don't see changes immediately. The old service worker continues serving cached content until all tabs are closed and reopened.
