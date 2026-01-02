@@ -722,6 +722,35 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Jan 2, 2026 - PWA Update Notification System
+
+**Problem:** When the PWA is updated (new service worker deployed), users with the app installed don't see changes immediately. The old service worker continues serving cached content until all tabs are closed and reopened.
+
+**Solution:** Implemented a proactive update notification system:
+
+1. **Detection** (`app.html`):
+   - Listen for `updatefound` event on service worker registration
+   - When new SW is installing, dispatch custom `sw-update-available` event
+   - On `controllerchange`, auto-reload to activate new version
+
+2. **Notification** (`+layout.svelte`):
+   - Listen for `sw-update-available` custom event
+   - Show persistent toast notification with refresh action
+   - User can tap toast or wait for automatic reload on next navigation
+
+3. **i18n Support**:
+   - English: "App update available" / "Tap to refresh and get the latest version"
+   - French: "Mise à jour disponible" / "Appuyez pour actualiser et obtenir la dernière version"
+
+**Files Updated:**
+
+- `src/app.html` - SW update detection script
+- `src/routes/+layout.svelte` - Toast notification handler
+- `src/lib/i18n/en.json` - English translations
+- `src/lib/i18n/fr.json` - French translations
+
+---
+
 ### Jan 2, 2026 - Logo Theme Switching & Header Hide-on-Scroll
 
 **Logo Theme Switching Fix:**
