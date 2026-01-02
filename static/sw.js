@@ -1,10 +1,13 @@
-const CACHE_NAME = 'ttc-alerts-beta-v2';
-const STATIC_CACHE = 'ttc-static-beta-v2';
-const DYNAMIC_CACHE = 'ttc-dynamic-beta-v2';
+const CACHE_NAME = 'ttc-alerts-beta-v3';
+const STATIC_CACHE = 'ttc-static-beta-v3';
+const DYNAMIC_CACHE = 'ttc-dynamic-beta-v3';
 const ALERTS_CACHE = 'ttc-alerts-cache-v1';
 const ETA_CACHE = 'ttc-eta-cache-v1';
 // Separate cache for SvelteKit immutable assets (hashed, never change)
 const IMMUTABLE_CACHE = 'ttc-immutable-v1';
+
+// SW Version for logging and debugging
+const SW_VERSION = '3.0.0';
 
 const STATIC_ASSETS = [
   '/',
@@ -72,19 +75,20 @@ async function networkFirstWithTimeout(request, cacheName, maxAge) {
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
+  console.log('[SW] Installing service worker v' + SW_VERSION);
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
       console.log('[SW] Caching static assets');
       return cache.addAll(STATIC_ASSETS);
     })
   );
+  // Skip waiting immediately to activate new SW
   self.skipWaiting();
 });
 
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker...');
+  console.log('[SW] Activating service worker v' + SW_VERSION);
   const validCaches = [STATIC_CACHE, DYNAMIC_CACHE, CACHE_NAME, ALERTS_CACHE, ETA_CACHE, IMMUTABLE_CACHE];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -96,9 +100,12 @@ self.addEventListener('activate', (event) => {
             return caches.delete(name);
           })
       );
+    }).then(() => {
+      console.log('[SW] Taking control of all clients');
+      // Claim all clients immediately
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
 });
 
 // Fetch event - different strategies based on request type

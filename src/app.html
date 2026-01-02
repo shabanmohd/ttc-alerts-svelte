@@ -153,29 +153,53 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
+          // Register SW with updateViaCache: 'none' to bypass HTTP cache
+          // This ensures browser always checks for SW updates
+          navigator.serviceWorker.register('/sw.js', {
+            updateViaCache: 'none'
+          })
             .then(registration => {
-              // Check for updates every 60 seconds
+              console.log('[App] SW registered');
+              
+              // Check for updates immediately on page load
+              registration.update().catch(() => {});
+              
+              // Check for updates every 30 seconds (more aggressive for iOS PWA)
               setInterval(() => {
-                registration.update();
-              }, 60000);
+                registration.update().catch(() => {});
+              }, 30000);
+              
+              // Also check for updates when page becomes visible (iOS PWA optimization)
+              document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                  registration.update().catch(() => {});
+                }
+              });
               
               // Listen for new service worker installation
               registration.addEventListener('updatefound', () => {
                 const newWorker = registration.installing;
                 if (!newWorker) return;
+                console.log('[App] New SW installing...');
                 
                 newWorker.addEventListener('statechange', () => {
+                  console.log('[App] SW state:', newWorker.state);
                   // When new SW is installed and waiting
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('[App] New SW ready, dispatching update event');
                     // Dispatch custom event for Svelte components to listen to
                     window.dispatchEvent(new CustomEvent('sw-update-available'));
                   }
                 });
               });
+              
+              // If there's already a waiting SW, notify immediately
+              if (registration.waiting) {
+                window.dispatchEvent(new CustomEvent('sw-update-available'));
+              }
             })
             .catch(err => {
-              console.log('SW registration failed:', err);
+              console.log('[App] SW registration failed:', err);
             });
         });
         
@@ -184,6 +208,7 @@
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing) {
             refreshing = true;
+            console.log('[App] New SW active, reloading...');
             window.location.reload();
           }
         });
