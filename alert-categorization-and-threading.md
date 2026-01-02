@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 12.6  
+**Version:** 12.7  
 **Date:** January 2, 2026  
-**Status:** ✅ Implemented and Active (poll-alerts v70 + Regular DELAY vs RSZ distinction + Express/Night route conflict prevention + Hidden thread auto-unhide + Stale alert cleanup + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
+**Status:** ✅ Implemented and Active (poll-alerts v71 + Regular DELAY vs RSZ distinction + ID generation fix + Express/Night route conflict prevention + Hidden thread auto-unhide + Stale alert cleanup + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -278,9 +278,10 @@ export const threadsWithAlerts = derived(
 | Resolved (has SERVICE_RESUMED)          | ❌ Hidden  | ✅ Visible   | Proper resolution with SERVICE_RESUMED |
 | Deleted (6h passed, no SERVICE_RESUMED) | ❌ Gone    | ❌ Gone      | Cleaned up silently                    |
 
-### Regular DELAY vs RSZ Distinction (v70)
+### Regular DELAY vs RSZ Distinction (v70, fixed in v71)
 
 **Problem:** TTC API uses `effect: "SIGNIFICANT_DELAYS"` for both:
+
 1. **Real delays** (mechanical problems, incidents) - `effectDesc: "Delays"`
 2. **RSZ (Reduced Speed Zone)** alerts - `effectDesc: "Reduced Speed Zone"`
 
@@ -291,30 +292,38 @@ Before v70, all `SIGNIFICANT_DELAYS` were excluded from `activeDisruptionRoutes`
 ```typescript
 // Include: NO_SERVICE, REDUCED_SERVICE, DETOUR, and regular DELAYS
 // Exclude: RSZ (Reduced Speed Zone)
-const isRegularDelay = a.effect === 'SIGNIFICANT_DELAYS' && a.effectDesc === 'Delays';
-if (['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR'].includes(a.effect) || isRegularDelay) {
+const isRegularDelay =
+  a.effect === "SIGNIFICANT_DELAYS" && a.effectDesc === "Delays";
+if (
+  ["NO_SERVICE", "REDUCED_SERVICE", "DETOUR"].includes(a.effect) ||
+  isRegularDelay
+) {
   activeDisruptionRoutes.add(a.route.toString());
 }
 ```
 
 **TTC API Alert Types with SIGNIFICANT_DELAYS:**
 
-| effectDesc           | Effect             | Include in activeDisruptionRoutes? | Treatment                     |
-| -------------------- | ------------------ | ---------------------------------- | ----------------------------- |
+| effectDesc           | Effect             | Include in activeDisruptionRoutes? | Treatment                       |
+| -------------------- | ------------------ | ---------------------------------- | ------------------------------- |
 | "Delays"             | SIGNIFICANT_DELAYS | ✅ Yes                             | Real delay, keep thread visible |
-| "Reduced Speed Zone" | SIGNIFICANT_DELAYS | ❌ No                              | RSZ, handle via deletion      |
+| "Reduced Speed Zone" | SIGNIFICANT_DELAYS | ❌ No                              | RSZ, handle via deletion        |
 
-**RSZ Alert ID Generation (also fixed in v70):**
+**RSZ Alert ID Generation (fixed in v71):**
 
-RSZ alert IDs now only generated for actual RSZ alerts:
+v70 fixed `activeDisruptionRoutes` but missed the `isRSZ` check for ID generation. v71 fixes this:
 
 ```typescript
-// Only generate RSZ ID if effectDesc confirms it's actually RSZ
-if (a.effect === 'SIGNIFICANT_DELAYS' && a.effectDesc === 'Reduced Speed Zone' && a.stopStart && a.stopEnd) {
-  const rszId = `ttc-RSZ-${primaryRoute}-${a.stopStart}-${a.stopEnd}${dir}`;
-  activeRszAlertIds.add(rszId);
-}
+// v70 (WRONG): All SIGNIFICANT_DELAYS treated as RSZ for ID generation
+const isRSZ = ttcAlert.effect === "SIGNIFICANT_DELAYS";
+
+// v71 (CORRECT): Only actual RSZ (effectDesc check)
+const isRSZ =
+  ttcAlert.effect === "SIGNIFICANT_DELAYS" &&
+  ttcAlert.effectDesc === "Reduced Speed Zone";
 ```
+
+This ensures regular delays get proper IDs like `ttc-SIGNIFICANT_DELAYS-59776` instead of RSZ-style IDs like `ttc-RSZ-4-Sheppard-Yonge-Don-Mills-BothWays`, which caused duplicate thread creation when Bluesky alerts arrived.
 
 ### RSZ (Reduced Speed Zone) Handling (v48)
 
