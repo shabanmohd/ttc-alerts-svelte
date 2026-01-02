@@ -285,7 +285,7 @@
       </p>
       <Button
         variant="default"
-        class="gap-2 bg-[#FF5F5F] hover:bg-[#FF5F5F]/90 text-white"
+        class="gap-2 bg-[#D44545] hover:bg-[#C03838] text-white"
         href="https://www.buymeacoffee.com/shabanca"
         target="_blank"
         rel="noopener noreferrer"
