@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "npm run translate && vite dev",
 		"dev:watch": "npm run translate && concurrently \"vite dev\" \"node scripts/watch-translations.cjs\"",
-		"build": "npm run translate && vite build",
+		"build": "npm run translate && node scripts/stamp-sw.js && vite build",
 		"preview": "vite preview",
 		"prepare": "husky",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
