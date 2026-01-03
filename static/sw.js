@@ -7,7 +7,7 @@ const ETA_CACHE = 'ttc-eta-cache-v1';
 const IMMUTABLE_CACHE = 'ttc-immutable-v1';
 
 // SW Version for logging and debugging
-const SW_VERSION = '4.0.0';
+const SW_VERSION = '4.0.1';
 
 const STATIC_ASSETS = [
   '/',
