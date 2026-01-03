@@ -1,13 +1,18 @@
 # Cloudflare Pages headers
 # https://developers.cloudflare.com/pages/configuration/headers/
 
-# Service Worker - must never be cached (renamed to bypass CDN cache)
-/service-worker.js
+# Service Worker - must never be cached (version in filename to bypass CDN)
+/sw-v4.0.js
   Cache-Control: no-cache, no-store, must-revalidate
   Pragma: no-cache
   Expires: 0
 
 # Legacy SW paths (in case old registrations try to access)
+/service-worker.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
 /sw-v4.js
   Cache-Control: no-cache, no-store, must-revalidate
   Pragma: no-cache
