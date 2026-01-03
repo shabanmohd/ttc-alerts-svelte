@@ -78,6 +78,9 @@
           <p class="text-sm text-muted-foreground mt-1">
             {$_("about.tagline")}
           </p>
+          <p class="text-xs text-muted-foreground/70 mt-1 font-mono">
+            v1.5.0-beta · Build 2026.01.02-A
+          </p>
         </div>
       </div>
     </Card.Content>
