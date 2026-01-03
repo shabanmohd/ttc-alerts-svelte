@@ -155,8 +155,8 @@
         window.addEventListener('load', () => {
           // Register SW with updateViaCache: 'none' to bypass HTTP cache
           // This ensures browser always checks for SW updates
-          // SW filename versioned to bypass CDN cache (sw-v4.js)
-          navigator.serviceWorker.register('/sw-v4.js', {
+          // SW filename changed to service-worker.js to bypass CDN cache
+          navigator.serviceWorker.register('/service-worker.js', {
             updateViaCache: 'none'
           })
             .then(registration => {
