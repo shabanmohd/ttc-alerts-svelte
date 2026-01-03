@@ -55,6 +55,9 @@
     }
     updateToastShown = true;
     
+    // Dismiss any existing update toast first (belt and suspenders)
+    toast.dismiss("sw-update-toast");
+    
     toast.info($_("app.updateAvailable") || "App update available", {
       id: "sw-update-toast", // Use fixed ID to prevent duplicates at toast level too
       description:
