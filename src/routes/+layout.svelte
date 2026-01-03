@@ -56,10 +56,13 @@
         label: $_("common.refresh") || "Refresh",
         onClick: async () => {
           // Signal that user requested the refresh (for controllerchange handler)
-          if (typeof window !== "undefined" && (window as any).__swRefreshRequested) {
+          if (
+            typeof window !== "undefined" &&
+            (window as any).__swRefreshRequested
+          ) {
             (window as any).__swRefreshRequested();
           }
-          
+
           // Get the waiting service worker and tell it to activate
           const registration = await navigator.serviceWorker?.getRegistration();
           if (registration?.waiting) {

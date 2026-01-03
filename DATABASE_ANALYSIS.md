@@ -4,13 +4,13 @@
 **PostgreSQL Version:** 17.6  
 **Plan:** Supabase Free Tier (500 MB limit)  
 **Analysis Tool:** Supabase CLI v2.67.1  
-**Last Updated:** December 30, 2025 - **OPTIMIZATION COMPLETE**
+**Last Updated:** January 3, 2026 - **Database trigger functions fixed**
 
 ---
 
 ## 🎉 OPTIMIZATION RESULTS
 
-### Before vs After
+### Before vs After (December 30, 2025)
 
 | Metric                  | Before | After     | Change        |
 | ----------------------- | ------ | --------- | ------------- |
@@ -20,7 +20,7 @@
 | **Unused Indexes**      | 23     | 0         | -23 indexes   |
 | **Free Tier Usage**     | 27%    | **7.8%**  | -19.2%        |
 
-### Actions Completed
+### Actions Completed (December 30)
 
 | Action                                | Result           |
 | ------------------------------------- | ---------------- |
@@ -30,17 +30,32 @@
 | ✅ Deleted dead code `preferences.ts` | Codebase cleanup |
 | ✅ `VACUUM ANALYZE` all tables        | Stats refreshed  |
 
-### Current Table Sizes (Post-Optimization)
+### Database Trigger Functions Fix (January 3, 2026)
 
-| Table                  | Total Size  | Data Size | Rows  |
-| ---------------------- | ----------- | --------- | ----- |
-| `alert_cache`          | 3.7 MB      | 2.0 MB    | 2,175 |
-| `incident_threads`     | 696 kB      | 296 kB    | 960   |
-| `notification_history` | 136 kB      | 48 kB     | 70    |
-| `planned_maintenance`  | 96 kB       | 8 kB      | 13    |
-| `gtfs_routes`          | 80 kB       | 8 kB      | 20    |
-| `gtfs_stations`        | 16 kB       | 0         | 0     |
-| **Total**              | **~4.7 MB** |           |       |
+Fixed database functions with empty `search_path` that caused alerts not to link to threads.
+
+| Action                                    | Result                       |
+| ----------------------------------------- | ---------------------------- |
+| ✅ Fixed `validate_alert_thread_routes()` | Now uses `public.tablename`  |
+| ✅ Fixed `find_or_create_thread()`        | Now uses `public.tablename`  |
+| ✅ Fixed `auto_populate_thread_hash()`    | Now uses `public.function()` |
+| ✅ Fixed `generate_thread_hash()`         | Now uses `public.function()` |
+| ✅ Linked orphaned alerts                 | 19 alerts linked to threads  |
+| ✅ Cleaned up duplicate threads           | 120 orphaned threads deleted |
+
+See [alert-categorization-and-threading.md](alert-categorization-and-threading.md) Troubleshooting section for details.
+
+### Current Table Sizes (January 3, 2026)
+
+| Table                  | Total Size  | Rows |
+| ---------------------- | ----------- | ---- |
+| `alert_cache`          | 3.5 MB      | 196  |
+| `incident_threads`     | 816 kB      | 63   |
+| `planned_maintenance`  | 96 kB       | 13   |
+| `gtfs_routes`          | 80 kB       | 20   |
+| `notification_history` | 72 kB       | 0    |
+| `gtfs_stations`        | 16 kB       | 0    |
+| **Total App Tables**   | **~4.6 MB** |      |
 
 ### Current Index Usage (All Active)
 
