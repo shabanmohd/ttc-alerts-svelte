@@ -1,0 +1,6 @@
+# Cloudflare Pages configuration
+# This ensures the correct build output directory is used
+
+name = "ttc-alerts-svelte"
+pages_build_output_dir = "./build"
+compatibility_date = "2024-01-29"
