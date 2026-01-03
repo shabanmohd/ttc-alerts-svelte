@@ -408,6 +408,42 @@ curl -s "https://ttc-alerts-svelte.pages.dev/sw-v4.0.js" | head -3
 
 ---
 
+## ✅ PWA Update Mechanism Verified
+
+The complete update flow is working correctly:
+
+### 1. Service Worker (`sw-v4.0.js`)
+- ✅ Does NOT auto-`skipWaiting()` during install
+- ✅ Listens for `SKIP_WAITING` message
+- ✅ Calls `skipWaiting()` only when user requests
+
+### 2. App HTML (`src/app.html`)
+- ✅ Registers SW with `updateViaCache: 'none'` (bypasses HTTP cache)
+- ✅ Checks for updates every 30 seconds
+- ✅ Checks on visibility change (iOS PWA optimization)
+- ✅ Dispatches `sw-update-available` event when new SW is ready
+- ✅ Only reloads when user explicitly requests via `__swRefreshRequested` flag
+
+### 3. Layout Component (`+layout.svelte`)
+- ✅ Listens for `sw-update-available` event
+- ✅ Shows toast notification with "Refresh" button
+- ✅ Sends `SKIP_WAITING` message to waiting SW
+- ✅ Coordinates reload with `__swRefreshRequested` flag
+
+### Update Flow
+```
+1. New SW deployed → Browser detects update
+2. New SW installs → Enters 'waiting' state
+3. App dispatches 'sw-update-available' event
+4. Toast appears: "App update available - Tap to refresh"
+5. User taps "Refresh" button
+6. App sends SKIP_WAITING message to waiting SW
+7. SW calls skipWaiting(), takes control
+8. App reloads to activate new version
+```
+
+---
+
 ## 🎉 Final Resolution
 
 **The service worker v4.0.0 is working correctly on the main production domain!**
