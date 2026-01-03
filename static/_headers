@@ -46,3 +46,4 @@
 # Icons - long cache
 /icons/*
   Cache-Control: public, max-age=86400
+
