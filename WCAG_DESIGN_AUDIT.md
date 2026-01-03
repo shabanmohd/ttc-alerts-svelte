@@ -1,6 +1,6 @@
 # WCAG 2.2 Design System Audit Report
 
-> **Audit Date:** December 2024 (Updated December 31, 2024)  
+> **Audit Date:** December 2024 (Updated December 31, 2025)  
 > **Auditor:** GitHub Copilot  
 > **Scope:** TTC Alerts PWA (Version B)  
 > **Standard:** WCAG 2.2 AA Compliance  

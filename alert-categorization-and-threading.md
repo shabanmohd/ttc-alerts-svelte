@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 12.7  
-**Date:** January 2, 2026  
-**Status:** ✅ Implemented and Active (poll-alerts v71 + Regular DELAY vs RSZ distinction + ID generation fix + Express/Night route conflict prevention + Hidden thread auto-unhide + Stale alert cleanup + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
+**Version:** 12.8  
+**Date:** January 3, 2026  
+**Status:** ✅ Implemented and Active (poll-alerts v72 + Database trigger fixes + Regular DELAY vs RSZ distinction + ID generation fix + Express/Night route conflict prevention + Hidden thread auto-unhide + Stale alert cleanup + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -57,7 +57,7 @@ This document describes the alert categorization and threading system designed t
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  Bluesky API    │────▶│  poll-alerts (v70)   │────▶│  Supabase DB    │
+│  Bluesky API    │────▶│  poll-alerts (v72)   │────▶│  Supabase DB    │
 │  @ttcalerts     │     │  (Edge Function)     │     │  alert_cache    │
 │  (PRIMARY)      │     └──────────────────────┘     │  incident_      │
 └─────────────────┘              │   │               │  threads        │
@@ -2195,6 +2195,64 @@ if (category !== "SERVICE_RESUMED") {
 - Database trigger `fix_jsonb_string_encoding` auto-corrects on INSERT
 - Pass arrays directly to Supabase (it handles serialization)
 - Don't use `JSON.stringify()` before insert
+
+#### Issue: Alerts Not Linked to Threads (thread_id = NULL)
+
+**Symptoms:**
+
+- Alerts exist in `alert_cache` but don't appear on frontend
+- `thread_id` column is NULL for ACCESSIBILITY or RSZ alerts
+- Threads exist but have no linked alerts
+- Duplicate threads created every polling cycle
+
+**Root Cause (Jan 3, 2026):**
+
+Database trigger functions had `SET search_path TO ''` (empty) which caused them to fail silently when referencing other tables. Affected functions:
+
+- `validate_alert_thread_routes()` - References `incident_threads`
+- `find_or_create_thread()` - References `incident_threads`
+- `auto_populate_thread_hash()` - Calls `generate_thread_hash()`
+- `generate_thread_hash()` - Calls `extract_route_number()`
+
+**Solution:**
+
+Use fully qualified table names (keeps Supabase security while working correctly):
+
+```sql
+-- CORRECT: Keep empty search_path + use public.tablename
+CREATE OR REPLACE FUNCTION public.validate_alert_thread_routes()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''  -- Keep for security
+AS $function$
+BEGIN
+  -- Use public.tablename instead of just tablename
+  SELECT * FROM public.incident_threads WHERE thread_id = NEW.thread_id;
+
+  -- For calling other functions, also qualify them
+  SELECT public.generate_thread_hash(...);
+
+  RETURN NEW;
+END;
+$function$;
+```
+
+**Recovery (link orphaned alerts):**
+
+```sql
+-- Link alerts to their threads by matching header_text to title
+UPDATE alert_cache ac
+SET thread_id = it.thread_id
+FROM incident_threads it
+WHERE ac.thread_id IS NULL
+  AND ac.header_text = LEFT(it.title, 200);
+
+-- Clean up orphaned duplicate threads
+DELETE FROM incident_threads it
+WHERE NOT EXISTS (
+  SELECT 1 FROM alert_cache ac WHERE ac.thread_id = it.thread_id
+);
+```
 
 ---
 
