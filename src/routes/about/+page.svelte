@@ -79,7 +79,7 @@
             {$_("about.tagline")}
           </p>
           <p class="text-xs text-muted-foreground/70 mt-1 font-mono">
-            v1.5.0-beta · Build 2026.01.02-A
+            v1.5.1-beta · Build 2026.01.02-B
           </p>
         </div>
       </div>
