@@ -19,6 +19,7 @@
     Clock,
   } from "lucide-svelte";
   import SEO from "$lib/components/SEO.svelte";
+  import { getVersionString } from "$lib/build-info";
 </script>
 
 <SEO
@@ -79,7 +80,7 @@
             {$_("about.tagline")}
           </p>
           <p class="text-xs text-muted-foreground/70 mt-1 font-mono">
-            v1.5.1-beta · Build 2026.01.02-B
+            {getVersionString()}
           </p>
         </div>
       </div>

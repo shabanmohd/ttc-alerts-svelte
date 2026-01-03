@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 /**
- * Service Worker Build Timestamp Script
+ * Build Stamping Script
  * 
- * Automatically updates the BUILD_TIMESTAMP in service worker files
- * to ensure browsers detect the new version on every deployment.
+ * Automatically updates:
+ * 1. BUILD_TIMESTAMP in service worker files (for SW update detection)
+ * 2. build-info.ts (for app version display)
+ * 
+ * This ensures browsers detect new versions on every deployment.
  */
 
 import { readFileSync, writeFileSync } from 'fs';
@@ -13,16 +16,18 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
 
+const timestamp = new Date().toISOString();
+const buildId = Date.now().toString(36); // Base36 for shorter IDs
+
+console.log(`📦 Stamping build: ${buildId} (${timestamp})`);
+
+// 1. Update Service Worker files
 const swFiles = [
   'static/sw-v4.0.js',
   'static/sw.js'
 ];
 
-const timestamp = new Date().toISOString();
-const buildId = `${Date.now()}`;
-
-console.log(`📦 Stamping service workers with build: ${buildId}`);
-
+console.log('\n🔧 Service Workers:');
 for (const file of swFiles) {
   const filePath = join(rootDir, file);
   
@@ -31,13 +36,11 @@ for (const file of swFiles) {
     
     // Update or add BUILD_TIMESTAMP
     if (content.includes('const BUILD_TIMESTAMP')) {
-      // Replace existing timestamp
       content = content.replace(
         /const BUILD_TIMESTAMP = ['"][^'"]*['"];/,
         `const BUILD_TIMESTAMP = '${timestamp}';`
       );
     } else {
-      // Add timestamp after SW_VERSION line
       content = content.replace(
         /(const SW_VERSION = ['"][^'"]*['"];)/,
         `$1\nconst BUILD_TIMESTAMP = '${timestamp}';`
@@ -51,4 +54,30 @@ for (const file of swFiles) {
   }
 }
 
-console.log('✨ Service worker stamping complete');
+// 2. Update build-info.ts
+const buildInfoPath = join(rootDir, 'src/lib/build-info.ts');
+console.log('\n📱 App Version:');
+
+try {
+  let content = readFileSync(buildInfoPath, 'utf-8');
+  
+  // Update timestamp
+  content = content.replace(
+    /timestamp: ['"][^'"]*['"]/,
+    `timestamp: '${timestamp}'`
+  );
+  
+  // Update buildId
+  content = content.replace(
+    /buildId: ['"][^'"]*['"]/,
+    `buildId: '${buildId}'`
+  );
+  
+  writeFileSync(buildInfoPath, content);
+  console.log(`  ✅ src/lib/build-info.ts`);
+} catch (err) {
+  console.error(`  ❌ src/lib/build-info.ts: ${err.message}`);
+}
+
+console.log('\n✨ Build stamping complete');
+
