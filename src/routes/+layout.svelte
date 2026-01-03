@@ -39,6 +39,7 @@
 
   let unsubscribeAlerts: (() => void) | null = null;
   let cleanupNetworkListeners: (() => void) | undefined;
+  let updateToastShown = false; // Prevent duplicate update toasts
 
   // Pull-to-refresh handler
   async function handlePullRefresh() {
@@ -47,7 +48,15 @@
 
   // Handle app update available
   function handleAppUpdate() {
+    // Prevent duplicate toasts if multiple updates occur while app is open
+    if (updateToastShown) {
+      console.log('[App] Update toast already shown, skipping duplicate');
+      return;
+    }
+    updateToastShown = true;
+    
     toast.info($_("app.updateAvailable") || "App update available", {
+      id: "sw-update-toast", // Use fixed ID to prevent duplicates at toast level too
       description:
         $_("app.updateDescription") ||
         "Tap to refresh and get the latest version",
