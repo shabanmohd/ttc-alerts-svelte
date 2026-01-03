@@ -307,6 +307,6 @@
       {$_("about.inToronto")}
     </p>
     <p>© {new Date().getFullYear()} rideTO</p>
-    <p class="text-xs text-muted-foreground/60 mt-2">v2.3.0 (No Auto-Reload)</p>
+    <p class="text-xs text-muted-foreground/60 mt-2">v2.4.0 (Toast Should Appear!)</p>
   </div>
 </main>
