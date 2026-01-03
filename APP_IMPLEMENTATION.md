@@ -123,6 +123,7 @@ Real-time Toronto Transit alerts PWA.
 | `types/database.ts`                              | ✅     | Database types (JSONB fields)                                                |
 | `supabase.ts`                                    | ✅     | Supabase client config                                                       |
 | `utils.ts`                                       | ✅     | Utility functions                                                            |
+| `build-info.ts`                                  | ✅     | Auto-stamped build version info (timestamp, buildId) 🆕                      |
 | `utils/date-formatters.ts`                       | ✅     | Shared date/time formatting utilities (extracted Jan 2025) 🆕                |
 | `utils/fetch-with-retry.ts`                      | ✅     | Network retry utility with exponential backoff 🆕                            |
 | `utils/ttc-service-info.ts`                      | ✅     | TTC service hours, holidays, suspended lines 🅱️                              |
@@ -186,7 +187,8 @@ Real-time Toronto Transit alerts PWA.
 | File                              | Status | Purpose                                                                               |
 | --------------------------------- | ------ | ------------------------------------------------------------------------------------- |
 | `manifest.json`                   | ✅     | PWA manifest (Version B: "rideTO Beta")                                               |
-| `sw.js`                           | ✅     | Service worker (Version B: beta cache prefix)                                         |
+| `sw-v4.0.js`                      | ✅     | Service worker v4 with BUILD_TIMESTAMP (auto-stamped on build)                        |
+| `sw.js`                           | ✅     | Service worker alias (also auto-stamped)                                              |
 | `robots.txt`                      | ✅     | Search engine directives, sitemap reference                                           |
 | `sitemap.xml`                     | ✅ 🆕  | XML sitemap with 5 public pages (rideto.ca)                                           |
 | `icons/*`                         | ✅     | All PWA icons (72-512px)                                                              |
@@ -350,6 +352,7 @@ Real-time Toronto Transit alerts PWA.
 
 | File                        | Status | Purpose                                                                   |
 | --------------------------- | ------ | ------------------------------------------------------------------------- |
+| `stamp-sw.js`               | ✅     | Auto-stamp SW + app version on build (triggers update toast) 🆕           |
 | `transform-gtfs.js`         | ✅     | Transform GTFS data, extract direction, sequence for subway/LRT           |
 | `generate-icons.js`         | ✅     | Generate PWA icons from source                                            |
 | `translate-i18n.cjs`        | ✅     | Sync i18n source files to translations folder, DeepL API                  |
@@ -750,30 +753,49 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 **Problem:** When the PWA is updated (new service worker deployed), users with the app installed don't see changes immediately. The old service worker continues serving cached content until all tabs are closed and reopened.
 
-**Solution:** Implemented a proactive update notification system:
+**Solution:** Implemented a proactive update notification system with automatic build stamping:
 
-1. **Detection** (`app.html`):
+1. **Automatic Build Stamping** (`scripts/stamp-sw.js`):
+
+   - Runs on every `npm run build` (before Vite)
+   - Updates `BUILD_TIMESTAMP` in service worker files
+   - Updates `src/lib/build-info.ts` with timestamp and unique buildId
+   - Ensures every deployment has unique SW content (triggers browser update detection)
+
+2. **Detection** (`app.html`):
 
    - Listen for `updatefound` event on service worker registration
    - When new SW is installing, dispatch custom `sw-update-available` event
-   - On `controllerchange`, auto-reload to activate new version
+   - Check for updates every 30 seconds and on visibility change
+   - On `controllerchange`, auto-reload only when user requested via toast
 
-2. **Notification** (`+layout.svelte`):
+3. **Notification** (`+layout.svelte`):
 
    - Listen for `sw-update-available` custom event
-   - Show persistent toast notification with refresh action
-   - User can tap toast or wait for automatic reload on next navigation
+   - Show persistent toast notification with refresh action (fixed ID prevents duplicates)
+   - `updateToastShown` flag prevents multiple toasts from multiple update events
+   - User taps "Refresh" → SW activates → page reloads
 
-3. **i18n Support**:
+4. **Version Display** (`src/routes/about/+page.svelte`):
+   - Uses `getVersionString()` from `build-info.ts`
+   - Format: `v1.5.1-beta · Build 2026.01.03-abc1234`
+   - Updates automatically on every deployment
+
+5. **i18n Support**:
    - English: "App update available" / "Tap to refresh and get the latest version"
    - French: "Mise à jour disponible" / "Appuyez pour actualiser et obtenir la dernière version"
 
 **Files Updated:**
 
+- `scripts/stamp-sw.js` - Build stamping script (NEW)
+- `src/lib/build-info.ts` - Build info module (NEW)
 - `src/app.html` - SW update detection script
-- `src/routes/+layout.svelte` - Toast notification handler
+- `src/routes/+layout.svelte` - Toast notification handler with duplicate prevention
+- `src/routes/about/+page.svelte` - Dynamic version display
 - `src/lib/i18n/en.json` - English translations
 - `src/lib/i18n/fr.json` - French translations
+- `static/sw-v4.0.js` - Service worker with BUILD_TIMESTAMP
+- `static/sw.js` - Service worker with BUILD_TIMESTAMP
 
 ---
 
