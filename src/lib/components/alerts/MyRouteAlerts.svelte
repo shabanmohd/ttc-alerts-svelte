@@ -204,14 +204,22 @@
     const alert = thread.latestAlert;
     if (!alert) return false;
 
-    // RSZ alerts have effect SIGNIFICANT_DELAYS and raw_data with stopStart/stopEnd
-    const rawData = alert.raw_data as Record<string, unknown> | null;
-    return (
-      alert.effect === "SIGNIFICANT_DELAYS" &&
-      rawData?.source === "ttc-api" &&
-      typeof rawData?.stopStart === "string" &&
-      typeof rawData?.stopEnd === "string"
-    );
+    // Primary: RSZ alerts have alert_id starting with "ttc-RSZ-"
+    // This is the most reliable way to detect RSZ from TTC API
+    if (alert.alert_id?.startsWith("ttc-RSZ-")) {
+      return true;
+    }
+
+    // Secondary: Bluesky-sourced RSZ alerts detected by text patterns
+    const headerText = (alert.header_text || "").toLowerCase();
+    const isBlueskyRSZ =
+      headerText.includes("slower than usual") ||
+      headerText.includes("reduced speed") ||
+      headerText.includes("move slower") ||
+      headerText.includes("running slower") ||
+      headerText.includes("slow zone");
+
+    return isBlueskyRSZ;
   }
 
   // Helper: Check if a thread is an elevator/escalator (accessibility) alert
