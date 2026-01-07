@@ -1,5 +1,6 @@
 <script lang="ts">
   import { CheckCircle } from "lucide-svelte";
+  import { _ } from "svelte-i18n";
   import AlertCard from "$lib/components/alerts/AlertCard.svelte";
   import type { ThreadWithAlerts } from "$lib/types/database";
 
@@ -10,11 +11,11 @@
   <div class="resolved-header">
     <div class="header-left">
       <span class="header-icon"><CheckCircle /></span>
-      <span class="header-title">Recently Resolved</span>
+      <span class="header-title">{$_("alerts.recentlyResolved")}</span>
       {#if alerts.length > 0}
         <span class="header-count">{alerts.length}</span>
       {:else}
-        <span class="header-none">None in last 6 hours</span>
+        <span class="header-none">{$_("alerts.noneInLastHours")}</span>
       {/if}
     </div>
   </div>

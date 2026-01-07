@@ -163,7 +163,9 @@
       "title": "Unable to load alerts",
       "description": "There was a problem fetching the latest alerts. Please check your connection and try again."
     },
-    "lastUpdated": "Last updated: {time}"
+    "lastUpdated": "Last updated: {time}",
+    "recentlyResolved": "Recently Resolved",
+    "noneInLastHours": "None in last 6 hours"
   },
   "filters": {
     "all": "All",
