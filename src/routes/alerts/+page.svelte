@@ -532,7 +532,9 @@
           {activeAlerts.length}
           {selectedCategory} alert{activeAlerts.length === 1 ? "" : "s"} found
         {:else}
-          {$_("alerts.noAlertsForCategory", { values: { category: selectedCategory } })}
+          {$_("alerts.noAlertsForCategory", {
+            values: { category: selectedCategory },
+          })}
         {/if}
       </div>
 

@@ -426,7 +426,9 @@
   {/if}
 
   {#if !isInitialized && !error}
-    <p class="text-muted-foreground mt-1 text-sm">{$_("stops.loadingDatabase")}</p>
+    <p class="text-muted-foreground mt-1 text-sm">
+      {$_("stops.loadingDatabase")}
+    </p>
   {/if}
 </div>
 
