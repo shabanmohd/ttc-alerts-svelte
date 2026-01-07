@@ -1,5 +1,6 @@
 <script lang="ts">
   import { OctagonX, Clock, CheckCircle, Calendar } from "lucide-svelte";
+  import { _ } from "svelte-i18n";
 
   type StatusType = "delay" | "disruption" | "scheduled";
 
@@ -16,15 +17,15 @@
 
   let { lines }: { lines: SubwayLine[] } = $props();
 
-  // Helper: get display name for status type
+  // Helper: get display name for status type (translated)
   function getStatusTypeName(type: StatusType): string {
     switch (type) {
       case "delay":
-        return "Delay";
+        return $_("status.delay");
       case "disruption":
-        return "Disruption";
+        return $_("status.disruption");
       case "scheduled":
-        return "Scheduled";
+        return $_("status.scheduled");
     }
   }
 </script>
@@ -40,7 +41,7 @@
       class:status-scheduled={line.status === "scheduled"}
       role="status"
       aria-label="{line.name}: {line.status === 'ok'
-        ? 'Normal service'
+        ? $_('status.normalService')
         : `${line.alertCount} issue${line.alertCount > 1 ? 's' : ''}: ${line.uniqueTypes.map((t) => getStatusTypeName(t)).join(', ')}`}"
     >
       <div class="subway-status-header">
@@ -55,7 +56,7 @@
       <div class="subway-status-indicator">
         {#if line.status === "ok"}
           <CheckCircle class="w-4 h-4 status-ok-icon" />
-          <span class="status-text status-ok-text">Normal service</span>
+          <span class="status-text status-ok-text">{$_("status.normalService")}</span>
         {:else}
           <!-- Show all unique issue types with icons -->
           <div class="multi-status-container">
@@ -64,17 +65,17 @@
                 {#if type === "disruption"}
                   <OctagonX class="w-4 h-4 status-disruption-icon" />
                   <span class="status-text status-disruption-text"
-                    >Disruption</span
+                    >{$_("status.disruption")}</span
                   >
                 {:else if type === "delay"}
                   <Clock class="w-4 h-4 status-delay-icon" />
-                  <span class="status-text status-delay-text">Delay</span>
+                  <span class="status-text status-delay-text">{$_("status.delay")}</span>
                 {:else if type === "scheduled"}
                   <Calendar
                     class="w-4 h-4 status-scheduled-icon flex-shrink-0"
                   />
                   <span class="status-text status-scheduled-text"
-                    >Scheduled</span
+                    >{$_("status.scheduled")}</span
                   >
                 {/if}
               </div>
