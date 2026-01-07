@@ -130,26 +130,29 @@ Real-time Toronto Transit alerts PWA.
 
 ### Root Files (`src/`)
 
-| File              | Status | Purpose                                                         |
-| ----------------- | ------ | --------------------------------------------------------------- |
-| `hooks.client.ts` | ✅ 🆕  | Sentry error monitoring - client-side SDK init, error filtering |
-| `app.html`        | ✅     | Main HTML template - fonts, PWA meta, SEO, DNS prefetch         |
-| `app.d.ts`        | ✅     | TypeScript declarations                                         |
+| File              | Status | Purpose                                                           |
+| ----------------- | ------ | ----------------------------------------------------------------- |
+| `hooks.client.ts` | ✅ 🆕  | Sentry error monitoring - client-side SDK init, error filtering   |
+| `hooks.server.ts` | ✅ 🆕  | Server hook - blocks /admin routes in production (localhost only) |
+| `app.html`        | ✅     | Main HTML template - fonts, PWA meta, SEO, DNS prefetch           |
+| `app.d.ts`        | ✅     | TypeScript declarations                                           |
 
 ### Pages (`src/routes/`)
 
-| File                          | Status | Purpose                                                      |
-| ----------------------------- | ------ | ------------------------------------------------------------ |
-| `+layout.svelte`              | ✅     | App layout, auth init, dialogs                               |
-| `+error.svelte`               | ✅     | 404 and error page - responsive, i18n, helpful links         |
-| `+page.svelte`                | ✅     | Homepage with alert tabs + ETA, lazy-loaded dialogs          |
-| `alerts/+page.svelte`         | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3)    |
-| `alerts-v3/+page.svelte`      | 📦     | Legacy alerts page (old design, kept for reference)          |
-| `help/+page.svelte`           | ✅     | How to Use - Quick Start, Features, FAQ, Get in Touch        |
-| `about/+page.svelte`          | ✅     | About page - app info, data sources, links, image dimensions |
-| `settings/+page.svelte`       | ✅     | Settings with stops, routes, prefs, location 🅱️              |
-| `routes/+page.svelte`         | ✅     | Route browser by category 🅱️                                 |
-| `routes/[route]/+page.svelte` | ✅     | Route detail page with alerts and route changes              |
+| File                                   | Status | Purpose                                                      |
+| -------------------------------------- | ------ | ------------------------------------------------------------ |
+| `+layout.svelte`                       | ✅     | App layout, auth init, dialogs                               |
+| `+error.svelte`                        | ✅     | 404 and error page - responsive, i18n, helpful links         |
+| `+page.svelte`                         | ✅     | Homepage with alert tabs + ETA, lazy-loaded dialogs          |
+| `alerts/+page.svelte`                  | ✅     | Main alerts page - Now/Planned tabs, improved IA (was v3)    |
+| `alerts-v3/+page.svelte`               | 📦     | Legacy alerts page (old design, kept for reference)          |
+| `help/+page.svelte`                    | ✅     | How to Use - Quick Start, Features, FAQ, Get in Touch        |
+| `about/+page.svelte`                   | ✅     | About page - app info, data sources, links, image dimensions |
+| `settings/+page.svelte`                | ✅     | Settings with stops, routes, prefs, location 🅱️              |
+| `routes/+page.svelte`                  | ✅     | Route browser by category 🅱️                                 |
+| `routes/[route]/+page.svelte`          | ✅     | Route detail page with alerts and route changes              |
+| `admin/train-alerts/+page.svelte`      | 🆕✅   | ML training interface - classify alerts into categories 🅱️   |
+| `api/admin/ttc-live-alerts/+server.ts` | 🆕✅   | API endpoint to fetch live TTC alerts for training 🅱️        |
 
 ### Alerts Components (`src/routes/alerts/`)
 
@@ -174,13 +177,14 @@ Real-time Toronto Transit alerts PWA.
 
 ### Database (EXISTING in Supabase)
 
-| Table                  | Size      | Purpose                                                  |
-| ---------------------- | --------- | -------------------------------------------------------- |
-| `alert_cache`          | 3.7 MB    | Alerts from Bluesky (header_text, categories, is_latest) |
-| `incident_threads`     | 704 kB    | Grouped alert threads (title, is_resolved, is_hidden)    |
-| `planned_maintenance`  | 96 kB     | Scheduled maintenance                                    |
-| `notification_history` | 72 kB     | Push notification history                                |
-| **Total DB Size**      | **39 MB** | 7.8% of 500 MB free tier                                 |
+| Table                  | Size      | Purpose                                                            |
+| ---------------------- | --------- | ------------------------------------------------------------------ |
+| `alert_cache`          | 3.7 MB    | Alerts from Bluesky (header_text, categories, is_latest)           |
+| `incident_threads`     | 704 kB    | Grouped alert threads (title, is_resolved, is_hidden)              |
+| `planned_maintenance`  | 96 kB     | Scheduled maintenance                                              |
+| `notification_history` | 72 kB     | Push notification history                                          |
+| `alert_training_data`  | 🆕 ~1 MB  | ML training data - 238 alerts with auto + human classifications 🅱️ |
+| **Total DB Size**      | **39 MB** | 7.8% of 500 MB free tier                                           |
 
 ### Static (`static/`)
 
@@ -618,6 +622,51 @@ const cleanStopId = stopId.replace(/_ar$/, "");
 
 ---
 
+## Admin Tools (Internal Only) 🅱️
+
+### Alert Training Interface
+
+**URL:** `/admin/train-alerts` (localhost only - not accessible in production)
+
+A tool for validating and improving the automatic alert classification system.
+
+**Features:**
+
+- View all training alerts (238 total: Bluesky + database + live TTC)
+- 5 classification categories matching app tabs:
+  - **MAJOR** - Disruptions & Delays (closures, shuttles, detours, significant delays)
+  - **RSZ** - Slow Zones (reduced speed zones)
+  - **ACCESSIBILITY** - Elevators (elevator/escalator outages)
+  - **SCHEDULED** - Scheduled maintenance
+  - **RESOLVED** - Service resumed
+- Import live alerts from TTC API
+- Export training data as JSON
+- Filter by: Needs Review / Validated / Conflicts / All
+- Keyboard shortcuts: 1-5 classify, Enter accept auto, ←→ navigate
+
+**Auto-Classification Accuracy:** 100% (238/238 alerts correctly classified by rule-based system)
+
+**Database Table:** `alert_training_data`
+| Column | Type | Purpose |
+|--------|------|---------|
+| `id` | UUID | Primary key |
+| `alert_id` | TEXT | Unique alert identifier |
+| `source` | TEXT | `bluesky`, `ttc-api-live`, or `database` |
+| `header_text` | TEXT | Alert headline |
+| `auto_classification` | TEXT | System-assigned category |
+| `human_classification` | TEXT | Human-validated category (nullable) |
+| `final_classification` | TEXT | Generated column: COALESCE(human, auto) |
+| `raw_data` | JSONB | Original alert JSON |
+
+**Files:**
+
+- `src/routes/admin/train-alerts/+page.svelte` - Training UI
+- `src/routes/api/admin/ttc-live-alerts/+server.ts` - Live TTC API proxy
+
+**Access Control:** Restricted to localhost only via `hooks.server.ts`
+
+---
+
 ## Next Steps
 
 | Priority | Task                              | Status      |
@@ -725,6 +774,29 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Jan 3, 2026 - Fix RSZ Detection Using Alert ID Prefix
+
+**Problem:** RSZ (Reduced Speed Zone) section showed incorrect data:
+- "1 ZONE" instead of 7 zones for Line 1
+- "Ossington → Ossington" appearing in Line 2 RSZ (not an actual RSZ zone)
+
+**Root Cause:** `isRSZAlert()` function detected RSZ by checking:
+1. `effect === "SIGNIFICANT_DELAYS"`
+2. `source === "ttc-api"`
+3. Has `stopStart` and `stopEnd` in raw_data
+
+But regular delay alerts (e.g., `ttc-SIGNIFICANT_DELAYS-59989`) also have these properties. The Ossington delay alert had `stopStart: "Ossington", stopEnd: "Ossington"` and passed all RSZ checks.
+
+**Fix:** Changed RSZ detection to use alert ID prefix:
+- RSZ alerts have `alert_id.startsWith("ttc-RSZ-")`
+- Regular delays have `alert_id` like `ttc-SIGNIFICANT_DELAYS-{numericId}`
+
+**Files Updated:**
+- `src/routes/alerts/+page.svelte` - Fix `isRSZAlert()`
+- `src/routes/alerts-v3/+page.svelte` - Fix `isRSZAlert()`
+- `src/routes/routes/[route]/+page.svelte` - Fix `isRSZAlert()`
+- `src/lib/components/alerts/MyRouteAlerts.svelte` - Fix `isRSZAlert()`
+
 ### Jan 2, 2026 - Alerts Store Visibility & Reconnection Refresh
 
 **Problem:** When the app was backgrounded (user switches to another tab/app) or the Realtime connection dropped, users could miss alert updates. Returning to the app would show stale data until a manual refresh.
@@ -777,6 +849,7 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
    - User taps "Refresh" → SW activates → page reloads
 
 4. **Version Display** (`src/routes/about/+page.svelte`):
+
    - Uses `getVersionString()` from `build-info.ts`
    - Format: `v1.5.1-beta · Build 2026.01.03-abc1234`
    - Updates automatically on every deployment
