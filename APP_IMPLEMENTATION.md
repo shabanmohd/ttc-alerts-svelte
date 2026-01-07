@@ -774,6 +774,60 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 
 ## Changelog
 
+### Jan 3, 2026 - Complete French i18n Translation Coverage
+
+**Problem:** Multiple UI elements were still hardcoded in English:
+
+- TTC attribution footer ("Data from TTC Subway Service Advisories")
+- Empty state messages on alerts page
+- Stop search empty state and loading states
+- ETACard loading text and refresh buttons
+- Planned Content subtabs (Closures/Route Changes)
+
+**Solution:** Added translation keys and updated components to use `$_()`:
+
+**Translation Keys Added:**
+
+- `alerts.attribution.*` - Footer attribution text (dataFrom, subway, elevators, busStreetcar, and)
+- `alerts.emptyDisruptions` - "No active service disruptions at this time"
+- `alerts.emptyElevators` - "All station facilities are operational"
+- `alerts.noAlertsForCategory` - "No alerts for this category"
+- `common.loadingSchedule` - "Loading schedule..."
+- `stops.noStopsForDirection` - "No stops for this direction"
+
+**Files Updated:**
+
+- `src/lib/i18n/en.json` - Added new translation keys
+- `src/lib/i18n/fr.json` - Added French translations
+- `src/lib/i18n/translations/en.json` - Synced keys
+- `src/lib/i18n/translations/fr.json` - Synced French translations
+- `src/routes/alerts/+page.svelte` - Use `$_()` for attribution and empty states
+- `src/routes/alerts/PlannedContent.svelte` - Use `$_()` for subtab labels
+- `src/routes/alerts-v3/PlannedContent.svelte` - Use `$_()` for subtab labels
+- `src/lib/components/stops/RouteStopsList.svelte` - Use `$_()` for empty state
+- `src/lib/components/stops/StopSearch.svelte` - Added svelte-i18n import, use `$_()`
+- `src/lib/components/eta/ETACard.svelte` - Added svelte-i18n import, use `$_()` for loading/refresh
+
+---
+
+### Jan 3, 2026 - Fix Admin Route Prerender Failure
+
+**Problem:** Cloudflare Pages deployment failing with:
+
+```
+Error: 404 /admin/train-alerts
+```
+
+**Root Cause:** `hooks.server.ts` blocks admin routes in production (returns 404), but SvelteKit was attempting to prerender `/admin/train-alerts`.
+
+**Fix:** Added `src/routes/admin/train-alerts/+page.ts` with `prerender = false` to disable prerendering for admin route.
+
+**Files Created:**
+
+- `src/routes/admin/train-alerts/+page.ts` - Disable prerendering for admin route
+
+---
+
 ### Jan 3, 2026 - Fix RSZ Detection Using Alert ID Prefix
 
 **Problem:** RSZ (Reduced Speed Zone) section showed incorrect data:
