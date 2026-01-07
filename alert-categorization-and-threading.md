@@ -360,6 +360,42 @@ const patterns = [
 - `skippedRszAlerts` - BlueSky RSZ posts that were filtered out
 - `rszDeletedCount` - Stale RSZ alerts deleted (TTC removed them)
 
+### Frontend RSZ Detection (Jan 2026 Fix)
+
+**Problem:** The frontend `isRSZAlert()` function incorrectly detected regular delay alerts as RSZ.
+
+**Original (Broken) Logic:**
+```typescript
+// WRONG: Detected RSZ by checking stopStart/stopEnd in raw_data
+const isTTCApiRSZ =
+  alert.effect === "SIGNIFICANT_DELAYS" &&
+  rawData?.source === "ttc-api" &&
+  typeof rawData?.stopStart === "string" &&
+  typeof rawData?.stopEnd === "string";
+```
+
+**Problem:** Regular delay alerts (`ttc-SIGNIFICANT_DELAYS-{id}`) also have `stopStart`/`stopEnd` when they occur at a specific station. This caused delay alerts like "Ossington → Ossington" to appear in the RSZ section.
+
+**Fixed Logic:**
+```typescript
+// CORRECT: Use alert_id prefix as definitive RSZ identifier
+if (alert.alert_id?.startsWith("ttc-RSZ-")) {
+  return true;
+}
+```
+
+**Alert ID Patterns:**
+| Alert Type | Alert ID Format | Example |
+|------------|-----------------|---------|
+| RSZ | `ttc-RSZ-{line}-{start}-{end}-{direction}` | `ttc-RSZ-1-Bloor-Yonge-Rosedale-NorthboundToFinch` |
+| Delay | `ttc-SIGNIFICANT_DELAYS-{numericId}` | `ttc-SIGNIFICANT_DELAYS-59989` |
+
+**Files Using `isRSZAlert()`:**
+- `src/routes/alerts/+page.svelte`
+- `src/routes/alerts-v3/+page.svelte`
+- `src/routes/routes/[route]/+page.svelte`
+- `src/lib/components/alerts/MyRouteAlerts.svelte`
+
 ### Key Principles
 
 - **Reply chain priority** - Bluesky reply relationships take precedence over similarity matching
