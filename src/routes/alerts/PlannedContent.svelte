@@ -9,6 +9,7 @@
   } from "$lib/stores/route-changes";
   import type { PlannedMaintenance } from "$lib/types/database";
   import { onMount } from "svelte";
+  import { _ } from "svelte-i18n";
 
   // Props from parent - controlled component pattern
   let {
@@ -71,10 +72,11 @@
     class:active={activeSubTab === "closures"}
     role="tab"
     aria-selected={activeSubTab === "closures"}
+    aria-label={$_("alerts.plannedSubtabs.ariaClosures")}
     onclick={() => handleSubtabChange("closures")}
   >
     <Construction class="sub-tab-icon" aria-hidden="true" />
-    <span class="sub-tab-label">Closures</span>
+    <span class="sub-tab-label">{$_("alerts.plannedSubtabs.closures")}</span>
     {#if closuresCount > 0}
       <span class="sub-tab-count">{closuresCount}</span>
     {/if}
@@ -84,10 +86,11 @@
     class:active={activeSubTab === "changes"}
     role="tab"
     aria-selected={activeSubTab === "changes"}
+    aria-label={$_("alerts.plannedSubtabs.ariaRouteChanges")}
     onclick={() => handleSubtabChange("changes")}
   >
     <GitBranch class="sub-tab-icon" aria-hidden="true" />
-    <span class="sub-tab-label">Route Changes</span>
+    <span class="sub-tab-label">{$_("alerts.plannedSubtabs.routeChanges")}</span>
     {#if $routeChangesCount > 0}
       <span class="sub-tab-count">{$routeChangesCount}</span>
     {/if}

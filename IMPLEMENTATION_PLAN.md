@@ -46,7 +46,7 @@ Deploy the current stable app as **Version A** (production) while developing new
 | Supabase Database       | Shared                        | Shared                                  |
 | Supabase Edge Functions | Shared                        | Shared                                  |
 | WebAuthn Auth           | Separate credentials          | Separate credentials                    |
-| PWA Name                | "rideTO"                  | "rideTO Beta"                       |
+| PWA Name                | "rideTO"                      | "rideTO Beta"                           |
 | SW Cache Prefix         | `ttc-alerts-v2`               | `ttc-alerts-beta-v1`                    |
 
 > ⚠️ **Note:** WebAuthn credentials are domain-specific. Users must register separately on each version.

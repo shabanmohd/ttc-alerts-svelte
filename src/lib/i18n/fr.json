@@ -147,7 +147,13 @@
     },
     "lastUpdated": "Dernière mise à jour : {time}",
     "recentlyResolved": "Récemment résolues",
-    "noneInLastHours": "Aucune au cours des 6 dernières heures"
+    "noneInLastHours": "Aucune au cours des 6 dernières heures",
+    "plannedSubtabs": {
+      "closures": "Fermetures",
+      "routeChanges": "Changements de parcours",
+      "ariaClosures": "Afficher les fermetures planifiées",
+      "ariaRouteChanges": "Afficher les changements de parcours prévus"
+    }
   },
   "filters": {
     "all": "Tous",

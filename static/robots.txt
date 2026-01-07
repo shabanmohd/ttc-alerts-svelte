@@ -2,6 +2,9 @@
 User-agent: *
 Allow: /
 
+# Admin pages - do not index (internal tools only)
+Disallow: /admin/
+
 # Testing pages - do not index
 Disallow: /alerts-v3
 

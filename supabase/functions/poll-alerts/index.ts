@@ -1,6 +1,18 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// v75: Fix orphan alerts when thread creation fails
+// - Add retry logic when thread INSERT fails
+// - Log errors for debugging
+// - Use more descriptive thread_id format (thread-category-uuid)
+// v74: Stronger station mismatch penalty
+// - Increased station mismatch penalty from -0.4 to -0.8 to prevent grouping different subway incidents
+// - Added +0.3 bonus when stations match (same incident)
+// - Prevents Summerhill/Yorkdale from incorrectly grouping together
+// v73: Remove isPlanned filter - show all TTC API alerts
+// - TTC uses alertType="Planned" for ALL alerts (real-time + scheduled)
+// - Previously filtered NO_SERVICE + Planned, incorrectly hiding weather/mechanical closures
+// - Routes 55, 77, 87, etc. now show correctly in Disruptions & Delays
 // v72: Performance optimizations
 // - Parallelize TTC API and Bluesky API calls (~1s savings)
 // - Batch cleanup operations for RSZ, Accessibility, SiteWide alerts
@@ -24,7 +36,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // - Also removes "See other service alerts" boilerplate text
 // v63: Fix SiteWide alerts to bypass alreadyHasThread check
 // v62: SiteWide alerts support (station entrance/facility closures)
-const FUNCTION_VERSION = 72;
+const FUNCTION_VERSION = 75;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -219,7 +231,11 @@ function enhancedSimilarity(t1: string, t2: string): number {
   const c1 = extractCause(t1), c2 = extractCause(t2);
   if (c1 && c1 === c2) score += 0.15;
   const s1 = extractStationName(t1), s2 = extractStationName(t2);
-  if (s1 && s2 && s1 !== s2) score -= 0.4;
+  // v74: Stronger station mismatch penalty to prevent grouping different subway incidents
+  // Changed from -0.4 to -0.8 to prevent Summerhill/Yorkdale from grouping together
+  if (s1 && s2 && s1 !== s2) score -= 0.8;
+  // Bonus if stations match (same incident)
+  if (s1 && s2 && s1 === s2) score += 0.3;
   const d1 = extractDirection(t1), d2 = extractDirection(t2);
   if (d1 && d2 && d1 !== d2) score -= 0.5;
   return Math.max(0, Math.min(1, score));
@@ -271,9 +287,11 @@ serve(async (req) => {
                 if (/^[1-4]$/.test(a.route.toString())) activeDisruptionRoutes.add(`Line ${a.route}`);
               }
             }
-            const isPlanned = a.alertType === 'Planned' && ['NO_SERVICE', 'REDUCED_SERVICE'].includes(a.effect);
+            // v73: Remove isPlanned filter - TTC uses alertType="Planned" for ALL alerts (including real-time)
+            // Previously filtered: alertType='Planned' + effect in [NO_SERVICE, REDUCED_SERVICE]
+            // This incorrectly hid real-time closures like weather/mechanical issues
             const isSiteWide = a.alertType === 'SiteWide' && (a.headerText || a.customHeaderText);
-            if (!isPlanned && (isSiteWide || ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'SIGNIFICANT_DELAYS', 'ACCESSIBILITY_ISSUE'].includes(a.effect)) && a.route && (a.headerText || a.customHeaderText)) {
+            if ((isSiteWide || ['NO_SERVICE', 'REDUCED_SERVICE', 'DETOUR', 'SIGNIFICANT_DELAYS', 'ACCESSIBILITY_ISSUE'].includes(a.effect)) && a.route && (a.headerText || a.customHeaderText)) {
               ttcApiAlerts.push(a);
               // Track active RSZ alert IDs (RSZ has effectDesc "Reduced Speed Zone", not "Delays")
               if (a.effect === 'SIGNIFICANT_DELAYS' && a.effectDesc === 'Reduced Speed Zone' && a.stopStart && a.stopEnd) {
@@ -838,9 +856,16 @@ serve(async (req) => {
         }
         
         if (!threadId) {
-          const newThreadId = crypto.randomUUID();
+          const newThreadId = `thread-${category.toLowerCase()}-${crypto.randomUUID()}`;
           const { data: nt, error: te } = await supabase.from('incident_threads').insert({ thread_id: newThreadId, title: headerText.substring(0, 200), categories: [category], affected_routes: routes, is_resolved: false }).select().single();
           if (!te && nt) { threadId = nt.thread_id; await supabase.from('alert_cache').update({ thread_id: threadId }).eq('alert_id', ttcAlertId); }
+          else if (te) {
+            // Thread creation failed - retry with a simpler approach
+            console.error('Thread creation failed:', te.message, 'for alert:', ttcAlertId);
+            const retryThreadId = `thread-${Date.now()}-${ttcAlertId}`;
+            const { data: retry } = await supabase.from('incident_threads').insert({ thread_id: retryThreadId, title: headerText.substring(0, 200), categories: [category], affected_routes: routes, is_resolved: false }).select().single();
+            if (retry) { threadId = retry.thread_id; await supabase.from('alert_cache').update({ thread_id: threadId }).eq('alert_id', ttcAlertId); }
+          }
         }
         if (!isRSZ) { blueskyActiveRoutes.add(routeStr); blueskyActiveRoutes.add(routeBase); }
       }

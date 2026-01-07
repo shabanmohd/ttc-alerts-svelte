@@ -777,10 +777,12 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 ### Jan 3, 2026 - Fix RSZ Detection Using Alert ID Prefix
 
 **Problem:** RSZ (Reduced Speed Zone) section showed incorrect data:
+
 - "1 ZONE" instead of 7 zones for Line 1
 - "Ossington → Ossington" appearing in Line 2 RSZ (not an actual RSZ zone)
 
 **Root Cause:** `isRSZAlert()` function detected RSZ by checking:
+
 1. `effect === "SIGNIFICANT_DELAYS"`
 2. `source === "ttc-api"`
 3. Has `stopStart` and `stopEnd` in raw_data
@@ -788,10 +790,12 @@ Handles bug reports and feature requests with Cloudflare Turnstile captcha verif
 But regular delay alerts (e.g., `ttc-SIGNIFICANT_DELAYS-59989`) also have these properties. The Ossington delay alert had `stopStart: "Ossington", stopEnd: "Ossington"` and passed all RSZ checks.
 
 **Fix:** Changed RSZ detection to use alert ID prefix:
+
 - RSZ alerts have `alert_id.startsWith("ttc-RSZ-")`
 - Regular delays have `alert_id` like `ttc-SIGNIFICANT_DELAYS-{numericId}`
 
 **Files Updated:**
+
 - `src/routes/alerts/+page.svelte` - Fix `isRSZAlert()`
 - `src/routes/alerts-v3/+page.svelte` - Fix `isRSZAlert()`
 - `src/routes/routes/[route]/+page.svelte` - Fix `isRSZAlert()`

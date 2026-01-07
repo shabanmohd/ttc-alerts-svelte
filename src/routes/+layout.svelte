@@ -50,14 +50,14 @@
   function handleAppUpdate() {
     // Prevent duplicate toasts if multiple updates occur while app is open
     if (updateToastShown) {
-      console.log('[App] Update toast already shown, skipping duplicate');
+      console.log("[App] Update toast already shown, skipping duplicate");
       return;
     }
     updateToastShown = true;
-    
+
     // Dismiss any existing update toast first (belt and suspenders)
     toast.dismiss("sw-update-toast");
-    
+
     toast.info($_("app.updateAvailable") || "App update available", {
       id: "sw-update-toast", // Use fixed ID to prevent duplicates at toast level too
       description:

@@ -365,6 +365,7 @@ const patterns = [
 **Problem:** The frontend `isRSZAlert()` function incorrectly detected regular delay alerts as RSZ.
 
 **Original (Broken) Logic:**
+
 ```typescript
 // WRONG: Detected RSZ by checking stopStart/stopEnd in raw_data
 const isTTCApiRSZ =
@@ -377,6 +378,7 @@ const isTTCApiRSZ =
 **Problem:** Regular delay alerts (`ttc-SIGNIFICANT_DELAYS-{id}`) also have `stopStart`/`stopEnd` when they occur at a specific station. This caused delay alerts like "Ossington → Ossington" to appear in the RSZ section.
 
 **Fixed Logic:**
+
 ```typescript
 // CORRECT: Use alert_id prefix as definitive RSZ identifier
 if (alert.alert_id?.startsWith("ttc-RSZ-")) {
@@ -391,6 +393,7 @@ if (alert.alert_id?.startsWith("ttc-RSZ-")) {
 | Delay | `ttc-SIGNIFICANT_DELAYS-{numericId}` | `ttc-SIGNIFICANT_DELAYS-59989` |
 
 **Files Using `isRSZAlert()`:**
+
 - `src/routes/alerts/+page.svelte`
 - `src/routes/alerts-v3/+page.svelte`
 - `src/routes/routes/[route]/+page.svelte`

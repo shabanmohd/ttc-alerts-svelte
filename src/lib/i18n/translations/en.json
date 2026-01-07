@@ -165,7 +165,13 @@
     },
     "lastUpdated": "Last updated: {time}",
     "recentlyResolved": "Recently Resolved",
-    "noneInLastHours": "None in last 6 hours"
+    "noneInLastHours": "None in last 6 hours",
+    "plannedSubtabs": {
+      "closures": "Closures",
+      "routeChanges": "Route Changes",
+      "ariaClosures": "Show scheduled closures",
+      "ariaRouteChanges": "Show planned route changes"
+    }
   },
   "filters": {
     "all": "All",
