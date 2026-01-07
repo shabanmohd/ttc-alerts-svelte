@@ -67,14 +67,7 @@
             alt="rideTO"
             width="64"
             height="24"
-            class="h-6 w-auto dark:hidden"
-          />
-          <img
-            src="/DARK-LOGO.svg"
-            alt="rideTO"
-            width="64"
-            height="24"
-            class="h-6 w-auto hidden dark:block"
+            class="h-6 w-auto"
           />
           <p class="text-sm text-muted-foreground mt-1">
             {$_("about.tagline")}

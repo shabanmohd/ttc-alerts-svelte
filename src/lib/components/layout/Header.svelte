@@ -147,21 +147,14 @@
   style="z-index: 999; background-color: hsl(var(--background)); padding-top: env(safe-area-inset-top, 0px);"
 >
   <div class="header-container">
-    <!-- Logo (mobile only) - CSS-based theme switching to prevent flash -->
+    <!-- Logo (mobile only) -->
     <a href="/" class="header-left">
       <img
         src="/LOGO.svg"
         alt="rideTO"
         width="85"
         height="32"
-        class="h-8 w-auto dark:hidden"
-      />
-      <img
-        src="/DARK-LOGO.svg"
-        alt="rideTO"
-        width="85"
-        height="32"
-        class="h-8 w-auto hidden dark:block"
+        class="h-8 w-auto"
       />
     </a>
 
@@ -359,14 +352,7 @@
         alt="rideTO"
         width="85"
         height="32"
-        class="h-8 w-auto dark:hidden"
-      />
-      <img
-        src="/DARK-LOGO.svg"
-        alt="rideTO"
-        width="85"
-        height="32"
-        class="h-8 w-auto hidden dark:block"
+        class="h-8 w-auto"
       />
     </div>
     <button

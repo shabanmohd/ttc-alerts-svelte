@@ -62,14 +62,7 @@
       alt="rideTO"
       width="85"
       height="32"
-      class="sidebar-logo dark:hidden"
-    />
-    <img
-      src="/DARK-LOGO.svg"
-      alt="rideTO"
-      width="85"
-      height="32"
-      class="sidebar-logo hidden dark:block"
+      class="sidebar-logo"
     />
   </a>
 
