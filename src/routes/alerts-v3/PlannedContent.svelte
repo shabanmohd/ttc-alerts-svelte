@@ -77,7 +77,8 @@
     onclick={() => (activeSubTab = "changes")}
   >
     <GitBranch class="sub-tab-icon" aria-hidden="true" />
-    <span class="sub-tab-label">{$_("alerts.plannedSubtabs.routeChanges")}</span>
+    <span class="sub-tab-label">{$_("alerts.plannedSubtabs.routeChanges")}</span
+    >
     {#if $routeChangesCount > 0}
       <span class="sub-tab-count">{$routeChangesCount}</span>
     {/if}

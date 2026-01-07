@@ -527,12 +527,12 @@
       <!-- Aria-live region for screen reader announcements (WCAG 4.1.3) -->
       <div aria-live="polite" aria-atomic="true" class="sr-only">
         {#if $isLoading}
-          Loading alerts...
+          {$_("common.loading")}
         {:else if activeAlerts.length > 0}
           {activeAlerts.length}
           {selectedCategory} alert{activeAlerts.length === 1 ? "" : "s"} found
         {:else}
-          No {selectedCategory} alerts at this time
+          {$_("alerts.noAlertsForCategory", { values: { category: selectedCategory } })}
         {/if}
       </div>
 
@@ -592,12 +592,12 @@
             <div class="empty-icon">
               <CheckCircle class="h-8 w-8" />
             </div>
-            <h3>All Clear</h3>
+            <h3>{$_("emptyStates.allClear")}</h3>
             <p>
               {#if selectedCategory === "disruptions"}
-                No active service disruptions and delays at this time
+                {$_("alerts.emptyDisruptions")}
               {:else}
-                All station facilities operational
+                {$_("alerts.emptyElevators")}
               {/if}
             </p>
           </div>

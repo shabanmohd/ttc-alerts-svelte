@@ -65,7 +65,7 @@
     <div class="stops-empty animate-fade-in">
       <MapPin class="h-8 w-8 text-muted-foreground" />
       <p class="text-sm text-muted-foreground">
-        No stops found for this direction
+        {$_("stops.noStopsForDirection")}
       </p>
     </div>
   {:else}

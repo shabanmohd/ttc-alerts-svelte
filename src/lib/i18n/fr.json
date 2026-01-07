@@ -160,7 +160,10 @@
       "ttcReducedSpeedZones": "Zones à vitesse réduite TTC",
       "ttcServiceChanges": "Changements de service TTC",
       "ttcSubwayServiceAdvisories": "Avis de service métro TTC"
-    }
+    },
+    "emptyDisruptions": "Aucune perturbation de service active en ce moment",
+    "emptyElevators": "Toutes les installations des stations sont opérationnelles",
+    "noAlertsForCategory": "Aucune alerte {category} en ce moment"
   },
   "filters": {
     "all": "Tous",

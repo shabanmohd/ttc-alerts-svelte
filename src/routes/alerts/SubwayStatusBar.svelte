@@ -56,7 +56,9 @@
       <div class="subway-status-indicator">
         {#if line.status === "ok"}
           <CheckCircle class="w-4 h-4 status-ok-icon" />
-          <span class="status-text status-ok-text">{$_("status.normalService")}</span>
+          <span class="status-text status-ok-text"
+            >{$_("status.normalService")}</span
+          >
         {:else}
           <!-- Show all unique issue types with icons -->
           <div class="multi-status-container">
@@ -69,7 +71,9 @@
                   >
                 {:else if type === "delay"}
                   <Clock class="w-4 h-4 status-delay-icon" />
-                  <span class="status-text status-delay-text">{$_("status.delay")}</span>
+                  <span class="status-text status-delay-text"
+                    >{$_("status.delay")}</span
+                  >
                 {:else if type === "scheduled"}
                   <Calendar
                     class="w-4 h-4 status-scheduled-icon flex-shrink-0"

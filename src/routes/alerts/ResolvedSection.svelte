@@ -7,7 +7,10 @@
   let { alerts }: { alerts: ThreadWithAlerts[] } = $props();
 </script>
 
-<section class="resolved-section animate-fade-in-up" style="animation-delay: 100ms">
+<section
+  class="resolved-section animate-fade-in-up"
+  style="animation-delay: 100ms"
+>
   <div class="resolved-header">
     <div class="header-left">
       <span class="header-icon"><CheckCircle /></span>

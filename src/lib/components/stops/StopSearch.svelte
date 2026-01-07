@@ -12,6 +12,7 @@
   import { browser } from "$app/environment";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import BookmarkStopButton from "./BookmarkStopButton.svelte";
+  import { _ } from "svelte-i18n";
 
   interface Props {
     onSelect?: (stop: TTCStop) => void;
@@ -415,9 +416,9 @@
         {/each}
       {:else if hasSearched && !isLoading}
         <div class="text-muted-foreground px-3 py-4 text-center text-sm">
-          <p>No stops found for "{query}"</p>
+          <p>{$_("stops.noStopsFound", { values: { query } })}</p>
           <p class="mt-1 text-xs">
-            Try a different search term or use the nearby button
+            {$_("stops.tryDifferentSearch")}
           </p>
         </div>
       {/if}
@@ -425,7 +426,7 @@
   {/if}
 
   {#if !isInitialized && !error}
-    <p class="text-muted-foreground mt-1 text-sm">Loading stops database...</p>
+    <p class="text-muted-foreground mt-1 text-sm">{$_("stops.loadingDatabase")}</p>
   {/if}
 </div>
 

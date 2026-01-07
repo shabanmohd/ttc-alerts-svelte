@@ -178,7 +178,10 @@
       "ttcReducedSpeedZones": "TTC Reduced Speed Zones",
       "ttcServiceChanges": "TTC Service Changes",
       "ttcSubwayServiceAdvisories": "TTC Subway Service Advisories"
-    }
+    },
+    "emptyDisruptions": "No active service disruptions and delays at this time",
+    "emptyElevators": "All station facilities operational",
+    "noAlertsForCategory": "No {category} alerts at this time"
   },
   "filters": {
     "all": "All",
