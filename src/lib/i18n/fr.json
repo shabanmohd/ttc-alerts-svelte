@@ -112,6 +112,12 @@
     "reducedSpeedZone": "Zone de vitesse réduite",
     "reducedSpeedZones": "Zones de vitesse réduite",
     "reducedSpeedZonesDesc": "Les trains roulent plus lentement que d'habitude dans ces sections en raison de travaux sur les voies",
+    "tabs": {
+      "now": "Maintenant",
+      "scheduled": "Planifié",
+      "ariaNow": "Afficher les alertes actives",
+      "ariaScheduled": "Afficher les fermetures planifiées"
+    },
     "categoryFilter": {
       "disruptionsAndDelays": "Perturbations et retards",
       "elevators": "Ascenseurs",

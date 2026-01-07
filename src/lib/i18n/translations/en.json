@@ -130,6 +130,12 @@
     "reducedSpeedZone": "Reduced Speed Zone",
     "reducedSpeedZones": "Reduced Speed Zones",
     "reducedSpeedZonesDesc": "Trains are running slower than usual in these sections due to track work",
+    "tabs": {
+      "now": "Now",
+      "scheduled": "Scheduled",
+      "ariaNow": "Show active alerts",
+      "ariaScheduled": "Show scheduled closures"
+    },
     "categoryFilter": {
       "disruptionsAndDelays": "Disruptions & Delays",
       "elevators": "Elevators",

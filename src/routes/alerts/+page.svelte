@@ -509,7 +509,7 @@
         onclick={() => setActiveTab("now")}
       >
         <Zap class="h-4 w-4" />
-        Now
+        {$_("alerts.tabs.now")}
       </button>
       <button
         class="primary-tab"
@@ -519,7 +519,7 @@
         onclick={() => setActiveTab("planned")}
       >
         <Calendar class="h-4 w-4" />
-        Scheduled
+        {$_("alerts.tabs.scheduled")}
       </button>
     </div>
 
