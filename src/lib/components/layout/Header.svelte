@@ -152,9 +152,9 @@
       <img
         src="/LOGO.svg"
         alt="rideTO"
-        width="85"
-        height="32"
-        class="h-8 w-auto"
+        width="106"
+        height="40"
+        class="h-10 w-auto"
       />
     </a>
 

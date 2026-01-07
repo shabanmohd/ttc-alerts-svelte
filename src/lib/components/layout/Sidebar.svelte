@@ -60,8 +60,8 @@
     <img
       src="/LOGO.svg"
       alt="rideTO"
-      width="85"
-      height="32"
+      width="106"
+      height="40"
       class="sidebar-logo"
     />
   </a>
