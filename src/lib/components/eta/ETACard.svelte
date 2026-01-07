@@ -18,6 +18,7 @@
     type NextDepartureInfo,
   } from "$lib/services/schedule-lookup";
   import { getRouteName } from "$lib/data/route-names";
+  import { _ } from "svelte-i18n";
   import { db } from "$lib/data/stops-db";
   import LiveSignalIcon from "./LiveSignalIcon.svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
@@ -593,7 +594,7 @@
             class="h-3 w-3 border-2 border-muted-foreground/30 border-t-muted-foreground/70 rounded-full animate-spin"
           ></div>
           <span class="text-xs text-muted-foreground/60"
-            >Loading schedule...</span
+            >{$_("common.loadingSchedule")}</span
           >
         </div>
       {:else}
@@ -627,8 +628,8 @@
               />
               <span
                 >{isRefreshing || eta.isLoading
-                  ? "Refreshing..."
-                  : "Refresh"}</span
+                  ? $_("common.refreshing")
+                  : $_("common.refresh")}</span
               >
             </Button>
           {/if}
