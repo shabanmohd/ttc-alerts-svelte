@@ -27,7 +27,8 @@
   import { activeDialog, openDialog, closeDialog } from "$lib/stores/dialogs";
   import { initNetworkListeners } from "$lib/stores/networkStatus";
   import { toast } from "svelte-sonner";
-  import { _ } from "svelte-i18n";
+  import { _, isLoading } from "svelte-i18n";
+  import { get } from "svelte/store";
 
   // Initialize i18n translations
   initI18n();
@@ -47,13 +48,23 @@
   }
 
   // Handle app update available
-  function handleAppUpdate() {
+  async function handleAppUpdate() {
     // Prevent duplicate toasts if multiple updates occur while app is open
     if (updateToastShown) {
       console.log("[App] Update toast already shown, skipping duplicate");
       return;
     }
     updateToastShown = true;
+
+    // Wait for i18n to finish loading (max 2 seconds)
+    const waitForI18n = async () => {
+      const maxWait = 2000;
+      const start = Date.now();
+      while (get(isLoading) && Date.now() - start < maxWait) {
+        await new Promise((r) => setTimeout(r, 50));
+      }
+    };
+    await waitForI18n();
 
     // Dismiss any existing update toast first (belt and suspenders)
     toast.dismiss("sw-update-toast");
