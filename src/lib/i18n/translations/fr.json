@@ -153,6 +153,13 @@
       "routeChanges": "Changements de parcours",
       "ariaClosures": "Afficher les fermetures planifiées",
       "ariaRouteChanges": "Afficher les changements de parcours prévus"
+    },
+    "attribution": {
+      "dataFrom": "Données de",
+      "ttcServiceAlerts": "Alertes de service TTC",
+      "ttcReducedSpeedZones": "Zones à vitesse réduite TTC",
+      "ttcServiceChanges": "Changements de service TTC",
+      "ttcSubwayServiceAdvisories": "Avis de service métro TTC"
     }
   },
   "filters": {

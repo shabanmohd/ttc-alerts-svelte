@@ -618,14 +618,14 @@
 
     <!-- TTC Attribution -->
     <div class="ttc-attribution">
-      <span>Data from</span>
+      <span>{$_("alerts.attribution.dataFrom")}</span>
       {#if activeTab === "now" && selectedCategory === "delays"}
         <a
           href="https://www.ttc.ca/riding-the-ttc/Updates/Reduced-Speed-Zones"
           target="_blank"
           rel="noopener noreferrer"
         >
-          TTC Reduced Speed Zones
+          {$_("alerts.attribution.ttcReducedSpeedZones")}
           <ExternalLink class="h-3 w-3" />
         </a>
       {:else if activeTab === "planned" && scheduledSubtab === "changes"}
@@ -634,7 +634,7 @@
           target="_blank"
           rel="noopener noreferrer"
         >
-          TTC Service Changes
+          {$_("alerts.attribution.ttcServiceChanges")}
           <ExternalLink class="h-3 w-3" />
         </a>
       {:else if activeTab === "planned" && scheduledSubtab === "closures"}
@@ -643,7 +643,7 @@
           target="_blank"
           rel="noopener noreferrer"
         >
-          TTC Subway Service Advisories
+          {$_("alerts.attribution.ttcSubwayServiceAdvisories")}
           <ExternalLink class="h-3 w-3" />
         </a>
       {:else}
@@ -652,7 +652,7 @@
           target="_blank"
           rel="noopener noreferrer"
         >
-          TTC Service Alerts
+          {$_("alerts.attribution.ttcServiceAlerts")}
           <ExternalLink class="h-3 w-3" />
         </a>
       {/if}

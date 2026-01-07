@@ -171,6 +171,13 @@
       "routeChanges": "Route Changes",
       "ariaClosures": "Show scheduled closures",
       "ariaRouteChanges": "Show planned route changes"
+    },
+    "attribution": {
+      "dataFrom": "Data from",
+      "ttcServiceAlerts": "TTC Service Alerts",
+      "ttcReducedSpeedZones": "TTC Reduced Speed Zones",
+      "ttcServiceChanges": "TTC Service Changes",
+      "ttcSubwayServiceAdvisories": "TTC Subway Service Advisories"
     }
   },
   "filters": {
