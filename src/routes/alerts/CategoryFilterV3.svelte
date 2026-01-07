@@ -1,14 +1,15 @@
 <script lang="ts">
   import { cn } from "$lib/utils";
   import { TriangleAlert, Gauge, Accessibility } from "lucide-svelte";
+  import { _ } from "svelte-i18n";
 
   type Category = "disruptions" | "delays" | "station-alerts";
 
   interface CategoryConfig {
     id: Category;
-    label: string;
+    labelKey: string;
     icon: typeof TriangleAlert;
-    ariaLabel: string;
+    ariaLabelKey: string;
   }
 
   let {
@@ -24,21 +25,21 @@
   const categories: CategoryConfig[] = [
     {
       id: "disruptions",
-      label: "Disruptions & Delays",
+      labelKey: "alerts.categoryFilter.disruptionsAndDelays",
       icon: TriangleAlert,
-      ariaLabel: "Show service disruptions and delays",
+      ariaLabelKey: "alerts.categoryFilter.ariaDisruptions",
     },
     {
       id: "station-alerts",
-      label: "Elevators",
+      labelKey: "alerts.categoryFilter.elevators",
       icon: Accessibility,
-      ariaLabel: "Show elevator and accessibility alerts",
+      ariaLabelKey: "alerts.categoryFilter.ariaElevators",
     },
     {
       id: "delays",
-      label: "Slow Zones",
+      labelKey: "alerts.categoryFilter.slowZones",
       icon: Gauge,
-      ariaLabel: "Show subway slow zones",
+      ariaLabelKey: "alerts.categoryFilter.ariaSlowZones",
     },
   ];
 
@@ -65,12 +66,12 @@
         class={cn("category-pill", cat.id, isActive && "active")}
         role="tab"
         aria-selected={isActive}
-        aria-label={`${cat.ariaLabel} (${count} alerts)`}
+        aria-label={`${$_(cat.ariaLabelKey)} (${count} alerts)`}
         onclick={() => handleSelect(cat.id)}
         type="button"
       >
         <Icon class="pill-icon" aria-hidden="true" />
-        <span class="pill-label">{cat.label}</span>
+        <span class="pill-label">{$_(cat.labelKey)}</span>
         {#if count > 0}
           <span class="pill-count">{count}</span>
         {/if}

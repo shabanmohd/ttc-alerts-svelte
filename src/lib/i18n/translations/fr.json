@@ -112,6 +112,14 @@
     "reducedSpeedZone": "Zone de vitesse réduite",
     "reducedSpeedZones": "Zones de vitesse réduite",
     "reducedSpeedZonesDesc": "Les trains roulent plus lentement que d'habitude dans ces sections en raison de travaux sur les voies",
+    "categoryFilter": {
+      "disruptionsAndDelays": "Perturbations et retards",
+      "elevators": "Ascenseurs",
+      "slowZones": "Zones lentes",
+      "ariaDisruptions": "Afficher les perturbations et retards de service",
+      "ariaElevators": "Afficher les alertes d'ascenseurs et d'accessibilité",
+      "ariaSlowZones": "Afficher les zones lentes du métro"
+    },
     "category": {
       "all": "Toutes",
       "delays": "Retards",
