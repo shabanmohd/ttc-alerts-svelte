@@ -5,8 +5,8 @@
   "description": "Real-time Toronto transit alerts and trip planning",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#C8102E",
-  "theme_color": "#C8102E",
+  "background_color": "#1a1a1a",
+  "theme_color": "#9B44C7",
   "orientation": "portrait-primary",
   "icons": [
     {
