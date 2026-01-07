@@ -279,8 +279,18 @@
         const routeMatch = single.match(/^(\d+[A-Z]?)/);
         displayRoutes.push(routeMatch ? routeMatch[1] : single);
       } else {
-        // Multiple variants - show just the base number
-        displayRoutes.push(baseNum);
+        // Multiple variants - prefer suffix version (e.g., "123F" over "123 Sherway")
+        // Look for variant with letter suffix
+        const suffixVariant = variants.find((v) => /^\d+[A-Z]/i.test(v));
+        if (suffixVariant) {
+          const routeMatch = suffixVariant.match(/^(\d+[A-Z])/i);
+          displayRoutes.push(
+            routeMatch ? routeMatch[1].toUpperCase() : baseNum
+          );
+        } else {
+          // No suffix variant found, use base number
+          displayRoutes.push(baseNum);
+        }
       }
     }
 
