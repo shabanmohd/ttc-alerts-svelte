@@ -412,16 +412,23 @@
           ) === "MAJOR"
         );
       }).length,
-      delays: active.filter((t) => {
-        const categories = (t.categories as string[]) || [];
-        return (
-          getSeverityCategory(
-            categories,
-            t.latestAlert?.effect ?? undefined,
-            t.latestAlert?.header_text ?? undefined
-          ) === "MINOR"
-        );
-      }).length,
+      // For RSZ (slow zones), count total alerts across all RSZ threads, not just thread count
+      delays: active
+        .filter((t) => {
+          const categories = (t.categories as string[]) || [];
+          return (
+            getSeverityCategory(
+              categories,
+              t.latestAlert?.effect ?? undefined,
+              t.latestAlert?.header_text ?? undefined
+            ) === "MINOR"
+          );
+        })
+        .reduce((total, thread) => {
+          // Count alerts in each RSZ thread
+          const alertCount = thread.alerts?.length || 0;
+          return total + alertCount;
+        }, 0),
       stationAlerts: active.filter((t) => {
         const categories = (t.categories as string[]) || [];
         return (
