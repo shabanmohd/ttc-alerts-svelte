@@ -45,6 +45,47 @@ function extractRoutes(data: unknown): string[] {
   return [];
 }
 
+// Calculate text similarity (Jaccard similarity)
+function textSimilarity(text1: string, text2: string): number {
+  const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  
+  const intersection = [...words1].filter(x => words2.has(x)).length;
+  const union = new Set([...words1, ...words2]).size;
+  
+  return union > 0 ? intersection / union : 0;
+}
+
+// Deduplicate alerts within a thread - keep newest of similar alerts
+function deduplicateAlerts(alerts: Alert[]): Alert[] {
+  if (alerts.length <= 1) return alerts;
+  
+  // Sort by date descending (newest first)
+  const sorted = [...alerts].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+  
+  const kept: Alert[] = [];
+  
+  for (const alert of sorted) {
+    // Check if this alert is too similar to any already kept alert
+    const isDuplicate = kept.some(keptAlert => {
+      const similarity = textSimilarity(
+        alert.header_text || '', 
+        keptAlert.header_text || ''
+      );
+      // If >90% similar and within same thread, consider it duplicate
+      return similarity > 0.9;
+    });
+    
+    if (!isDuplicate) {
+      kept.push(alert);
+    }
+  }
+  
+  return kept;
+}
+
 // Derived: threads with their alerts grouped
 export const threadsWithAlerts = derived(
   [threads, alerts],
@@ -59,10 +100,13 @@ export const threadsWithAlerts = derived(
           .filter(a => a.thread_id === thread.thread_id)
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         
+        // Deduplicate alerts with >90% similar text, keeping the newest
+        const deduplicatedAlerts = deduplicateAlerts(threadAlerts);
+        
         return {
           ...thread,
-          alerts: threadAlerts,
-          latestAlert: threadAlerts[0]
+          alerts: deduplicatedAlerts,
+          latestAlert: deduplicatedAlerts[0]
         };
       })
       // Filter out threads with no alerts, missing critical data, invalid timestamps, or planned alerts

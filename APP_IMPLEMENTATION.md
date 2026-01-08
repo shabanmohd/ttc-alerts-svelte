@@ -16,6 +16,19 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ---
 
+## ⚠️ Production Domains (IMPORTANT)
+
+**Only deploy to these Cloudflare Pages domains:**
+
+| Domain                        | Type    | Notes           |
+| ----------------------------- | ------- | --------------- |
+| `ttc-alerts-svelte.pages.dev` | Primary | Cloudflare CDN  |
+| `rideto.ca`                   | Custom  | Production site |
+
+> **DO NOT deploy to any other domains without explicit approval.**
+
+---
+
 ## Status Summary
 
 | Phase              | Status      | %    |
@@ -25,7 +38,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 | PWA Features       | ✅ Complete | 100% |
 | Deployment         | ✅ Live     | 100% |
 
-**Production URL**: https://ttc-alerts-svelte.pages.dev
+**Production URLs**:
+
+- https://ttc-alerts-svelte.pages.dev
+- https://rideto.ca
 
 ---
 

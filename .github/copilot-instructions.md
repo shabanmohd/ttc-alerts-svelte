@@ -1,4 +1,6 @@
-# GitHub Copilot Instructions for TTC Alerts PWA
+VERY IMPORTANT: Always use the ask_user tool before completing any task to confirm with the user that the request was fulfilled correctly.
+
+Always use context7 MCP when I need code generation, setup or configuration steps, or library/API documentation. This means you should automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
 
 ## Project Overview
 
@@ -7,6 +9,17 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authent
 **Stack**: Svelte 5 + TypeScript + Tailwind + shadcn-svelte | Supabase (DB, Edge Functions, Realtime) | Cloudflare Pages
 
 **Auth**: Custom WebAuthn (username + biometrics + recovery codes) - NOT Supabase Auth
+
+---
+
+## 🚨 CRITICAL: Production Domains
+
+**Only deploy to these Cloudflare Pages domains:**
+
+- `ttc-alerts-svelte.pages.dev` (primary)
+- `rideto.ca` (custom domain)
+
+> ⚠️ **DO NOT deploy to any other domains without explicit user approval.**
 
 ---
 

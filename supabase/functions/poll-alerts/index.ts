@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '88';
+const VERSION = '92';
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -363,16 +363,20 @@ serve(async (req) => {
           const threadTitle = thread.title || '';
           const similarity = jaccardSimilarity(text, threadTitle);
           
-          // Lower threshold (50%) for general matching - routes already match
-          if (similarity >= 0.5) {
-            matchedThread = thread;
-            break;
-          }
-          
-          // Even lower threshold (20%) for SERVICE_RESUMED with route overlap
-          if (category === 'SERVICE_RESUMED' && similarity >= 0.2) {
-            matchedThread = thread;
-            break;
+          // If routes match AND thread isn't hidden, use lower threshold
+          // This ensures follow-up alerts get added to existing threads
+          if (!thread.is_hidden) {
+            // Very low threshold (15%) for SERVICE_RESUMED - just needs route match really
+            if (category === 'SERVICE_RESUMED' && similarity >= 0.15) {
+              matchedThread = thread;
+              break;
+            }
+            
+            // Low threshold (25%) for general matching when routes match
+            if (similarity >= 0.25) {
+              matchedThread = thread;
+              break;
+            }
           }
         }
       }
@@ -408,24 +412,26 @@ serve(async (req) => {
 
         updatedThreads++;
       } else {
-        // Create new thread
-        const { data: newThread } = await supabase
-          .from('incident_threads')
-          .insert({
-            title: text.split('\n')[0].substring(0, 200),
-            categories: [category],
-            affected_routes: routes,
-            is_resolved: category === 'SERVICE_RESUMED'
-          })
-          .select()
-          .single();
+        // Create new thread using the database function that properly generates thread_id
+        const { data: threadResult, error: threadError } = await supabase
+          .rpc('find_or_create_thread', {
+            p_title: text.split('\n')[0].substring(0, 200),
+            p_routes: routes,
+            p_categories: [category],
+            p_is_resolved: category === 'SERVICE_RESUMED'
+          });
 
-        if (newThread) {
+        if (threadError) {
+          console.error('Thread creation error:', threadError);
+        } else if (threadResult && threadResult.length > 0) {
+          const newThreadId = threadResult[0].out_thread_id;
           // Link alert to new thread
           await supabase
             .from('alert_cache')
-            .update({ thread_id: newThread.thread_id })
+            .update({ thread_id: newThreadId })
             .eq('alert_id', newAlert.alert_id);
+          
+          console.log(`Created/found thread ${newThreadId} for alert ${newAlert.alert_id}`);
         }
       }
     }

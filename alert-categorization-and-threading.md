@@ -48,7 +48,7 @@ This document describes the alert categorization and threading system designed t
 │  Bluesky API  │──────▶│                      │              │
 │  @ttcalerts   │       └──────────────────────┘              │
 └───────────────┘                                              ▼
-                        ┌──────────────────────┐               
+                        ┌──────────────────────┐
                         │  Svelte Frontend     │◀──────────────┘
                         │  alerts.ts store     │
                         │  + Realtime sub      │
@@ -60,7 +60,7 @@ This document describes the alert categorization and threading system designed t
 - **Frontend:** Svelte 5 + TypeScript + Tailwind + shadcn-svelte
 - **Backend:** Supabase (PostgreSQL + Edge Functions + Realtime)
 - **Hosting:** Cloudflare Pages
-- **Data Sources:** 
+- **Data Sources:**
   - **TTC API** (Authority for active status): `https://alerts.ttc.ca/api/alerts/live-alerts`
   - **Bluesky** (Context/History): `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
 
