@@ -660,7 +660,7 @@ CREATE TABLE planned_maintenance (
 
 ### `scrape-maintenance` (v2)
 
-**Trigger:** Cron schedule (`scrape-maintenance-daily` at 6 AM UTC)  
+**Trigger:** Cron schedule (`scrape-maintenance-6hr` - every 6 hours at 0, 6, 12, 18 UTC)  
 **Purpose:** Scrape planned subway closures from TTC website
 
 **TTC API Endpoint:**
