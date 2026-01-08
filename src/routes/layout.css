@@ -2364,17 +2364,17 @@ html.reduce-motion .eta-live-indicator svg {
   color: hsl(142 90% 95%) !important;
 }
 
-/* Info toast - blue with high contrast */
+/* Info toast - purple (#9B44C7) with high contrast */
 [data-sonner-toast][data-type="info"] {
-  background: hsl(217 70% 35%) !important;
-  border: 1px solid hsl(217 60% 45%) !important;
+  background: #9B44C7 !important;
+  border: 1px solid hsl(280 50% 55%) !important;
   color: hsl(0 0% 100%) !important;
 }
 
 .dark [data-sonner-toast][data-type="info"] {
-  background: hsl(217 60% 25%) !important;
-  border: 1px solid hsl(217 60% 38%) !important;
-  color: hsl(213 100% 95%) !important;
+  background: hsl(280 50% 35%) !important;
+  border: 1px solid hsl(280 50% 48%) !important;
+  color: hsl(280 100% 95%) !important;
 }
 
 /* Error toast - red with high contrast */

@@ -57,23 +57,23 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display                              |
 | `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)              |
 | `components/alerts/StatusBadge.svelte`          | ✅     | Status badges (Nightly/Weekend Closure, Delay, etc.)       |
-| `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback             |
-| `components/dialogs/CreateAccountDialog.svelte` | ✅     | Registration + recovery codes                    |
-| `components/dialogs/AuthRequiredDialog.svelte`  | ✅     | Auth prompt for protected features               |
-| `components/dialogs/HowToUseDialog.svelte`      | ✅     | User guide                                       |
-| `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                               |
-| `components/layout/Header.svelte`               | ✅     | App header with auth controls                    |
-| `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation                               |
-| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation                                |
-| `components/ui/*`                               | ✅     | shadcn-svelte base components                    |
-| `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                     |
-| `stores/alerts.ts`                              | ✅     | Alerts state + date validation filter            |
-| `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store                       |
-| `stores/preferences.ts`                         | ✅     | User preferences state                           |
-| `types/auth.ts`                                 | ✅     | Auth TypeScript types                            |
-| `types/database.ts`                             | ✅     | Database types (JSONB fields)                    |
-| `supabase.ts`                                   | ✅     | Supabase client config                           |
-| `utils.ts`                                      | ✅     | Utility functions                                |
+| `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback                       |
+| `components/dialogs/CreateAccountDialog.svelte` | ✅     | Registration + recovery codes                              |
+| `components/dialogs/AuthRequiredDialog.svelte`  | ✅     | Auth prompt for protected features                         |
+| `components/dialogs/HowToUseDialog.svelte`      | ✅     | User guide                                                 |
+| `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                                         |
+| `components/layout/Header.svelte`               | ✅     | App header with auth controls                              |
+| `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation                                         |
+| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation                                          |
+| `components/ui/*`                               | ✅     | shadcn-svelte base components                              |
+| `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                               |
+| `stores/alerts.ts`                              | ✅     | Alerts state + date validation filter                      |
+| `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store                                 |
+| `stores/preferences.ts`                         | ✅     | User preferences state                                     |
+| `types/auth.ts`                                 | ✅     | Auth TypeScript types                                      |
+| `types/database.ts`                             | ✅     | Database types (JSONB fields)                              |
+| `supabase.ts`                                   | ✅     | Supabase client config                                     |
+| `utils.ts`                                      | ✅     | Utility functions                                          |
 
 ### Pages (`src/routes/`)
 

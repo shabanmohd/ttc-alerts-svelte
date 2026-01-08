@@ -609,11 +609,11 @@ CREATE TABLE planned_maintenance (
 
 **Closure Type Detection:**
 
-| Pattern                          | Type               | Badge                   |
-| -------------------------------- | ------------------ | ----------------------- |
-| `start_time: "23:00:00"` (10PM+) | Nightly            | "Nightly Early Closure" |
-| `start_time: null` + Sat-Sun    | Weekend            | "Weekend Closure"       |
-| Everything else                  | Generic scheduled  | "Scheduled Closure"     |
+| Pattern                          | Type              | Badge                   |
+| -------------------------------- | ----------------- | ----------------------- |
+| `start_time: "23:00:00"` (10PM+) | Nightly           | "Nightly Early Closure" |
+| `start_time: null` + Sat-Sun     | Weekend           | "Weekend Closure"       |
+| Everything else                  | Generic scheduled | "Scheduled Closure"     |
 
 ---
 
@@ -691,31 +691,34 @@ https://www.ttc.ca/sxa/search/results/?s={SCOPE_ID}&itemid={ITEM_ID}&sig=&v={VAR
 
 The `ClosuresView.svelte` component detects closure type based on the data:
 
-| Closure Type        | Badge Label          | Color         | Detection Logic                        |
-| ------------------- | -------------------- | ------------- | -------------------------------------- |
-| `NIGHTLY_CLOSURE`   | "Nightly Early Closure" | Blue          | `start_time` >= 22:00 (10 PM)         |
-| `WEEKEND_CLOSURE`   | "Weekend Closure"    | Purple/Magenta | No `start_time` AND spans Sat-Sun     |
-| `SCHEDULED_CLOSURE` | "Scheduled Closure"  | Purple         | Default fallback                      |
+| Closure Type        | Badge Label             | Color          | Detection Logic                   |
+| ------------------- | ----------------------- | -------------- | --------------------------------- |
+| `NIGHTLY_CLOSURE`   | "Nightly Early Closure" | Blue           | `start_time` >= 22:00 (10 PM)     |
+| `WEEKEND_CLOSURE`   | "Weekend Closure"       | Purple/Magenta | No `start_time` AND spans Sat-Sun |
+| `SCHEDULED_CLOSURE` | "Scheduled Closure"     | Purple         | Default fallback                  |
 
 ```typescript
 // ClosuresView.svelte - getClosureType()
 function getClosureType(maintenance: PlannedMaintenance): string {
   const startHour = parseTimeHour(maintenance.start_time);
-  
+
   // Nightly: starts at 10 PM or later
   if (startHour !== null && startHour >= 22) return "NIGHTLY_CLOSURE";
-  
+
   // Weekend: no start time + spans Sat-Sun
   if (!maintenance.start_time) {
     const startDay = parseLocalDate(maintenance.start_date).getDay();
     const endDay = parseLocalDate(maintenance.end_date).getDay();
-    if ((startDay === 6 && endDay === 0) || // Sat-Sun
-        (startDay === 5 && endDay === 0) || // Fri-Sun
-        (startDay === 6 && endDay === 1)) { // Sat-Mon
+    if (
+      (startDay === 6 && endDay === 0) || // Sat-Sun
+      (startDay === 5 && endDay === 0) || // Fri-Sun
+      (startDay === 6 && endDay === 1)
+    ) {
+      // Sat-Mon
       return "WEEKEND_CLOSURE";
     }
   }
-  
+
   return "SCHEDULED_CLOSURE";
 }
 ```
