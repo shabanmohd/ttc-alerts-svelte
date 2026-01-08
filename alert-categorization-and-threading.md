@@ -1,7 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.3  
+**Version:** 3.4  
 **Date:** January 8, 2026  
+**poll-alerts Version:** 103  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
@@ -602,20 +603,52 @@ CREATE TABLE planned_maintenance (
 
 ## Edge Functions
 
-### `poll-alerts`
+### `poll-alerts` (v103)
 
 **Trigger:** Cron schedule (every 2 minutes)  
-**Purpose:** Fetch, categorize, and thread alerts from Bluesky
+**Purpose:** Fetch, categorize, and thread alerts; manage thread lifecycle
 
 **Flow:**
 
-1. Fetch latest posts from @ttcalerts.bsky.social
-2. For each post:
-   - Extract text and routes
-   - Determine category from keywords
-   - Find or create incident thread
-   - Store in `alert_cache`
-3. Update Realtime subscriptions
+1. **STEP 1:** Fetch TTC API (`/api/alerts/live-alerts`)
+   - Get authoritative list of active routes, RSZ alerts, and elevator alerts
+   
+2. **STEP 2:** Hide threads no longer in TTC API
+   - Excludes RSZ and ACCESSIBILITY (they have their own lifecycle)
+   
+3. **STEP 2b:** Resolve threads with matching SERVICE_RESUMED alerts
+   - Matches by route + 10% text similarity
+   - Skips RSZ, ACCESSIBILITY, SERVICE_RESUMED threads
+   
+4. **STEP 3:** Unhide threads if routes return to TTC API
+   - Re-activates threads if alert comes back
+   
+5. **STEP 4:** Fetch Bluesky posts for context/history
+   - Extract routes, categorize, thread matching
+   - Create new threads if no match found
+   
+6. **STEP 5:** Process RSZ alerts from TTC API
+   - Normalize route format ("1" → "Line 1")
+   - Create/update RSZ threads and alerts
+   
+7. **STEP 6:** Process elevator alerts from TTC API
+   - Extract station name from header
+   - Create/update ACCESSIBILITY threads
+   
+8. **STEP 6b:** Auto-resolve elevator threads
+   - If station no longer in TTC API → elevator restored → resolve thread
+   
+9. **STEP 6c:** Auto-resolve RSZ threads
+   - If line no longer has RSZ in TTC API → resolve thread
+   
+10. **STEP 7:** Unhide RSZ/ACCESSIBILITY + merge duplicates
+    - Correct historical hidden state from v94
+    - Keep newest thread per station/line
+
+**False Positive Prevention:**
+- `nonRoutePatterns` filter removes "Bay X", "Platform X", "Track X" before route extraction
+- Line regex only matches Lines 1-4: `/\bLine\s+(1|2|3|4)\b/gi`
+- Exact route number matching prevents 46 ≠ 996 confusion
 
 ### `scrape-maintenance`
 
@@ -634,12 +667,15 @@ CREATE TABLE planned_maintenance (
 
 This system provides:
 
-✅ **Single source (Bluesky)** - @ttcalerts.bsky.social via AT Protocol  
+✅ **Dual source (TTC API + Bluesky)** - TTC API is authority, Bluesky adds context  
 ✅ **Keyword-based categorization** - 6 categories with priority ordering  
 ✅ **Incident threading** - Jaccard similarity + exact route number matching  
 ✅ **Cross-route prevention** - Route 46 cannot match with 996, 39 cannot match with 939  
-✅ **Smart SERVICE_RESUMED** - Lower threshold (20%) for different vocabulary  
-✅ **Auto-resolve** - SERVICE_RESUMED closes threads  
+✅ **False positive prevention** - "Bay 2", "Platform 1" filtered from route extraction  
+✅ **Smart SERVICE_RESUMED** - Lower threshold (10%) for route-matched alerts  
+✅ **Auto-resolve disruptions** - SERVICE_RESUMED or route disappears from TTC API  
+✅ **Auto-resolve elevators** - Station no longer in TTC API → elevator restored  
+✅ **Auto-resolve RSZ** - Line no longer has RSZ in TTC API → resolved  
 ✅ **Mutually exclusive filters** - One category filter at a time  
 ✅ **Planned alert separation** - Maintenance excluded from main feed  
 ✅ **Realtime updates** - Supabase subscriptions push changes  
@@ -648,13 +684,13 @@ This system provides:
 **Architecture:**
 
 ```
-Bluesky API → poll-alerts Edge Function → Supabase PostgreSQL
-                                              ↓
-                                       Realtime subscriptions
-                                              ↓
-                                       Svelte stores (alerts.ts)
-                                              ↓
-                                       AlertCard.svelte UI
+TTC API + Bluesky → poll-alerts Edge Function → Supabase PostgreSQL
+                                                     ↓
+                                              Realtime subscriptions
+                                                     ↓
+                                              Svelte stores (alerts.ts)
+                                                     ↓
+                                              AlertCard.svelte / RSZAlertCard.svelte UI
 ```
 
 ---

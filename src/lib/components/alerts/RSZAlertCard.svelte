@@ -20,17 +20,17 @@
 
   // Subway line colors - matching DESIGN_SYSTEM.md (WCAG 2.2 AA Compliant)
   const LINE_COLORS: Record<string, { color: string; textColor: string }> = {
-    "1": { color: "#ffc524", textColor: "#000000" },  // TTC Yellow (Yonge-University)
-    "2": { color: "#00853f", textColor: "#ffffff" },  // TTC Green (Bloor-Danforth)
-    "4": { color: "#a12f7d", textColor: "#ffffff" },  // TTC Purple (Sheppard)
-    "5": { color: "#d95319", textColor: "#ffffff" },  // TTC Orange (Eglinton)
-    "6": { color: "#636569", textColor: "#ffffff" },  // TTC Grey (Finch West)
+    "1": { color: "#ffc524", textColor: "#000000" }, // TTC Yellow (Yonge-University)
+    "2": { color: "#00853f", textColor: "#ffffff" }, // TTC Green (Bloor-Danforth)
+    "4": { color: "#a12f7d", textColor: "#ffffff" }, // TTC Purple (Sheppard)
+    "5": { color: "#d95319", textColor: "#ffffff" }, // TTC Orange (Eglinton)
+    "6": { color: "#636569", textColor: "#ffffff" }, // TTC Grey (Finch West)
   };
 
   // Full line names for display
   const LINE_NAMES: Record<string, string> = {
     "1": "Line 1 Yonge-University",
-    "2": "Line 2 Bloor-Danforth", 
+    "2": "Line 2 Bloor-Danforth",
     "4": "Line 4 Sheppard",
     "5": "Line 5 Eglinton",
     "6": "Line 6 Finch West",
@@ -44,7 +44,7 @@
   function getRoute(thread: ThreadWithAlerts): string {
     const routes = thread.affected_routes;
     let routeStr = "";
-    
+
     if (Array.isArray(routes) && routes.length > 0) {
       routeStr = routes[0];
     } else if (typeof routes === "string") {
@@ -59,18 +59,18 @@
         routeStr = routes;
       }
     }
-    
+
     // Extract just the number from "Line X" format
     const match = routeStr.match(/Line\s*(\d+)/i);
     if (match) {
       return match[1]; // Return just "1", "2", etc.
     }
-    
+
     // If it's already just a number, return it
     if (/^\d+$/.test(routeStr)) {
       return routeStr;
     }
-    
+
     return routeStr || "Unknown";
   }
 
@@ -82,7 +82,7 @@
     const alerts = thread.alerts || [];
     for (const alert of alerts) {
       const rawData = alert.raw_data as RSZData | null;
-      
+
       // First try raw_data (for Bluesky RSZ alerts)
       if (rawData?.stopStart && rawData?.stopEnd) {
         entries.push({
@@ -93,19 +93,21 @@
         });
         continue;
       }
-      
+
       // Parse from header_text/description_text (for TTC API RSZ alerts)
       // Format: "Line X: Subway trains will move slower than usual [direction] from [start] to [end] stations..."
       const text = alert.header_text || alert.description_text || "";
-      
+
       // Match direction pattern: "northbound/southbound/eastbound/westbound from X to Y stations"
-      const dirMatch = text.match(/(northbound|southbound|eastbound|westbound)\s+from\s+(.+?)\s+to\s+(.+?)\s+stations?/i);
-      
+      const dirMatch = text.match(
+        /(northbound|southbound|eastbound|westbound)\s+from\s+(.+?)\s+to\s+(.+?)\s+stations?/i
+      );
+
       if (dirMatch) {
         const direction = dirMatch[1];
         const startStation = dirMatch[2].trim();
         const endStation = dirMatch[3].trim();
-        
+
         entries.push({
           direction: direction,
           stations: `${startStation} → ${endStation}`,
@@ -114,12 +116,16 @@
         });
         continue;
       }
-      
+
       // Fallback: Try to extract from "Affected Area:" line in description
-      const affectedMatch = (alert.description_text || "").match(/Affected Area:\s*([^to\n]+?)\s+to\s+([^\n]+)/i);
+      const affectedMatch = (alert.description_text || "").match(
+        /Affected Area:\s*([^to\n]+?)\s+to\s+([^\n]+)/i
+      );
       if (affectedMatch) {
         // Try to get direction from earlier in the text
-        const dirFromText = text.match(/(northbound|southbound|eastbound|westbound)/i);
+        const dirFromText = text.match(
+          /(northbound|southbound|eastbound|westbound)/i
+        );
         entries.push({
           direction: dirFromText?.[1] || "Unknown",
           stations: `${affectedMatch[1].trim()} → ${affectedMatch[2].trim()}`,
@@ -240,7 +246,9 @@
               Line {route}
             </span>
             <div class="rsz-line-info">
-              <span class="rsz-line-name">{LINE_NAMES[route] || `Line ${route}`}</span>
+              <span class="rsz-line-name"
+                >{LINE_NAMES[route] || `Line ${route}`}</span
+              >
               <span class="rsz-label">{$_("alerts.reducedSpeedZone")}</span>
             </div>
           </div>
