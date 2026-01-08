@@ -1045,6 +1045,28 @@ header.sticky {
   color: hsl(270 70% 75%);
 }
 
+/* Nightly Closure - warm orange (late night, evening) */
+.status-badge-nightly {
+  background-color: hsl(25 95% 93%);
+  color: hsl(25 95% 38%);
+}
+
+.dark .status-badge-nightly {
+  background-color: hsl(25 80% 25% / 0.4);
+  color: hsl(25 95% 70%);
+}
+
+/* Weekend Closure - purple/magenta (special weekend event) */
+.status-badge-weekend {
+  background-color: hsl(300 60% 94%);
+  color: hsl(300 60% 35%);
+}
+
+.dark .status-badge-weekend {
+  background-color: hsl(300 50% 28% / 0.4);
+  color: hsl(300 70% 75%);
+}
+
 /* Station badge - blue for accessibility alerts */
 /* Used to display station name (Dupont, Davisville, etc.) */
 /* Color: Blue hsl(217 91% 60%) matching accessibility tab */

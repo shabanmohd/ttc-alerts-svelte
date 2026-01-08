@@ -30,6 +30,10 @@
         return "status-badge-planned";
       case "SCHEDULED_CLOSURE":
         return "status-badge-scheduled";
+      case "NIGHTLY_CLOSURE":
+        return "status-badge-nightly";
+      case "WEEKEND_CLOSURE":
+        return "status-badge-weekend";
       case "TEMPORARY_ROUTE_CHANGE":
         return "status-badge-route-change";
       case "BUS":
@@ -60,6 +64,8 @@
       PLANNED: "status.planned",
       PLANNED_CLOSURE: "status.planned",
       SCHEDULED_CLOSURE: "status.scheduledClosure",
+      NIGHTLY_CLOSURE: "status.nightlyClosure",
+      WEEKEND_CLOSURE: "status.weekendClosure",
       TEMPORARY_ROUTE_CHANGE: "status.temporaryRouteChange",
       ACCESSIBILITY: "status.accessibility",
       BUS: "routes.bus",

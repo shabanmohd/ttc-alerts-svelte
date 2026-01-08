@@ -203,6 +203,8 @@
     "shuttle": "Shuttle",
     "planned": "Planned",
     "scheduledClosure": "Scheduled Closure",
+    "nightlyClosure": "Nightly Closure",
+    "weekendClosure": "Weekend Closure",
     "active": "Active",
     "resolved": "Resolved",
     "scheduled": "Scheduled",

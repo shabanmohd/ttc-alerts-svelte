@@ -128,6 +128,41 @@
   }
 
   /**
+   * Detect closure type based on start_time and date range.
+   * - NIGHTLY_CLOSURE: Has start_time at 10 PM or later (22:00+)
+   * - WEEKEND_CLOSURE: No start_time (all-day) and spans Sat-Sun
+   * - SCHEDULED_CLOSURE: Everything else (generic scheduled closure)
+   */
+  function getClosureType(maintenance: PlannedMaintenance): string {
+    const startHour = parseTimeHour(maintenance.start_time);
+    
+    // Nightly closure: starts at 10 PM (22:00) or later
+    if (startHour !== null && startHour >= 22) {
+      return "NIGHTLY_CLOSURE";
+    }
+    
+    // Weekend closure: no specific start time and spans weekend days
+    if (!maintenance.start_time) {
+      const startDate = parseLocalDate(maintenance.start_date);
+      const endDate = parseLocalDate(maintenance.end_date);
+      const startDay = startDate.getDay(); // 0=Sun, 6=Sat
+      const endDay = endDate.getDay();
+      
+      // Check if it's a typical weekend closure (Sat-Sun)
+      // Or starts on Friday evening and ends Sunday
+      if (
+        (startDay === 6 && endDay === 0) || // Sat to Sun
+        (startDay === 5 && endDay === 0) || // Fri to Sun
+        (startDay === 6 && endDay === 1)    // Sat to Mon
+      ) {
+        return "WEEKEND_CLOSURE";
+      }
+    }
+    
+    return "SCHEDULED_CLOSURE";
+  }
+
+  /**
    * Convert maintenance to ThreadWithAlerts format for AlertCard.
    */
   function maintenanceToThread(
@@ -138,6 +173,9 @@
       : "";
     const startDate = formatDateDisplay(maintenance.start_date);
     const endDate = formatDateDisplay(maintenance.end_date);
+
+    // Detect closure type for badge
+    const closureType = getClosureType(maintenance);
 
     // Header: affected stations
     const headerText =
@@ -163,8 +201,8 @@
 
     return {
       thread_id: `maintenance-${maintenance.maintenance_id}`,
-      title: `${maintenance.routes.join(", ")} - Scheduled Closure`,
-      categories: ["SCHEDULED_CLOSURE", "SUBWAY"],
+      title: `${maintenance.routes.join(", ")} - ${closureType.replace(/_/g, " ")}`,
+      categories: [closureType, "SUBWAY"],
       affected_routes: maintenance.routes,
       is_resolved: false,
       resolved_at: null,
@@ -176,8 +214,8 @@
         thread_id: `maintenance-${maintenance.maintenance_id}`,
         header_text: headerText,
         description_text: descriptionText,
-        effect: "SCHEDULED_CLOSURE",
-        categories: ["SCHEDULED_CLOSURE", "SUBWAY"],
+        effect: closureType,
+        categories: [closureType, "SUBWAY"],
         affected_routes: maintenance.routes,
         is_latest: true,
         created_at: maintenance.start_date,

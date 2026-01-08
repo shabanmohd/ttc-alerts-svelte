@@ -153,6 +153,28 @@
   color: hsl(25 95% 60%);
 }
 
+/* Nightly Closure - Warm orange (late night) */
+.status-badge-nightly {
+  background-color: hsl(25 95% 93%);
+  color: hsl(25 95% 38%);
+}
+
+.dark .status-badge-nightly {
+  background-color: hsl(25 80% 25% / 0.4);
+  color: hsl(25 95% 70%);
+}
+
+/* Weekend Closure - Purple/Magenta (special event) */
+.status-badge-weekend {
+  background-color: hsl(300 60% 94%);
+  color: hsl(300 60% 35%);
+}
+
+.dark .status-badge-weekend {
+  background-color: hsl(300 50% 28% / 0.4);
+  color: hsl(300 70% 75%);
+}
+
 /* Temporary Route Change - Purple */
 .status-badge-route-change {
   background-color: rgba(147, 51, 234, 0.15);

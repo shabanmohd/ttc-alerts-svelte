@@ -85,6 +85,8 @@
     // Priority order for display
     const priority = [
       "SERVICE_DISRUPTION",
+      "NIGHTLY_CLOSURE",
+      "WEEKEND_CLOSURE",
       "SCHEDULED_CLOSURE",
       "DETOUR",
       "DELAY",
@@ -436,8 +438,8 @@
           </time>
         </div>
 
-        {#if getMainCategory(categories(), rawRoutes) === "SCHEDULED_CLOSURE"}
-          <!-- Scheduled Closure: Visual hierarchy with header + description -->
+        {#if ["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes))}
+          <!-- Scheduled Closure types: Visual hierarchy with header + description -->
           <p class="text-sm font-medium leading-snug" id="{cardId}-title">
             {displayAlert?.header_text || ""}
           </p>

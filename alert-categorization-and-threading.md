@@ -612,40 +612,32 @@ CREATE TABLE planned_maintenance (
 
 1. **STEP 1:** Fetch TTC API (`/api/alerts/live-alerts`)
    - Get authoritative list of active routes, RSZ alerts, and elevator alerts
-   
 2. **STEP 2:** Hide threads no longer in TTC API
    - Excludes RSZ and ACCESSIBILITY (they have their own lifecycle)
-   
 3. **STEP 2b:** Resolve threads with matching SERVICE_RESUMED alerts
    - Matches by route + 10% text similarity
    - Skips RSZ, ACCESSIBILITY, SERVICE_RESUMED threads
-   
 4. **STEP 3:** Unhide threads if routes return to TTC API
    - Re-activates threads if alert comes back
-   
 5. **STEP 4:** Fetch Bluesky posts for context/history
    - Extract routes, categorize, thread matching
    - Create new threads if no match found
-   
 6. **STEP 5:** Process RSZ alerts from TTC API
    - Normalize route format ("1" → "Line 1")
    - Create/update RSZ threads and alerts
-   
 7. **STEP 6:** Process elevator alerts from TTC API
    - Extract station name from header
    - Create/update ACCESSIBILITY threads
-   
 8. **STEP 6b:** Auto-resolve elevator threads
    - If station no longer in TTC API → elevator restored → resolve thread
-   
 9. **STEP 6c:** Auto-resolve RSZ threads
    - If line no longer has RSZ in TTC API → resolve thread
-   
 10. **STEP 7:** Unhide RSZ/ACCESSIBILITY + merge duplicates
     - Correct historical hidden state from v94
     - Keep newest thread per station/line
 
 **False Positive Prevention:**
+
 - `nonRoutePatterns` filter removes "Bay X", "Platform X", "Track X" before route extraction
 - Line regex only matches Lines 1-4: `/\bLine\s+(1|2|3|4)\b/gi`
 - Exact route number matching prevents 46 ≠ 996 confusion
