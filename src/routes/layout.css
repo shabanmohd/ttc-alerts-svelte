@@ -1030,6 +1030,17 @@ header.sticky {
   color: hsl(220 14% 80%);
 }
 
+/* Cyan/Shuttle - shuttle bus replacement */
+.status-badge-shuttle {
+  background-color: hsl(185 85% 93%);
+  color: hsl(185 85% 28%);
+}
+
+.dark .status-badge-shuttle {
+  background-color: hsl(185 60% 25% / 0.5);
+  color: hsl(185 85% 75%);
+}
+
 .status-badge-planned {
   background-color: hsl(var(--status-info-bg));
   color: hsl(var(--status-info-text));

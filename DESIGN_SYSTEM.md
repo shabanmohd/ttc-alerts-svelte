@@ -1006,7 +1006,8 @@ Used alongside AccessibilityBadge to show the station name (e.g., "DUPONT", "DAV
 - `.status-badge-resumed` - Teal
 - `.status-badge-disruption` - Red
 - `.status-badge-delay` - Amber
-- `.status-badge-detour` - Orange
+- `.status-badge-detour` - Gray (neutral for route changes)
+- `.status-badge-shuttle` - Cyan (shuttle bus replacements)
 - `.status-badge-planned` - Blue
 - `.status-badge-scheduled` - Purple (generic scheduled closure)
 - `.status-badge-nightly` - Blue (nightly early closures starting 10 PM+)

@@ -25,6 +25,8 @@
       case "DETOUR":
       case "DIVERSION": // Same styling as DETOUR
         return "status-badge-detour";
+      case "SHUTTLE":
+        return "status-badge-shuttle";
       case "PLANNED_SERVICE_DISRUPTION":
       case "PLANNED":
         return "status-badge-planned";
