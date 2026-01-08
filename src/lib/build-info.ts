@@ -7,8 +7,8 @@
 
 export const BUILD_INFO = {
   version: '1.5.1-beta',
-  timestamp: '2026-01-08T00:59:19.316Z',
-  buildId: 'mk4qp11x'
+  timestamp: '2026-01-08T01:07:55.841Z',
+  buildId: 'mk4r03lt'
 } as const;
 
 // Formatted version string for display
