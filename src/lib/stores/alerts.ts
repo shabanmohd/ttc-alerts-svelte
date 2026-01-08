@@ -64,6 +64,13 @@ function extractRoutes(data: unknown): string[] {
   return [];
 }
 
+// Helper to parse route number from route string (e.g., "77 Swansea" -> "77")
+function parseRouteNumber(routeString: string): string {
+  // Match leading digits (with optional leading zeros)
+  const match = routeString.trim().match(/^(\d+)/);
+  return match ? match[1] : routeString;
+}
+
 /**
  * Determine the severity category of an alert/thread based on its categories and effect.
  * Maps TTC API effects to our simplified categories:
@@ -618,12 +625,14 @@ export function getThreadsForRoutes(routes: string[]): ThreadWithAlerts[] {
     const allRoutes = [...new Set([...threadRoutes, ...alertRoutes])];
     
     // Match if any of the user's saved routes is in the thread's routes
-    // Use exact match only - no substring matching to prevent route 11 matching 119/511
-    return routes.some(savedRoute => 
-      allRoutes.some(threadRoute => 
-        threadRoute.replace(/^0+/, '').toLowerCase() === savedRoute.replace(/^0+/, '').toLowerCase()
-      )
-    );
+    // Parse route numbers to handle cases like "77 Swansea" matching "77"
+    // Remove leading zeros for comparison
+    const normalizedSavedRoutes = routes.map(r => parseRouteNumber(r).replace(/^0+/, '').toLowerCase());
+    
+    return allRoutes.some(threadRoute => {
+      const normalizedThreadRoute = parseRouteNumber(threadRoute).replace(/^0+/, '').toLowerCase();
+      return normalizedSavedRoutes.includes(normalizedThreadRoute);
+    });
   });
 }
 
