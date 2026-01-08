@@ -244,7 +244,7 @@ export async function fetchAlerts(): Promise<void> {
       .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(200);
     
     if (alertsError) throw alertsError;
     
