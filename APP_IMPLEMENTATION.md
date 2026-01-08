@@ -76,41 +76,41 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Pages (`src/routes/`)
 
-| File                             | Status | Purpose                        |
-| -------------------------------- | ------ | ------------------------------ |
-| `+layout.svelte`                 | ✅     | App layout, auth init, dialogs |
-| `+page.svelte`                   | ✅     | Homepage with alert tabs       |
-| `preferences/+page.svelte`       | ✅     | Route/mode preferences         |
-| `auth/callback/+page.svelte`     | ✅     | Auth callback handler          |
-| `admin/accuracy/+page.svelte`    | ✅     | Alert accuracy monitoring      |
+| File                          | Status | Purpose                        |
+| ----------------------------- | ------ | ------------------------------ |
+| `+layout.svelte`              | ✅     | App layout, auth init, dialogs |
+| `+page.svelte`                | ✅     | Homepage with alert tabs       |
+| `preferences/+page.svelte`    | ✅     | Route/mode preferences         |
+| `auth/callback/+page.svelte`  | ✅     | Auth callback handler          |
+| `admin/accuracy/+page.svelte` | ✅     | Alert accuracy monitoring      |
 
 ### Backend (`supabase/`)
 
-| File                                    | Status | Purpose                                                 |
-| --------------------------------------- | ------ | ------------------------------------------------------- |
-| `functions/_shared/auth-utils.ts`       | ✅     | CORS + Supabase client factory                          |
-| `functions/auth-register/index.ts`      | ✅     | User registration + recovery codes (uses Supabase Auth) |
-| `functions/auth-challenge/index.ts`     | ✅     | Generate WebAuthn challenge                             |
-| `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                       |
-| `functions/auth-session/index.ts`       | ✅     | Validate existing session                               |
-| `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                              |
+| File                                        | Status | Purpose                                                 |
+| ------------------------------------------- | ------ | ------------------------------------------------------- |
+| `functions/_shared/auth-utils.ts`           | ✅     | CORS + Supabase client factory                          |
+| `functions/auth-register/index.ts`          | ✅     | User registration + recovery codes (uses Supabase Auth) |
+| `functions/auth-challenge/index.ts`         | ✅     | Generate WebAuthn challenge                             |
+| `functions/auth-verify/index.ts`            | ✅     | Verify biometrics, create session                       |
+| `functions/auth-session/index.ts`           | ✅     | Validate existing session                               |
+| `functions/auth-recover/index.ts`           | ✅     | Sign in with recovery code                              |
 | `functions/poll-alerts/index.ts`            | ✅     | Fetch/parse/thread alerts (v5: fixed schema)            |
 | `functions/monitor-alert-accuracy/index.ts` | ✅     | Compare TTC API vs Supabase (scheduled every 5min)      |
 | `functions/scrape-maintenance/index.ts`     | ✅     | Scrape maintenance schedule                             |
 
 ### Database (EXISTING in Supabase)
 
-| Table                   | Rows | Purpose                                                  |
-| ----------------------- | ---- | -------------------------------------------------------- |
-| `alert_cache`           | 600+ | Alerts from Bluesky (header_text, categories, is_latest) |
-| `incident_threads`      | 255K | Grouped alert threads (title, is_resolved)               |
-| `planned_maintenance`   | 9    | Scheduled maintenance                                    |
-| `alert_accuracy_logs`   | -    | Alert accuracy checks (every 5min)                       |
-| `alert_accuracy_reports`| -    | Daily accuracy summaries                                 |
-| `user_profiles`         | -    | User display_name, linked to auth.users                  |
-| `webauthn_credentials` | -    | Public keys (credential_id as PK)                        |
-| `recovery_codes`       | -    | Bcrypt-hashed one-time codes                             |
-| `user_preferences`     | -    | Routes, modes, notification settings                     |
+| Table                    | Rows | Purpose                                                  |
+| ------------------------ | ---- | -------------------------------------------------------- |
+| `alert_cache`            | 600+ | Alerts from Bluesky (header_text, categories, is_latest) |
+| `incident_threads`       | 255K | Grouped alert threads (title, is_resolved)               |
+| `planned_maintenance`    | 9    | Scheduled maintenance                                    |
+| `alert_accuracy_logs`    | -    | Alert accuracy checks (every 5min)                       |
+| `alert_accuracy_reports` | -    | Daily accuracy summaries                                 |
+| `user_profiles`          | -    | User display_name, linked to auth.users                  |
+| `webauthn_credentials`   | -    | Public keys (credential_id as PK)                        |
+| `recovery_codes`         | -    | Bcrypt-hashed one-time codes                             |
+| `user_preferences`       | -    | Routes, modes, notification settings                     |
 
 ### Static (`static/`)
 
@@ -278,7 +278,6 @@ The "Recently Resolved" section was always showing "None in last 6 hours" even w
 - `src/lib/stores/alerts.ts`:
   - Removed `!thread.is_resolved` filter from `threadsWithAlerts` - now only filters hidden threads
   - Added `resolved_at` to the threads SELECT query columns
-  
 - Active alerts (`activeAlerts`, `rszAlerts`, `categoryCounts`) still correctly filter `!t.is_resolved` at the page level
 
 **Result:** 7 recently resolved alerts now visible in "Recently Resolved" section, including SERVICE_RESUMED confirmations from Bluesky.

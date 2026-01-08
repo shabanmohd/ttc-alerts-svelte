@@ -20,6 +20,7 @@
     Calendar,
     ArrowLeftRight,
     X,
+    Eye,
   } from "lucide-svelte";
 
   interface AccuracyLog {
@@ -86,6 +87,10 @@
   let isLoadingComparison = $state(false);
   let comparisonResult: ComparisonResult | null = $state(null);
   let comparisonError = $state<string | null>(null);
+  
+  // Check details modal state
+  let showCheckDetails = $state(false);
+  let selectedCheckLog: AccuracyLog | null = $state(null);
 
   // Date selection - default to today
   let selectedDate = $state(new Date().toISOString().split("T")[0]);
@@ -278,6 +283,16 @@
   function closeComparison() {
     showComparison = false;
     comparisonResult = null;
+  }
+  
+  function showCheckDetailsModal(log: AccuracyLog) {
+    selectedCheckLog = log;
+    showCheckDetails = true;
+  }
+  
+  function closeCheckDetails() {
+    showCheckDetails = false;
+    selectedCheckLog = null;
   }
 
   async function triggerManualCheck() {
@@ -631,6 +646,7 @@
                     <th class="text-right py-2 px-2 font-medium">Matched</th>
                     <th class="text-right py-2 px-2 font-medium">Complete</th>
                     <th class="text-right py-2 px-2 font-medium">Status</th>
+                    <th class="text-center py-2 px-2 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -656,6 +672,16 @@
                           <LogStatusIcon class="w-3 h-3" />
                           <span class="capitalize">{log.status}</span>
                         </span>
+                      </td>
+                      <td class="py-2 px-2 text-center">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          class="h-7 px-2"
+                          onclick={() => showCheckDetailsModal(log)}
+                        >
+                          <Eye class="w-4 h-4" />
+                        </Button>
                       </td>
                     </tr>
                   {/each}
@@ -900,6 +926,7 @@
                   <th class="text-right py-2 px-2 font-medium">Matched</th>
                   <th class="text-right py-2 px-2 font-medium">Complete</th>
                   <th class="text-right py-2 px-2 font-medium">Status</th>
+                  <th class="text-center py-2 px-2 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -924,6 +951,16 @@
                         <LogStatusIcon class="w-3 h-3" />
                         <span class="capitalize">{log.status}</span>
                       </span>
+                    </td>
+                    <td class="py-2 px-2 text-center">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        class="h-7 px-2"
+                        onclick={() => showCheckDetailsModal(log)}
+                      >
+                        <Eye class="w-4 h-4" />
+                      </Button>
                     </td>
                   </tr>
                 {/each}
@@ -1091,6 +1128,115 @@
         <Button onclick={fetchComparison} disabled={isLoadingComparison}>
           <RefreshCw class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-spin' : ''}" />
           Refresh
+        </Button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Check Details Modal -->
+{#if showCheckDetails && selectedCheckLog}
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div 
+    class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" 
+    onclick={closeCheckDetails}
+    role="button"
+    tabindex="-1"
+  >
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div 
+      class="bg-zinc-900 rounded-lg shadow-xl w-full max-w-md overflow-hidden flex flex-col border border-zinc-700"
+      onclick={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="check-details-title"
+      tabindex="-1"
+    >
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-700 bg-zinc-800">
+        <div>
+          <h2 id="check-details-title" class="text-lg font-bold text-white">Check Details</h2>
+          <p class="text-sm text-zinc-400">
+            {new Date(selectedCheckLog.checked_at).toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })}
+          </p>
+        </div>
+        <Button variant="ghost" size="sm" onclick={closeCheckDetails} class="text-zinc-400 hover:text-white">
+          <X class="w-5 h-5" />
+        </Button>
+      </div>
+      
+      <!-- Content -->
+      <div class="p-6 space-y-4">
+        {#if selectedCheckLog}
+          {@const StatusIcon = getStatusIcon(selectedCheckLog.status)}
+          
+          <!-- Status Badge -->
+          <div class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg {
+            selectedCheckLog.status === 'healthy' ? 'bg-emerald-500/20 text-emerald-400' :
+            selectedCheckLog.status === 'warning' ? 'bg-amber-500/20 text-amber-400' :
+            'bg-red-500/20 text-red-400'
+          }">
+            <StatusIcon class="w-5 h-5" />
+            <span class="font-semibold capitalize">{selectedCheckLog.status}</span>
+          </div>
+        {/if}
+        
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-zinc-800 rounded-lg p-3 text-center">
+            <div class="text-2xl font-bold text-white">{selectedCheckLog.ttc_alert_count}</div>
+            <div class="text-xs text-zinc-400">TTC API Alerts</div>
+          </div>
+          <div class="bg-zinc-800 rounded-lg p-3 text-center">
+            <div class="text-2xl font-bold text-white">{selectedCheckLog.frontend_alert_count}</div>
+            <div class="text-xs text-zinc-400">Frontend Alerts</div>
+          </div>
+          <div class="bg-zinc-800 rounded-lg p-3 text-center">
+            <div class="text-2xl font-bold text-emerald-400">{selectedCheckLog.matched_count}</div>
+            <div class="text-xs text-zinc-400">Matched</div>
+          </div>
+          <div class="bg-zinc-800 rounded-lg p-3 text-center">
+            <div class="text-2xl font-bold text-blue-400">{selectedCheckLog.completeness}%</div>
+            <div class="text-xs text-zinc-400">Completeness</div>
+          </div>
+          <div class="bg-zinc-800 rounded-lg p-3 text-center">
+            <div class="text-2xl font-bold text-amber-400">{selectedCheckLog.missing_count}</div>
+            <div class="text-xs text-zinc-400">Missing Alerts</div>
+          </div>
+          <div class="bg-zinc-800 rounded-lg p-3 text-center">
+            <div class="text-2xl font-bold text-red-400">{selectedCheckLog.stale_count}</div>
+            <div class="text-xs text-zinc-400">Stale Alerts</div>
+          </div>
+        </div>
+        
+        <!-- Precision -->
+        <div class="bg-zinc-800 rounded-lg p-3 text-center">
+          <div class="text-2xl font-bold text-purple-400">{selectedCheckLog.precision}%</div>
+          <div class="text-xs text-zinc-400">Precision (Non-Stale Rate)</div>
+        </div>
+        
+        {#if selectedCheckLog.error_message}
+          <div class="bg-red-500/20 text-red-400 rounded-lg p-3 text-sm">
+            <strong>Error:</strong> {selectedCheckLog.error_message}
+          </div>
+        {/if}
+      </div>
+      
+      <!-- Footer -->
+      <div class="flex justify-between gap-2 px-6 py-4 border-t border-zinc-700 bg-zinc-800">
+        <Button variant="outline" onclick={closeCheckDetails}>
+          Close
+        </Button>
+        <Button onclick={() => { closeCheckDetails(); fetchComparison(); }} disabled={isLoadingComparison}>
+          <ArrowLeftRight class="w-4 h-4 mr-2" />
+          Compare Live
         </Button>
       </div>
     </div>
