@@ -207,6 +207,37 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Changelog
 
+### Jan 8, 2026 - SERVICE_RESUMED Thread Handling Fix
+
+**Bug Fixed:**
+SERVICE_RESUMED alerts from Bluesky weren't properly showing in "Recently Resolved" section.
+
+**Root Causes:**
+
+1. **poll-alerts missing metadata**: When SERVICE_RESUMED matched an existing thread, the Edge Function wasn't setting `resolved_at` timestamp or adding `SERVICE_RESUMED` to thread categories.
+
+2. **Wrong cutoff source**: Frontend used `thread.resolved_at` for the cutoff, but displayed `latestAlert.created_at` to users - causing inconsistency.
+
+3. **Orphaned filter too strict**: Previously filtered out standalone SERVICE_RESUMED threads, but these are valid (Bluesky posts them when service genuinely resumes).
+
+**Fixes Applied:**
+
+- `supabase/functions/poll-alerts/index.ts` (v98):
+  - Now sets `resolved_at` timestamp when SERVICE_RESUMED matches thread
+  - Now adds `SERVICE_RESUMED` to thread categories array
+  
+- `src/routes/alerts/+page.svelte`:
+  - Extended cutoff from 6 hours to **12 hours**
+  - Changed cutoff to use `latestAlert.created_at` instead of `thread.resolved_at`
+  - Removed orphaned SERVICE_RESUMED filter
+
+**Result:** 25+ SERVICE_RESUMED alerts now visible in Recently Resolved section.
+
+**Files Updated:**
+
+- `supabase/functions/poll-alerts/index.ts` - Thread update logic for SERVICE_RESUMED
+- `src/routes/alerts/+page.svelte` - Recently Resolved filter logic
+
 ### Jan 8, 2026 - Alert Accuracy Monitoring System
 
 **New Feature:**
