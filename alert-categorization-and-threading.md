@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.5  
+**Version:** 3.6  
 **Date:** January 8, 2026  
-**poll-alerts Version:** 106  
+**poll-alerts Version:** 110  
 **scrape-maintenance Version:** 2  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
@@ -646,11 +646,14 @@ CREATE TABLE planned_maintenance (
    - Create/update ACCESSIBILITY threads
 8. **STEP 6b:** Auto-resolve elevator threads
    - If station no longer in TTC API → elevator restored → resolve thread
+   - Uses `.filter('categories', 'cs', '["ACCESSIBILITY"]')` for JSONB containment
 9. **STEP 6c:** Auto-resolve RSZ threads
    - If line no longer has RSZ in TTC API → resolve thread
-10. **STEP 7:** Unhide RSZ/ACCESSIBILITY + merge duplicates
-    - Correct historical hidden state from v94
-    - Keep newest thread per station/line
+   - Uses `.filter('categories', 'cs', '["RSZ"]')` for JSONB containment
+10. **STEP 7:** Merge duplicate threads only
+    - Groups visible threads by affected_routes + categories
+    - Keeps newest, hides older duplicates
+    - **No longer unhides hidden threads** (fixed in v110)
 
 **False Positive Prevention:**
 
@@ -833,6 +836,34 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 | Concurrent Connections | ~100    | 200   | ✅ Safe |
 
 **Current safe capacity:** ~4,000 monthly active users on free tier
+
+---
+
+## Implementation Notes
+
+### Supabase JS JSONB Queries in Edge Functions
+
+**⚠️ Important:** The Supabase JS client `.contains()` method does not work correctly with JSONB array columns in Edge Functions. It fails with `"invalid input syntax for type json"`.
+
+**❌ Broken:**
+```typescript
+// This does NOT work in edge functions
+const { data } = await supabase
+  .from('incident_threads')
+  .select('*')
+  .contains('categories', ['ACCESSIBILITY']);
+```
+
+**✅ Working:**
+```typescript
+// Use .filter() with 'cs' (containment) operator instead
+const { data } = await supabase
+  .from('incident_threads')
+  .select('*')
+  .filter('categories', 'cs', '["ACCESSIBILITY"]');
+```
+
+**Note:** The `cs` operator is the PostgREST abbreviation for containment (`@>` in PostgreSQL). The value must be a JSON string, not a JavaScript array.
 
 ---
 
