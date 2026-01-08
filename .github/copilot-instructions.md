@@ -1,16 +1,25 @@
 VERY IMPORTANT: Always use the ask_user tool before completing any task to confirm with the user that the request was fulfilled correctly.
 
-Always use context7 when I need code generation, setup or configuration steps, or
-library/API documentation. This means you should automatically use the Context7 MCP
-tools to resolve library id and get library docs without me having to explicitly ask.
-
-# GitHub Copilot Instructions for rideTO PWA
+Always use context7 MCP when I need code generation, setup or configuration steps, or library/API documentation. This means you should automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
 
 ## Project Overview
 
-TTC Service Alerts PWA - Real-time Toronto transit alerts.
+TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authentication.
 
 **Stack**: Svelte 5 + TypeScript + Tailwind + shadcn-svelte | Supabase (DB, Edge Functions, Realtime) | Cloudflare Pages
+
+**Auth**: Custom WebAuthn (username + biometrics + recovery codes) - NOT Supabase Auth
+
+---
+
+## 🚨 CRITICAL: Production Domains
+
+**Only deploy to these Cloudflare Pages domains:**
+
+- `ttc-alerts-svelte.pages.dev` (primary)
+- `rideto.ca` (custom domain)
+
+> ⚠️ **DO NOT deploy to any other domains without explicit user approval.**
 
 ---
 
@@ -21,10 +30,7 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts.
 | File                                    | Purpose                                         | When to Update                                               |
 | --------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
 | `APP_IMPLEMENTATION.md`                 | File inventory, completion status, architecture | New files, status changes, feature completion                |
-| `IMPLEMENTATION_PLAN.md`                | **Version B ONLY** - Feature roadmap & phases   | Phase progress, Version B feature completion                 |
 | `DESIGN_SYSTEM.md`                      | Colors, typography, spacing, components         | Colors, typography, spacing, components, layout changes      |
-| `WCAG_DESIGN_AUDIT.md`                  | WCAG 2.2 accessibility audit and compliance     | Accessibility changes, a11y fixes, compliance updates        |
-| `SEO_AUDIT.md`                          | SEO audit, meta tags, structured data           | SEO fixes, meta tag changes, sitemap updates                 |
 | `alert-categorization-and-threading.md` | Edge Function logic, threading algorithm        | Categorization logic, threading algorithm, filtering changes |
 | `TTC-ROUTE-CONFLICTS.md`                | Route number conflicts (39/939, 46/996, etc.)   | Route matching bugs, new conflict patterns                   |
 | `TTC-BUS-ROUTES.md`                     | Complete TTC bus route reference                | Route additions/removals                                     |
@@ -42,9 +48,8 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts.
 
 1. `APP_IMPLEMENTATION.md` - Understand current project state and file locations
 2. `DESIGN_SYSTEM.md` - Understand UI patterns and styling conventions
-3. `WCAG_DESIGN_AUDIT.md` - Understand accessibility requirements and compliance status
-4. `alert-categorization-and-threading.md` - Understand Edge Function and threading logic
-5. `TTC-ROUTE-CONFLICTS.md` - Understand route matching edge cases
+3. `alert-categorization-and-threading.md` - Understand Edge Function and threading logic
+4. `TTC-ROUTE-CONFLICTS.md` - Understand route matching edge cases
 
 **These docs are your context restoration system. Use them before asking questions or making assumptions.**
 
@@ -75,92 +80,6 @@ TTC Service Alerts PWA - Real-time Toronto transit alerts.
 - Update when fixing route threading bugs
 - Add new test cases for discovered edge cases
 - Update code examples to match actual implementation
-
----
-
-## 🔀 Version A/B Documentation Rules
-
-### Branch Structure
-
-| Version   | Branch      | URL                                   | Purpose      |
-| --------- | ----------- | ------------------------------------- | ------------ |
-| Version A | `main`      | ttc-alerts-svelte.pages.dev           | Stable/Prod  |
-| Version B | `version-b` | version-b.ttc-alerts-svelte.pages.dev | Beta/Testing |
-
-### Documentation Scope
-
-| Document                 | Scope              | Notes                                   |
-| ------------------------ | ------------------ | --------------------------------------- |
-| `APP_IMPLEMENTATION.md`  | **Both Versions**  | Use 🅰️/🅱️ markers and comparison tables |
-| `IMPLEMENTATION_PLAN.md` | **Version B ONLY** | Beta feature roadmap, NOT for Version A |
-| `DESIGN_SYSTEM.md`       | **Both Versions**  | Note version differences if any         |
-| Other docs               | **Both Versions**  | Specify version if behavior differs     |
-
-### 📝 Update Rules for Version Changes
-
-#### When Making Changes to Version A (`main` branch):
-
-1. Update `APP_IMPLEMENTATION.md` Version A sections
-2. **DO NOT** update `IMPLEMENTATION_PLAN.md` (Version B only)
-3. Mark files with 🅰️ if Version A specific
-
-#### When Making Changes to Version B (`version-b` branch):
-
-1. Update `APP_IMPLEMENTATION.md` Version B sections
-2. Update `IMPLEMENTATION_PLAN.md` progress tables and file checklists
-3. Mark new files with 🆕🅱️ in APP_IMPLEMENTATION.md
-4. Update Phase completion status in IMPLEMENTATION_PLAN.md
-
-#### Cross-Reference Rules:
-
-1. **Always check both docs** when making Version B changes
-2. `IMPLEMENTATION_PLAN.md` Phase → corresponds to → `APP_IMPLEMENTATION.md` files
-3. When a Phase is complete in IMPLEMENTATION_PLAN, verify files listed in APP_IMPLEMENTATION
-4. Keep Progress Summary table in IMPLEMENTATION_PLAN.md current
-
-### Version Markers Reference
-
-| Marker | Meaning                    |
-| ------ | -------------------------- |
-| 🆕     | New file (either version)  |
-| 🅰️     | Version A specific         |
-| 🅱️     | Version B specific         |
-| 🆕🅱️   | New file in Version B only |
-| ✅     | Complete                   |
-| ⚠️     | Partial/In Progress        |
-| ❌     | Not Started                |
-
-### APP_IMPLEMENTATION.md File Organization
-
-When documenting files, organize them into these categories:
-
-1. **Shared Files (Both Versions)** - Files that exist in both Version A and Version B
-
-   - Core components, stores, types, utilities
-   - Mark with no special marker (they're the default)
-
-2. **Version A Exclusive** - Files only in Version A (`main` branch)
-
-   - Mark with 🅰️
-   - Rare - most Version A files become shared when merged
-
-3. **Version B Exclusive** - Files only in Version B (`version-b` branch)
-   - Mark with 🅱️ or 🆕🅱️ for new files
-   - These are beta features not yet in production
-   - Example: Stop search, bookmarks, ETA features
-
-**Example structure in APP_IMPLEMENTATION.md:**
-
-```markdown
-### Stores (`src/lib/stores/`)
-
-| File                | Status | Description                    |
-| ------------------- | ------ | ------------------------------ |
-| `alerts.ts`         | ✅     | Alert filtering - Shared       |
-| `preferences.ts`    | ✅     | User preferences - Shared      |
-| `stops.ts` 🆕🅱️     | ✅     | Stop database - Version B only |
-| `bookmarks.ts` 🆕🅱️ | ✅     | Bookmarks - Version B only     |
-```
 
 ---
 
@@ -249,19 +168,18 @@ When documenting files, organize them into these categories:
 
 ## Architecture
 
-### Data Storage
+### Auth System (Custom WebAuthn)
 
-- **Preferences**: Stored in Supabase `device_preferences` table (device fingerprint based)
-- **Bookmarks**: Stored in localStorage only
-- **Alerts**: Fetched from Supabase with Realtime subscriptions
+- Username-based (no email) → WebAuthn biometrics → 8 recovery codes
+- Tables: `users`, `webauthn_credentials`, `recovery_codes`, `device_sessions`
 
 ### Feature Access
 
-| Feature          | Storage       |
+| Feature          | Auth Required |
 | ---------------- | ------------- |
-| View alerts      | None required |
-| Save preferences | Device-based  |
-| Bookmarks        | localStorage  |
+| View alerts      | No            |
+| Save preferences | Yes           |
+| "My Alerts" tab  | Yes           |
 
 ## Code Patterns
 
@@ -286,24 +204,21 @@ When documenting files, organize them into these categories:
 ### Stores
 
 ```typescript
-import { threadsWithAlerts, isLoading } from "$lib/stores/alerts";
-import { bookmarks } from "$lib/stores/bookmarks";
-import { preferences } from "$lib/stores/preferences";
+import { isAuthenticated, user } from "$lib/stores/auth";
 ```
 
 ## File Structure
 
 ```
 src/lib/
-├── components/     # alerts/, dialogs/, layout/, ui/, stops/, eta/
-├── stores/         # alerts.ts, preferences.ts, bookmarks.ts
-├── types/          # database.ts
-├── data/           # stops-db.ts, route-names.ts
-├── i18n/           # en.json, fr.json, translations/
+├── components/     # alerts/, dialogs/, layout/, ui/
+├── services/       # webauthn.ts
+├── stores/         # alerts.ts, auth.ts, preferences.ts
+├── types/          # auth.ts, database.ts
 ├── supabase.ts
 └── utils.ts
 
-supabase/functions/ # poll-alerts, scrape-maintenance, get-eta
+supabase/functions/ # auth-register, auth-challenge, auth-verify, auth-session, auth-recover
 ```
 
 ## Commands
