@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '93';
+const VERSION = '94';
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -435,6 +435,7 @@ serve(async (req) => {
     
     // STEP 2: Hide threads that are no longer in TTC API
     // Only hide if they weren't explicitly resolved via SERVICE_RESUMED
+    // EXCLUDES: RSZ and ACCESSIBILITY threads (they manage their own lifecycle)
     let hiddenThreads = 0;
     if (ttcActiveRoutes.size > 0) {
       // Get all unresolved, non-hidden threads
@@ -446,9 +447,16 @@ serve(async (req) => {
       
       for (const thread of activeThreads || []) {
         const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+        const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
         
         // Skip threads with no routes (can't cross-reference)
         if (threadRoutes.length === 0) continue;
+        
+        // Skip RSZ and ACCESSIBILITY threads - they have their own lifecycle
+        // These threads use station names or subway line numbers, not route numbers
+        if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) {
+          continue;
+        }
         
         // Check if ANY of the thread's routes are still active in TTC API
         const hasActiveTtcAlert = threadHasActiveTtcAlert(threadRoutes, ttcActiveRoutes);
@@ -472,16 +480,23 @@ serve(async (req) => {
     
     // STEP 3: Also unhide threads if their routes ARE back in TTC API
     // (in case alert comes back)
+    // EXCLUDES: RSZ and ACCESSIBILITY threads
     if (ttcActiveRoutes.size > 0) {
       const { data: hiddenThreadsData } = await supabase
         .from('incident_threads')
-        .select('thread_id, title, affected_routes')
+        .select('thread_id, title, affected_routes, categories')
         .eq('is_resolved', false)
         .eq('is_hidden', true);
       
       for (const thread of hiddenThreadsData || []) {
         const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+        const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
         if (threadRoutes.length === 0) continue;
+        
+        // Skip RSZ and ACCESSIBILITY threads
+        if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) {
+          continue;
+        }
         
         const hasActiveTtcAlert = threadHasActiveTtcAlert(threadRoutes, ttcActiveRoutes);
         
@@ -677,6 +692,27 @@ serve(async (req) => {
     newAlerts += elevatorResult.newAlerts;
     updatedThreads += elevatorResult.updatedThreads;
 
+    // STEP 7: Unhide RSZ/ACCESSIBILITY threads that were incorrectly hidden
+    // This corrects the state from before v94 when these threads were being hidden
+    const { data: incorrectlyHiddenThreads } = await supabase
+      .from('incident_threads')
+      .select('thread_id, title, categories')
+      .eq('is_resolved', false)
+      .eq('is_hidden', true);
+    
+    let unhiddenRszAccessibility = 0;
+    for (const thread of incorrectlyHiddenThreads || []) {
+      const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
+      if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) {
+        await supabase
+          .from('incident_threads')
+          .update({ is_hidden: false, updated_at: new Date().toISOString() })
+          .eq('thread_id', thread.thread_id);
+        unhiddenRszAccessibility++;
+        console.log(`Unhidden RSZ/ACCESSIBILITY thread: "${thread.title}"`);
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true,
@@ -685,6 +721,7 @@ serve(async (req) => {
         rszAlerts: ttcData.rszAlerts.length,
         elevatorAlerts: ttcData.elevatorAlerts.length,
         hiddenThreads,
+        unhiddenRszAccessibility,
         newAlerts, 
         updatedThreads,
         timestamp: new Date().toISOString()
