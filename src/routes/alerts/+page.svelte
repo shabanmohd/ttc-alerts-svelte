@@ -335,9 +335,11 @@
   // Get RSZ alerts (for delays tab) - using same isRSZAlert helper
   let rszAlerts = $derived.by(() => {
     if (selectedCategory !== "delays") return [];
-    return $threadsWithAlerts.filter(
+    const rsz = $threadsWithAlerts.filter(
       (t) => !t.is_resolved && !t.is_hidden && isRSZAlert(t)
     );
+    console.log('=== DEBUG: rszAlerts ===', rsz.length, rsz.map(t => t.title));
+    return rsz;
   });
 
   // Get recently resolved alerts (last 6 hours) - only show under Disruptions tab
@@ -348,6 +350,7 @@
     if (selectedCategory !== "disruptions") return [];
 
     const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
+    
     return $threadsWithAlerts.filter((t) => {
       // Must be resolved and not hidden
       if (!t.is_resolved || t.is_hidden || !t.resolved_at) return false;

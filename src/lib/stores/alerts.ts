@@ -172,10 +172,9 @@ export const threadsWithAlerts = derived(
   [threads, alerts],
   ([$threads, $alerts]) => {
     return $threads
-      // CRITICAL: Filter out resolved and hidden threads first
-      // Resolved: incident has been closed/fixed
+      // Filter out hidden threads only - keep resolved threads for "Recently Resolved" section
       // Hidden: thread no longer in TTC API without SERVICE_RESUMED confirmation
-      .filter(thread => !thread.is_resolved && !thread.is_hidden)
+      .filter(thread => !thread.is_hidden)
       .map((thread): ThreadWithAlerts => {
         const threadAlerts = $alerts
           .filter(a => a.thread_id === thread.thread_id)
@@ -251,12 +250,12 @@ export async function fetchAlerts(): Promise<void> {
     // Get unique thread IDs from alerts
     const threadIds = [...new Set((alertsData || []).map(a => a.thread_id).filter(Boolean))];
     
-    // Fetch threads - select only needed columns to reduce egress (include is_hidden)
+    // Fetch threads - select only needed columns to reduce egress (include is_hidden, resolved_at)
     let threadsData: Thread[] = [];
     if (threadIds.length > 0) {
       const { data, error: threadsError } = await supabase
         .from('incident_threads')
-        .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, created_at, updated_at')
+        .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at')
         .in('thread_id', threadIds);
       
       if (threadsError) throw threadsError;

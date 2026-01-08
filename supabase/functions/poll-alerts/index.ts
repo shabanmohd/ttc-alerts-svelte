@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '95';
+const VERSION = '97';
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -222,10 +222,22 @@ async function fetchTtcActiveRoutes(): Promise<Set<string>> {
 }
 
 // Generate a unique alert ID for TTC API alerts (RSZ/Elevator)
-function generateTtcAlertId(type: string, route: string, text: string): string {
-  // Create a deterministic ID based on type, route, and key text
-  const cleanText = text.substring(0, 50).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-  return `ttc-${type}-${route}-${cleanText}`.substring(0, 100);
+function generateTtcAlertId(type: string, route: string, text: string, stopStart?: string, stopEnd?: string): string {
+  // Include station names in ID to ensure uniqueness for RSZ alerts
+  let idBase = `ttc-${type}-${route}`;
+  
+  if (stopStart && stopEnd) {
+    // Use station names for RSZ alerts to ensure uniqueness
+    const cleanStart = stopStart.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 15);
+    const cleanEnd = stopEnd.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 15);
+    idBase += `-${cleanStart}-${cleanEnd}`;
+  } else {
+    // Fallback to text for other alerts
+    const cleanText = text.substring(0, 50).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    idBase += `-${cleanText}`;
+  }
+  
+  return idBase.substring(0, 100);
 }
 
 // Process RSZ alerts from TTC API
@@ -236,7 +248,9 @@ async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promis
   for (const rsz of rszAlerts) {
     const headerText = rsz.headerText || '';
     const route = rsz.route || '';
-    const alertId = generateTtcAlertId('rsz', route, headerText);
+    const stopStart = rsz.stopStart || '';
+    const stopEnd = rsz.stopEnd || '';
+    const alertId = generateTtcAlertId('rsz', route, headerText, stopStart, stopEnd);
     
     // Check if this alert already exists
     const { data: existing } = await supabase
@@ -474,6 +488,62 @@ serve(async (req) => {
             .eq('thread_id', thread.thread_id);
           
           hiddenThreads++;
+        }
+      }
+    }
+    
+    // STEP 2b: Mark threads as resolved if they have a matching SERVICE_RESUMED alert
+    // (This catches cases where SERVICE_RESUMED ended up in a different thread)
+    {
+      // Get all unresolved SERVICE_DISRUPTION threads
+      const { data: unresolvedThreads } = await supabase
+        .from('incident_threads')
+        .select('thread_id, title, affected_routes')
+        .eq('is_resolved', false)
+        .contains('categories', ['SERVICE_DISRUPTION']);
+      
+      // Get all SERVICE_RESUMED alerts from the last 48 hours
+      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+      const { data: resumedAlerts } = await supabase
+        .from('alert_cache')
+        .select('header_text, affected_routes')
+        .contains('categories', ['SERVICE_RESUMED'])
+        .gte('created_at', fortyEightHoursAgo);
+      
+      for (const thread of unresolvedThreads || []) {
+        const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+        if (threadRoutes.length === 0) continue;
+        
+        // Check if any SERVICE_RESUMED alert matches this thread's routes with good similarity
+        for (const resumedAlert of resumedAlerts || []) {
+          const resumedRoutes = Array.isArray(resumedAlert.affected_routes) ? resumedAlert.affected_routes : [];
+          
+          // Check route overlap
+          const hasRouteMatch = threadRoutes.some(tr => {
+            const trNorm = normalizeRoute(tr);
+            return resumedRoutes.some(rr => normalizeRoute(rr) === trNorm);
+          });
+          
+          if (hasRouteMatch) {
+            // Check text similarity
+            const similarity = jaccardSimilarity(thread.title || '', resumedAlert.header_text || '');
+            if (similarity >= 0.25) {
+              console.log(`Resolving thread "${thread.title}" - matched SERVICE_RESUMED with ${(similarity * 100).toFixed(0)}% similarity`);
+              
+              await supabase
+                .from('incident_threads')
+                .update({ 
+                  is_resolved: true,
+                  is_hidden: true,
+                  resolved_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                })
+                .eq('thread_id', thread.thread_id);
+              
+              hiddenThreads++;
+              break; // Move to next thread
+            }
+          }
         }
       }
     }

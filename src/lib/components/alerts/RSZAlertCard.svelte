@@ -18,19 +18,27 @@
     alertId: string;
   }
 
-  // Subway line colors (matching alerts page)
+  // Subway line colors (matching alerts page) - keyed by route number
   const LINE_COLORS: Record<string, { color: string; textColor: string }> = {
-    "Line 1": { color: "#ffc524", textColor: "#000000" },
-    "Line 2": { color: "#00853f", textColor: "#ffffff" },
-    "Line 4": { color: "#a12f7d", textColor: "#ffffff" },
-    "Line 6": { color: "#808285", textColor: "#ffffff" },
+    "1": { color: "#ffc524", textColor: "#000000" },
+    "2": { color: "#00853f", textColor: "#ffffff" },
+    "4": { color: "#a12f7d", textColor: "#ffffff" },
+    "6": { color: "#808285", textColor: "#ffffff" },
+  };
+
+  // Full line names for display
+  const LINE_NAMES: Record<string, string> = {
+    "1": "Line 1 Yonge-University",
+    "2": "Line 2 Bloor-Danforth", 
+    "4": "Line 4 Sheppard",
+    "6": "Line 6 Finch West",
   };
 
   let { threads }: { threads: ThreadWithAlerts[] } = $props();
 
-  let expandedSections = $state(new Set<string>(["Line 1", "Line 2"])); // Default expanded
+  let expandedSections = $state(new Set<string>(["1", "2"])); // Default expanded
 
-  // Extract route from thread (e.g., "Line 1" from affected_routes)
+  // Extract route from thread (e.g., "1" from affected_routes)
   function getRoute(thread: ThreadWithAlerts): string {
     const routes = thread.affected_routes;
     if (Array.isArray(routes) && routes.length > 0) {
@@ -55,10 +63,47 @@
     const alerts = thread.alerts || [];
     for (const alert of alerts) {
       const rawData = alert.raw_data as RSZData | null;
+      
+      // First try raw_data (for Bluesky RSZ alerts)
       if (rawData?.stopStart && rawData?.stopEnd) {
         entries.push({
           direction: rawData.direction || "Unknown",
           stations: `${rawData.stopStart} → ${rawData.stopEnd}`,
+          timestamp: alert.created_at || "",
+          alertId: alert.alert_id,
+        });
+        continue;
+      }
+      
+      // Parse from header_text/description_text (for TTC API RSZ alerts)
+      // Format: "Line X: Subway trains will move slower than usual [direction] from [start] to [end] stations..."
+      const text = alert.header_text || alert.description_text || "";
+      
+      // Match direction pattern: "northbound/southbound/eastbound/westbound from X to Y stations"
+      const dirMatch = text.match(/(northbound|southbound|eastbound|westbound)\s+from\s+(.+?)\s+to\s+(.+?)\s+stations?/i);
+      
+      if (dirMatch) {
+        const direction = dirMatch[1];
+        const startStation = dirMatch[2].trim();
+        const endStation = dirMatch[3].trim();
+        
+        entries.push({
+          direction: direction,
+          stations: `${startStation} → ${endStation}`,
+          timestamp: alert.created_at || "",
+          alertId: alert.alert_id,
+        });
+        continue;
+      }
+      
+      // Fallback: Try to extract from "Affected Area:" line in description
+      const affectedMatch = (alert.description_text || "").match(/Affected Area:\s*([^to\n]+?)\s+to\s+([^\n]+)/i);
+      if (affectedMatch) {
+        // Try to get direction from earlier in the text
+        const dirFromText = text.match(/(northbound|southbound|eastbound|westbound)/i);
+        entries.push({
+          direction: dirFromText?.[1] || "Unknown",
+          stations: `${affectedMatch[1].trim()} → ${affectedMatch[2].trim()}`,
           timestamp: alert.created_at || "",
           alertId: alert.alert_id,
         });
@@ -173,10 +218,10 @@
               class="rsz-line-badge"
               style="background-color: {lineInfo.color}; color: {lineInfo.textColor}"
             >
-              {route.replace("Line ", "")}
+              {route}
             </span>
             <div class="rsz-line-info">
-              <span class="rsz-line-name">{route}</span>
+              <span class="rsz-line-name">{LINE_NAMES[route] || `Line ${route}`}</span>
               <span class="rsz-label">{$_("alerts.reducedSpeedZone")}</span>
             </div>
           </div>
