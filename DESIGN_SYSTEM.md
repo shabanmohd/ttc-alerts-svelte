@@ -996,6 +996,9 @@ Used alongside AccessibilityBadge to show the station name (e.g., "DUPONT", "DAV
 <StatusBadge category="DELAY" />
 <StatusBadge category="DIVERSION" />
 <StatusBadge category="PLANNED_CLOSURE" />
+<StatusBadge category="SCHEDULED_CLOSURE" />
+<StatusBadge category="NIGHTLY_CLOSURE" />
+<StatusBadge category="WEEKEND_CLOSURE" />
 ```
 
 **CSS Classes:**
@@ -1005,6 +1008,9 @@ Used alongside AccessibilityBadge to show the station name (e.g., "DUPONT", "DAV
 - `.status-badge-delay` - Amber
 - `.status-badge-detour` - Orange
 - `.status-badge-planned` - Blue
+- `.status-badge-scheduled` - Purple (generic scheduled closure)
+- `.status-badge-nightly` - Blue (nightly early closures starting 10 PM+)
+- `.status-badge-weekend` - Purple/Magenta (full weekend closures)
 
 **Text Handling:**
 

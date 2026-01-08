@@ -49,13 +49,14 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Frontend (`src/lib/`)
 
-| File                                            | Status | Purpose                                          |
-| ----------------------------------------------- | ------ | ------------------------------------------------ |
-| `components/alerts/AlertCard.svelte`            | ✅     | Alert cards w/ route extraction from header_text |
-| `components/alerts/FilterChips.svelte`          | ✅     | Category filter buttons                          |
-| `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display                    |
-| `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)    |
-| `components/alerts/StatusBadge.svelte`          | ✅     | Status indicators (Delay, Detour, Resumed, etc.) |
+| File                                            | Status | Purpose                                                    |
+| ----------------------------------------------- | ------ | ---------------------------------------------------------- |
+| `components/alerts/AlertCard.svelte`            | ✅     | Alert cards w/ route extraction from header_text           |
+| `components/alerts/ClosuresView.svelte`         | ✅     | Scheduled closures display (detects nightly/weekend types) |
+| `components/alerts/FilterChips.svelte`          | ✅     | Category filter buttons                                    |
+| `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display                              |
+| `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)              |
+| `components/alerts/StatusBadge.svelte`          | ✅     | Status badges (Nightly/Weekend Closure, Delay, etc.)       |
 | `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback             |
 | `components/dialogs/CreateAccountDialog.svelte` | ✅     | Registration + recovery codes                    |
 | `components/dialogs/AuthRequiredDialog.svelte`  | ✅     | Auth prompt for protected features               |
@@ -94,9 +95,9 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-verify/index.ts`            | ✅     | Verify biometrics, create session                            |
 | `functions/auth-session/index.ts`           | ✅     | Validate existing session                                    |
 | `functions/auth-recover/index.ts`           | ✅     | Sign in with recovery code                                   |
-| `functions/poll-alerts/index.ts`            | ✅     | Fetch/parse/thread alerts (v103: auto-resolve RSZ/elevators) |
+| `functions/poll-alerts/index.ts`            | ✅     | Fetch/parse/thread alerts (v106: auto-resolve RSZ/elevators) |
 | `functions/monitor-alert-accuracy/index.ts` | ✅     | Compare TTC API vs Supabase (scheduled every 5min)           |
-| `functions/scrape-maintenance/index.ts`     | ✅     | Scrape maintenance schedule                                  |
+| `functions/scrape-maintenance/index.ts`     | ✅     | Scrape subway closures from TTC (v2: Sitecore API, daily)    |
 
 ### Database (EXISTING in Supabase)
 

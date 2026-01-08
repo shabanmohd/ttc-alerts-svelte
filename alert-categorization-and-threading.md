@@ -1,8 +1,9 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.4  
+**Version:** 3.5  
 **Date:** January 8, 2026  
-**poll-alerts Version:** 103  
+**poll-alerts Version:** 106  
+**scrape-maintenance Version:** 2  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
@@ -586,18 +587,33 @@ CREATE INDEX idx_threads_updated ON incident_threads(updated_at);
 
 ### Table: `planned_maintenance`
 
-Stores planned maintenance alerts separately (scraped from TTC website).
+Stores planned subway closures scraped from TTC website via `scrape-maintenance` Edge Function.
 
 ```sql
 CREATE TABLE planned_maintenance (
   id SERIAL PRIMARY KEY,
-  route TEXT NOT NULL,
-  description TEXT NOT NULL,
-  start_date DATE,
-  end_date DATE,
-  scraped_at TIMESTAMPTZ DEFAULT NOW()
+  maintenance_id TEXT NOT NULL UNIQUE,  -- TTC's unique ID for the closure
+  subway_line TEXT NOT NULL,            -- "Line 1 (Yonge - University)", etc.
+  affected_stations TEXT NOT NULL,      -- "Finch to Eglinton stations"
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  start_time TIME,                      -- "23:00:00" for nightly closures, NULL for full-day
+  end_time TIME,
+  reason TEXT,                          -- "Station work", "Track work", etc.
+  description TEXT,                     -- Full description text
+  details_url TEXT,                     -- Link to TTC page
+  scraped_at TIMESTAMPTZ DEFAULT NOW(),
+  is_active BOOLEAN DEFAULT TRUE        -- Deactivated when past or removed from API
 );
 ```
+
+**Closure Type Detection:**
+
+| Pattern                          | Type               | Badge                   |
+| -------------------------------- | ------------------ | ----------------------- |
+| `start_time: "23:00:00"` (10PM+) | Nightly            | "Nightly Early Closure" |
+| `start_time: null` + Sat-Sun    | Weekend            | "Weekend Closure"       |
+| Everything else                  | Generic scheduled  | "Scheduled Closure"     |
 
 ---
 
@@ -642,16 +658,67 @@ CREATE TABLE planned_maintenance (
 - Line regex only matches Lines 1-4: `/\bLine\s+(1|2|3|4)\b/gi`
 - Exact route number matching prevents 46 ≠ 996 confusion
 
-### `scrape-maintenance`
+### `scrape-maintenance` (v2)
 
-**Trigger:** Cron schedule (daily)  
-**Purpose:** Scrape planned maintenance from TTC website
+**Trigger:** Cron schedule (`scrape-maintenance-daily` at 6 AM UTC)  
+**Purpose:** Scrape planned subway closures from TTC website
+
+**TTC API Endpoint:**
+
+```
+https://www.ttc.ca/sxa/search/results/?s={SCOPE_ID}&itemid={ITEM_ID}&sig=&v={VARIANT_ID}&p=10&e=0&o=SortDatesAscending
+```
+
+**API Parameters:**
+
+- SCOPE_ID: `{99D7699F-DB47-4BB1-8946-77561CE7B320}`
+- ITEM_ID: `{72CC555F-9128-4581-AD12-3D04AB1C87BA}` (subway-service)
+- VARIANT_ID: `{23DC07D4-6BAC-4B98-A9CC-07606C5B1322}`
 
 **Flow:**
 
-1. Fetch TTC service alerts page
-2. Parse maintenance announcements
-3. Upsert into `planned_maintenance` table
+1. Fetch TTC Sitecore search API for subway service advisories
+2. Parse HTML response to extract:
+   - Subway line (Line 1, Line 2, etc.)
+   - Affected stations (e.g., "Finch to Eglinton")
+   - Date range (start_date, end_date)
+   - Start time (if specified, e.g., "11 p.m.")
+   - Details URL
+3. Upsert into `planned_maintenance` table (keyed by `maintenance_id`)
+4. Deactivate items no longer in API or past their end date
+
+**Closure Type Detection (Frontend):**
+
+The `ClosuresView.svelte` component detects closure type based on the data:
+
+| Closure Type        | Badge Label          | Color         | Detection Logic                        |
+| ------------------- | -------------------- | ------------- | -------------------------------------- |
+| `NIGHTLY_CLOSURE`   | "Nightly Early Closure" | Blue          | `start_time` >= 22:00 (10 PM)         |
+| `WEEKEND_CLOSURE`   | "Weekend Closure"    | Purple/Magenta | No `start_time` AND spans Sat-Sun     |
+| `SCHEDULED_CLOSURE` | "Scheduled Closure"  | Purple         | Default fallback                      |
+
+```typescript
+// ClosuresView.svelte - getClosureType()
+function getClosureType(maintenance: PlannedMaintenance): string {
+  const startHour = parseTimeHour(maintenance.start_time);
+  
+  // Nightly: starts at 10 PM or later
+  if (startHour !== null && startHour >= 22) return "NIGHTLY_CLOSURE";
+  
+  // Weekend: no start time + spans Sat-Sun
+  if (!maintenance.start_time) {
+    const startDay = parseLocalDate(maintenance.start_date).getDay();
+    const endDay = parseLocalDate(maintenance.end_date).getDay();
+    if ((startDay === 6 && endDay === 0) || // Sat-Sun
+        (startDay === 5 && endDay === 0) || // Fri-Sun
+        (startDay === 6 && endDay === 1)) { // Sat-Mon
+      return "WEEKEND_CLOSURE";
+    }
+  }
+  
+  return "SCHEDULED_CLOSURE";
+}
+```
 
 ---
 
