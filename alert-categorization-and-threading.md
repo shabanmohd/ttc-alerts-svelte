@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 12.8  
-**Date:** January 3, 2026  
-**Status:** ✅ Implemented and Active (poll-alerts v72 + Database trigger fixes + Regular DELAY vs RSZ distinction + ID generation fix + Express/Night route conflict prevention + Hidden thread auto-unhide + Stale alert cleanup + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
+**Version:** 12.9  
+**Date:** January 8, 2026  
+**Status:** ✅ Implemented and Active (poll-alerts v72 + Route number parsing for My Routes + Database trigger fixes + Regular DELAY vs RSZ distinction + ID generation fix + Express/Night route conflict prevention + Hidden thread auto-unhide + Stale alert cleanup + Bluesky reply threading + TTC API dual-use + RSZ exclusive from TTC API + Subway route deduplication + Orphaned SERVICE_RESUMED prevention + Simplified scheduled maintenance view + Hidden stale alerts + SiteWide alerts + HTML stripping + SiteWide cleanup)  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
 ---
@@ -1344,6 +1344,62 @@ return nowMinutes >= startMinutes || nowMinutes <= endMinutes;
 ```
 
 **Result:** Nightly closures appear in MAJOR severity tab while active, alongside real-time alerts.
+
+### Route Number Parsing for My Routes
+
+**Function:** `parseRouteNumber()` (in `alerts.ts`) and `normalizeRouteId()` (in components)
+
+The Edge Function extracts full route names from alert text (e.g., "77 Swansea", "501 Queen"), but users save routes by number only (e.g., "77", "501"). Route matching must normalize these formats.
+
+**Example Problem:**
+- Database has: `affected_routes: ["77 Swansea"]`
+- User's saved route: `"77"`
+- Exact string match: `"77 Swansea" !== "77"` ❌ (fails)
+- Parsed match: `parseRouteNumber("77 Swansea") === "77"` ✅ (succeeds)
+
+**Route Number Parsing Logic:**
+
+```typescript
+// Extract leading digits from route strings
+// "77 Swansea" → "77"
+// "501 Queen" → "501"
+// "Line 1" → "Line 1" (no leading digits, returns as-is)
+function parseRouteNumber(routeString: string): string {
+  const match = routeString.trim().match(/^(\d+)/);
+  return match ? match[1] : routeString;
+}
+
+// In getThreadsForRoutes() - normalize before comparison
+const normalizedSavedRoutes = routes.map(r => 
+  parseRouteNumber(r).replace(/^0+/, '').toLowerCase()
+);
+
+return allRoutes.some(threadRoute => {
+  const normalizedThreadRoute = parseRouteNumber(threadRoute)
+    .replace(/^0+/, '').toLowerCase();
+  return normalizedSavedRoutes.includes(normalizedThreadRoute);
+});
+```
+
+**Where This Applies:**
+
+| File | Function | Purpose |
+|------|----------|---------|
+| `src/lib/stores/alerts.ts` | `parseRouteNumber()` | Store-level route filtering for My Routes |
+| `src/lib/stores/alerts.ts` | `getThreadsForRoutes()` | Filter threads by user's saved routes |
+| `src/routes/routes/[route]/+page.svelte` | `normalizeRouteId()` | Route detail page alert filtering |
+| `src/lib/components/alerts/MyRouteAlerts.svelte` | `normalizeRouteId()` | My Routes component filtering |
+
+**Route Name Patterns in Database:**
+
+From `affected_routes` in `alert_cache`:
+- Bus: `"77 Swansea"`, `"501 Queen"`, `"504 King"`, `"29 Dufferin"`
+- Streetcar: `"505 Dundas"`, `"506 Carlton"`, `"510 Spadina"`
+- Express: `"927 Highway"`, `"27 Express"`
+- Subway: `"Line 1"`, `"Line 2"`, `"Line 6"` (handled separately)
+- Stations: `"Bayview"`, `"Bloor-Yonge"`, `"St George"` (no leading digits)
+
+**⚠️ Important:** The Edge Function's `extractRoutes()` intentionally captures route names to provide more context in alerts. The client-side parsing extracts just the number for user preference matching.
 
 ---
 
