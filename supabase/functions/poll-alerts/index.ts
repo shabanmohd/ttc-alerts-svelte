@@ -1,6 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// v76: Don't thread ACCESSIBILITY alerts together
+// - Each elevator/escalator alert is a separate incident
+// - Skip similarity matching for ACCESSIBILITY category
+// - Skip thread matching for TTC API ACCESSIBILITY alerts
+// - Different elevators at same station should NOT be merged
 // v75: Fix orphan alerts when thread creation fails
 // - Add retry logic when thread INSERT fails
 // - Log errors for debugging
@@ -36,7 +41,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // - Also removes "See other service alerts" boilerplate text
 // v63: Fix SiteWide alerts to bypass alreadyHasThread check
 // v62: SiteWide alerts support (station entrance/facility closures)
-const FUNCTION_VERSION = 75;
+const FUNCTION_VERSION = 76;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -581,7 +586,8 @@ serve(async (req) => {
       }
 
       // Priority 3: Similarity matching - use EXACT route with branch (40 vs 40B are DIFFERENT)
-      if (!matchedThread && routes.length > 0) {
+      // SKIP similarity matching for ACCESSIBILITY alerts - each elevator/escalator is a separate incident
+      if (!matchedThread && routes.length > 0 && category !== 'ACCESSIBILITY') {
         // For route matching, use exact branch letters (40B ≠ 40)
         const alertExactRoutes = routes.map(extractRouteWithBranch);
         const alertBaseRoutes = routes.map(extractRouteNumber); // Keep for subway lines
@@ -832,9 +838,10 @@ serve(async (req) => {
             if (threadId) break;
           }
           if (threadId) await supabase.from('alert_cache').update({ thread_id: threadId }).eq('alert_id', ttcAlertId);
-        } else {
+        } else if (!isAccessibility) {
           // CRITICAL: When finding matching threads, filter out threads with conflicting routes
           // This prevents 939 Finch Express from joining 39 Finch East thread (or vice versa)
+          // Skip for ACCESSIBILITY alerts - each elevator/escalator is a separate incident
           const { data: et } = await supabase.from('incident_threads').select('*').eq('is_resolved', false);
           let matchingThread = null;
           for (const t of et || []) {
