@@ -995,6 +995,7 @@ Used alongside AccessibilityBadge to show the station name (e.g., "DUPONT", "DAV
 <StatusBadge category="SERVICE_DISRUPTION" />
 <StatusBadge category="DELAY" />
 <StatusBadge category="DIVERSION" />
+<StatusBadge category="SHUTTLE" />
 <StatusBadge category="PLANNED_CLOSURE" />
 <StatusBadge category="SCHEDULED_CLOSURE" />
 <StatusBadge category="NIGHTLY_CLOSURE" />

@@ -2377,7 +2377,7 @@ html.reduce-motion .eta-live-indicator svg {
 
 /* Info toast - purple (#9B44C7) with high contrast */
 [data-sonner-toast][data-type="info"] {
-  background: #9B44C7 !important;
+  background: #9b44c7 !important;
   border: 1px solid hsl(280 50% 55%) !important;
   color: hsl(0 0% 100%) !important;
 }

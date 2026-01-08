@@ -851,24 +851,36 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 **⚠️ Important:** The Supabase JS client `.contains()` method does not work correctly with JSONB array columns in Edge Functions. It fails with `"invalid input syntax for type json"`.
 
 **❌ Broken:**
+
 ```typescript
 // This does NOT work in edge functions
 const { data } = await supabase
-  .from('incident_threads')
-  .select('*')
-  .contains('categories', ['ACCESSIBILITY']);
+  .from("incident_threads")
+  .select("*")
+  .contains("categories", ["ACCESSIBILITY"]);
 ```
 
 **✅ Working:**
+
 ```typescript
 // Use .filter() with 'cs' (containment) operator instead
 const { data } = await supabase
-  .from('incident_threads')
-  .select('*')
-  .filter('categories', 'cs', '["ACCESSIBILITY"]');
+  .from("incident_threads")
+  .select("*")
+  .filter("categories", "cs", '["ACCESSIBILITY"]');
 ```
 
 **Note:** The `cs` operator is the PostgREST abbreviation for containment (`@>` in PostgreSQL). The value must be a JSON string, not a JavaScript array.
+
+---
+
+## Version History
+
+| Version | Date       | Changes                                                                              |
+| ------- | ---------- | ------------------------------------------------------------------------------------ |
+| v3.8    | 2026-01-08 | STEP 2b: Only match SERVICE_RESUMED if created AFTER the thread (prevents false positives) |
+| v3.7    | 2026-01-08 | Fixed JSONB queries (`.filter()` not `.contains()`), per-elevator threading          |
+| v3.6    | 2026-01-07 | Fixed STEP 7 unhide bug, added elevator code extraction                              |
 
 ---
 
