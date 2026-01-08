@@ -76,12 +76,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Pages (`src/routes/`)
 
-| File                         | Status | Purpose                        |
-| ---------------------------- | ------ | ------------------------------ |
-| `+layout.svelte`             | ✅     | App layout, auth init, dialogs |
-| `+page.svelte`               | ✅     | Homepage with alert tabs       |
-| `preferences/+page.svelte`   | ✅     | Route/mode preferences         |
-| `auth/callback/+page.svelte` | ✅     | Auth callback handler          |
+| File                             | Status | Purpose                        |
+| -------------------------------- | ------ | ------------------------------ |
+| `+layout.svelte`                 | ✅     | App layout, auth init, dialogs |
+| `+page.svelte`                   | ✅     | Homepage with alert tabs       |
+| `preferences/+page.svelte`       | ✅     | Route/mode preferences         |
+| `auth/callback/+page.svelte`     | ✅     | Auth callback handler          |
+| `admin/accuracy/+page.svelte`    | ✅     | Alert accuracy monitoring      |
 
 ### Backend (`supabase/`)
 
@@ -93,17 +94,20 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `functions/auth-verify/index.ts`        | ✅     | Verify biometrics, create session                       |
 | `functions/auth-session/index.ts`       | ✅     | Validate existing session                               |
 | `functions/auth-recover/index.ts`       | ✅     | Sign in with recovery code                              |
-| `functions/poll-alerts/index.ts`        | ✅     | Fetch/parse/thread alerts (v5: fixed schema)            |
-| `functions/scrape-maintenance/index.ts` | ✅     | Scrape maintenance schedule                             |
+| `functions/poll-alerts/index.ts`            | ✅     | Fetch/parse/thread alerts (v5: fixed schema)            |
+| `functions/monitor-alert-accuracy/index.ts` | ✅     | Compare TTC API vs Supabase (scheduled every 5min)      |
+| `functions/scrape-maintenance/index.ts`     | ✅     | Scrape maintenance schedule                             |
 
 ### Database (EXISTING in Supabase)
 
-| Table                  | Rows | Purpose                                                  |
-| ---------------------- | ---- | -------------------------------------------------------- |
-| `alert_cache`          | 600+ | Alerts from Bluesky (header_text, categories, is_latest) |
-| `incident_threads`     | 255K | Grouped alert threads (title, is_resolved)               |
-| `planned_maintenance`  | 9    | Scheduled maintenance                                    |
-| `user_profiles`        | -    | User display_name, linked to auth.users                  |
+| Table                   | Rows | Purpose                                                  |
+| ----------------------- | ---- | -------------------------------------------------------- |
+| `alert_cache`           | 600+ | Alerts from Bluesky (header_text, categories, is_latest) |
+| `incident_threads`      | 255K | Grouped alert threads (title, is_resolved)               |
+| `planned_maintenance`   | 9    | Scheduled maintenance                                    |
+| `alert_accuracy_logs`   | -    | Alert accuracy checks (every 5min)                       |
+| `alert_accuracy_reports`| -    | Daily accuracy summaries                                 |
+| `user_profiles`         | -    | User display_name, linked to auth.users                  |
 | `webauthn_credentials` | -    | Public keys (credential_id as PK)                        |
 | `recovery_codes`       | -    | Bcrypt-hashed one-time codes                             |
 | `user_preferences`     | -    | Routes, modes, notification settings                     |
@@ -189,18 +193,33 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Deployed Edge Functions
 
-| Function       | Status | URL                                                                    |
-| -------------- | ------ | ---------------------------------------------------------------------- |
-| auth-register  | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register`  |
-| auth-challenge | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge` |
-| auth-verify    | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`    |
-| auth-session   | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`   |
-| auth-recover   | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`   |
-| poll-alerts    | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts`    |
+| Function               | Status | URL                                                                            |
+| ---------------------- | ------ | ------------------------------------------------------------------------------ |
+| auth-register          | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register`          |
+| auth-challenge         | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge`         |
+| auth-verify            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`            |
+| auth-session           | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`           |
+| auth-recover           | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`           |
+| poll-alerts            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts`            |
+| monitor-alert-accuracy | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/monitor-alert-accuracy` |
 
 ---
 
 ## Changelog
+
+### Jan 8, 2026 - Alert Accuracy Monitoring System
+
+**New Feature:**
+
+- ✅ `monitor-alert-accuracy` Edge Function compares TTC API vs Supabase data
+- ✅ pg_cron scheduler runs every 5 minutes
+- ✅ Database tables: `alert_accuracy_logs`, `alert_accuracy_reports`
+- ✅ Admin dashboard at `/admin/accuracy` with:
+  - Live accuracy metrics (completeness, precision)
+  - 24-hour trend chart
+  - Recent checks table
+  - Missing/extra alerts breakdown
+- ✅ Jaccard similarity algorithm for fuzzy alert matching
 
 ### Dec 4, 2025 - Lexend Font + Typography Hierarchy
 
