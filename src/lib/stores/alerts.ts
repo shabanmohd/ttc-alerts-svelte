@@ -54,6 +54,16 @@ export function getSeverityCategory(
     return 'ACCESSIBILITY';
   }
   
+  // Check for RSZ category directly (from TTC API alerts)
+  if (categories.includes('RSZ')) {
+    return 'MINOR';
+  }
+  
+  // Check effect for RSZ (from TTC API alerts)
+  if (effect?.toUpperCase() === 'RSZ') {
+    return 'MINOR';
+  }
+  
   // Check for RSZ/slow zone patterns BEFORE checking effect
   // This is critical because RSZ alerts have effect="SIGNIFICANT_DELAYS" but should be MINOR
   const text = (headerText || '').toLowerCase();
