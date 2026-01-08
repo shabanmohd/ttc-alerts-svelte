@@ -18,12 +18,13 @@
     alertId: string;
   }
 
-  // Subway line colors (matching alerts page) - keyed by route number
+  // Subway line colors - matching DESIGN_SYSTEM.md (WCAG 2.2 AA Compliant)
   const LINE_COLORS: Record<string, { color: string; textColor: string }> = {
-    "1": { color: "#ffc524", textColor: "#000000" },
-    "2": { color: "#00853f", textColor: "#ffffff" },
-    "4": { color: "#a12f7d", textColor: "#ffffff" },
-    "6": { color: "#808285", textColor: "#ffffff" },
+    "1": { color: "#ffc524", textColor: "#000000" },  // TTC Yellow (Yonge-University)
+    "2": { color: "#00853f", textColor: "#ffffff" },  // TTC Green (Bloor-Danforth)
+    "4": { color: "#a12f7d", textColor: "#ffffff" },  // TTC Purple (Sheppard)
+    "5": { color: "#d95319", textColor: "#ffffff" },  // TTC Orange (Eglinton)
+    "6": { color: "#636569", textColor: "#ffffff" },  // TTC Grey (Finch West)
   };
 
   // Full line names for display
@@ -31,6 +32,7 @@
     "1": "Line 1 Yonge-University",
     "2": "Line 2 Bloor-Danforth", 
     "4": "Line 4 Sheppard",
+    "5": "Line 5 Eglinton",
     "6": "Line 6 Finch West",
   };
 
@@ -38,21 +40,38 @@
 
   let expandedSections = $state(new Set<string>(["1", "2"])); // Default expanded
 
-  // Extract route from thread (e.g., "1" from affected_routes)
+  // Extract route NUMBER from thread (e.g., "1" from "Line 1" or ["Line 1"])
   function getRoute(thread: ThreadWithAlerts): string {
     const routes = thread.affected_routes;
+    let routeStr = "";
+    
     if (Array.isArray(routes) && routes.length > 0) {
-      return routes[0];
-    }
-    if (typeof routes === "string") {
+      routeStr = routes[0];
+    } else if (typeof routes === "string") {
       try {
         const parsed = JSON.parse(routes);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          routeStr = parsed[0];
+        } else {
+          routeStr = routes;
+        }
       } catch {
-        return routes;
+        routeStr = routes;
       }
     }
-    return "Unknown";
+    
+    // Extract just the number from "Line X" format
+    const match = routeStr.match(/Line\s*(\d+)/i);
+    if (match) {
+      return match[1]; // Return just "1", "2", etc.
+    }
+    
+    // If it's already just a number, return it
+    if (/^\d+$/.test(routeStr)) {
+      return routeStr;
+    }
+    
+    return routeStr || "Unknown";
   }
 
   // Extract RSZ data from a thread
@@ -218,7 +237,7 @@
               class="rsz-line-badge"
               style="background-color: {lineInfo.color}; color: {lineInfo.textColor}"
             >
-              {route}
+              Line {route}
             </span>
             <div class="rsz-line-info">
               <span class="rsz-line-name">{LINE_NAMES[route] || `Line ${route}`}</span>

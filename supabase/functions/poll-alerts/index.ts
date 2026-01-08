@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '97';
+const VERSION = '103'; // Auto-resolve RSZ threads when no longer in TTC API
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -46,16 +46,25 @@ const ALERT_CATEGORIES = {
 function extractRoutes(text: string): string[] {
   const routes: string[] = [];
   
-  // Match subway lines first: Line 1, Line 2, Line 4
-  const lineMatch = text.match(/Line\s*(\d+)/gi);
+  // Words that precede numbers that are NOT route numbers (e.g., "Bay 2", "Platform 1", "Track 3")
+  const nonRoutePatterns = /\b(bay|platform|track|door|gate|level|floor|exit|entrance|stop)\s+\d+/gi;
+  // Remove these false positives from the text before extracting routes
+  const cleanedText = text.replace(nonRoutePatterns, '');
+  
+  // Match subway lines - must be "Line X" where X is 1, 2, 3, or 4 (TTC only has these)
+  // Also matches official names like "Line 1 Yonge-University", "Line 2 Bloor-Danforth"
+  // Requires word boundary before "Line" to avoid false matches
+  const lineMatch = cleanedText.match(/\bLine\s+(1|2|3|4)\b/gi);
   if (lineMatch) {
     lineMatch.forEach(m => {
-      routes.push(m); // Keep "Line 1" format
+      // Normalize to "Line X" format
+      const num = m.match(/\d/)?.[0];
+      if (num) routes.push(`Line ${num}`);
     });
   }
   
   // Match numbered routes with optional name: "306 Carlton", "504 King", etc.
-  const routeWithNameMatch = text.match(/\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g);
+  const routeWithNameMatch = cleanedText.match(/\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g);
   if (routeWithNameMatch) {
     routeWithNameMatch.forEach(m => {
       routes.push(m); // Keep "306 Carlton" format
@@ -63,7 +72,7 @@ function extractRoutes(text: string): string[] {
   }
   
   // Match standalone route numbers if not already captured
-  const standaloneMatch = text.match(/\b(\d{1,3})(?=\s|:|,|$)/g);
+  const standaloneMatch = cleanedText.match(/\b(\d{1,3})(?=\s|:|,|$)/g);
   if (standaloneMatch) {
     standaloneMatch.forEach(num => {
       if (parseInt(num) < 1000 && !routes.some(r => r.startsWith(num))) {
@@ -112,8 +121,10 @@ function routesMatch(route1: string, route2: string): boolean {
 
 // Calculate Jaccard similarity for threading
 function jaccardSimilarity(text1: string, text2: string): number {
-  const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 2));
-  const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  // Strip punctuation from words for better matching (e.g., "islington:" matches "islington")
+  const normalizeWord = (w: string) => w.replace(/[^a-z0-9]/g, '');
+  const words1 = new Set(text1.toLowerCase().split(/\s+/).map(normalizeWord).filter(w => w.length > 2));
+  const words2 = new Set(text2.toLowerCase().split(/\s+/).map(normalizeWord).filter(w => w.length > 2));
   
   const intersection = new Set([...words1].filter(x => words2.has(x)));
   const union = new Set([...words1, ...words2]);
@@ -264,7 +275,16 @@ async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promis
     }
 
     // Extract route info - RSZ alerts are for subway lines
-    const routes = route ? [route] : extractRoutes(headerText);
+    // TTC API returns route as "1", "2", "3", "4" for subway lines
+    // Normalize to "Line 1", "Line 2", etc. for consistency
+    let routes: string[];
+    if (route && /^[1-4]$/.test(route)) {
+      routes = [`Line ${route}`];
+    } else if (route) {
+      routes = [route];
+    } else {
+      routes = extractRoutes(headerText);
+    }
     
     // Build description with RSZ details
     let description = headerText;
@@ -495,12 +515,13 @@ serve(async (req) => {
     // STEP 2b: Mark threads as resolved if they have a matching SERVICE_RESUMED alert
     // (This catches cases where SERVICE_RESUMED ended up in a different thread)
     {
-      // Get all unresolved SERVICE_DISRUPTION threads
+      // Get all unresolved threads that could be resolved by SERVICE_RESUMED
+      // Includes: SERVICE_DISRUPTION, DIVERSION, DELAY, SHUTTLE (NOT: RSZ, ACCESSIBILITY, SERVICE_RESUMED)
       const { data: unresolvedThreads } = await supabase
         .from('incident_threads')
-        .select('thread_id, title, affected_routes')
+        .select('thread_id, title, affected_routes, categories')
         .eq('is_resolved', false)
-        .contains('categories', ['SERVICE_DISRUPTION']);
+        .eq('is_hidden', false);
       
       // Get all SERVICE_RESUMED alerts from the last 48 hours
       const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
@@ -512,9 +533,15 @@ serve(async (req) => {
       
       for (const thread of unresolvedThreads || []) {
         const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+        const threadCats = Array.isArray(thread.categories) ? thread.categories : [];
         if (threadRoutes.length === 0) continue;
         
-        // Check if any SERVICE_RESUMED alert matches this thread's routes with good similarity
+        // Skip threads that shouldn't be auto-resolved by SERVICE_RESUMED
+        if (threadCats.includes('RSZ') || threadCats.includes('ACCESSIBILITY') || threadCats.includes('SERVICE_RESUMED')) {
+          continue;
+        }
+        
+        // Check if any SERVICE_RESUMED alert matches this thread's routes
         for (const resumedAlert of resumedAlerts || []) {
           const resumedRoutes = Array.isArray(resumedAlert.affected_routes) ? resumedAlert.affected_routes : [];
           
@@ -525,9 +552,9 @@ serve(async (req) => {
           });
           
           if (hasRouteMatch) {
-            // Check text similarity
+            // Check text similarity - lower threshold (10%) when routes match since route is the key signal
             const similarity = jaccardSimilarity(thread.title || '', resumedAlert.header_text || '');
-            if (similarity >= 0.25) {
+            if (similarity >= 0.10) {
               console.log(`Resolving thread "${thread.title}" - matched SERVICE_RESUMED with ${(similarity * 100).toFixed(0)}% similarity`);
               
               await supabase
@@ -768,6 +795,87 @@ serve(async (req) => {
     newAlerts += elevatorResult.newAlerts;
     updatedThreads += elevatorResult.updatedThreads;
 
+    // STEP 6b: Resolve ACCESSIBILITY threads that are no longer in TTC API
+    // (elevator has been restored to service)
+    let resolvedElevators = 0;
+    const ttcStationsWithElevatorIssues = new Set(
+      ttcData.elevatorAlerts.map(e => {
+        // Extract station name from headerText: "Station: Elevator out of service..."
+        const match = e.headerText?.match(/^([^:]+):/);
+        return match ? match[1].trim() : '';
+      }).filter(Boolean)
+    );
+    
+    // Get all active ACCESSIBILITY threads
+    const { data: accessibilityThreads } = await supabase
+      .from('incident_threads')
+      .select('thread_id, title, affected_routes')
+      .contains('categories', ['ACCESSIBILITY'])
+      .eq('is_resolved', false)
+      .eq('is_hidden', false);
+    
+    for (const thread of accessibilityThreads || []) {
+      const stationName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
+      if (!stationName) continue;
+      
+      // Check if this station is still in TTC API
+      if (!ttcStationsWithElevatorIssues.has(stationName)) {
+        console.log(`Resolving elevator thread: "${thread.title}" - no longer in TTC API`);
+        
+        await supabase
+          .from('incident_threads')
+          .update({ 
+            is_resolved: true,
+            is_hidden: true,
+            resolved_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('thread_id', thread.thread_id);
+        
+        resolvedElevators++;
+      }
+    }
+
+    // STEP 6c: Resolve RSZ threads that no longer have alerts in TTC API
+    let resolvedRszThreads = 0;
+    const ttcLinesWithRsz = new Set(
+      ttcData.rszAlerts.map(rsz => {
+        // RSZ alerts have route like "1" - normalize to "Line 1"
+        const route = rsz.route || rsz.affectedRoute || '';
+        return /^\d$/.test(route) ? `Line ${route}` : route;
+      }).filter(Boolean)
+    );
+    
+    // Get all active RSZ threads
+    const { data: rszThreads } = await supabase
+      .from('incident_threads')
+      .select('thread_id, title, affected_routes')
+      .contains('categories', ['RSZ'])
+      .eq('is_resolved', false)
+      .eq('is_hidden', false);
+    
+    for (const thread of rszThreads || []) {
+      const lineName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
+      if (!lineName) continue;
+      
+      // Check if this line still has RSZ alerts in TTC API
+      if (!ttcLinesWithRsz.has(lineName)) {
+        console.log(`Resolving RSZ thread: "${thread.title}" - no RSZ alerts for ${lineName} in TTC API`);
+        
+        await supabase
+          .from('incident_threads')
+          .update({ 
+            is_resolved: true,
+            is_hidden: true,
+            resolved_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('thread_id', thread.thread_id);
+        
+        resolvedRszThreads++;
+      }
+    }
+
     // STEP 7: Unhide RSZ/ACCESSIBILITY threads that were incorrectly hidden
     // This corrects the state from before v94 when these threads were being hidden
     // ALSO: Merge duplicate threads by keeping only the newest one per station/line
@@ -836,6 +944,8 @@ serve(async (req) => {
         rszAlerts: ttcData.rszAlerts.length,
         elevatorAlerts: ttcData.elevatorAlerts.length,
         hiddenThreads,
+        resolvedElevators,
+        resolvedRszThreads,
         unhiddenRszAccessibility,
         mergedDuplicates,
         newAlerts, 

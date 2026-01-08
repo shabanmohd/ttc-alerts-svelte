@@ -4,7 +4,7 @@ Always use context7 MCP when I need code generation, setup or configuration step
 
 ## Project Overview
 
-TTC Service Alerts PWA - Real-time Toronto transit alerts with biometric authentication.
+TTC Service Alerts PWA - Real-time Toronto transit alerts
 
 **Stack**: Svelte 5 + TypeScript + Tailwind + shadcn-svelte | Supabase (DB, Edge Functions, Realtime) | Cloudflare Pages
 
