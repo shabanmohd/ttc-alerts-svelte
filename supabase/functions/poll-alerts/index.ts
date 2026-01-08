@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// v77: Add fallback for empty RPC result to prevent orphaned alerts
+// - If find_or_create_thread RPC returns empty/null (not error), create thread directly
+// - This prevents alerts from being created without threads
 // v76: Don't thread ACCESSIBILITY alerts together
 // - Each elevator/escalator alert is a separate incident
 // - Skip similarity matching for ACCESSIBILITY category
@@ -41,7 +44,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // - Also removes "See other service alerts" boilerplate text
 // v63: Fix SiteWide alerts to bypass alreadyHasThread check
 // v62: SiteWide alerts support (station entrance/facility closures)
-const FUNCTION_VERSION = 76;
+const FUNCTION_VERSION = 77;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -730,6 +733,10 @@ serve(async (req) => {
             await supabase.from('incident_threads').update({ affected_routes: [...new Set([...er, ...routes])], updated_at: new Date().toISOString() }).eq('thread_id', r.out_thread_id);
             updatedThreads++;
           }
+        } else {
+          // Fallback: RPC returned empty/null - create thread directly to prevent orphaned alerts
+          const { data: nt } = await supabase.from('incident_threads').insert({ title: headerTitle, categories: [category], affected_routes: routes, is_resolved: false, resolved_at: null }).select().single();
+          if (nt) { await supabase.from('alert_cache').update({ thread_id: nt.thread_id }).eq('alert_id', newAlert.alert_id); alertToThreadMap.set(alertId, nt.thread_id); }
         }
       }
     }
