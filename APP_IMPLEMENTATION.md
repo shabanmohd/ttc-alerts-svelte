@@ -225,7 +225,6 @@ SERVICE_RESUMED alerts from Bluesky weren't properly showing in "Recently Resolv
 - `supabase/functions/poll-alerts/index.ts` (v98):
   - Now sets `resolved_at` timestamp when SERVICE_RESUMED matches thread
   - Now adds `SERVICE_RESUMED` to thread categories array
-  
 - `src/routes/alerts/+page.svelte`:
   - Extended cutoff from 6 hours to **12 hours**
   - Changed cutoff to use `latestAlert.created_at` instead of `thread.resolved_at`

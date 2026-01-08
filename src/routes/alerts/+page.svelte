@@ -280,13 +280,13 @@
     if (alert.alert_id?.toLowerCase().startsWith("ttc-rsz-")) {
       return true;
     }
-    
+
     // Also check for RSZ category (set by poll-alerts v93+)
     const categories = (alert.categories as string[]) || [];
     if (categories.includes("RSZ")) {
       return true;
     }
-    
+
     // Also check for RSZ effect (set by poll-alerts v93+)
     if (alert.effect?.toUpperCase() === "RSZ") {
       return true;
@@ -338,7 +338,11 @@
     const rsz = $threadsWithAlerts.filter(
       (t) => !t.is_resolved && !t.is_hidden && isRSZAlert(t)
     );
-    console.log('=== DEBUG: rszAlerts ===', rsz.length, rsz.map(t => t.title));
+    console.log(
+      "=== DEBUG: rszAlerts ===",
+      rsz.length,
+      rsz.map((t) => t.title)
+    );
     return rsz;
   });
 
@@ -350,17 +354,17 @@
     if (selectedCategory !== "disruptions") return [];
 
     const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
-    
+
     return $threadsWithAlerts.filter((t) => {
       // Must be resolved and not hidden
       if (!t.is_resolved || t.is_hidden || !t.resolved_at) return false;
-      
+
       // Use the latest alert's timestamp for the cutoff (more accurate for display)
       // This matches what AlertCard shows to the user
-      const latestAlertTime = t.latestAlert?.created_at 
+      const latestAlertTime = t.latestAlert?.created_at
         ? new Date(t.latestAlert.created_at).getTime()
         : new Date(t.resolved_at).getTime();
-      
+
       if (latestAlertTime < twelveHoursAgo) return false;
 
       // MUST have SERVICE_RESUMED category (confirmed by Bluesky)

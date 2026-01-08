@@ -388,6 +388,7 @@ Similarity: 8/9 = 0.89 → MATCH (≥ 0.8)
 Resolved threads are displayed in a "Recently Resolved" section under the Disruptions tab for **12 hours** after the latest SERVICE_RESUMED alert was posted.
 
 **Requirements for display:**
+
 1. `is_resolved = true` - Thread must be marked resolved
 2. `is_hidden = false` - Thread must not be hidden
 3. `latestAlert.created_at` within 12 hours of current time (uses alert timestamp, not thread.resolved_at)
@@ -405,10 +406,14 @@ The `threadsWithAlerts` store includes resolved threads (only filters out hidden
 export const threadsWithAlerts = derived(
   [threads, alerts],
   ([$threads, $alerts]) => {
-    return $threads
-      // Filter out hidden threads only - keep resolved for "Recently Resolved" section
-      .filter(thread => !thread.is_hidden)
-      .map((thread): ThreadWithAlerts => { /* ... */ })
+    return (
+      $threads
+        // Filter out hidden threads only - keep resolved for "Recently Resolved" section
+        .filter((thread) => !thread.is_hidden)
+        .map((thread): ThreadWithAlerts => {
+          /* ... */
+        })
+    );
   }
 );
 ```
@@ -426,21 +431,21 @@ export const threadsWithAlerts = derived(
 let recentlyResolved = $derived.by(() => {
   if (selectedCategory !== "disruptions") return [];
   const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
-  
+
   return $threadsWithAlerts.filter((t) => {
     if (!t.is_resolved || t.is_hidden || !t.resolved_at) return false;
-    
+
     // Use the latest alert's timestamp for the cutoff (matches what AlertCard displays)
-    const latestAlertTime = t.latestAlert?.created_at 
+    const latestAlertTime = t.latestAlert?.created_at
       ? new Date(t.latestAlert.created_at).getTime()
       : new Date(t.resolved_at).getTime();
-    
+
     if (latestAlertTime < twelveHoursAgo) return false;
-    
+
     const categories = (t.categories as string[]) || [];
     if (!categories.includes("SERVICE_RESUMED")) return false;
     if (isRSZAlert(t)) return false;
-    
+
     // Show all SERVICE_RESUMED threads, including standalone ones
     // Bluesky posts them when service genuinely resumes
     return true;
