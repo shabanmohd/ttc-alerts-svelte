@@ -35,7 +35,7 @@ let realtimeChannel: RealtimeChannel | null = null;
 
 /**
  * Determine severity category based on alert categories, effect, and text
- * MAJOR: Significant service disruptions (NO_SERVICE, SIGNIFICANT_DELAYS, DETOUR)
+ * MAJOR: Significant service disruptions (NO_SERVICE, DETOUR) - NOT slow zones
  * MINOR: RSZ/slow zones, minor delays
  * ACCESSIBILITY: Elevator/escalator issues
  */
@@ -45,13 +45,37 @@ export function getSeverityCategory(
   headerText?: string
 ): SeverityCategory {
   // Check for accessibility (elevator/escalator) first
-  if (categories.includes('ACCESSIBILITY') || categories.includes('ELEVATOR')) {
+  if (categories.includes('ACCESSIBILITY') || categories.includes('ELEVATOR') || categories.includes('ACCESSIBILITY_ISSUE')) {
     return 'ACCESSIBILITY';
   }
   
-  // Check effect for major disruptions
-  const majorEffects = ['NO_SERVICE', 'SIGNIFICANT_DELAYS', 'DETOUR', 'MODIFIED_SERVICE'];
+  // Check effect for accessibility issues
+  if (effect?.toUpperCase() === 'ACCESSIBILITY_ISSUE') {
+    return 'ACCESSIBILITY';
+  }
+  
+  // Check for RSZ/slow zone patterns BEFORE checking effect
+  // This is critical because RSZ alerts have effect="SIGNIFICANT_DELAYS" but should be MINOR
+  const text = (headerText || '').toLowerCase();
+  if (
+    text.includes('slower than usual') ||
+    text.includes('reduced speed') ||
+    text.includes('move slower') ||
+    text.includes('running slower') ||
+    text.includes('slow zone') ||
+    text.includes('rsz')
+  ) {
+    return 'MINOR';
+  }
+  
+  // Check effect for major disruptions (excluding RSZ which was caught above)
+  const majorEffects = ['NO_SERVICE', 'DETOUR', 'MODIFIED_SERVICE'];
   if (effect && majorEffects.includes(effect.toUpperCase())) {
+    return 'MAJOR';
+  }
+  
+  // SIGNIFICANT_DELAYS without RSZ text patterns is also MAJOR
+  if (effect?.toUpperCase() === 'SIGNIFICANT_DELAYS') {
     return 'MAJOR';
   }
   
@@ -59,18 +83,6 @@ export function getSeverityCategory(
   const majorCategories = ['SERVICE_DISRUPTION', 'DIVERSION', 'DETOUR', 'NO_SERVICE'];
   if (majorCategories.some(cat => categories.includes(cat))) {
     return 'MAJOR';
-  }
-  
-  // Check for RSZ/slow zone patterns (MINOR)
-  const text = (headerText || '').toLowerCase();
-  if (
-    text.includes('slower than usual') ||
-    text.includes('reduced speed') ||
-    text.includes('move slower') ||
-    text.includes('running slower') ||
-    text.includes('slow zone')
-  ) {
-    return 'MINOR';
   }
   
   // Check categories for minor issues
