@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '92';
+const VERSION = '93';
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -121,9 +121,39 @@ function jaccardSimilarity(text1: string, text2: string): number {
   return intersection.size / union.size;
 }
 
-// Fetch active routes from TTC API (THE AUTHORITY)
-async function fetchTtcActiveRoutes(): Promise<Set<string>> {
-  const activeRoutes = new Set<string>();
+// Type for TTC API alert
+interface TtcApiAlert {
+  id: string;
+  route: string;
+  routeType: string;
+  headerText: string;
+  effect: string;
+  effectDesc: string;
+  severity: string;
+  cause: string;
+  causeDescription: string;
+  alertType: string;
+  rszLength?: string;
+  targetRemoval?: string;
+  elevatorCode?: string;
+  stopStart?: string;
+  stopEnd?: string;
+}
+
+// Type for RSZ/Elevator alert data
+interface RszElevatorData {
+  activeRoutes: Set<string>;
+  rszAlerts: TtcApiAlert[];
+  elevatorAlerts: TtcApiAlert[];
+}
+
+// Fetch active routes, RSZ alerts, and elevator alerts from TTC API
+async function fetchTtcData(): Promise<RszElevatorData> {
+  const result: RszElevatorData = {
+    activeRoutes: new Set<string>(),
+    rszAlerts: [],
+    elevatorAlerts: []
+  };
   
   try {
     const response = await fetch(TTC_LIVE_ALERTS_API, {
@@ -132,24 +162,31 @@ async function fetchTtcActiveRoutes(): Promise<Set<string>> {
     
     if (!response.ok) {
       console.error(`TTC API error: ${response.status}`);
-      return activeRoutes; // Return empty set, don't fail entirely
+      return result;
     }
     
     const data = await response.json();
     const routes = data.routes || [];
+    const accessibility = data.accessibility || [];
     
-    // TTC API returns alerts at the route level (each object IS an alert)
+    // Process route alerts
     for (const routeAlert of routes) {
-      // Ignore RSZ (Reduced Speed Zone) alerts - "slower than usual" 
       const headerText = routeAlert.headerText?.toLowerCase() || '';
-      const isRsz = routeAlert.alertType === 'Planned' && headerText.includes('slower than usual');
+      const effectDesc = routeAlert.effectDesc || '';
+      const effect = routeAlert.effect || '';
+      
+      // Check if it's an RSZ alert
+      const isRsz = effectDesc === 'Reduced Speed Zone' || 
+                    headerText.includes('slower than usual') ||
+                    headerText.includes('reduced speed');
       
       if (isRsz) {
-        continue; // Skip RSZ alerts
+        // Collect RSZ alert for later processing
+        result.rszAlerts.push(routeAlert);
+        continue;
       }
       
-      // Look for real disruptions
-      const effect = routeAlert.effect || '';
+      // Regular disruption alerts - add to active routes for thread hiding logic
       const isRealDisruption = 
         effect === 'NO_SERVICE' || 
         effect === 'SIGNIFICANT_DELAYS' ||
@@ -158,20 +195,213 @@ async function fetchTtcActiveRoutes(): Promise<Set<string>> {
         routeAlert.severity === 'High';
       
       if (isRealDisruption) {
-        // Use the route number (e.g., "512" for 512 St Clair)
         const routeId = routeAlert.route || routeAlert.id;
         if (routeId) {
-          activeRoutes.add(routeId);
+          result.activeRoutes.add(routeId);
         }
       }
     }
     
-    console.log(`TTC API: ${activeRoutes.size} routes with real alerts: ${[...activeRoutes].join(', ')}`);
+    // Process accessibility (elevator/escalator) alerts
+    for (const accessAlert of accessibility) {
+      result.elevatorAlerts.push(accessAlert);
+    }
+    
+    console.log(`TTC API: ${result.activeRoutes.size} disruptions, ${result.rszAlerts.length} RSZ, ${result.elevatorAlerts.length} elevators`);
   } catch (error) {
     console.error('Failed to fetch TTC API:', error);
   }
   
-  return activeRoutes;
+  return result;
+}
+
+// Fetch active routes from TTC API (THE AUTHORITY) - wrapper for backward compatibility
+async function fetchTtcActiveRoutes(): Promise<Set<string>> {
+  const data = await fetchTtcData();
+  return data.activeRoutes;
+}
+
+// Generate a unique alert ID for TTC API alerts (RSZ/Elevator)
+function generateTtcAlertId(type: string, route: string, text: string): string {
+  // Create a deterministic ID based on type, route, and key text
+  const cleanText = text.substring(0, 50).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  return `ttc-${type}-${route}-${cleanText}`.substring(0, 100);
+}
+
+// Process RSZ alerts from TTC API
+async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promise<{ newAlerts: number; updatedThreads: number }> {
+  let newAlerts = 0;
+  let updatedThreads = 0;
+
+  for (const rsz of rszAlerts) {
+    const headerText = rsz.headerText || '';
+    const route = rsz.route || '';
+    const alertId = generateTtcAlertId('rsz', route, headerText);
+    
+    // Check if this alert already exists
+    const { data: existing } = await supabase
+      .from('alert_cache')
+      .select('alert_id')
+      .eq('alert_id', alertId)
+      .single();
+    
+    if (existing) {
+      continue; // Already have this RSZ alert
+    }
+
+    // Extract route info - RSZ alerts are for subway lines
+    const routes = route ? [route] : extractRoutes(headerText);
+    
+    // Build description with RSZ details
+    let description = headerText;
+    if (rsz.rszLength) {
+      description += `\n\nReduced Speed Zone Length: ${rsz.rszLength}`;
+    }
+    if (rsz.targetRemoval) {
+      description += `\nTarget Removal: ${rsz.targetRemoval}`;
+    }
+    if (rsz.stopStart && rsz.stopEnd) {
+      description += `\nAffected Area: ${rsz.stopStart} to ${rsz.stopEnd}`;
+    }
+
+    // Create alert record
+    const alert = {
+      alert_id: alertId,
+      header_text: headerText.substring(0, 200),
+      description_text: description,
+      categories: ['RSZ'],
+      affected_routes: routes,
+      created_at: new Date().toISOString(),
+      is_latest: true,
+      effect: 'RSZ' // Use RSZ as effect type
+    };
+
+    // Insert alert
+    const { data: newAlert, error: insertError } = await supabase
+      .from('alert_cache')
+      .insert(alert)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('RSZ insert error:', insertError);
+      continue;
+    }
+
+    newAlerts++;
+
+    // Create/find thread for RSZ alert
+    const { data: threadResult, error: threadError } = await supabase
+      .rpc('find_or_create_thread', {
+        p_title: headerText.substring(0, 200),
+        p_routes: routes,
+        p_categories: ['RSZ'],
+        p_is_resolved: false
+      });
+
+    if (threadError) {
+      console.error('RSZ thread creation error:', threadError);
+    } else if (threadResult && threadResult.length > 0) {
+      const threadId = threadResult[0].out_thread_id;
+      await supabase
+        .from('alert_cache')
+        .update({ thread_id: threadId })
+        .eq('alert_id', newAlert.alert_id);
+      
+      console.log(`RSZ alert ${alertId} linked to thread ${threadId}`);
+      updatedThreads++;
+    }
+  }
+
+  console.log(`RSZ processing: ${newAlerts} new alerts, ${updatedThreads} threads updated`);
+  return { newAlerts, updatedThreads };
+}
+
+// Process elevator/escalator alerts from TTC API
+async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[]): Promise<{ newAlerts: number; updatedThreads: number }> {
+  let newAlerts = 0;
+  let updatedThreads = 0;
+
+  for (const elevator of elevatorAlerts) {
+    const headerText = elevator.headerText || '';
+    const elevatorCode = elevator.elevatorCode || '';
+    const alertId = generateTtcAlertId('elev', elevatorCode || 'unknown', headerText);
+    
+    // Check if this alert already exists
+    const { data: existing } = await supabase
+      .from('alert_cache')
+      .select('alert_id')
+      .eq('alert_id', alertId)
+      .single();
+    
+    if (existing) {
+      continue; // Already have this elevator alert
+    }
+
+    // Extract station name from header text (e.g., "Dundas West: Elevator out of service...")
+    const stationMatch = headerText.match(/^([^:]+):/);
+    const station = stationMatch ? stationMatch[1].trim() : 'Unknown Station';
+    
+    // Build description
+    let description = headerText;
+    if (elevator.routeType) {
+      description += `\n\nType: ${elevator.routeType}`;
+    }
+    if (elevatorCode) {
+      description += `\nElevator Code: ${elevatorCode}`;
+    }
+
+    // Create alert record - use station as "route" for grouping
+    const alert = {
+      alert_id: alertId,
+      header_text: headerText.substring(0, 200),
+      description_text: description,
+      categories: ['ACCESSIBILITY'],
+      affected_routes: [station], // Use station name for threading
+      created_at: new Date().toISOString(),
+      is_latest: true,
+      effect: 'ACCESSIBILITY_ISSUE'
+    };
+
+    // Insert alert
+    const { data: newAlert, error: insertError } = await supabase
+      .from('alert_cache')
+      .insert(alert)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Elevator insert error:', insertError);
+      continue;
+    }
+
+    newAlerts++;
+
+    // Create/find thread for elevator alert
+    const { data: threadResult, error: threadError } = await supabase
+      .rpc('find_or_create_thread', {
+        p_title: headerText.substring(0, 200),
+        p_routes: [station],
+        p_categories: ['ACCESSIBILITY'],
+        p_is_resolved: false
+      });
+
+    if (threadError) {
+      console.error('Elevator thread creation error:', threadError);
+    } else if (threadResult && threadResult.length > 0) {
+      const threadId = threadResult[0].out_thread_id;
+      await supabase
+        .from('alert_cache')
+        .update({ thread_id: threadId })
+        .eq('alert_id', newAlert.alert_id);
+      
+      console.log(`Elevator alert ${alertId} linked to thread ${threadId}`);
+      updatedThreads++;
+    }
+  }
+
+  console.log(`Elevator processing: ${newAlerts} new alerts, ${updatedThreads} threads updated`);
+  return { newAlerts, updatedThreads };
 }
 
 // Check if a thread's routes have any active TTC API alerts
@@ -199,8 +429,9 @@ serve(async (req) => {
 
     console.log(`poll-alerts v${VERSION} starting...`);
 
-    // STEP 1: Fetch TTC API to get authoritative list of active routes
-    const ttcActiveRoutes = await fetchTtcActiveRoutes();
+    // STEP 1: Fetch TTC API to get authoritative list of active routes, RSZ alerts, and elevator alerts
+    const ttcData = await fetchTtcData();
+    const ttcActiveRoutes = ttcData.activeRoutes;
     
     // STEP 2: Hide threads that are no longer in TTC API
     // Only hide if they weren't explicitly resolved via SERVICE_RESUMED
@@ -436,11 +667,23 @@ serve(async (req) => {
       }
     }
 
+    // STEP 5: Process RSZ alerts from TTC API
+    const rszResult = await processRszAlerts(supabase, ttcData.rszAlerts);
+    newAlerts += rszResult.newAlerts;
+    updatedThreads += rszResult.updatedThreads;
+
+    // STEP 6: Process elevator/escalator alerts from TTC API
+    const elevatorResult = await processElevatorAlerts(supabase, ttcData.elevatorAlerts);
+    newAlerts += elevatorResult.newAlerts;
+    updatedThreads += elevatorResult.updatedThreads;
+
     return new Response(
       JSON.stringify({ 
         success: true,
         version: VERSION,
         ttcApiActiveRoutes: [...ttcActiveRoutes],
+        rszAlerts: ttcData.rszAlerts.length,
+        elevatorAlerts: ttcData.elevatorAlerts.length,
         hiddenThreads,
         newAlerts, 
         updatedThreads,
