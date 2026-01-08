@@ -354,7 +354,14 @@
     return $threadsWithAlerts.filter((t) => {
       // Must be resolved and not hidden
       if (!t.is_resolved || t.is_hidden || !t.resolved_at) return false;
-      if (new Date(t.resolved_at).getTime() < twelveHoursAgo) return false;
+      
+      // Use the latest alert's timestamp for the cutoff (more accurate for display)
+      // This matches what AlertCard shows to the user
+      const latestAlertTime = t.latestAlert?.created_at 
+        ? new Date(t.latestAlert.created_at).getTime()
+        : new Date(t.resolved_at).getTime();
+      
+      if (latestAlertTime < twelveHoursAgo) return false;
 
       // MUST have SERVICE_RESUMED category (confirmed by Bluesky)
       const categories = (t.categories as string[]) || [];
