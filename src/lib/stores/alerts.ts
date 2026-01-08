@@ -3,6 +3,12 @@ import type { Alert, Thread, ThreadWithAlerts, Maintenance, PlannedMaintenance }
 import { supabase } from '$lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+// Severity category type for filtering alerts
+export type SeverityCategory = 'MAJOR' | 'MINOR' | 'ACCESSIBILITY';
+
+// Severity category filter state (for alerts-v3 and similar pages)
+export const selectedSeverityCategory = writable<SeverityCategory>('MAJOR');
+
 // Core alert state
 export const alerts = writable<Alert[]>([]);
 export const threads = writable<Thread[]>([]);
@@ -21,8 +27,61 @@ export const connectionError = writable<string | null>(null);
 // Maintenance state
 export const maintenanceItems = writable<PlannedMaintenance[]>([]);
 
+// Track recently added thread IDs for "new" animation
+export const recentlyAddedThreadIds = writable<Set<string>>(new Set());
+
 // Track active Realtime channel
 let realtimeChannel: RealtimeChannel | null = null;
+
+/**
+ * Determine severity category based on alert categories, effect, and text
+ * MAJOR: Significant service disruptions (NO_SERVICE, SIGNIFICANT_DELAYS, DETOUR)
+ * MINOR: RSZ/slow zones, minor delays
+ * ACCESSIBILITY: Elevator/escalator issues
+ */
+export function getSeverityCategory(
+  categories: string[],
+  effect?: string,
+  headerText?: string
+): SeverityCategory {
+  // Check for accessibility (elevator/escalator) first
+  if (categories.includes('ACCESSIBILITY') || categories.includes('ELEVATOR')) {
+    return 'ACCESSIBILITY';
+  }
+  
+  // Check effect for major disruptions
+  const majorEffects = ['NO_SERVICE', 'SIGNIFICANT_DELAYS', 'DETOUR', 'MODIFIED_SERVICE'];
+  if (effect && majorEffects.includes(effect.toUpperCase())) {
+    return 'MAJOR';
+  }
+  
+  // Check categories for major disruptions
+  const majorCategories = ['SERVICE_DISRUPTION', 'DIVERSION', 'DETOUR', 'NO_SERVICE'];
+  if (majorCategories.some(cat => categories.includes(cat))) {
+    return 'MAJOR';
+  }
+  
+  // Check for RSZ/slow zone patterns (MINOR)
+  const text = (headerText || '').toLowerCase();
+  if (
+    text.includes('slower than usual') ||
+    text.includes('reduced speed') ||
+    text.includes('move slower') ||
+    text.includes('running slower') ||
+    text.includes('slow zone')
+  ) {
+    return 'MINOR';
+  }
+  
+  // Check categories for minor issues
+  const minorCategories = ['DELAY', 'SERVICE_RESUMED', 'REGULAR_SERVICE'];
+  if (minorCategories.some(cat => categories.includes(cat))) {
+    return 'MINOR';
+  }
+  
+  // Default to MAJOR for unknown
+  return 'MAJOR';
+}
 
 // Helper to extract categories from JSONB or array
 function extractCategories(data: unknown): string[] {
