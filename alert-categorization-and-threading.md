@@ -1352,6 +1352,7 @@ return nowMinutes >= startMinutes || nowMinutes <= endMinutes;
 The Edge Function extracts full route names from alert text (e.g., "77 Swansea", "501 Queen"), but users save routes by number only (e.g., "77", "501"). Route matching must normalize these formats.
 
 **Example Problem:**
+
 - Database has: `affected_routes: ["77 Swansea"]`
 - User's saved route: `"77"`
 - Exact string match: `"77 Swansea" !== "77"` ❌ (fails)
@@ -1370,29 +1371,31 @@ function parseRouteNumber(routeString: string): string {
 }
 
 // In getThreadsForRoutes() - normalize before comparison
-const normalizedSavedRoutes = routes.map(r => 
-  parseRouteNumber(r).replace(/^0+/, '').toLowerCase()
+const normalizedSavedRoutes = routes.map((r) =>
+  parseRouteNumber(r).replace(/^0+/, "").toLowerCase()
 );
 
-return allRoutes.some(threadRoute => {
+return allRoutes.some((threadRoute) => {
   const normalizedThreadRoute = parseRouteNumber(threadRoute)
-    .replace(/^0+/, '').toLowerCase();
+    .replace(/^0+/, "")
+    .toLowerCase();
   return normalizedSavedRoutes.includes(normalizedThreadRoute);
 });
 ```
 
 **Where This Applies:**
 
-| File | Function | Purpose |
-|------|----------|---------|
-| `src/lib/stores/alerts.ts` | `parseRouteNumber()` | Store-level route filtering for My Routes |
-| `src/lib/stores/alerts.ts` | `getThreadsForRoutes()` | Filter threads by user's saved routes |
-| `src/routes/routes/[route]/+page.svelte` | `normalizeRouteId()` | Route detail page alert filtering |
-| `src/lib/components/alerts/MyRouteAlerts.svelte` | `normalizeRouteId()` | My Routes component filtering |
+| File                                             | Function                | Purpose                                   |
+| ------------------------------------------------ | ----------------------- | ----------------------------------------- |
+| `src/lib/stores/alerts.ts`                       | `parseRouteNumber()`    | Store-level route filtering for My Routes |
+| `src/lib/stores/alerts.ts`                       | `getThreadsForRoutes()` | Filter threads by user's saved routes     |
+| `src/routes/routes/[route]/+page.svelte`         | `normalizeRouteId()`    | Route detail page alert filtering         |
+| `src/lib/components/alerts/MyRouteAlerts.svelte` | `normalizeRouteId()`    | My Routes component filtering             |
 
 **Route Name Patterns in Database:**
 
 From `affected_routes` in `alert_cache`:
+
 - Bus: `"77 Swansea"`, `"501 Queen"`, `"504 King"`, `"29 Dufferin"`
 - Streetcar: `"505 Dundas"`, `"506 Carlton"`, `"510 Spadina"`
 - Express: `"927 Highway"`, `"27 Express"`
