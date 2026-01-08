@@ -528,7 +528,7 @@ serve(async (req) => {
       const { data: resumedAlerts } = await supabase
         .from('alert_cache')
         .select('header_text, affected_routes')
-        .contains('categories', ['SERVICE_RESUMED'])
+        .filter('categories', 'cs', '["SERVICE_RESUMED"]')
         .gte('created_at', fortyEightHoursAgo);
       
       for (const thread of unresolvedThreads || []) {
@@ -806,23 +806,29 @@ serve(async (req) => {
       }).filter(Boolean)
     );
     
-    // Get all active ACCESSIBILITY threads
-    const { data: accessibilityThreads } = await supabase
+    // Get all active ACCESSIBILITY threads - use filter() with 'cs' operator for JSONB containment
+    const { data: accessibilityThreads, error: accError } = await supabase
       .from('incident_threads')
       .select('thread_id, title, affected_routes')
-      .contains('categories', ['ACCESSIBILITY'])
+      .filter('categories', 'cs', '["ACCESSIBILITY"]')
       .eq('is_resolved', false)
       .eq('is_hidden', false);
     
+    if (accError) {
+      console.error('STEP 6b: Failed to fetch accessibility threads:', accError);
+    }
+    
     for (const thread of accessibilityThreads || []) {
       const stationName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
-      if (!stationName) continue;
+      if (!stationName) {
+        continue;
+      }
       
       // Check if this station is still in TTC API
       if (!ttcStationsWithElevatorIssues.has(stationName)) {
-        console.log(`Resolving elevator thread: "${thread.title}" - no longer in TTC API`);
+        console.log(`STEP 6b: Resolving elevator thread: "${thread.title}" - station "${stationName}" no longer in TTC API`);
         
-        await supabase
+        const { error: updateError } = await supabase
           .from('incident_threads')
           .update({ 
             is_resolved: true,
@@ -832,7 +838,9 @@ serve(async (req) => {
           })
           .eq('thread_id', thread.thread_id);
         
-        resolvedElevators++;
+        if (!updateError) {
+          resolvedElevators++;
+        }
       }
     }
 
@@ -846,11 +854,11 @@ serve(async (req) => {
       }).filter(Boolean)
     );
     
-    // Get all active RSZ threads
+    // Get all active RSZ threads - use filter() with 'cs' operator for JSONB containment
     const { data: rszThreads } = await supabase
       .from('incident_threads')
       .select('thread_id, title, affected_routes')
-      .contains('categories', ['RSZ'])
+      .filter('categories', 'cs', '["RSZ"]')
       .eq('is_resolved', false)
       .eq('is_hidden', false);
     
@@ -876,15 +884,15 @@ serve(async (req) => {
       }
     }
 
-    // STEP 7: Unhide RSZ/ACCESSIBILITY threads that were incorrectly hidden
-    // This corrects the state from before v94 when these threads were being hidden
-    // ALSO: Merge duplicate threads by keeping only the newest one per station/line
+    // STEP 7: Merge duplicate RSZ/ACCESSIBILITY threads by keeping only the newest one per station/line
+    // Note: We no longer automatically unhide hidden threads - STEP 6b/6c handle auto-resolving properly
     const { data: rszAccessibilityThreads } = await supabase
       .from('incident_threads')
       .select('thread_id, title, categories, affected_routes, is_hidden, created_at')
-      .eq('is_resolved', false);
+      .eq('is_resolved', false)
+      .eq('is_hidden', false); // Only consider visible threads for deduplication
     
-    let unhiddenRszAccessibility = 0;
+    let unhiddenRszAccessibility = 0; // No longer unhiding threads
     let mergedDuplicates = 0;
     
     // Group threads by station/route for deduplication
@@ -896,16 +904,6 @@ serve(async (req) => {
       // Only process RSZ and ACCESSIBILITY threads
       if (!threadCategories.includes('RSZ') && !threadCategories.includes('ACCESSIBILITY')) {
         continue;
-      }
-      
-      // Unhide if hidden
-      if (thread.is_hidden) {
-        await supabase
-          .from('incident_threads')
-          .update({ is_hidden: false, updated_at: new Date().toISOString() })
-          .eq('thread_id', thread.thread_id);
-        unhiddenRszAccessibility++;
-        console.log(`Unhidden RSZ/ACCESSIBILITY thread: "${thread.title}"`);
       }
       
       // Group by affected_routes (station name) for deduplication
