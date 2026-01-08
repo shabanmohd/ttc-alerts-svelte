@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '94';
+const VERSION = '95';
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -694,22 +694,61 @@ serve(async (req) => {
 
     // STEP 7: Unhide RSZ/ACCESSIBILITY threads that were incorrectly hidden
     // This corrects the state from before v94 when these threads were being hidden
-    const { data: incorrectlyHiddenThreads } = await supabase
+    // ALSO: Merge duplicate threads by keeping only the newest one per station/line
+    const { data: rszAccessibilityThreads } = await supabase
       .from('incident_threads')
-      .select('thread_id, title, categories')
-      .eq('is_resolved', false)
-      .eq('is_hidden', true);
+      .select('thread_id, title, categories, affected_routes, is_hidden, created_at')
+      .eq('is_resolved', false);
     
     let unhiddenRszAccessibility = 0;
-    for (const thread of incorrectlyHiddenThreads || []) {
+    let mergedDuplicates = 0;
+    
+    // Group threads by station/route for deduplication
+    const threadsByKey: Record<string, any[]> = {};
+    
+    for (const thread of rszAccessibilityThreads || []) {
       const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
-      if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) {
+      
+      // Only process RSZ and ACCESSIBILITY threads
+      if (!threadCategories.includes('RSZ') && !threadCategories.includes('ACCESSIBILITY')) {
+        continue;
+      }
+      
+      // Unhide if hidden
+      if (thread.is_hidden) {
         await supabase
           .from('incident_threads')
           .update({ is_hidden: false, updated_at: new Date().toISOString() })
           .eq('thread_id', thread.thread_id);
         unhiddenRszAccessibility++;
         console.log(`Unhidden RSZ/ACCESSIBILITY thread: "${thread.title}"`);
+      }
+      
+      // Group by affected_routes (station name) for deduplication
+      const routes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+      const key = routes.join('|') + '|' + threadCategories.join('|');
+      if (!threadsByKey[key]) {
+        threadsByKey[key] = [];
+      }
+      threadsByKey[key].push(thread);
+    }
+    
+    // For each group, keep only the newest thread and hide the rest
+    for (const key of Object.keys(threadsByKey)) {
+      const threads = threadsByKey[key];
+      if (threads.length <= 1) continue;
+      
+      // Sort by created_at desc (newest first)
+      threads.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      // Keep the newest, hide the rest
+      for (let i = 1; i < threads.length; i++) {
+        await supabase
+          .from('incident_threads')
+          .update({ is_hidden: true, updated_at: new Date().toISOString() })
+          .eq('thread_id', threads[i].thread_id);
+        mergedDuplicates++;
+        console.log(`Hiding duplicate thread: "${threads[i].title}"`);
       }
     }
 
@@ -722,6 +761,7 @@ serve(async (req) => {
         elevatorAlerts: ttcData.elevatorAlerts.length,
         hiddenThreads,
         unhiddenRszAccessibility,
+        mergedDuplicates,
         newAlerts, 
         updatedThreads,
         timestamp: new Date().toISOString()
