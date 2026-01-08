@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.7  
+**Version:** 3.8  
 **Date:** January 8, 2026  
-**poll-alerts Version:** 111  
+**poll-alerts Version:** 104  
 **scrape-maintenance Version:** 2  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
@@ -619,7 +619,7 @@ CREATE TABLE planned_maintenance (
 
 ## Edge Functions
 
-### `poll-alerts` (v103)
+### `poll-alerts` (v104)
 
 **Trigger:** Cron schedule (every 2 minutes)  
 **Purpose:** Fetch, categorize, and thread alerts; manage thread lifecycle
@@ -632,6 +632,8 @@ CREATE TABLE planned_maintenance (
    - Excludes RSZ and ACCESSIBILITY (they have their own lifecycle)
 3. **STEP 2b:** Resolve threads with matching SERVICE_RESUMED alerts
    - Matches by route + 10% text similarity
+   - **CRITICAL:** Only matches if SERVICE_RESUMED was created AFTER the thread (v104+)
+   - Prevents old "service resumed" alerts from resolving new incidents
    - Skips RSZ, ACCESSIBILITY, SERVICE_RESUMED threads
 4. **STEP 3:** Unhide threads if routes return to TTC API
    - Re-activates threads if alert comes back

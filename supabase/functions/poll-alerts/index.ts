@@ -541,12 +541,13 @@ serve(async (req) => {
     
     // STEP 2b: Mark threads as resolved if they have a matching SERVICE_RESUMED alert
     // (This catches cases where SERVICE_RESUMED ended up in a different thread)
+    // CRITICAL: Only match if SERVICE_RESUMED was created AFTER the thread started
     {
       // Get all unresolved threads that could be resolved by SERVICE_RESUMED
       // Includes: SERVICE_DISRUPTION, DIVERSION, DELAY, SHUTTLE (NOT: RSZ, ACCESSIBILITY, SERVICE_RESUMED)
       const { data: unresolvedThreads } = await supabase
         .from('incident_threads')
-        .select('thread_id, title, affected_routes, categories')
+        .select('thread_id, title, affected_routes, categories, created_at')
         .eq('is_resolved', false)
         .eq('is_hidden', false);
       
@@ -554,13 +555,14 @@ serve(async (req) => {
       const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
       const { data: resumedAlerts } = await supabase
         .from('alert_cache')
-        .select('header_text, affected_routes')
+        .select('header_text, affected_routes, created_at')
         .filter('categories', 'cs', '["SERVICE_RESUMED"]')
         .gte('created_at', fortyEightHoursAgo);
       
       for (const thread of unresolvedThreads || []) {
         const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
         const threadCats = Array.isArray(thread.categories) ? thread.categories : [];
+        const threadCreatedAt = new Date(thread.created_at).getTime();
         if (threadRoutes.length === 0) continue;
         
         // Skip threads that shouldn't be auto-resolved by SERVICE_RESUMED
@@ -571,6 +573,13 @@ serve(async (req) => {
         // Check if any SERVICE_RESUMED alert matches this thread's routes
         for (const resumedAlert of resumedAlerts || []) {
           const resumedRoutes = Array.isArray(resumedAlert.affected_routes) ? resumedAlert.affected_routes : [];
+          const resumedCreatedAt = new Date(resumedAlert.created_at).getTime();
+          
+          // CRITICAL: Only match if SERVICE_RESUMED was created AFTER the thread
+          // This prevents old "service resumed" alerts from resolving new incidents
+          if (resumedCreatedAt <= threadCreatedAt) {
+            continue;
+          }
           
           // Check route overlap
           const hasRouteMatch = threadRoutes.some(tr => {
