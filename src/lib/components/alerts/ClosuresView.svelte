@@ -135,30 +135,30 @@
    */
   function getClosureType(maintenance: PlannedMaintenance): string {
     const startHour = parseTimeHour(maintenance.start_time);
-    
+
     // Nightly closure: starts at 10 PM (22:00) or later
     if (startHour !== null && startHour >= 22) {
       return "NIGHTLY_CLOSURE";
     }
-    
+
     // Weekend closure: no specific start time and spans weekend days
     if (!maintenance.start_time) {
       const startDate = parseLocalDate(maintenance.start_date);
       const endDate = parseLocalDate(maintenance.end_date);
       const startDay = startDate.getDay(); // 0=Sun, 6=Sat
       const endDay = endDate.getDay();
-      
+
       // Check if it's a typical weekend closure (Sat-Sun)
       // Or starts on Friday evening and ends Sunday
       if (
         (startDay === 6 && endDay === 0) || // Sat to Sun
         (startDay === 5 && endDay === 0) || // Fri to Sun
-        (startDay === 6 && endDay === 1)    // Sat to Mon
+        (startDay === 6 && endDay === 1) // Sat to Mon
       ) {
         return "WEEKEND_CLOSURE";
       }
     }
-    
+
     return "SCHEDULED_CLOSURE";
   }
 

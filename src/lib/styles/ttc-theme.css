@@ -153,15 +153,15 @@
   color: hsl(25 95% 60%);
 }
 
-/* Nightly Closure - Warm orange (late night) */
+/* Nightly Early Closure - Blue (night sky/evening) */
 .status-badge-nightly {
-  background-color: hsl(25 95% 93%);
-  color: hsl(25 95% 38%);
+  background-color: hsl(217 91% 95%);
+  color: hsl(217 91% 40%);
 }
 
 .dark .status-badge-nightly {
-  background-color: hsl(25 80% 25% / 0.4);
-  color: hsl(25 95% 70%);
+  background-color: hsl(217 50% 25% / 0.5);
+  color: hsl(217 91% 75%);
 }
 
 /* Weekend Closure - Purple/Magenta (special event) */
