@@ -28,7 +28,7 @@
     ttc_title?: string;
     ttc_effect?: string;
   }
-  
+
   interface StaleAlert {
     route: string;
     frontend_title?: string;
@@ -60,25 +60,29 @@
     total_missing_instances: number;
     total_stale_instances: number;
   }
-  
+
   interface TTCAlert {
     route: string;
     title: string;
     effect: string;
   }
-  
+
   interface FrontendAlert {
     route: string;
     title: string;
     status: string;
   }
-  
+
   interface ComparisonResult {
     ttc_alerts: TTCAlert[];
     frontend_alerts: FrontendAlert[];
     matched: number;
     missing: { route: string; ttc_title?: string; ttc_effect?: string }[];
-    stale: { route: string; frontend_title?: string; frontend_status?: string }[];
+    stale: {
+      route: string;
+      frontend_title?: string;
+      frontend_status?: string;
+    }[];
     completeness: number;
     precision: number;
     timestamp: string;
@@ -93,13 +97,13 @@
   let isRefreshing = $state(false);
   let isLoadingDate = $state(false);
   let error = $state<string | null>(null);
-  
+
   // Comparison view state
   let showComparison = $state(false);
   let isLoadingComparison = $state(false);
   let comparisonResult: ComparisonResult | null = $state(null);
   let comparisonError = $state<string | null>(null);
-  
+
   // Check details modal state
   let showCheckDetails = $state(false);
   let selectedCheckLog: AccuracyLog | null = $state(null);
@@ -260,11 +264,11 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
-  
+
   async function fetchComparison() {
     isLoadingComparison = true;
     comparisonError = null;
-    
+
     try {
       const response = await fetch(
         `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/monitor-alert-accuracy`,
@@ -276,32 +280,33 @@
           },
         }
       );
-      
+
       if (!response.ok) throw new Error("Failed to fetch comparison");
-      
+
       const data = await response.json();
       comparisonResult = data;
       showComparison = true;
-      
+
       // Also refresh the main data
       await fetchData();
     } catch (e) {
-      comparisonError = e instanceof Error ? e.message : "Failed to fetch comparison";
+      comparisonError =
+        e instanceof Error ? e.message : "Failed to fetch comparison";
     } finally {
       isLoadingComparison = false;
     }
   }
-  
+
   function closeComparison() {
     showComparison = false;
     comparisonResult = null;
   }
-  
+
   function showCheckDetailsModal(log: AccuracyLog) {
     selectedCheckLog = log;
     showCheckDetails = true;
   }
-  
+
   function closeCheckDetails() {
     showCheckDetails = false;
     selectedCheckLog = null;
@@ -449,7 +454,7 @@
           <Download class="w-4 h-4 mr-2" />
           Export JSON
         </Button>
-        
+
         <!-- Compare Side-by-Side (only show for today) -->
         {#if !isViewingHistory}
           <Button
@@ -458,7 +463,9 @@
             onclick={fetchComparison}
             disabled={isLoadingComparison}
           >
-            <ArrowLeftRight class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-pulse' : ''}" />
+            <ArrowLeftRight
+              class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-pulse' : ''}"
+            />
             {isLoadingComparison ? "Loading..." : "Compare"}
           </Button>
         {/if}
@@ -637,13 +644,17 @@
             <CardTitle class="text-sm font-medium"
               >All Checks ({selectedDateLogs.length})</CardTitle
             >
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onclick={fetchComparison}
               disabled={isLoadingComparison}
             >
-              <ArrowLeftRight class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-pulse' : ''}" />
+              <ArrowLeftRight
+                class="w-4 h-4 mr-2 {isLoadingComparison
+                  ? 'animate-pulse'
+                  : ''}"
+              />
               {isLoadingComparison ? "Loading..." : "Compare Now (Live)"}
             </Button>
           </CardHeader>
@@ -686,8 +697,8 @@
                         </span>
                       </td>
                       <td class="py-2 px-2 text-center">
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           class="h-7 px-2"
                           onclick={() => showCheckDetailsModal(log)}
@@ -917,13 +928,15 @@
       <Card>
         <CardHeader class="flex flex-row items-center justify-between">
           <CardTitle class="text-sm font-medium">Recent Checks</CardTitle>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onclick={fetchComparison}
             disabled={isLoadingComparison}
           >
-            <ArrowLeftRight class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-pulse' : ''}" />
+            <ArrowLeftRight
+              class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-pulse' : ''}"
+            />
             {isLoadingComparison ? "Loading..." : "Compare Now"}
           </Button>
         </CardHeader>
@@ -965,8 +978,8 @@
                       </span>
                     </td>
                     <td class="py-2 px-2 text-center">
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         class="h-7 px-2"
                         onclick={() => showCheckDetailsModal(log)}
@@ -988,14 +1001,14 @@
 <!-- Side-by-Side Comparison Modal -->
 {#if showComparison && comparisonResult}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div 
-    class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" 
+  <div
+    class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
     onclick={closeComparison}
     role="button"
     tabindex="-1"
   >
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-    <div 
+    <div
       class="bg-zinc-900 rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col border border-zinc-700"
       onclick={(e) => e.stopPropagation()}
       role="dialog"
@@ -1004,21 +1017,36 @@
       tabindex="-1"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-700 bg-zinc-800">
+      <div
+        class="flex items-center justify-between px-6 py-4 border-b border-zinc-700 bg-zinc-800"
+      >
         <div>
           <h2 class="text-xl font-bold text-white">Side-by-Side Comparison</h2>
           <p class="text-sm text-zinc-400">
-            {new Date(comparisonResult.timestamp).toLocaleString()} • 
-            <span class="text-green-400">{comparisonResult.matched} matched</span> • 
-            <span class="{comparisonResult.missing.length > 0 ? 'text-amber-400' : 'text-zinc-400'}">{comparisonResult.missing.length} missing</span> • 
-            <span class="{comparisonResult.stale.length > 0 ? 'text-red-400' : 'text-zinc-400'}">{comparisonResult.stale.length} stale</span>
+            {new Date(comparisonResult.timestamp).toLocaleString()} •
+            <span class="text-green-400"
+              >{comparisonResult.matched} matched</span
+            >
+            •
+            <span
+              class={comparisonResult.missing.length > 0
+                ? "text-amber-400"
+                : "text-zinc-400"}
+              >{comparisonResult.missing.length} missing</span
+            >
+            •
+            <span
+              class={comparisonResult.stale.length > 0
+                ? "text-red-400"
+                : "text-zinc-400"}>{comparisonResult.stale.length} stale</span
+            >
           </p>
         </div>
         <Button variant="ghost" size="sm" onclick={closeComparison}>
           <X class="w-5 h-5" />
         </Button>
       </div>
-      
+
       <!-- Comparison Content -->
       <div class="flex-1 overflow-auto p-6 bg-zinc-900">
         <div class="grid md:grid-cols-2 gap-6">
@@ -1030,28 +1058,47 @@
             </h3>
             <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
               {#each comparisonResult.ttc_alerts as alert}
-                {@const isMissing = comparisonResult.missing.some(m => m.route === alert.route && m.ttc_title === alert.title)}
-                <div class="p-3 rounded-lg border {isMissing ? 'bg-amber-900/50 border-amber-700' : 'bg-zinc-800 border-zinc-700'}">
+                {@const isMissing = comparisonResult.missing.some(
+                  (m) => m.route === alert.route && m.ttc_title === alert.title
+                )}
+                <div
+                  class="p-3 rounded-lg border {isMissing
+                    ? 'bg-amber-900/50 border-amber-700'
+                    : 'bg-zinc-800 border-zinc-700'}"
+                >
                   <div class="flex items-start justify-between gap-2">
                     <div class="flex-1 min-w-0">
-                      <div class="font-semibold text-sm flex items-center gap-2">
-                        <span class="bg-red-600 text-white px-2 py-0.5 rounded text-xs font-bold">
+                      <div
+                        class="font-semibold text-sm flex items-center gap-2"
+                      >
+                        <span
+                          class="bg-red-600 text-white px-2 py-0.5 rounded text-xs font-bold"
+                        >
                           {alert.route}
                         </span>
-                        <span class="text-xs px-2 py-0.5 rounded bg-zinc-700 text-zinc-300">
+                        <span
+                          class="text-xs px-2 py-0.5 rounded bg-zinc-700 text-zinc-300"
+                        >
                           {alert.effect}
                         </span>
                       </div>
-                      <p class="text-sm text-zinc-400 mt-1 truncate" title={alert.title}>
+                      <p
+                        class="text-sm text-zinc-400 mt-1 truncate"
+                        title={alert.title}
+                      >
                         {alert.title}
                       </p>
                     </div>
                     {#if isMissing}
-                      <span class="text-xs text-amber-300 bg-amber-900/70 px-2 py-0.5 rounded whitespace-nowrap">
+                      <span
+                        class="text-xs text-amber-300 bg-amber-900/70 px-2 py-0.5 rounded whitespace-nowrap"
+                      >
                         Missing in Frontend
                       </span>
                     {:else}
-                      <span class="text-xs text-green-300 bg-green-900/70 px-2 py-0.5 rounded whitespace-nowrap">
+                      <span
+                        class="text-xs text-green-300 bg-green-900/70 px-2 py-0.5 rounded whitespace-nowrap"
+                      >
                         ✓ Matched
                       </span>
                     {/if}
@@ -1065,7 +1112,7 @@
               {/if}
             </div>
           </div>
-          
+
           <!-- Frontend Alerts -->
           <div>
             <h3 class="font-semibold mb-3 flex items-center gap-2 text-white">
@@ -1074,28 +1121,48 @@
             </h3>
             <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
               {#each comparisonResult.frontend_alerts as alert}
-                {@const isStale = comparisonResult.stale.some(s => s.route === alert.route && s.frontend_title === alert.title)}
-                <div class="p-3 rounded-lg border {isStale ? 'bg-red-900/50 border-red-700' : 'bg-zinc-800 border-zinc-700'}">
+                {@const isStale = comparisonResult.stale.some(
+                  (s) =>
+                    s.route === alert.route && s.frontend_title === alert.title
+                )}
+                <div
+                  class="p-3 rounded-lg border {isStale
+                    ? 'bg-red-900/50 border-red-700'
+                    : 'bg-zinc-800 border-zinc-700'}"
+                >
                   <div class="flex items-start justify-between gap-2">
                     <div class="flex-1 min-w-0">
-                      <div class="font-semibold text-sm flex items-center gap-2">
-                        <span class="bg-red-600 text-white px-2 py-0.5 rounded text-xs font-bold">
+                      <div
+                        class="font-semibold text-sm flex items-center gap-2"
+                      >
+                        <span
+                          class="bg-red-600 text-white px-2 py-0.5 rounded text-xs font-bold"
+                        >
                           {alert.route}
                         </span>
-                        <span class="text-xs px-2 py-0.5 rounded bg-zinc-700 text-zinc-300">
+                        <span
+                          class="text-xs px-2 py-0.5 rounded bg-zinc-700 text-zinc-300"
+                        >
                           {alert.status}
                         </span>
                       </div>
-                      <p class="text-sm text-zinc-400 mt-1 truncate" title={alert.title}>
+                      <p
+                        class="text-sm text-zinc-400 mt-1 truncate"
+                        title={alert.title}
+                      >
                         {alert.title}
                       </p>
                     </div>
                     {#if isStale}
-                      <span class="text-xs text-red-300 bg-red-900/70 px-2 py-0.5 rounded whitespace-nowrap">
+                      <span
+                        class="text-xs text-red-300 bg-red-900/70 px-2 py-0.5 rounded whitespace-nowrap"
+                      >
                         Not in TTC API
                       </span>
                     {:else}
-                      <span class="text-xs text-green-300 bg-green-900/70 px-2 py-0.5 rounded whitespace-nowrap">
+                      <span
+                        class="text-xs text-green-300 bg-green-900/70 px-2 py-0.5 rounded whitespace-nowrap"
+                      >
                         ✓ Matched
                       </span>
                     {/if}
@@ -1110,35 +1177,47 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Summary Stats -->
-        <div class="mt-6 pt-6 border-t border-zinc-700 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div
+          class="mt-6 pt-6 border-t border-zinc-700 grid grid-cols-2 md:grid-cols-4 gap-4"
+        >
           <div class="text-center">
-            <div class="text-2xl font-bold text-white">{comparisonResult.completeness.toFixed(1)}%</div>
+            <div class="text-2xl font-bold text-white">
+              {comparisonResult.completeness.toFixed(1)}%
+            </div>
             <div class="text-sm text-zinc-400">Completeness</div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-bold text-white">{comparisonResult.precision.toFixed(1)}%</div>
+            <div class="text-2xl font-bold text-white">
+              {comparisonResult.precision.toFixed(1)}%
+            </div>
             <div class="text-sm text-zinc-400">Precision</div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-bold text-amber-400">{comparisonResult.missing.length}</div>
+            <div class="text-2xl font-bold text-amber-400">
+              {comparisonResult.missing.length}
+            </div>
             <div class="text-sm text-zinc-400">Missing from Frontend</div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-bold text-red-400">{comparisonResult.stale.length}</div>
+            <div class="text-2xl font-bold text-red-400">
+              {comparisonResult.stale.length}
+            </div>
             <div class="text-sm text-zinc-400">Stale in Frontend</div>
           </div>
         </div>
       </div>
-      
+
       <!-- Footer -->
-      <div class="flex justify-end gap-2 px-6 py-4 border-t border-zinc-700 bg-zinc-800">
-        <Button variant="outline" onclick={closeComparison}>
-          Close
-        </Button>
+      <div
+        class="flex justify-end gap-2 px-6 py-4 border-t border-zinc-700 bg-zinc-800"
+      >
+        <Button variant="outline" onclick={closeComparison}>Close</Button>
         <Button onclick={fetchComparison} disabled={isLoadingComparison}>
-          <RefreshCw class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-spin' : ''}" />
+          <RefreshCw
+            class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-spin' : ''}"
+          />
           Refresh
         </Button>
       </div>
@@ -1149,14 +1228,14 @@
 <!-- Check Details Modal -->
 {#if showCheckDetails && selectedCheckLog}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div 
-    class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" 
+  <div
+    class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
     onclick={closeCheckDetails}
     role="button"
     tabindex="-1"
   >
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-    <div 
+    <div
       class="bg-zinc-900 rounded-lg shadow-xl w-full max-w-md overflow-hidden flex flex-col border border-zinc-700"
       onclick={(e) => e.stopPropagation()}
       role="dialog"
@@ -1165,9 +1244,13 @@
       tabindex="-1"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-700 bg-zinc-800">
+      <div
+        class="flex items-center justify-between px-6 py-4 border-b border-zinc-700 bg-zinc-800"
+      >
         <div>
-          <h2 id="check-details-title" class="text-lg font-bold text-white">Check Details</h2>
+          <h2 id="check-details-title" class="text-lg font-bold text-white">
+            Check Details
+          </h2>
           <p class="text-sm text-zinc-400">
             {new Date(selectedCheckLog.checked_at).toLocaleString("en-US", {
               month: "short",
@@ -1179,75 +1262,105 @@
             })}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onclick={closeCheckDetails} class="text-zinc-400 hover:text-white">
+        <Button
+          variant="ghost"
+          size="sm"
+          onclick={closeCheckDetails}
+          class="text-zinc-400 hover:text-white"
+        >
           <X class="w-5 h-5" />
         </Button>
       </div>
-      
+
       <!-- Content -->
       <div class="p-6 space-y-4">
         {#if selectedCheckLog}
           {@const StatusIcon = getStatusIcon(selectedCheckLog.status)}
-          
+
           <!-- Status Badge -->
-          <div class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg {
-            selectedCheckLog.status === 'healthy' ? 'bg-emerald-500/20 text-emerald-400' :
-            selectedCheckLog.status === 'warning' ? 'bg-amber-500/20 text-amber-400' :
-            'bg-red-500/20 text-red-400'
-          }">
+          <div
+            class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg {selectedCheckLog.status ===
+            'healthy'
+              ? 'bg-emerald-500/20 text-emerald-400'
+              : selectedCheckLog.status === 'warning'
+                ? 'bg-amber-500/20 text-amber-400'
+                : 'bg-red-500/20 text-red-400'}"
+          >
             <StatusIcon class="w-5 h-5" />
-            <span class="font-semibold capitalize">{selectedCheckLog.status}</span>
+            <span class="font-semibold capitalize"
+              >{selectedCheckLog.status}</span
+            >
           </div>
         {/if}
-        
+
         <!-- Stats Grid -->
         <div class="grid grid-cols-2 gap-3">
           <div class="bg-zinc-800 rounded-lg p-3 text-center">
-            <div class="text-2xl font-bold text-white">{selectedCheckLog.ttc_alert_count}</div>
+            <div class="text-2xl font-bold text-white">
+              {selectedCheckLog.ttc_alert_count}
+            </div>
             <div class="text-xs text-zinc-400">TTC API Alerts</div>
           </div>
           <div class="bg-zinc-800 rounded-lg p-3 text-center">
-            <div class="text-2xl font-bold text-white">{selectedCheckLog.frontend_alert_count}</div>
+            <div class="text-2xl font-bold text-white">
+              {selectedCheckLog.frontend_alert_count}
+            </div>
             <div class="text-xs text-zinc-400">Frontend Alerts</div>
           </div>
           <div class="bg-zinc-800 rounded-lg p-3 text-center">
-            <div class="text-2xl font-bold text-emerald-400">{selectedCheckLog.matched_count}</div>
+            <div class="text-2xl font-bold text-emerald-400">
+              {selectedCheckLog.matched_count}
+            </div>
             <div class="text-xs text-zinc-400">Matched</div>
           </div>
           <div class="bg-zinc-800 rounded-lg p-3 text-center">
-            <div class="text-2xl font-bold text-blue-400">{selectedCheckLog.completeness}%</div>
+            <div class="text-2xl font-bold text-blue-400">
+              {selectedCheckLog.completeness}%
+            </div>
             <div class="text-xs text-zinc-400">Completeness</div>
           </div>
           <div class="bg-zinc-800 rounded-lg p-3 text-center">
-            <div class="text-2xl font-bold text-amber-400">{selectedCheckLog.missing_count}</div>
+            <div class="text-2xl font-bold text-amber-400">
+              {selectedCheckLog.missing_count}
+            </div>
             <div class="text-xs text-zinc-400">Missing Alerts</div>
           </div>
           <div class="bg-zinc-800 rounded-lg p-3 text-center">
-            <div class="text-2xl font-bold text-red-400">{selectedCheckLog.stale_count}</div>
+            <div class="text-2xl font-bold text-red-400">
+              {selectedCheckLog.stale_count}
+            </div>
             <div class="text-xs text-zinc-400">Stale Alerts</div>
           </div>
         </div>
-        
+
         <!-- Precision -->
         <div class="bg-zinc-800 rounded-lg p-3 text-center">
-          <div class="text-2xl font-bold text-purple-400">{selectedCheckLog.precision}%</div>
+          <div class="text-2xl font-bold text-purple-400">
+            {selectedCheckLog.precision}%
+          </div>
           <div class="text-xs text-zinc-400">Precision (Non-Stale Rate)</div>
         </div>
-        
+
         {#if selectedCheckLog.error_message}
           <div class="bg-red-500/20 text-red-400 rounded-lg p-3 text-sm">
-            <strong>Error:</strong> {selectedCheckLog.error_message}
+            <strong>Error:</strong>
+            {selectedCheckLog.error_message}
           </div>
         {/if}
-        
+
         <!-- Missing Alerts Details -->
         {#if selectedCheckLog.missing_alerts && Array.isArray(selectedCheckLog.missing_alerts) && selectedCheckLog.missing_alerts.length > 0}
           <div class="border-t border-zinc-700 pt-4">
-            <h4 class="text-sm font-medium text-amber-400 mb-2">Missing Alerts ({selectedCheckLog.missing_alerts.length})</h4>
+            <h4 class="text-sm font-medium text-amber-400 mb-2">
+              Missing Alerts ({selectedCheckLog.missing_alerts.length})
+            </h4>
             <div class="space-y-2 max-h-32 overflow-y-auto">
               {#each selectedCheckLog.missing_alerts as alert}
-                <div class="bg-amber-500/10 border border-amber-500/30 rounded p-2 text-xs">
-                  <span class="font-semibold text-amber-300">{alert.route}</span>
+                <div
+                  class="bg-amber-500/10 border border-amber-500/30 rounded p-2 text-xs"
+                >
+                  <span class="font-semibold text-amber-300">{alert.route}</span
+                  >
                   <span class="text-zinc-400 ml-2">{alert.ttc_effect}</span>
                   <p class="text-zinc-300 mt-1">{alert.ttc_title}</p>
                 </div>
@@ -1255,16 +1368,21 @@
             </div>
           </div>
         {/if}
-        
+
         <!-- Stale Alerts Details -->
         {#if selectedCheckLog.stale_alerts && Array.isArray(selectedCheckLog.stale_alerts) && selectedCheckLog.stale_alerts.length > 0}
           <div class="border-t border-zinc-700 pt-4">
-            <h4 class="text-sm font-medium text-red-400 mb-2">Stale Alerts ({selectedCheckLog.stale_alerts.length})</h4>
+            <h4 class="text-sm font-medium text-red-400 mb-2">
+              Stale Alerts ({selectedCheckLog.stale_alerts.length})
+            </h4>
             <div class="space-y-2 max-h-32 overflow-y-auto">
               {#each selectedCheckLog.stale_alerts as alert}
-                <div class="bg-red-500/10 border border-red-500/30 rounded p-2 text-xs">
+                <div
+                  class="bg-red-500/10 border border-red-500/30 rounded p-2 text-xs"
+                >
                   <span class="font-semibold text-red-300">{alert.route}</span>
-                  <span class="text-zinc-400 ml-2">{alert.frontend_status}</span>
+                  <span class="text-zinc-400 ml-2">{alert.frontend_status}</span
+                  >
                   <p class="text-zinc-300 mt-1">{alert.frontend_title}</p>
                 </div>
               {/each}
@@ -1272,13 +1390,19 @@
           </div>
         {/if}
       </div>
-      
+
       <!-- Footer -->
-      <div class="flex justify-between gap-2 px-6 py-4 border-t border-zinc-700 bg-zinc-800">
-        <Button variant="outline" onclick={closeCheckDetails}>
-          Close
-        </Button>
-        <Button onclick={() => { closeCheckDetails(); fetchComparison(); }} disabled={isLoadingComparison}>
+      <div
+        class="flex justify-between gap-2 px-6 py-4 border-t border-zinc-700 bg-zinc-800"
+      >
+        <Button variant="outline" onclick={closeCheckDetails}>Close</Button>
+        <Button
+          onclick={() => {
+            closeCheckDetails();
+            fetchComparison();
+          }}
+          disabled={isLoadingComparison}
+        >
           <ArrowLeftRight class="w-4 h-4 mr-2" />
           Compare Live
         </Button>
@@ -1289,8 +1413,13 @@
 
 <!-- Comparison Error Toast -->
 {#if comparisonError}
-  <div class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+  <div
+    class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50"
+  >
     {comparisonError}
-    <button class="ml-2 text-white/80 hover:text-white" onclick={() => comparisonError = null}>×</button>
+    <button
+      class="ml-2 text-white/80 hover:text-white"
+      onclick={() => (comparisonError = null)}>×</button
+    >
   </div>
 {/if}

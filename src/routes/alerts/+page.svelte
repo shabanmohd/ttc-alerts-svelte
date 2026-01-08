@@ -343,7 +343,7 @@
   });
 
   // Get recently resolved alerts (last 6 hours) - only show under Disruptions tab
-  // ONLY show alerts that have SERVICE_RESUMED category (properly threaded with Bluesky confirmation)
+  // Show all alerts that have SERVICE_RESUMED category (confirmed by Bluesky)
   // Exclude hidden, accessibility and RSZ alerts
   let recentlyResolved = $derived.by(() => {
     // Only show resolved section in disruptions tab
@@ -356,18 +356,15 @@
       if (!t.is_resolved || t.is_hidden || !t.resolved_at) return false;
       if (new Date(t.resolved_at).getTime() < sixHoursAgo) return false;
 
-      // MUST have SERVICE_RESUMED category (properly confirmed by Bluesky)
+      // MUST have SERVICE_RESUMED category (confirmed by Bluesky)
       const categories = (t.categories as string[]) || [];
       if (!categories.includes("SERVICE_RESUMED")) return false;
 
       // Exclude RSZ alerts
       if (isRSZAlert(t)) return false;
 
-      // Exclude orphaned SERVICE_RESUMED (no preceding DELAY/DISRUPTION)
-      const onlyServiceResumed =
-        categories.length === 1 && categories[0] === "SERVICE_RESUMED";
-      const singleAlertThread = (t.alerts?.length || 0) === 1;
-      if (onlyServiceResumed && singleAlertThread) return false;
+      // Note: We now show all SERVICE_RESUMED threads, including standalone ones
+      // since Bluesky posts them when service genuinely resumes
 
       return true;
     });
