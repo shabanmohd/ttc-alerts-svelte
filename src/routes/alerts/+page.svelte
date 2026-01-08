@@ -349,12 +349,12 @@
     // Only show resolved section in disruptions tab
     if (selectedCategory !== "disruptions") return [];
 
-    const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
+    const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
     
     return $threadsWithAlerts.filter((t) => {
       // Must be resolved and not hidden
       if (!t.is_resolved || t.is_hidden || !t.resolved_at) return false;
-      if (new Date(t.resolved_at).getTime() < sixHoursAgo) return false;
+      if (new Date(t.resolved_at).getTime() < twelveHoursAgo) return false;
 
       // MUST have SERVICE_RESUMED category (confirmed by Bluesky)
       const categories = (t.categories as string[]) || [];
