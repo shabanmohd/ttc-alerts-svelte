@@ -12,7 +12,7 @@
   let {
     title,
     description,
-    image = "/icons/og-image.png",
+    image = "/icons/og-image.png?v=6",
     type = "website",
     noindex = false,
   }: Props = $props();
