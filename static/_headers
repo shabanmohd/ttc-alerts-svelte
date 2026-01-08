@@ -53,7 +53,13 @@
 /_app/immutable/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Icons - long cache
+# Icons - disable cache for icon refresh
 /icons/*
-  Cache-Control: public, max-age=86400
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# Favicons - disable cache for refresh
+/favicon*.png
+  Cache-Control: no-cache, no-store, must-revalidate
 
