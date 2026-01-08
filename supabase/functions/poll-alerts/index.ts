@@ -1,6 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// v78: Fix RSZ vs point-incident station matching
+// - extractStationName() now handles "stations" plural and range patterns like "from X to Y stations"
+// - Add extractSecondStationName() to capture second station in ranges
+// - enhancedSimilarity() now compares ALL stations from both texts
+// - Apply penalty when one text has stations but other doesn't (prevents RSZ matching random delays)
 // v77: Add fallback for empty RPC result to prevent orphaned alerts
 // - If find_or_create_thread RPC returns empty/null (not error), create thread directly
 // - This prevents alerts from being created without threads
@@ -44,7 +49,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // - Also removes "See other service alerts" boilerplate text
 // v63: Fix SiteWide alerts to bypass alreadyHasThread check
 // v62: SiteWide alerts support (station entrance/facility closures)
-const FUNCTION_VERSION = 77;
+const FUNCTION_VERSION = 78;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 
@@ -175,8 +180,31 @@ function hasConflictingRoutes(alertRoutes: string[], threadRoutes: string[]): bo
 
 function extractStationName(text: string): string | null {
   const lower = text.toLowerCase();
-  const m = lower.match(/(?:at|from|to|between|near)\s+([a-z]+(?:\s+[a-z]+)?)\s+station/i) || lower.match(/([a-z]+(?:\s+[a-z]+)?)\s+station/i);
-  return m ? m[1].toLowerCase() : null;
+  // Match "at/from/to/between/near X station" (singular)
+  let m = lower.match(/(?:at|from|to|between|near)\s+([a-z]+(?:\s+[a-z]+)?)\s+station(?!s)/i);
+  if (m) return m[1].toLowerCase();
+  // Match "X station" (singular) without preposition
+  m = lower.match(/([a-z]+(?:\s+[a-z]+)?)\s+station(?!s)/i);
+  if (m) return m[1].toLowerCase();
+  // Match range patterns like "from X to Y stations" - return first station
+  m = lower.match(/from\s+([a-z\-]+(?:\s+[a-z\-]+)?)\s+to\s+([a-z\-]+(?:\s+[a-z\-]+)?)\s+stations/i);
+  if (m) return m[1].toLowerCase().replace(/-/g, ' ');
+  // Match "between X and Y stations" - return first station
+  m = lower.match(/between\s+([a-z\-]+(?:\s+[a-z\-]+)?)\s+and\s+([a-z\-]+(?:\s+[a-z\-]+)?)\s+stations/i);
+  if (m) return m[1].toLowerCase().replace(/-/g, ' ');
+  return null;
+}
+
+// Extract second station from range patterns (for RSZ detection)
+function extractSecondStationName(text: string): string | null {
+  const lower = text.toLowerCase();
+  // Match range patterns like "from X to Y stations" - return second station
+  let m = lower.match(/from\s+([a-z\-]+(?:\s+[a-z\-]+)?)\s+to\s+([a-z\-]+(?:\s+[a-z\-]+)?)\s+stations/i);
+  if (m) return m[2].toLowerCase().replace(/-/g, ' ');
+  // Match "between X and Y stations" - return second station
+  m = lower.match(/between\s+([a-z\-]+(?:\s+[a-z\-]+)?)\s+and\s+([a-z\-]+(?:\s+[a-z\-]+)?)\s+stations/i);
+  if (m) return m[2].toLowerCase().replace(/-/g, ' ');
+  return null;
 }
 
 function extractDirection(text: string): string | null {
@@ -238,12 +266,33 @@ function enhancedSimilarity(t1: string, t2: string): number {
   score += locOverlap > 0 ? Math.min(0.2, locOverlap * 0.1) : 0;
   const c1 = extractCause(t1), c2 = extractCause(t2);
   if (c1 && c1 === c2) score += 0.15;
-  const s1 = extractStationName(t1), s2 = extractStationName(t2);
-  // v74: Stronger station mismatch penalty to prevent grouping different subway incidents
-  // Changed from -0.4 to -0.8 to prevent Summerhill/Yorkdale from grouping together
-  if (s1 && s2 && s1 !== s2) score -= 0.8;
-  // Bonus if stations match (same incident)
-  if (s1 && s2 && s1 === s2) score += 0.3;
+  
+  // Extract all stations mentioned in both texts (including range patterns like "from X to Y stations")
+  const s1_first = extractStationName(t1);
+  const s1_second = extractSecondStationName(t1);
+  const s2_first = extractStationName(t2);
+  const s2_second = extractSecondStationName(t2);
+  
+  // Get all unique stations from each text
+  const stations1 = new Set([s1_first, s1_second].filter(Boolean) as string[]);
+  const stations2 = new Set([s2_first, s2_second].filter(Boolean) as string[]);
+  
+  // v78: Improved station matching for RSZ vs point incidents
+  // Check if any station from text1 matches any station from text2
+  const hasOverlap = [...stations1].some(s => stations2.has(s));
+  
+  // Apply penalties/bonuses based on station overlap
+  if (stations1.size > 0 && stations2.size > 0) {
+    if (hasOverlap) {
+      score += 0.3; // Stations match - likely same incident
+    } else {
+      score -= 0.8; // Different stations - different incidents
+    }
+  } else if (stations1.size > 0 || stations2.size > 0) {
+    // One text has stations, other doesn't - mild penalty
+    score -= 0.3;
+  }
+  
   const d1 = extractDirection(t1), d2 = extractDirection(t2);
   if (d1 && d2 && d1 !== d2) score -= 0.5;
   return Math.max(0, Math.min(1, score));
@@ -388,6 +437,51 @@ serve(async (req) => {
         if (staleSiteWideIds.length > 0) {
           await supabase.from('alert_cache').delete().in('alert_id', staleSiteWideIds);
           siteWideDeletedCount = staleSiteWideIds.length;
+        }
+        
+        // v78: Clean up mis-threaded Bluesky alerts in RSZ threads
+        // Bluesky alerts (non-RSZ) should never be in RSZ threads (which have "slower than usual" in title)
+        // This can happen due to threading bugs; cleaning up prevents stale data from showing
+        const { data: rszThreads } = await supabase
+          .from('incident_threads')
+          .select('thread_id, title')
+          .ilike('title', '%slower than usual%');
+        
+        if (rszThreads && rszThreads.length > 0) {
+          const rszThreadIds = rszThreads.map(t => t.thread_id);
+          // Find Bluesky alerts (bsky-*) that are incorrectly linked to RSZ threads
+          const { data: misthreadedAlerts } = await supabase
+            .from('alert_cache')
+            .select('alert_id, thread_id, header_text')
+            .in('thread_id', rszThreadIds)
+            .like('alert_id', 'bsky-%');
+          
+          if (misthreadedAlerts && misthreadedAlerts.length > 0) {
+            // Delete these mis-threaded alerts (they were wrongly assigned)
+            const misthreadedIds = misthreadedAlerts.map(a => a.alert_id);
+            await supabase.from('alert_cache').delete().in('alert_id', misthreadedIds);
+            console.log(`[poll-alerts v78] Cleaned up ${misthreadedIds.length} mis-threaded Bluesky alerts from RSZ threads`);
+          }
+          
+          // Also clean up TTC API alerts (ttc-SIGNIFICANT_DELAYS-*) that are DELAY type (not RSZ) in RSZ threads
+          // These have effectDesc="Delays" vs RSZ which has effectDesc="Reduced Speed Zone"
+          const { data: possibleMisthreadedTtcAlerts } = await supabase
+            .from('alert_cache')
+            .select('alert_id, thread_id, header_text')
+            .in('thread_id', rszThreadIds)
+            .like('alert_id', 'ttc-SIGNIFICANT_DELAYS-%');
+          
+          if (possibleMisthreadedTtcAlerts && possibleMisthreadedTtcAlerts.length > 0) {
+            // Filter to only alerts that are NOT RSZ (RSZ has "slower than usual" in header)
+            const misthreadedTtcIds = possibleMisthreadedTtcAlerts
+              .filter(a => !a.header_text?.toLowerCase().includes('slower than usual'))
+              .map(a => a.alert_id);
+            
+            if (misthreadedTtcIds.length > 0) {
+              await supabase.from('alert_cache').delete().in('alert_id', misthreadedTtcIds);
+              console.log(`[poll-alerts v78] Cleaned up ${misthreadedTtcIds.length} mis-threaded TTC DELAY alerts from RSZ threads`);
+            }
+          }
         }
         
         // Clean up orphaned threads (threads with no remaining alerts)
@@ -594,12 +688,19 @@ serve(async (req) => {
         // For route matching, use exact branch letters (40B ≠ 40)
         const alertExactRoutes = routes.map(extractRouteWithBranch);
         const alertBaseRoutes = routes.map(extractRouteNumber); // Keep for subway lines
+        
+        // v78: Detect if current alert is RSZ (slow zone) for bi-directional protection
+        const isRszAlert = isSpeedReductionPost(text);
+        
         for (const thread of candidateThreads || []) {
           const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
           if (!threadRoutes.length) continue;
-          // Skip RSZ threads for non-RSZ alerts (RSZ threads have "slower than usual" in title)
+          
+          // v78: Bi-directional RSZ/non-RSZ separation
+          // RSZ threads have "slower than usual" in title
           const isRszThread = (thread.title || '').toLowerCase().includes('slower than usual');
-          if (isRszThread && !text.toLowerCase().includes('slower than usual')) continue;
+          // Skip if RSZ status doesn't match (RSZ alert shouldn't match non-RSZ thread and vice versa)
+          if (isRszThread !== isRszAlert) continue;
           
           // CRITICAL: Reject matches between express (9XX) and regular (XX) routes
           // e.g., 939 Finch Express should NOT merge with 39 Finch East thread
@@ -633,8 +734,9 @@ serve(async (req) => {
             const eff = !thread.is_resolved ? sim + 0.5 : sim;
             if (eff > bestSimilarity) { bestSimilarity = eff; matchedThread = thread; }
           } else if (!thread.is_resolved) {
+            // v78: Increase minimum threshold for DELAY to 0.35 to prevent false matches
             if (sim >= 0.4 && sim > bestSimilarity) { bestSimilarity = sim; matchedThread = thread; }
-            else if ((category === 'DIVERSION' || category === 'DELAY') && sim >= 0.25 && sim > bestSimilarity) { bestSimilarity = sim; matchedThread = thread; }
+            else if ((category === 'DIVERSION' || category === 'DELAY') && sim >= 0.35 && sim > bestSimilarity) { bestSimilarity = sim; matchedThread = thread; }
           }
         }
       }
