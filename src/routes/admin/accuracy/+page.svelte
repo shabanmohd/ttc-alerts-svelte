@@ -606,10 +606,19 @@
 
         <!-- Historical Checks Table -->
         <Card>
-          <CardHeader>
+          <CardHeader class="flex flex-row items-center justify-between">
             <CardTitle class="text-sm font-medium"
               >All Checks ({selectedDateLogs.length})</CardTitle
             >
+            <Button 
+              variant="outline" 
+              size="sm"
+              onclick={fetchComparison}
+              disabled={isLoadingComparison}
+            >
+              <ArrowLeftRight class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-pulse' : ''}" />
+              {isLoadingComparison ? "Loading..." : "Compare Now (Live)"}
+            </Button>
           </CardHeader>
           <CardContent>
             <div class="overflow-x-auto max-h-96">
@@ -868,8 +877,17 @@
 
       <!-- Recent Checks Table -->
       <Card>
-        <CardHeader>
+        <CardHeader class="flex flex-row items-center justify-between">
           <CardTitle class="text-sm font-medium">Recent Checks</CardTitle>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onclick={fetchComparison}
+            disabled={isLoadingComparison}
+          >
+            <ArrowLeftRight class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-pulse' : ''}" />
+            {isLoadingComparison ? "Loading..." : "Compare Now"}
+          </Button>
         </CardHeader>
         <CardContent>
           <div class="overflow-x-auto">
