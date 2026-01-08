@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.6  
+**Version:** 3.7  
 **Date:** January 8, 2026  
-**poll-alerts Version:** 110  
+**poll-alerts Version:** 111  
 **scrape-maintenance Version:** 2  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
@@ -643,9 +643,12 @@ CREATE TABLE planned_maintenance (
    - Create/update RSZ threads and alerts
 7. **STEP 6:** Process elevator alerts from TTC API
    - Extract station name from header
-   - Create/update ACCESSIBILITY threads
+   - **Each elevator gets its own thread** (thread_id = `thread-elev-{elevatorCode}`)
+   - Multiple elevators at same station appear as separate alerts
+   - No threading between different elevators at same station
 8. **STEP 6b:** Auto-resolve elevator threads
-   - If station no longer in TTC API → elevator restored → resolve thread
+   - New threads: resolve by specific `elevatorCode` from thread_id
+   - Legacy threads: fall back to station name matching
    - Uses `.filter('categories', 'cs', '["ACCESSIBILITY"]')` for JSONB containment
 9. **STEP 6c:** Auto-resolve RSZ threads
    - If line no longer has RSZ in TTC API → resolve thread
