@@ -83,10 +83,16 @@ async function fetchTTCAlerts(): Promise<TTCAlert[]> {
     const data = await response.json();
     const alerts: TTCAlert[] = [];
     
-    // Process routes array, excluding RSZ
+    // Process routes array, excluding RSZ and Service Resumed alerts
     for (const route of data.routes || []) {
       // Skip RSZ alerts
       if (route.effectDesc === "Reduced Speed Zone") continue;
+      
+      // Skip Service Resumed alerts (these go to Recently Resolved section)
+      if (route.effectDesc === "Service Resumed" || 
+          route.title?.toLowerCase().includes("regular service has resumed") ||
+          route.title?.toLowerCase().includes("service has resumed") ||
+          route.title?.toLowerCase().includes("regular service resumed")) continue;
       
       // TTC API has route number in the 'route' field
       alerts.push({
