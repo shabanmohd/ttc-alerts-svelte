@@ -14,20 +14,11 @@ const COMMIT_HASH = __COMMIT_HASH__ ?? "dev";
 
 /**
  * Returns a formatted version string for display
- * @example "v1.0.0 (abc1234) - Jan 8, 2026"
+ * @example "v1.0.0 (abc1234)"
  */
 export function getVersionString(): string {
   const shortHash = COMMIT_HASH.slice(0, 7);
-  
-  // Format build date nicely
-  const date = new Date(BUILD_DATE);
-  const formattedDate = date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  
-  return `v${APP_VERSION} (${shortHash}) - ${formattedDate}`;
+  return `v${APP_VERSION} (${shortHash})`;
 }
 
 /**
