@@ -1,14 +1,14 @@
-const CACHE_NAME = 'ttc-alerts-beta-v8';
-const STATIC_CACHE = 'ttc-static-beta-v8';
-const DYNAMIC_CACHE = 'ttc-dynamic-beta-v8';
-const ALERTS_CACHE = 'ttc-alerts-cache-v5';
-const ETA_CACHE = 'ttc-eta-cache-v5';
+const CACHE_NAME = 'ttc-alerts-beta-v9';
+const STATIC_CACHE = 'ttc-static-beta-v9';
+const DYNAMIC_CACHE = 'ttc-dynamic-beta-v9';
+const ALERTS_CACHE = 'ttc-alerts-cache-v6';
+const ETA_CACHE = 'ttc-eta-cache-v6';
 // Separate cache for SvelteKit immutable assets (hashed, never change)
-const IMMUTABLE_CACHE = 'ttc-immutable-v5';
+const IMMUTABLE_CACHE = 'ttc-immutable-v6';
 
 // SW Version for logging and debugging
-const SW_VERSION = '8.0.0';
-const BUILD_TIMESTAMP = '2026-01-08T01:44:02.502Z';
+const SW_VERSION = '9.0.0';
+const BUILD_TIMESTAMP = '2026-01-08T01:49:34.541Z';
 
 const STATIC_ASSETS = [
   '/',
