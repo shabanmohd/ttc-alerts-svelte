@@ -264,6 +264,9 @@ async function storeResult(result: CheckResult): Promise<void> {
       precision: result.precision,
       missing_count: result.missing.length,
       stale_count: result.stale.length,
+      // Store detailed alert data for discrepancies
+      missing_alerts: result.missing,
+      stale_alerts: result.stale,
       status
     });
   

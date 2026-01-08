@@ -23,6 +23,18 @@
     Eye,
   } from "lucide-svelte";
 
+  interface MissingAlert {
+    route: string;
+    ttc_title?: string;
+    ttc_effect?: string;
+  }
+  
+  interface StaleAlert {
+    route: string;
+    frontend_title?: string;
+    frontend_status?: string;
+  }
+
   interface AccuracyLog {
     id: number;
     checked_at: string;
@@ -35,8 +47,8 @@
     stale_count: number;
     status: "healthy" | "warning" | "critical";
     error_message: string | null;
-    missing_alerts?: unknown;
-    stale_alerts?: unknown;
+    missing_alerts?: MissingAlert[];
+    stale_alerts?: StaleAlert[];
   }
 
   interface DailyReport {
@@ -1225,6 +1237,38 @@
         {#if selectedCheckLog.error_message}
           <div class="bg-red-500/20 text-red-400 rounded-lg p-3 text-sm">
             <strong>Error:</strong> {selectedCheckLog.error_message}
+          </div>
+        {/if}
+        
+        <!-- Missing Alerts Details -->
+        {#if selectedCheckLog.missing_alerts && Array.isArray(selectedCheckLog.missing_alerts) && selectedCheckLog.missing_alerts.length > 0}
+          <div class="border-t border-zinc-700 pt-4">
+            <h4 class="text-sm font-medium text-amber-400 mb-2">Missing Alerts ({selectedCheckLog.missing_alerts.length})</h4>
+            <div class="space-y-2 max-h-32 overflow-y-auto">
+              {#each selectedCheckLog.missing_alerts as alert}
+                <div class="bg-amber-500/10 border border-amber-500/30 rounded p-2 text-xs">
+                  <span class="font-semibold text-amber-300">{alert.route}</span>
+                  <span class="text-zinc-400 ml-2">{alert.ttc_effect}</span>
+                  <p class="text-zinc-300 mt-1">{alert.ttc_title}</p>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
+        
+        <!-- Stale Alerts Details -->
+        {#if selectedCheckLog.stale_alerts && Array.isArray(selectedCheckLog.stale_alerts) && selectedCheckLog.stale_alerts.length > 0}
+          <div class="border-t border-zinc-700 pt-4">
+            <h4 class="text-sm font-medium text-red-400 mb-2">Stale Alerts ({selectedCheckLog.stale_alerts.length})</h4>
+            <div class="space-y-2 max-h-32 overflow-y-auto">
+              {#each selectedCheckLog.stale_alerts as alert}
+                <div class="bg-red-500/10 border border-red-500/30 rounded p-2 text-xs">
+                  <span class="font-semibold text-red-300">{alert.route}</span>
+                  <span class="text-zinc-400 ml-2">{alert.frontend_status}</span>
+                  <p class="text-zinc-300 mt-1">{alert.frontend_title}</p>
+                </div>
+              {/each}
+            </div>
           </div>
         {/if}
       </div>
