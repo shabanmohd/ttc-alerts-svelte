@@ -39,13 +39,16 @@ This document describes the alert categorization and threading system designed t
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  Bluesky API    │────▶│  poll-alerts         │────▶│  Supabase DB    │
-│  @ttcalerts     │     │  (Edge Function)     │     │  alert_cache    │
-└─────────────────┘     └──────────────────────┘     │  incident_      │
-                                                      │  threads        │
-                                                      └────────┬────────┘
-                                                               │
-                        ┌──────────────────────┐               │
+│  TTC API        │────▶│  poll-alerts         │────▶│  Supabase DB    │
+│  live-alerts    │     │  (Edge Function)     │     │  alert_cache    │
+└─────────────────┘     │                      │     │  incident_      │
+        │               │  1. Fetch TTC API    │     │  threads        │
+        │               │  2. Hide stale       │     └────────┬────────┘
+┌───────▼───────┐       │  3. Process Bluesky  │              │
+│  Bluesky API  │──────▶│                      │              │
+│  @ttcalerts   │       └──────────────────────┘              │
+└───────────────┘                                              ▼
+                        ┌──────────────────────┐               
                         │  Svelte Frontend     │◀──────────────┘
                         │  alerts.ts store     │
                         │  + Realtime sub      │
@@ -57,32 +60,47 @@ This document describes the alert categorization and threading system designed t
 - **Frontend:** Svelte 5 + TypeScript + Tailwind + shadcn-svelte
 - **Backend:** Supabase (PostgreSQL + Edge Functions + Realtime)
 - **Hosting:** Cloudflare Pages
-- **Data Source:** Bluesky AT Protocol (public API)
+- **Data Sources:** 
+  - **TTC API** (Authority for active status): `https://alerts.ttc.ca/api/alerts/live-alerts`
+  - **Bluesky** (Context/History): `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
 
 ---
 
 ## Alert Sources
 
-### Current Implementation
+### Current Implementation (v81+)
 
-**Primary Source: Bluesky**
+**Authority Source: TTC API**
+
+- Official TTC live alerts API
+- **Endpoint:** `https://alerts.ttc.ca/api/alerts/live-alerts`
+- **Purpose:** Determines which routes have ACTIVE alerts
+- **Behavior:** If a route has no TTC API alert, threads for that route are hidden
+- **Filtering:** RSZ (Reduced Speed Zone / "slower than usual") alerts are excluded
+- **Status:** ✅ Enabled as authority
+
+**Context Source: Bluesky**
 
 - Official TTC account: [@ttcalerts.bsky.social](https://bsky.app/profile/ttcalerts.bsky.social)
 - **API:** Bluesky AT Protocol public API
 - **Endpoint:** `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
 - **Polling:** Edge function fetches last 50 posts per invocation
 - **Deduplication:** Uses `bluesky_uri` as unique identifier
-- **Status:** ✅ Enabled (primary and only source)
+- **Purpose:** Provides context, threading, and history for alerts
+- **Status:** ✅ Enabled (supplements TTC API)
 
 **GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear on Bluesky)
 
 ### Key Principles
 
+- **TTC API is Authority** - If TTC API says route has no alert, thread is hidden
 - **Effect > Cause** - "No service" matters more than "due to security incident"
 - **Non-exclusive categories** - Alert can be `SERVICE_DISRUPTION` + `SUBWAY`
 - **Simple threading** - 50% text similarity for general matching, 20% for SERVICE_RESUMED
 - **Latest first** - Most recent update at top of thread
 - **Exact route number matching** - Threading uses route NUMBER comparison (e.g., "46" ≠ "996")
+- **Auto-hide stale** - Threads hidden when route not in TTC API
+- **Auto-unhide** - Threads restored if route returns to TTC API
 
 ---
 
