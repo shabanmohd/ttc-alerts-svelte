@@ -3,8 +3,24 @@
   import { supabase } from "$lib/supabase";
   import Header from "$lib/components/layout/Header.svelte";
   import { Button } from "$lib/components/ui/button";
-  import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
-  import { RefreshCw, CheckCircle, AlertTriangle, XCircle, TrendingUp, TrendingDown, Download, Calendar } from "lucide-svelte";
+  import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+  } from "$lib/components/ui/card";
+  import {
+    RefreshCw,
+    CheckCircle,
+    AlertTriangle,
+    XCircle,
+    TrendingUp,
+    TrendingDown,
+    Download,
+    Calendar,
+    ArrowLeftRight,
+    X,
+  } from "lucide-svelte";
 
   interface AccuracyLog {
     id: number;
@@ -16,7 +32,7 @@
     precision: number;
     missing_count: number;
     stale_count: number;
-    status: 'healthy' | 'warning' | 'critical';
+    status: "healthy" | "warning" | "critical";
     error_message: string | null;
     missing_alerts?: unknown;
     stale_alerts?: unknown;
@@ -31,6 +47,29 @@
     total_missing_instances: number;
     total_stale_instances: number;
   }
+  
+  interface TTCAlert {
+    route: string;
+    title: string;
+    effect: string;
+  }
+  
+  interface FrontendAlert {
+    route: string;
+    title: string;
+    status: string;
+  }
+  
+  interface ComparisonResult {
+    ttc_alerts: TTCAlert[];
+    frontend_alerts: FrontendAlert[];
+    matched: number;
+    missing: { route: string; ttc_title?: string; ttc_effect?: string }[];
+    stale: { route: string; frontend_title?: string; frontend_status?: string }[];
+    completeness: number;
+    precision: number;
+    timestamp: string;
+  }
 
   let latestLog: AccuracyLog | null = $state(null);
   let recentLogs: AccuracyLog[] = $state([]);
@@ -42,8 +81,14 @@
   let isLoadingDate = $state(false);
   let error = $state<string | null>(null);
   
+  // Comparison view state
+  let showComparison = $state(false);
+  let isLoadingComparison = $state(false);
+  let comparisonResult: ComparisonResult | null = $state(null);
+  let comparisonError = $state<string | null>(null);
+
   // Date selection - default to today
-  let selectedDate = $state(new Date().toISOString().split('T')[0]);
+  let selectedDate = $state(new Date().toISOString().split("T")[0]);
   let availableDates: string[] = $state([]);
   let isViewingHistory = $state(false);
 
@@ -51,146 +96,188 @@
     try {
       // Fetch latest log
       const { data: latest, error: latestError } = await supabase
-        .from('alert_accuracy_logs')
-        .select('*')
-        .order('checked_at', { ascending: false })
+        .from("alert_accuracy_logs")
+        .select("*")
+        .order("checked_at", { ascending: false })
         .limit(1)
         .single();
 
-      if (latestError && latestError.code !== 'PGRST116') throw latestError;
+      if (latestError && latestError.code !== "PGRST116") throw latestError;
       latestLog = latest;
 
       // Fetch last 24 hours of logs for trend
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const twentyFourHoursAgo = new Date(
+        Date.now() - 24 * 60 * 60 * 1000
+      ).toISOString();
       const { data: logs, error: logsError } = await supabase
-        .from('alert_accuracy_logs')
-        .select('*')
-        .gte('checked_at', twentyFourHoursAgo)
-        .order('checked_at', { ascending: true });
+        .from("alert_accuracy_logs")
+        .select("*")
+        .gte("checked_at", twentyFourHoursAgo)
+        .order("checked_at", { ascending: true });
 
       if (logsError) throw logsError;
       recentLogs = logs || [];
 
       // Fetch today's report
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       const { data: report, error: reportError } = await supabase
-        .from('alert_accuracy_reports')
-        .select('*')
-        .eq('report_date', today)
+        .from("alert_accuracy_reports")
+        .select("*")
+        .eq("report_date", today)
         .single();
 
-      if (reportError && reportError.code !== 'PGRST116') throw reportError;
+      if (reportError && reportError.code !== "PGRST116") throw reportError;
       todayReport = report;
-      
+
       // Fetch available dates (for date picker)
       const { data: dates, error: datesError } = await supabase
-        .from('alert_accuracy_reports')
-        .select('report_date')
-        .order('report_date', { ascending: false })
+        .from("alert_accuracy_reports")
+        .select("report_date")
+        .order("report_date", { ascending: false })
         .limit(30);
-      
-      if (!datesError && dates) {
-        availableDates = (dates as { report_date: string }[]).map(d => d.report_date);
-      }
 
+      if (!datesError && dates) {
+        availableDates = (dates as { report_date: string }[]).map(
+          (d) => d.report_date
+        );
+      }
     } catch (e) {
-      error = e instanceof Error ? e.message : 'Failed to fetch data';
+      error = e instanceof Error ? e.message : "Failed to fetch data";
     } finally {
       isLoading = false;
     }
   }
-  
+
   async function fetchDateData(date: string) {
     isLoadingDate = true;
     try {
       // Fetch report for selected date
       const { data: report, error: reportError } = await supabase
-        .from('alert_accuracy_reports')
-        .select('*')
-        .eq('report_date', date)
+        .from("alert_accuracy_reports")
+        .select("*")
+        .eq("report_date", date)
         .single();
-      
-      if (reportError && reportError.code !== 'PGRST116') throw reportError;
+
+      if (reportError && reportError.code !== "PGRST116") throw reportError;
       selectedReport = report;
-      
+
       // Fetch all logs for that date
       const startOfDay = `${date}T00:00:00.000Z`;
       const endOfDay = `${date}T23:59:59.999Z`;
-      
+
       const { data: logs, error: logsError } = await supabase
-        .from('alert_accuracy_logs')
-        .select('*')
-        .gte('checked_at', startOfDay)
-        .lte('checked_at', endOfDay)
-        .order('checked_at', { ascending: true });
-      
+        .from("alert_accuracy_logs")
+        .select("*")
+        .gte("checked_at", startOfDay)
+        .lte("checked_at", endOfDay)
+        .order("checked_at", { ascending: true });
+
       if (logsError) throw logsError;
       selectedDateLogs = logs || [];
-      
     } catch (e) {
-      error = e instanceof Error ? e.message : 'Failed to fetch date data';
+      error = e instanceof Error ? e.message : "Failed to fetch date data";
     } finally {
       isLoadingDate = false;
     }
   }
-  
+
   function handleDateChange(event: Event) {
     const target = event.target as HTMLInputElement;
     selectedDate = target.value;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     isViewingHistory = selectedDate !== today;
-    
+
     if (isViewingHistory) {
       fetchDateData(selectedDate);
     }
   }
-  
+
   function downloadReport() {
-    const dataToExport = isViewingHistory ? {
-      date: selectedDate,
-      report: selectedReport,
-      logs: selectedDateLogs.map(log => ({
-        checked_at: log.checked_at,
-        ttc_alert_count: log.ttc_alert_count,
-        frontend_alert_count: log.frontend_alert_count,
-        matched_count: log.matched_count,
-        completeness: log.completeness,
-        precision: log.precision,
-        missing_count: log.missing_count,
-        stale_count: log.stale_count,
-        status: log.status,
-        missing_alerts: log.missing_alerts,
-        stale_alerts: log.stale_alerts,
-        error_message: log.error_message
-      }))
-    } : {
-      date: new Date().toISOString().split('T')[0],
-      report: todayReport,
-      logs: recentLogs.map(log => ({
-        checked_at: log.checked_at,
-        ttc_alert_count: log.ttc_alert_count,
-        frontend_alert_count: log.frontend_alert_count,
-        matched_count: log.matched_count,
-        completeness: log.completeness,
-        precision: log.precision,
-        missing_count: log.missing_count,
-        stale_count: log.stale_count,
-        status: log.status,
-        missing_alerts: log.missing_alerts,
-        stale_alerts: log.stale_alerts,
-        error_message: log.error_message
-      }))
-    };
-    
-    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    const dataToExport = isViewingHistory
+      ? {
+          date: selectedDate,
+          report: selectedReport,
+          logs: selectedDateLogs.map((log) => ({
+            checked_at: log.checked_at,
+            ttc_alert_count: log.ttc_alert_count,
+            frontend_alert_count: log.frontend_alert_count,
+            matched_count: log.matched_count,
+            completeness: log.completeness,
+            precision: log.precision,
+            missing_count: log.missing_count,
+            stale_count: log.stale_count,
+            status: log.status,
+            missing_alerts: log.missing_alerts,
+            stale_alerts: log.stale_alerts,
+            error_message: log.error_message,
+          })),
+        }
+      : {
+          date: new Date().toISOString().split("T")[0],
+          report: todayReport,
+          logs: recentLogs.map((log) => ({
+            checked_at: log.checked_at,
+            ttc_alert_count: log.ttc_alert_count,
+            frontend_alert_count: log.frontend_alert_count,
+            matched_count: log.matched_count,
+            completeness: log.completeness,
+            precision: log.precision,
+            missing_count: log.missing_count,
+            stale_count: log.stale_count,
+            status: log.status,
+            missing_alerts: log.missing_alerts,
+            stale_alerts: log.stale_alerts,
+            error_message: log.error_message,
+          })),
+        };
+
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `accuracy-report-${selectedDate}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+  
+  async function fetchComparison() {
+    isLoadingComparison = true;
+    comparisonError = null;
+    
+    try {
+      const response = await fetch(
+        `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/monitor-alert-accuracy`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+        }
+      );
+      
+      if (!response.ok) throw new Error("Failed to fetch comparison");
+      
+      const data = await response.json();
+      comparisonResult = data;
+      showComparison = true;
+      
+      // Also refresh the main data
+      await fetchData();
+    } catch (e) {
+      comparisonError = e instanceof Error ? e.message : "Failed to fetch comparison";
+    } finally {
+      isLoadingComparison = false;
+    }
+  }
+  
+  function closeComparison() {
+    showComparison = false;
+    comparisonResult = null;
   }
 
   async function triggerManualCheck() {
@@ -199,20 +286,20 @@
       const response = await fetch(
         `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/monitor-alert-accuracy`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-          }
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
         }
       );
-      
-      if (!response.ok) throw new Error('Failed to run check');
-      
+
+      if (!response.ok) throw new Error("Failed to run check");
+
       // Refresh data after check
       await fetchData();
     } catch (e) {
-      error = e instanceof Error ? e.message : 'Failed to trigger check';
+      error = e instanceof Error ? e.message : "Failed to trigger check";
     } finally {
       isRefreshing = false;
     }
@@ -220,10 +307,10 @@
 
   function formatTime(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true 
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   }
 
@@ -232,50 +319,61 @@
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'Just now';
+
+    if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins} min ago`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours} hr ago`;
-    
+
     return date.toLocaleDateString();
   }
 
   function getStatusColor(status: string): string {
     switch (status) {
-      case 'healthy': return 'text-green-600';
-      case 'warning': return 'text-amber-600';
-      case 'critical': return 'text-red-600';
-      default: return 'text-gray-600';
+      case "healthy":
+        return "text-green-600";
+      case "warning":
+        return "text-amber-600";
+      case "critical":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
     }
   }
 
   function getStatusIcon(status: string) {
     switch (status) {
-      case 'healthy': return CheckCircle;
-      case 'warning': return AlertTriangle;
-      case 'critical': return XCircle;
-      default: return AlertTriangle;
+      case "healthy":
+        return CheckCircle;
+      case "warning":
+        return AlertTriangle;
+      case "critical":
+        return XCircle;
+      default:
+        return AlertTriangle;
     }
   }
 
   // Calculate trend (comparing last hour to previous hour)
   let completnessTrend = $derived.by(() => {
     if (recentLogs.length < 24) return 0; // Need at least 2 hours of data
-    
+
     const lastHour = recentLogs.slice(-12);
     const previousHour = recentLogs.slice(-24, -12);
-    
-    const lastAvg = lastHour.reduce((sum, l) => sum + l.completeness, 0) / lastHour.length;
-    const prevAvg = previousHour.reduce((sum, l) => sum + l.completeness, 0) / previousHour.length;
-    
+
+    const lastAvg =
+      lastHour.reduce((sum, l) => sum + l.completeness, 0) / lastHour.length;
+    const prevAvg =
+      previousHour.reduce((sum, l) => sum + l.completeness, 0) /
+      previousHour.length;
+
     return Math.round((lastAvg - prevAvg) * 10) / 10;
   });
 
   onMount(() => {
     fetchData();
-    
+
     // Auto-refresh every 5 minutes
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
@@ -288,16 +386,18 @@
 
 <div class="min-h-screen bg-background">
   <Header />
-  
+
   <main class="container mx-auto px-4 py-6 max-w-6xl">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
+    >
       <div>
         <h1 class="text-2xl font-bold">Alert Accuracy Monitor</h1>
         <p class="text-muted-foreground text-sm">
           Compares TTC API alerts vs frontend display
         </p>
       </div>
-      
+
       <div class="flex flex-wrap items-center gap-2">
         <!-- Date Picker -->
         <div class="flex items-center gap-2 bg-muted/50 rounded-md px-3 py-1.5">
@@ -306,48 +406,73 @@
             type="date"
             bind:value={selectedDate}
             onchange={handleDateChange}
-            max={new Date().toISOString().split('T')[0]}
+            max={new Date().toISOString().split("T")[0]}
             class="bg-transparent text-sm border-none focus:outline-none focus:ring-0"
           />
         </div>
-        
+
         <!-- Download JSON -->
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           onclick={downloadReport}
-          disabled={isLoading || (isViewingHistory && selectedDateLogs.length === 0)}
+          disabled={isLoading ||
+            (isViewingHistory && selectedDateLogs.length === 0)}
         >
           <Download class="w-4 h-4 mr-2" />
           Export JSON
         </Button>
         
+        <!-- Compare Side-by-Side (only show for today) -->
+        {#if !isViewingHistory}
+          <Button
+            variant="outline"
+            size="sm"
+            onclick={fetchComparison}
+            disabled={isLoadingComparison}
+          >
+            <ArrowLeftRight class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-pulse' : ''}" />
+            {isLoadingComparison ? "Loading..." : "Compare"}
+          </Button>
+        {/if}
+
         <!-- Manual Check (only show for today) -->
         {#if !isViewingHistory}
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onclick={triggerManualCheck}
             disabled={isRefreshing}
           >
-            <RefreshCw class="w-4 h-4 mr-2 {isRefreshing ? 'animate-spin' : ''}" />
-            {isRefreshing ? 'Checking...' : 'Run Check'}
+            <RefreshCw
+              class="w-4 h-4 mr-2 {isRefreshing ? 'animate-spin' : ''}"
+            />
+            {isRefreshing ? "Checking..." : "Run Check"}
           </Button>
         {/if}
       </div>
     </div>
-    
+
     <!-- History Banner -->
     {#if isViewingHistory}
-      <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg mb-4 flex items-center justify-between">
+      <div
+        class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg mb-4 flex items-center justify-between"
+      >
         <span class="text-sm">
-          Viewing history for <strong>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</strong>
+          Viewing history for <strong
+            >{new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}</strong
+          >
         </span>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="sm"
           onclick={() => {
-            selectedDate = new Date().toISOString().split('T')[0];
+            selectedDate = new Date().toISOString().split("T")[0];
             isViewingHistory = false;
           }}
         >
@@ -377,7 +502,7 @@
             </CardHeader>
             <CardContent>
               <div class="text-3xl font-bold">
-                {selectedReport?.avg_completeness?.toFixed(1) ?? '—'}%
+                {selectedReport?.avg_completeness?.toFixed(1) ?? "—"}%
               </div>
               <p class="text-xs text-muted-foreground mt-1">
                 Average for the day
@@ -393,7 +518,7 @@
             </CardHeader>
             <CardContent>
               <div class="text-3xl font-bold">
-                {selectedReport?.avg_precision?.toFixed(1) ?? '—'}%
+                {selectedReport?.avg_precision?.toFixed(1) ?? "—"}%
               </div>
               <p class="text-xs text-muted-foreground mt-1">
                 Average for the day
@@ -411,9 +536,7 @@
               <div class="text-3xl font-bold">
                 {selectedReport?.total_checks ?? selectedDateLogs.length}
               </div>
-              <p class="text-xs text-muted-foreground mt-1">
-                Checks performed
-              </p>
+              <p class="text-xs text-muted-foreground mt-1">Checks performed</p>
             </CardContent>
           </Card>
 
@@ -424,8 +547,16 @@
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div class="text-3xl font-bold {(selectedReport?.total_missing_instances ?? 0) + (selectedReport?.total_stale_instances ?? 0) > 0 ? 'text-amber-600' : ''}">
-                {(selectedReport?.total_missing_instances ?? 0) + (selectedReport?.total_stale_instances ?? 0)}
+              <div
+                class="text-3xl font-bold {(selectedReport?.total_missing_instances ??
+                  0) +
+                  (selectedReport?.total_stale_instances ?? 0) >
+                0
+                  ? 'text-amber-600'
+                  : ''}"
+              >
+                {(selectedReport?.total_missing_instances ?? 0) +
+                  (selectedReport?.total_stale_instances ?? 0)}
               </div>
               <p class="text-xs text-muted-foreground mt-1">
                 Missing + stale alerts
@@ -444,16 +575,24 @@
               <div class="h-24 flex items-end gap-px">
                 {#each selectedDateLogs as log}
                   {@const height = Math.max(10, log.completeness)}
-                  {@const bgColor = log.status === 'healthy' ? 'bg-green-500' : 
-                                    log.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}
-                  <div 
+                  {@const bgColor =
+                    log.status === "healthy"
+                      ? "bg-green-500"
+                      : log.status === "warning"
+                        ? "bg-amber-500"
+                        : "bg-red-500"}
+                  <div
                     class="flex-1 {bgColor} rounded-t opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
                     style="height: {height}%"
-                    title="{formatTime(log.checked_at)}: {log.completeness}% complete"
+                    title="{formatTime(
+                      log.checked_at
+                    )}: {log.completeness}% complete"
                   ></div>
                 {/each}
               </div>
-              <div class="flex justify-between text-xs text-muted-foreground mt-2">
+              <div
+                class="flex justify-between text-xs text-muted-foreground mt-2"
+              >
                 <span>12:00 AM</span>
                 <span>11:59 PM</span>
               </div>
@@ -468,7 +607,9 @@
         <!-- Historical Checks Table -->
         <Card>
           <CardHeader>
-            <CardTitle class="text-sm font-medium">All Checks ({selectedDateLogs.length})</CardTitle>
+            <CardTitle class="text-sm font-medium"
+              >All Checks ({selectedDateLogs.length})</CardTitle
+            >
           </CardHeader>
           <CardContent>
             <div class="overflow-x-auto max-h-96">
@@ -490,12 +631,19 @@
                       <td class="py-2 px-2 text-muted-foreground">
                         {formatTime(log.checked_at)}
                       </td>
-                      <td class="py-2 px-2 text-right">{log.ttc_alert_count}</td>
-                      <td class="py-2 px-2 text-right">{log.frontend_alert_count}</td>
+                      <td class="py-2 px-2 text-right">{log.ttc_alert_count}</td
+                      >
+                      <td class="py-2 px-2 text-right"
+                        >{log.frontend_alert_count}</td
+                      >
                       <td class="py-2 px-2 text-right">{log.matched_count}</td>
                       <td class="py-2 px-2 text-right">{log.completeness}%</td>
                       <td class="py-2 px-2 text-right">
-                        <span class="inline-flex items-center gap-1 {getStatusColor(log.status)}">
+                        <span
+                          class="inline-flex items-center gap-1 {getStatusColor(
+                            log.status
+                          )}"
+                        >
                           <LogStatusIcon class="w-3 h-3" />
                           <span class="capitalize">{log.status}</span>
                         </span>
@@ -509,7 +657,9 @@
         </Card>
       {:else}
         <div class="text-center py-12">
-          <div class="text-muted-foreground">No data available for this date</div>
+          <div class="text-muted-foreground">
+            No data available for this date
+          </div>
         </div>
       {/if}
     {:else}
@@ -525,16 +675,20 @@
           <CardContent>
             <div class="flex items-baseline gap-2">
               <span class="text-3xl font-bold">
-                {latestLog?.completeness?.toFixed(1) ?? '—'}%
+                {latestLog?.completeness?.toFixed(1) ?? "—"}%
               </span>
               {#if completnessTrend !== 0}
-                <span class="text-sm {completnessTrend > 0 ? 'text-green-600' : 'text-red-600'} flex items-center">
+                <span
+                  class="text-sm {completnessTrend > 0
+                    ? 'text-green-600'
+                    : 'text-red-600'} flex items-center"
+                >
                   {#if completnessTrend > 0}
                     <TrendingUp class="w-3 h-3 mr-1" />
                   {:else}
                     <TrendingDown class="w-3 h-3 mr-1" />
                   {/if}
-                  {completnessTrend > 0 ? '+' : ''}{completnessTrend}%
+                  {completnessTrend > 0 ? "+" : ""}{completnessTrend}%
                 </span>
               {/if}
             </div>
@@ -553,7 +707,7 @@
           </CardHeader>
           <CardContent>
             <div class="text-3xl font-bold">
-              {latestLog?.precision?.toFixed(1) ?? '—'}%
+              {latestLog?.precision?.toFixed(1) ?? "—"}%
             </div>
             <p class="text-xs text-muted-foreground mt-1">
               Frontend alerts that are real
@@ -569,7 +723,11 @@
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div class="text-3xl font-bold {(latestLog?.missing_count ?? 0) > 0 ? 'text-amber-600' : ''}">
+            <div
+              class="text-3xl font-bold {(latestLog?.missing_count ?? 0) > 0
+                ? 'text-amber-600'
+                : ''}"
+            >
               {latestLog?.missing_count ?? 0}
             </div>
             <p class="text-xs text-muted-foreground mt-1">
@@ -586,7 +744,11 @@
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div class="text-3xl font-bold {(latestLog?.stale_count ?? 0) > 0 ? 'text-red-600' : ''}">
+            <div
+              class="text-3xl font-bold {(latestLog?.stale_count ?? 0) > 0
+                ? 'text-red-600'
+                : ''}"
+            >
               {latestLog?.stale_count ?? 0}
             </div>
             <p class="text-xs text-muted-foreground mt-1">
@@ -606,9 +768,15 @@
             {#if latestLog}
               {@const StatusIcon = getStatusIcon(latestLog.status)}
               <div class="flex items-center gap-3">
-                <StatusIcon class="w-8 h-8 {getStatusColor(latestLog.status)}" />
+                <StatusIcon
+                  class="w-8 h-8 {getStatusColor(latestLog.status)}"
+                />
                 <div>
-                  <div class="font-semibold capitalize {getStatusColor(latestLog.status)}">
+                  <div
+                    class="font-semibold capitalize {getStatusColor(
+                      latestLog.status
+                    )}"
+                  >
                     {latestLog.status}
                   </div>
                   <div class="text-sm text-muted-foreground">
@@ -635,15 +803,21 @@
                 </div>
                 <div>
                   <div class="text-muted-foreground">Avg Completeness</div>
-                  <div class="font-semibold">{todayReport.avg_completeness?.toFixed(1)}%</div>
+                  <div class="font-semibold">
+                    {todayReport.avg_completeness?.toFixed(1)}%
+                  </div>
                 </div>
                 <div>
                   <div class="text-muted-foreground">Missing Instances</div>
-                  <div class="font-semibold">{todayReport.total_missing_instances}</div>
+                  <div class="font-semibold">
+                    {todayReport.total_missing_instances}
+                  </div>
                 </div>
                 <div>
                   <div class="text-muted-foreground">Stale Instances</div>
-                  <div class="font-semibold">{todayReport.total_stale_instances}</div>
+                  <div class="font-semibold">
+                    {todayReport.total_stale_instances}
+                  </div>
                 </div>
               </div>
             {:else}
@@ -663,16 +837,24 @@
             <div class="h-24 flex items-end gap-px">
               {#each recentLogs.slice(-96) as log}
                 {@const height = Math.max(10, log.completeness)}
-                {@const bgColor = log.status === 'healthy' ? 'bg-green-500' : 
-                                  log.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}
-                <div 
+                {@const bgColor =
+                  log.status === "healthy"
+                    ? "bg-green-500"
+                    : log.status === "warning"
+                      ? "bg-amber-500"
+                      : "bg-red-500"}
+                <div
                   class="flex-1 {bgColor} rounded-t opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
                   style="height: {height}%"
-                  title="{formatTime(log.checked_at)}: {log.completeness}% complete"
+                  title="{formatTime(
+                    log.checked_at
+                  )}: {log.completeness}% complete"
                 ></div>
               {/each}
             </div>
-            <div class="flex justify-between text-xs text-muted-foreground mt-2">
+            <div
+              class="flex justify-between text-xs text-muted-foreground mt-2"
+            >
               <span>24h ago</span>
               <span>Now</span>
             </div>
@@ -710,11 +892,17 @@
                       {formatTime(log.checked_at)}
                     </td>
                     <td class="py-2 px-2 text-right">{log.ttc_alert_count}</td>
-                    <td class="py-2 px-2 text-right">{log.frontend_alert_count}</td>
+                    <td class="py-2 px-2 text-right"
+                      >{log.frontend_alert_count}</td
+                    >
                     <td class="py-2 px-2 text-right">{log.matched_count}</td>
                     <td class="py-2 px-2 text-right">{log.completeness}%</td>
                     <td class="py-2 px-2 text-right">
-                      <span class="inline-flex items-center gap-1 {getStatusColor(log.status)}">
+                      <span
+                        class="inline-flex items-center gap-1 {getStatusColor(
+                          log.status
+                        )}"
+                      >
                         <LogStatusIcon class="w-3 h-3" />
                         <span class="capitalize">{log.status}</span>
                       </span>
@@ -729,3 +917,158 @@
     {/if}
   </main>
 </div>
+
+<!-- Side-by-Side Comparison Modal -->
+{#if showComparison && comparisonResult}
+  <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-background rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b">
+        <div>
+          <h2 class="text-xl font-bold">Side-by-Side Comparison</h2>
+          <p class="text-sm text-muted-foreground">
+            {new Date(comparisonResult.timestamp).toLocaleString()} • 
+            <span class="text-green-600">{comparisonResult.matched} matched</span> • 
+            <span class="{comparisonResult.missing.length > 0 ? 'text-amber-600' : ''}">{comparisonResult.missing.length} missing</span> • 
+            <span class="{comparisonResult.stale.length > 0 ? 'text-red-600' : ''}">{comparisonResult.stale.length} stale</span>
+          </p>
+        </div>
+        <Button variant="ghost" size="sm" onclick={closeComparison}>
+          <X class="w-5 h-5" />
+        </Button>
+      </div>
+      
+      <!-- Comparison Content -->
+      <div class="flex-1 overflow-auto p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- TTC API Alerts -->
+          <div>
+            <h3 class="font-semibold mb-3 flex items-center gap-2">
+              <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
+              TTC API Alerts ({comparisonResult.ttc_alerts.length})
+            </h3>
+            <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
+              {#each comparisonResult.ttc_alerts as alert}
+                {@const isMissing = comparisonResult.missing.some(m => m.route === alert.route && m.ttc_title === alert.title)}
+                <div class="p-3 rounded-lg border {isMissing ? 'bg-amber-50 border-amber-200' : 'bg-muted/30'}">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="flex-1 min-w-0">
+                      <div class="font-semibold text-sm flex items-center gap-2">
+                        <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-bold">
+                          {alert.route}
+                        </span>
+                        <span class="text-xs px-2 py-0.5 rounded bg-muted">
+                          {alert.effect}
+                        </span>
+                      </div>
+                      <p class="text-sm text-muted-foreground mt-1 truncate" title={alert.title}>
+                        {alert.title}
+                      </p>
+                    </div>
+                    {#if isMissing}
+                      <span class="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded whitespace-nowrap">
+                        Missing in Frontend
+                      </span>
+                    {:else}
+                      <span class="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded whitespace-nowrap">
+                        ✓ Matched
+                      </span>
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+              {#if comparisonResult.ttc_alerts.length === 0}
+                <div class="text-center text-muted-foreground py-8">
+                  No alerts from TTC API
+                </div>
+              {/if}
+            </div>
+          </div>
+          
+          <!-- Frontend Alerts -->
+          <div>
+            <h3 class="font-semibold mb-3 flex items-center gap-2">
+              <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+              Frontend Alerts ({comparisonResult.frontend_alerts.length})
+            </h3>
+            <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
+              {#each comparisonResult.frontend_alerts as alert}
+                {@const isStale = comparisonResult.stale.some(s => s.route === alert.route && s.frontend_title === alert.title)}
+                <div class="p-3 rounded-lg border {isStale ? 'bg-red-50 border-red-200' : 'bg-muted/30'}">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="flex-1 min-w-0">
+                      <div class="font-semibold text-sm flex items-center gap-2">
+                        <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-bold">
+                          {alert.route}
+                        </span>
+                        <span class="text-xs px-2 py-0.5 rounded bg-muted">
+                          {alert.status}
+                        </span>
+                      </div>
+                      <p class="text-sm text-muted-foreground mt-1 truncate" title={alert.title}>
+                        {alert.title}
+                      </p>
+                    </div>
+                    {#if isStale}
+                      <span class="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded whitespace-nowrap">
+                        Not in TTC API
+                      </span>
+                    {:else}
+                      <span class="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded whitespace-nowrap">
+                        ✓ Matched
+                      </span>
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+              {#if comparisonResult.frontend_alerts.length === 0}
+                <div class="text-center text-muted-foreground py-8">
+                  No alerts in frontend
+                </div>
+              {/if}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Summary Stats -->
+        <div class="mt-6 pt-6 border-t grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="text-center">
+            <div class="text-2xl font-bold">{comparisonResult.completeness.toFixed(1)}%</div>
+            <div class="text-sm text-muted-foreground">Completeness</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold">{comparisonResult.precision.toFixed(1)}%</div>
+            <div class="text-sm text-muted-foreground">Precision</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-amber-600">{comparisonResult.missing.length}</div>
+            <div class="text-sm text-muted-foreground">Missing from Frontend</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-red-600">{comparisonResult.stale.length}</div>
+            <div class="text-sm text-muted-foreground">Stale in Frontend</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="flex justify-end gap-2 px-6 py-4 border-t bg-muted/30">
+        <Button variant="outline" onclick={closeComparison}>
+          Close
+        </Button>
+        <Button onclick={fetchComparison} disabled={isLoadingComparison}>
+          <RefreshCw class="w-4 h-4 mr-2 {isLoadingComparison ? 'animate-spin' : ''}" />
+          Refresh
+        </Button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Comparison Error Toast -->
+{#if comparisonError}
+  <div class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+    {comparisonError}
+    <button class="ml-2 text-white/80 hover:text-white" onclick={() => comparisonError = null}>×</button>
+  </div>
+{/if}

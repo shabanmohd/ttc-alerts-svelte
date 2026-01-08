@@ -370,6 +370,9 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       ...result,
+      // Include raw alerts for comparison view
+      ttc_alerts: ttcAlerts,
+      frontend_alerts: frontendAlerts,
       duration_ms: duration
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
