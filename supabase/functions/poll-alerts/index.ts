@@ -719,6 +719,12 @@ serve(async (req) => {
         // Resolve thread if SERVICE_RESUMED
         if (category === 'SERVICE_RESUMED') {
           updates.is_resolved = true;
+          updates.resolved_at = new Date().toISOString();
+          // Add SERVICE_RESUMED to thread categories if not already present
+          const existingCategories = (matchedThread.categories as string[]) || [];
+          if (!existingCategories.includes('SERVICE_RESUMED')) {
+            updates.categories = [...existingCategories, 'SERVICE_RESUMED'];
+          }
         }
 
         await supabase
