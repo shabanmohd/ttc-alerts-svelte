@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '103'; // Auto-resolve RSZ threads when no longer in TTC API
+const VERSION = '105'; // Comprehensive RSZ/ACCESSIBILITY protection from SERVICE_RESUMED
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -732,6 +732,14 @@ serve(async (req) => {
       // Check for matching thread based on EXACT route number match and similarity
       for (const thread of unresolvedThreads || []) {
         const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+        const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
+        
+        // CRITICAL: Skip RSZ and ACCESSIBILITY threads during Bluesky matching
+        // These threads have their own lifecycle managed by TTC API (STEP 6b/6c)
+        // SERVICE_RESUMED posts should NOT resolve these threads
+        if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) {
+          continue;
+        }
         
         // Use exact route number matching to prevent 46 matching 996, etc.
         const hasRouteOverlap = routes.some(alertRoute => 
@@ -780,13 +788,17 @@ serve(async (req) => {
         };
 
         // Resolve thread if SERVICE_RESUMED
-        if (category === 'SERVICE_RESUMED') {
+        // CRITICAL: NEVER resolve RSZ or ACCESSIBILITY threads via SERVICE_RESUMED
+        // These threads have their own lifecycle managed by TTC API
+        const matchedCategories = (matchedThread.categories as string[]) || [];
+        const isProtectedThread = matchedCategories.includes('RSZ') || matchedCategories.includes('ACCESSIBILITY');
+        
+        if (category === 'SERVICE_RESUMED' && !isProtectedThread) {
           updates.is_resolved = true;
           updates.resolved_at = new Date().toISOString();
           // Add SERVICE_RESUMED to thread categories if not already present
-          const existingCategories = (matchedThread.categories as string[]) || [];
-          if (!existingCategories.includes('SERVICE_RESUMED')) {
-            updates.categories = [...existingCategories, 'SERVICE_RESUMED'];
+          if (!matchedCategories.includes('SERVICE_RESUMED')) {
+            updates.categories = [...matchedCategories, 'SERVICE_RESUMED'];
           }
         }
 
@@ -911,8 +923,9 @@ serve(async (req) => {
       }
     }
 
-    // STEP 6c: Resolve RSZ threads that no longer have alerts in TTC API
+    // STEP 6c: Manage RSZ thread lifecycle based on TTC API
     let resolvedRszThreads = 0;
+    let repairedRszThreads = 0;
     const ttcLinesWithRsz = new Set(
       ttcData.rszAlerts.map(rsz => {
         // RSZ alerts have route like "1" - normalize to "Line 1"
@@ -921,6 +934,41 @@ serve(async (req) => {
       }).filter(Boolean)
     );
     
+    // STEP 6c-repair: Un-resolve RSZ threads that were incorrectly resolved
+    // If TTC API has RSZ alerts for a line, ensure the thread is active
+    if (ttcLinesWithRsz.size > 0) {
+      const { data: resolvedRszData } = await supabase
+        .from('incident_threads')
+        .select('thread_id, title, affected_routes')
+        .filter('categories', 'cs', '["RSZ"]')
+        .eq('is_resolved', true);
+      
+      for (const thread of resolvedRszData || []) {
+        const lineName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
+        if (!lineName) continue;
+        
+        // If TTC API has RSZ alerts for this line, un-resolve the thread
+        if (ttcLinesWithRsz.has(lineName)) {
+          console.log(`STEP 6c-repair: Un-resolving RSZ thread: "${thread.title}" - ${lineName} has active RSZ alerts in TTC API`);
+          
+          await supabase
+            .from('incident_threads')
+            .update({ 
+              is_resolved: false,
+              is_hidden: false,
+              resolved_at: null,
+              updated_at: new Date().toISOString(),
+              // Remove SERVICE_RESUMED from categories if present (it was added incorrectly)
+              categories: ['RSZ']
+            })
+            .eq('thread_id', thread.thread_id);
+          
+          repairedRszThreads++;
+        }
+      }
+    }
+    
+    // STEP 6c-resolve: Resolve RSZ threads that no longer have alerts in TTC API
     // Get all active RSZ threads - use filter() with 'cs' operator for JSONB containment
     const { data: rszThreads } = await supabase
       .from('incident_threads')
@@ -935,7 +983,7 @@ serve(async (req) => {
       
       // Check if this line still has RSZ alerts in TTC API
       if (!ttcLinesWithRsz.has(lineName)) {
-        console.log(`Resolving RSZ thread: "${thread.title}" - no RSZ alerts for ${lineName} in TTC API`);
+        console.log(`STEP 6c-resolve: Resolving RSZ thread: "${thread.title}" - no RSZ alerts for ${lineName} in TTC API`);
         
         await supabase
           .from('incident_threads')
@@ -1011,6 +1059,7 @@ serve(async (req) => {
         hiddenThreads,
         resolvedElevators,
         resolvedRszThreads,
+        repairedRszThreads,
         unhiddenRszAccessibility,
         mergedDuplicates,
         newAlerts, 

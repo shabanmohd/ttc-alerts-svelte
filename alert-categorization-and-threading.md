@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.8  
+**Version:** 3.9  
 **Date:** January 8, 2026  
-**poll-alerts Version:** 104  
+**poll-alerts Version:** 105  
 **scrape-maintenance Version:** 2  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
@@ -619,7 +619,7 @@ CREATE TABLE planned_maintenance (
 
 ## Edge Functions
 
-### `poll-alerts` (v104)
+### `poll-alerts` (v105)
 
 **Trigger:** Cron schedule (every 2 minutes)  
 **Purpose:** Fetch, categorize, and thread alerts; manage thread lifecycle
@@ -639,6 +639,8 @@ CREATE TABLE planned_maintenance (
    - Re-activates threads if alert comes back
 5. **STEP 4:** Fetch Bluesky posts for context/history
    - Extract routes, categorize, thread matching
+   - **CRITICAL (v105):** Skips RSZ and ACCESSIBILITY threads during matching
+   - **CRITICAL (v105):** Never resolves RSZ/ACCESSIBILITY threads even if matched
    - Create new threads if no match found
 6. **STEP 5:** Process RSZ alerts from TTC API
    - Normalize route format ("1" → "Line 1")
@@ -652,13 +654,22 @@ CREATE TABLE planned_maintenance (
    - New threads: resolve by specific `elevatorCode` from thread_id
    - Legacy threads: fall back to station name matching
    - Uses `.filter('categories', 'cs', '["ACCESSIBILITY"]')` for JSONB containment
-9. **STEP 6c:** Auto-resolve RSZ threads
-   - If line no longer has RSZ in TTC API → resolve thread
+9. **STEP 6c:** RSZ thread lifecycle management (v105+)
+   - **STEP 6c-repair:** Un-resolve incorrectly resolved RSZ threads if TTC API has alerts
+   - **STEP 6c-resolve:** Resolve RSZ threads if line no longer has RSZ in TTC API
    - Uses `.filter('categories', 'cs', '["RSZ"]')` for JSONB containment
 10. **STEP 7:** Merge duplicate threads only
     - Groups visible threads by affected_routes + categories
     - Keeps newest, hides older duplicates
     - **No longer unhides hidden threads** (fixed in v110)
+
+**RSZ/ACCESSIBILITY Thread Protection (v105+):**
+
+RSZ and ACCESSIBILITY threads have protected lifecycle managed only by TTC API:
+1. **Created:** When TTC API reports RSZ/elevator alerts
+2. **Resolved:** Only when TTC API no longer has alerts for that line/elevator
+3. **Protected from SERVICE_RESUMED:** Bluesky posts cannot resolve these threads
+4. **Auto-repair:** If incorrectly resolved, STEP 6c-repair will restore them
 
 **False Positive Prevention:**
 
@@ -877,8 +888,7 @@ const { data } = await supabase
 ## Version History
 
 | Version | Date       | Changes                                                                                    |
-| ------- | ---------- | ------------------------------------------------------------------------------------------ |
-| v3.8    | 2026-01-08 | STEP 2b: Only match SERVICE_RESUMED if created AFTER the thread (prevents false positives) |
+| ------- | ---------- | ------------------------------------------------------------------------------------------ || v3.9    | 2026-01-08 | Comprehensive RSZ/ACCESSIBILITY protection: skip during Bluesky matching, never resolve via SERVICE_RESUMED, auto-repair if incorrectly resolved || v3.8    | 2026-01-08 | STEP 2b: Only match SERVICE_RESUMED if created AFTER the thread (prevents false positives) |
 | v3.7    | 2026-01-08 | Fixed JSONB queries (`.filter()` not `.contains()`), per-elevator threading                |
 | v3.6    | 2026-01-07 | Fixed STEP 7 unhide bug, added elevator code extraction                                    |
 
