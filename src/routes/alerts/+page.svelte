@@ -275,9 +275,20 @@
     const alert = thread.latestAlert;
     if (!alert) return false;
 
-    // Primary: RSZ alerts have alert_id starting with "ttc-RSZ-"
+    // Primary: RSZ alerts have alert_id starting with "ttc-rsz-" (lowercase)
     // This is the most reliable way to detect RSZ from TTC API
-    if (alert.alert_id?.startsWith("ttc-RSZ-")) {
+    if (alert.alert_id?.toLowerCase().startsWith("ttc-rsz-")) {
+      return true;
+    }
+    
+    // Also check for RSZ category (set by poll-alerts v93+)
+    const categories = (alert.categories as string[]) || [];
+    if (categories.includes("RSZ")) {
+      return true;
+    }
+    
+    // Also check for RSZ effect (set by poll-alerts v93+)
+    if (alert.effect?.toUpperCase() === "RSZ") {
       return true;
     }
 
