@@ -876,11 +876,11 @@ const { data } = await supabase
 
 ## Version History
 
-| Version | Date       | Changes                                                                              |
-| ------- | ---------- | ------------------------------------------------------------------------------------ |
+| Version | Date       | Changes                                                                                    |
+| ------- | ---------- | ------------------------------------------------------------------------------------------ |
 | v3.8    | 2026-01-08 | STEP 2b: Only match SERVICE_RESUMED if created AFTER the thread (prevents false positives) |
-| v3.7    | 2026-01-08 | Fixed JSONB queries (`.filter()` not `.contains()`), per-elevator threading          |
-| v3.6    | 2026-01-07 | Fixed STEP 7 unhide bug, added elevator code extraction                              |
+| v3.7    | 2026-01-08 | Fixed JSONB queries (`.filter()` not `.contains()`), per-elevator threading                |
+| v3.6    | 2026-01-07 | Fixed STEP 7 unhide bug, added elevator code extraction                                    |
 
 ---
 

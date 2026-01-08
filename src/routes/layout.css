@@ -1030,15 +1030,15 @@ header.sticky {
   color: hsl(220 14% 80%);
 }
 
-/* Cyan/Shuttle - shuttle bus replacement */
+/* Orange/Shuttle - shuttle bus replacement (distinct from teal resumed) */
 .status-badge-shuttle {
-  background-color: hsl(185 85% 93%);
-  color: hsl(185 85% 28%);
+  background-color: hsl(24 95% 92%);
+  color: hsl(24 85% 32%);
 }
 
 .dark .status-badge-shuttle {
-  background-color: hsl(185 60% 25% / 0.5);
-  color: hsl(185 85% 75%);
+  background-color: hsl(24 60% 25% / 0.5);
+  color: hsl(24 85% 70%);
 }
 
 .status-badge-planned {
