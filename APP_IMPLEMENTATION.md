@@ -243,6 +243,31 @@ For local development, use `localhost` and `http://localhost:5173`.
 - `src/lib/components/layout/Sidebar.svelte` - Font weight classes
 - `src/lib/components/alerts/AlertCard.svelte` - Font weight classes
 
+### Jan 8, 2026 - Recently Resolved Section Fix
+
+**Bug Fixed:**
+The "Recently Resolved" section was always showing "None in last 6 hours" even when resolved threads existed in the database.
+
+**Root Causes:**
+
+1. **Store filtering bug**: `threadsWithAlerts` derived store was filtering out ALL resolved threads with `!thread.is_resolved`, so `recentlyResolved` filter could never find any matches.
+
+2. **Missing column**: The threads SQL query wasn't selecting `resolved_at` column, so even if threads made it through, `resolved_at` was always `undefined`.
+
+**Fixes Applied:**
+
+- `src/lib/stores/alerts.ts`:
+  - Removed `!thread.is_resolved` filter from `threadsWithAlerts` - now only filters hidden threads
+  - Added `resolved_at` to the threads SELECT query columns
+  
+- Active alerts (`activeAlerts`, `rszAlerts`, `categoryCounts`) still correctly filter `!t.is_resolved` at the page level
+
+**Result:** 7 recently resolved alerts now visible in "Recently Resolved" section, including SERVICE_RESUMED confirmations from Bluesky.
+
+**Files Updated:**
+
+- `src/lib/stores/alerts.ts` - Store filtering and SQL query fix
+
 ### Dec 4, 2025 - Edge Function Alert Parsing Fix
 
 **poll-alerts Edge Function:**

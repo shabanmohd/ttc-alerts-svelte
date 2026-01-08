@@ -376,6 +376,67 @@ Similarity: 8/9 = 0.89 → MATCH (≥ 0.8)
 
 - **ACTIVE** (`is_resolved = false`) - Incident ongoing
 - **RESOLVED** (`is_resolved = true`) - Closed by SERVICE_RESUMED or age
+- **HIDDEN** (`is_hidden = true`) - Thread no longer in TTC API without SERVICE_RESUMED confirmation
+
+### Recently Resolved Display
+
+**Implemented in:** `src/routes/alerts/+page.svelte`
+
+Resolved threads are displayed in a "Recently Resolved" section under the Disruptions tab for 6 hours after resolution.
+
+**Requirements for display:**
+1. `is_resolved = true` - Thread must be marked resolved
+2. `is_hidden = false` - Thread must not be hidden
+3. `resolved_at` within 6 hours of current time
+4. Thread must have `SERVICE_RESUMED` category (confirmed by Bluesky)
+5. Not an RSZ alert (those don't have "resolved" state)
+6. Not an orphaned SERVICE_RESUMED (must have preceding DELAY/DISRUPTION alert)
+
+**Store Configuration:**
+
+The `threadsWithAlerts` store includes resolved threads (only filters out hidden):
+
+```typescript
+// src/lib/stores/alerts.ts
+export const threadsWithAlerts = derived(
+  [threads, alerts],
+  ([$threads, $alerts]) => {
+    return $threads
+      // Filter out hidden threads only - keep resolved for "Recently Resolved" section
+      .filter(thread => !thread.is_hidden)
+      .map((thread): ThreadWithAlerts => { /* ... */ })
+  }
+);
+```
+
+**SQL Query includes `resolved_at`:**
+
+```typescript
+.select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at')
+```
+
+**Frontend Filter:**
+
+```typescript
+// src/routes/alerts/+page.svelte
+let recentlyResolved = $derived.by(() => {
+  if (selectedCategory !== "disruptions") return [];
+  const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
+  
+  return $threadsWithAlerts.filter((t) => {
+    if (!t.is_resolved || t.is_hidden || !t.resolved_at) return false;
+    if (new Date(t.resolved_at).getTime() < sixHoursAgo) return false;
+    const categories = (t.categories as string[]) || [];
+    if (!categories.includes("SERVICE_RESUMED")) return false;
+    if (isRSZAlert(t)) return false;
+    // Exclude orphaned SERVICE_RESUMED
+    const onlyServiceResumed = categories.length === 1 && categories[0] === "SERVICE_RESUMED";
+    const singleAlertThread = (t.alerts?.length || 0) === 1;
+    if (onlyServiceResumed && singleAlertThread) return false;
+    return true;
+  });
+});
+```
 
 ---
 
