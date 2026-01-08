@@ -920,17 +920,31 @@
 
 <!-- Side-by-Side Comparison Modal -->
 {#if showComparison && comparisonResult}
-  <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-background rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div 
+    class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" 
+    onclick={closeComparison}
+    role="button"
+    tabindex="-1"
+  >
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div 
+      class="bg-zinc-900 rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col border border-zinc-700"
+      onclick={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="comparison-title"
+      tabindex="-1"
+    >
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-700 bg-zinc-800">
         <div>
-          <h2 class="text-xl font-bold">Side-by-Side Comparison</h2>
-          <p class="text-sm text-muted-foreground">
+          <h2 class="text-xl font-bold text-white">Side-by-Side Comparison</h2>
+          <p class="text-sm text-zinc-400">
             {new Date(comparisonResult.timestamp).toLocaleString()} • 
-            <span class="text-green-600">{comparisonResult.matched} matched</span> • 
-            <span class="{comparisonResult.missing.length > 0 ? 'text-amber-600' : ''}">{comparisonResult.missing.length} missing</span> • 
-            <span class="{comparisonResult.stale.length > 0 ? 'text-red-600' : ''}">{comparisonResult.stale.length} stale</span>
+            <span class="text-green-400">{comparisonResult.matched} matched</span> • 
+            <span class="{comparisonResult.missing.length > 0 ? 'text-amber-400' : 'text-zinc-400'}">{comparisonResult.missing.length} missing</span> • 
+            <span class="{comparisonResult.stale.length > 0 ? 'text-red-400' : 'text-zinc-400'}">{comparisonResult.stale.length} stale</span>
           </p>
         </div>
         <Button variant="ghost" size="sm" onclick={closeComparison}>
@@ -939,38 +953,38 @@
       </div>
       
       <!-- Comparison Content -->
-      <div class="flex-1 overflow-auto p-6">
+      <div class="flex-1 overflow-auto p-6 bg-zinc-900">
         <div class="grid md:grid-cols-2 gap-6">
           <!-- TTC API Alerts -->
           <div>
-            <h3 class="font-semibold mb-3 flex items-center gap-2">
+            <h3 class="font-semibold mb-3 flex items-center gap-2 text-white">
               <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
               TTC API Alerts ({comparisonResult.ttc_alerts.length})
             </h3>
             <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
               {#each comparisonResult.ttc_alerts as alert}
                 {@const isMissing = comparisonResult.missing.some(m => m.route === alert.route && m.ttc_title === alert.title)}
-                <div class="p-3 rounded-lg border {isMissing ? 'bg-amber-50 border-amber-200' : 'bg-muted/30'}">
+                <div class="p-3 rounded-lg border {isMissing ? 'bg-amber-900/50 border-amber-700' : 'bg-zinc-800 border-zinc-700'}">
                   <div class="flex items-start justify-between gap-2">
                     <div class="flex-1 min-w-0">
                       <div class="font-semibold text-sm flex items-center gap-2">
-                        <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-bold">
+                        <span class="bg-red-600 text-white px-2 py-0.5 rounded text-xs font-bold">
                           {alert.route}
                         </span>
-                        <span class="text-xs px-2 py-0.5 rounded bg-muted">
+                        <span class="text-xs px-2 py-0.5 rounded bg-zinc-700 text-zinc-300">
                           {alert.effect}
                         </span>
                       </div>
-                      <p class="text-sm text-muted-foreground mt-1 truncate" title={alert.title}>
+                      <p class="text-sm text-zinc-400 mt-1 truncate" title={alert.title}>
                         {alert.title}
                       </p>
                     </div>
                     {#if isMissing}
-                      <span class="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded whitespace-nowrap">
+                      <span class="text-xs text-amber-300 bg-amber-900/70 px-2 py-0.5 rounded whitespace-nowrap">
                         Missing in Frontend
                       </span>
                     {:else}
-                      <span class="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded whitespace-nowrap">
+                      <span class="text-xs text-green-300 bg-green-900/70 px-2 py-0.5 rounded whitespace-nowrap">
                         ✓ Matched
                       </span>
                     {/if}
@@ -978,7 +992,7 @@
                 </div>
               {/each}
               {#if comparisonResult.ttc_alerts.length === 0}
-                <div class="text-center text-muted-foreground py-8">
+                <div class="text-center text-zinc-500 py-8">
                   No alerts from TTC API
                 </div>
               {/if}
@@ -987,34 +1001,34 @@
           
           <!-- Frontend Alerts -->
           <div>
-            <h3 class="font-semibold mb-3 flex items-center gap-2">
+            <h3 class="font-semibold mb-3 flex items-center gap-2 text-white">
               <span class="w-3 h-3 bg-green-500 rounded-full"></span>
               Frontend Alerts ({comparisonResult.frontend_alerts.length})
             </h3>
             <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
               {#each comparisonResult.frontend_alerts as alert}
                 {@const isStale = comparisonResult.stale.some(s => s.route === alert.route && s.frontend_title === alert.title)}
-                <div class="p-3 rounded-lg border {isStale ? 'bg-red-50 border-red-200' : 'bg-muted/30'}">
+                <div class="p-3 rounded-lg border {isStale ? 'bg-red-900/50 border-red-700' : 'bg-zinc-800 border-zinc-700'}">
                   <div class="flex items-start justify-between gap-2">
                     <div class="flex-1 min-w-0">
                       <div class="font-semibold text-sm flex items-center gap-2">
-                        <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-bold">
+                        <span class="bg-red-600 text-white px-2 py-0.5 rounded text-xs font-bold">
                           {alert.route}
                         </span>
-                        <span class="text-xs px-2 py-0.5 rounded bg-muted">
+                        <span class="text-xs px-2 py-0.5 rounded bg-zinc-700 text-zinc-300">
                           {alert.status}
                         </span>
                       </div>
-                      <p class="text-sm text-muted-foreground mt-1 truncate" title={alert.title}>
+                      <p class="text-sm text-zinc-400 mt-1 truncate" title={alert.title}>
                         {alert.title}
                       </p>
                     </div>
                     {#if isStale}
-                      <span class="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded whitespace-nowrap">
+                      <span class="text-xs text-red-300 bg-red-900/70 px-2 py-0.5 rounded whitespace-nowrap">
                         Not in TTC API
                       </span>
                     {:else}
-                      <span class="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded whitespace-nowrap">
+                      <span class="text-xs text-green-300 bg-green-900/70 px-2 py-0.5 rounded whitespace-nowrap">
                         ✓ Matched
                       </span>
                     {/if}
@@ -1022,7 +1036,7 @@
                 </div>
               {/each}
               {#if comparisonResult.frontend_alerts.length === 0}
-                <div class="text-center text-muted-foreground py-8">
+                <div class="text-center text-zinc-500 py-8">
                   No alerts in frontend
                 </div>
               {/if}
@@ -1031,28 +1045,28 @@
         </div>
         
         <!-- Summary Stats -->
-        <div class="mt-6 pt-6 border-t grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="mt-6 pt-6 border-t border-zinc-700 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="text-center">
-            <div class="text-2xl font-bold">{comparisonResult.completeness.toFixed(1)}%</div>
-            <div class="text-sm text-muted-foreground">Completeness</div>
+            <div class="text-2xl font-bold text-white">{comparisonResult.completeness.toFixed(1)}%</div>
+            <div class="text-sm text-zinc-400">Completeness</div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-bold">{comparisonResult.precision.toFixed(1)}%</div>
-            <div class="text-sm text-muted-foreground">Precision</div>
+            <div class="text-2xl font-bold text-white">{comparisonResult.precision.toFixed(1)}%</div>
+            <div class="text-sm text-zinc-400">Precision</div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-bold text-amber-600">{comparisonResult.missing.length}</div>
-            <div class="text-sm text-muted-foreground">Missing from Frontend</div>
+            <div class="text-2xl font-bold text-amber-400">{comparisonResult.missing.length}</div>
+            <div class="text-sm text-zinc-400">Missing from Frontend</div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-bold text-red-600">{comparisonResult.stale.length}</div>
-            <div class="text-sm text-muted-foreground">Stale in Frontend</div>
+            <div class="text-2xl font-bold text-red-400">{comparisonResult.stale.length}</div>
+            <div class="text-sm text-zinc-400">Stale in Frontend</div>
           </div>
         </div>
       </div>
       
       <!-- Footer -->
-      <div class="flex justify-end gap-2 px-6 py-4 border-t bg-muted/30">
+      <div class="flex justify-end gap-2 px-6 py-4 border-t border-zinc-700 bg-zinc-800">
         <Button variant="outline" onclick={closeComparison}>
           Close
         </Button>
