@@ -92,6 +92,14 @@
     // Check if the thread is marked as resolved
     if (thread.is_resolved) return true;
 
+    // RSZ and ACCESSIBILITY threads should NEVER be resolved by text matching
+    // Their lifecycle is managed exclusively by TTC API through poll-alerts
+    const categories = Array.isArray(thread.categories) ? thread.categories : [];
+    if (categories.includes("RSZ") || categories.includes("ACCESSIBILITY")) {
+      // For RSZ/ACCESSIBILITY, only trust the is_resolved flag
+      return false;
+    }
+
     // Check if the latest alert has SERVICE_RESUMED effect
     const effect = thread.latestAlert?.effect?.toUpperCase() || "";
     if (effect.includes("SERVICE_RESUMED") || effect.includes("RESUMED"))

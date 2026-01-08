@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '105'; // Comprehensive RSZ/ACCESSIBILITY protection from SERVICE_RESUMED
+const VERSION = '106'; // Enhanced RSZ protection: auto-fix title and is_latest when SERVICE_RESUMED text detected
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -936,6 +936,7 @@ serve(async (req) => {
     
     // STEP 6c-repair: Un-resolve RSZ threads that were incorrectly resolved
     // If TTC API has RSZ alerts for a line, ensure the thread is active
+    // Also fixes title and is_latest flag to point to actual RSZ alert (not SERVICE_RESUMED)
     if (ttcLinesWithRsz.size > 0) {
       const { data: resolvedRszData } = await supabase
         .from('incident_threads')
@@ -951,6 +952,31 @@ serve(async (req) => {
         if (ttcLinesWithRsz.has(lineName)) {
           console.log(`STEP 6c-repair: Un-resolving RSZ thread: "${thread.title}" - ${lineName} has active RSZ alerts in TTC API`);
           
+          // First, reset all is_latest flags for this thread's alerts
+          await supabase
+            .from('alerts')
+            .update({ is_latest: false })
+            .eq('thread_id', thread.thread_id);
+          
+          // Find the most recent RSZ alert (not SERVICE_RESUMED) for this thread
+          const { data: latestRszAlert } = await supabase
+            .from('alerts')
+            .select('id, header_text')
+            .eq('thread_id', thread.thread_id)
+            .eq('effect', 'RSZ')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+          
+          // Set is_latest on the correct RSZ alert
+          if (latestRszAlert) {
+            await supabase
+              .from('alerts')
+              .update({ is_latest: true })
+              .eq('id', latestRszAlert.id);
+          }
+          
+          // Update the thread with correct title and clear SERVICE_RESUMED from categories
           await supabase
             .from('incident_threads')
             .update({ 
@@ -959,7 +985,9 @@ serve(async (req) => {
               resolved_at: null,
               updated_at: new Date().toISOString(),
               // Remove SERVICE_RESUMED from categories if present (it was added incorrectly)
-              categories: ['RSZ']
+              categories: ['RSZ'],
+              // Fix title to match actual RSZ alert, not SERVICE_RESUMED
+              title: latestRszAlert?.header_text || thread.title
             })
             .eq('thread_id', thread.thread_id);
           
@@ -996,6 +1024,51 @@ serve(async (req) => {
           .eq('thread_id', thread.thread_id);
         
         resolvedRszThreads++;
+      }
+    }
+    
+    // STEP 6c-fix-title: Fix RSZ thread titles if they have SERVICE_RESUMED text
+    // This catches cases where SERVICE_RESUMED was matched to RSZ thread incorrectly
+    for (const thread of rszThreads || []) {
+      // Check if thread title contains "resumed" (case-insensitive)
+      const titleLower = (thread.title || '').toLowerCase();
+      if (titleLower.includes('resumed') || titleLower.includes('regular service')) {
+        console.log(`STEP 6c-fix-title: Fixing RSZ thread title: "${thread.title}"`);
+        
+        // Reset all is_latest flags for this thread
+        await supabase
+          .from('alerts')
+          .update({ is_latest: false })
+          .eq('thread_id', thread.thread_id);
+        
+        // Find the most recent RSZ alert (not SERVICE_RESUMED) for this thread
+        const { data: latestRszAlert } = await supabase
+          .from('alerts')
+          .select('id, header_text')
+          .eq('thread_id', thread.thread_id)
+          .eq('effect', 'RSZ')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (latestRszAlert) {
+          // Set is_latest on the correct RSZ alert
+          await supabase
+            .from('alerts')
+            .update({ is_latest: true })
+            .eq('id', latestRszAlert.id);
+          
+          // Update thread title
+          await supabase
+            .from('incident_threads')
+            .update({ 
+              title: latestRszAlert.header_text,
+              updated_at: new Date().toISOString()
+            })
+            .eq('thread_id', thread.thread_id);
+          
+          console.log(`STEP 6c-fix-title: Fixed RSZ thread title to: "${latestRszAlert.header_text}"`);
+        }
       }
     }
 

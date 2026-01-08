@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.9  
+**Version:** 3.10  
 **Date:** January 8, 2026  
-**poll-alerts Version:** 105  
+**poll-alerts Version:** 106  
 **scrape-maintenance Version:** 2  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
@@ -657,19 +657,37 @@ CREATE TABLE planned_maintenance (
 9. **STEP 6c:** RSZ thread lifecycle management (v105+)
    - **STEP 6c-repair:** Un-resolve incorrectly resolved RSZ threads if TTC API has alerts
    - **STEP 6c-resolve:** Resolve RSZ threads if line no longer has RSZ in TTC API
+   - **STEP 6c-fix-title (v106+):** Fix RSZ thread titles if they have SERVICE_RESUMED text
    - Uses `.filter('categories', 'cs', '["RSZ"]')` for JSONB containment
 10. **STEP 7:** Merge duplicate threads only
     - Groups visible threads by affected_routes + categories
     - Keeps newest, hides older duplicates
     - **No longer unhides hidden threads** (fixed in v110)
 
-**RSZ/ACCESSIBILITY Thread Protection (v105+):**
+**RSZ/ACCESSIBILITY Thread Protection (v106+):**
 
-RSZ and ACCESSIBILITY threads have protected lifecycle managed only by TTC API:
-1. **Created:** When TTC API reports RSZ/elevator alerts
-2. **Resolved:** Only when TTC API no longer has alerts for that line/elevator
-3. **Protected from SERVICE_RESUMED:** Bluesky posts cannot resolve these threads
-4. **Auto-repair:** If incorrectly resolved, STEP 6c-repair will restore them
+RSZ and ACCESSIBILITY threads have a **4-layer protection** system managed only by TTC API:
+
+1. **Layer 1 - Skip during Bluesky matching (STEP 4 loop):**
+   - When iterating Bluesky posts to find matching threads, skip RSZ/ACCESSIBILITY threads entirely
+   - These threads should only be managed by TTC API, not Bluesky
+
+2. **Layer 2 - Never resolve via SERVICE_RESUMED (STEP 4 resolve):**
+   - Even if a Bluesky SERVICE_RESUMED post matches by route, do NOT resolve RSZ/ACCESSIBILITY threads
+   - Log warning and skip resolution
+
+3. **Layer 3 - Auto-repair (STEP 6c-repair):**
+   - If RSZ threads are incorrectly resolved, check TTC API for active RSZ alerts
+   - If TTC API has RSZ alerts for that line, un-resolve the thread
+   - Also fixes `is_latest` flag and thread title to point to correct RSZ alert
+
+4. **Layer 4 - Title self-healing (STEP 6c-fix-title, v106+):**
+   - Check active RSZ threads for SERVICE_RESUMED text in title
+   - If found, reset `is_latest` flags and update title to match actual RSZ alert
+   - Prevents frontend `isResolved()` false positives
+
+**Why is_latest and title matter:**
+The frontend `isResolved()` function checks the **latest alert text** (not just `is_resolved` flag) for "resumed" keywords. If a SERVICE_RESUMED alert gets `is_latest: true`, the thread will appear resolved in the UI even if `is_resolved: false`.
 
 **False Positive Prevention:**
 
@@ -888,7 +906,10 @@ const { data } = await supabase
 ## Version History
 
 | Version | Date       | Changes                                                                                    |
-| ------- | ---------- | ------------------------------------------------------------------------------------------ || v3.9    | 2026-01-08 | Comprehensive RSZ/ACCESSIBILITY protection: skip during Bluesky matching, never resolve via SERVICE_RESUMED, auto-repair if incorrectly resolved || v3.8    | 2026-01-08 | STEP 2b: Only match SERVICE_RESUMED if created AFTER the thread (prevents false positives) |
+| ------- | ---------- | ------------------------------------------------------------------------------------------ |
+| v3.10   | 2026-01-08 | Enhanced RSZ protection: auto-fix title/is_latest when SERVICE_RESUMED text detected in RSZ threads |
+| v3.9    | 2026-01-08 | Comprehensive RSZ/ACCESSIBILITY protection: skip during Bluesky matching, never resolve via SERVICE_RESUMED, auto-repair if incorrectly resolved |
+| v3.8    | 2026-01-08 | STEP 2b: Only match SERVICE_RESUMED if created AFTER the thread (prevents false positives) |
 | v3.7    | 2026-01-08 | Fixed JSONB queries (`.filter()` not `.contains()`), per-elevator threading                |
 | v3.6    | 2026-01-07 | Fixed STEP 7 unhide bug, added elevator code extraction                                    |
 
