@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '81';
+const VERSION = '88';
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -292,10 +292,12 @@ serve(async (req) => {
     const { data: existingAlerts } = await supabase
       .from('alert_cache')
       .select('bluesky_uri, header_text')
+      .not('bluesky_uri', 'is', null)  // Only get alerts with bluesky_uri
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
 
     const existingUris = new Set(existingAlerts?.map(a => a.bluesky_uri) || []);
+    console.log(`Found ${existingUris.size} existing Bluesky URIs in last 24h`);
 
     // Get unresolved threads for matching
     const { data: unresolvedThreads } = await supabase
@@ -315,8 +317,12 @@ serve(async (req) => {
       const { category, priority } = categorizeAlert(text);
       const routes = extractRoutes(text);
       
+      // Extract post ID from URI: at://did:plc:xxx/app.bsky.feed.post/3mbuyu22npk2b -> 3mbuyu22npk2b
+      const postId = uri.split('/').pop() || uri;
+      
       // Create alert record matching alert_cache schema
       const alert = {
+        alert_id: `bsky-${postId}`,
         bluesky_uri: uri,
         header_text: text.split('\n')[0].substring(0, 200),
         description_text: text,
