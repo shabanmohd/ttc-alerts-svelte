@@ -391,7 +391,7 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
       header_text: headerText.substring(0, 200),
       description_text: description,
       categories: ['ACCESSIBILITY'],
-      affected_routes: [station], // Use station name for threading
+      affected_routes: [station], // Use station name for filtering/display
       created_at: new Date().toISOString(),
       is_latest: true,
       effect: 'ACCESSIBILITY_ISSUE'
@@ -411,26 +411,53 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
 
     newAlerts++;
 
-    // Create/find thread for elevator alert
-    const { data: threadResult, error: threadError } = await supabase
-      .rpc('find_or_create_thread', {
-        p_title: headerText.substring(0, 200),
-        p_routes: [station],
-        p_categories: ['ACCESSIBILITY'],
-        p_is_resolved: false
-      });
-
-    if (threadError) {
-      console.error('Elevator thread creation error:', threadError);
-    } else if (threadResult && threadResult.length > 0) {
-      const threadId = threadResult[0].out_thread_id;
+    // For elevator alerts, create a deterministic thread ID based on elevatorCode
+    // This ensures each elevator gets its own thread, but the same elevator doesn't create duplicates
+    const threadId = elevatorCode 
+      ? `thread-elev-${elevatorCode}` 
+      : `thread-elev-${station.replace(/\s+/g, '-').toLowerCase()}-${alertId.slice(-8)}`;
+    
+    // Check if thread already exists (for this specific elevator)
+    const { data: existingThread } = await supabase
+      .from('incident_threads')
+      .select('thread_id')
+      .eq('thread_id', threadId)
+      .single();
+    
+    if (existingThread) {
+      // Thread exists, just link the alert to it
       await supabase
         .from('alert_cache')
         .update({ thread_id: threadId })
         .eq('alert_id', newAlert.alert_id);
       
-      console.log(`Elevator alert ${alertId} linked to thread ${threadId}`);
+      console.log(`Elevator alert ${alertId} linked to existing thread ${threadId}`);
       updatedThreads++;
+    } else {
+      // Create new thread for this elevator
+      const { error: threadError } = await supabase
+        .from('incident_threads')
+        .insert({
+          thread_id: threadId,
+          title: headerText.substring(0, 200),
+          affected_routes: [station],
+          categories: ['ACCESSIBILITY'],
+          is_resolved: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (threadError) {
+        console.error('Elevator thread creation error:', threadError);
+      } else {
+        await supabase
+          .from('alert_cache')
+          .update({ thread_id: threadId })
+          .eq('alert_id', newAlert.alert_id);
+        
+        console.log(`Elevator alert ${alertId} created new thread ${threadId}`);
+        updatedThreads++;
+      }
     }
   }
 
@@ -796,14 +823,15 @@ serve(async (req) => {
     updatedThreads += elevatorResult.updatedThreads;
 
     // STEP 6b: Resolve ACCESSIBILITY threads that are no longer in TTC API
-    // (elevator has been restored to service)
+    // Each elevator has a unique elevatorCode, and thread_id = thread-elev-{elevatorCode}
+    // Resolve threads where that specific elevator is no longer in TTC API
     let resolvedElevators = 0;
-    const ttcStationsWithElevatorIssues = new Set(
-      ttcData.elevatorAlerts.map(e => {
-        // Extract station name from headerText: "Station: Elevator out of service..."
-        const match = e.headerText?.match(/^([^:]+):/);
-        return match ? match[1].trim() : '';
-      }).filter(Boolean)
+    
+    // Build a set of active elevator codes from TTC API
+    const ttcActiveElevatorCodes = new Set(
+      ttcData.elevatorAlerts
+        .map(e => e.elevatorCode)
+        .filter(Boolean)
     );
     
     // Get all active ACCESSIBILITY threads - use filter() with 'cs' operator for JSONB containment
@@ -819,14 +847,44 @@ serve(async (req) => {
     }
     
     for (const thread of accessibilityThreads || []) {
-      const stationName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
-      if (!stationName) {
+      // Extract elevator code from thread_id (format: thread-elev-{elevatorCode})
+      const elevatorCodeMatch = thread.thread_id?.match(/^thread-elev-(.+)$/);
+      const elevatorCode = elevatorCodeMatch ? elevatorCodeMatch[1] : null;
+      
+      // Skip threads that don't follow the elevator thread ID pattern (legacy threads)
+      // For legacy threads, use station name matching as fallback
+      if (!elevatorCode) {
+        const stationName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
+        // Check if ANY elevator at this station is still in TTC API
+        const stationHasActiveElevator = ttcData.elevatorAlerts.some(e => {
+          const match = e.headerText?.match(/^([^:]+):/);
+          return match && match[1].trim() === stationName;
+        });
+        
+        if (stationName && !stationHasActiveElevator) {
+          console.log(`STEP 6b: Resolving legacy elevator thread: "${thread.title}" - station "${stationName}" no longer in TTC API`);
+          
+          const { error: updateError } = await supabase
+            .from('incident_threads')
+            .update({ 
+              is_resolved: true,
+              is_hidden: true,
+              resolved_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('thread_id', thread.thread_id);
+          
+          if (!updateError) {
+            resolvedElevators++;
+          }
+        }
         continue;
       }
       
-      // Check if this station is still in TTC API
-      if (!ttcStationsWithElevatorIssues.has(stationName)) {
-        console.log(`STEP 6b: Resolving elevator thread: "${thread.title}" - station "${stationName}" no longer in TTC API`);
+      // For new-style threads with elevatorCode in thread_id
+      // Check if this specific elevator is still in TTC API
+      if (!ttcActiveElevatorCodes.has(elevatorCode)) {
+        console.log(`STEP 6b: Resolving elevator thread: "${thread.title}" - elevator "${elevatorCode}" no longer in TTC API`);
         
         const { error: updateError } = await supabase
           .from('incident_threads')
