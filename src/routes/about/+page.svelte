@@ -55,7 +55,7 @@
     <Card.Content>
       <div class="flex items-center gap-4">
         <img
-          src="/icons/icon-192x192.png?v=9"
+          src="/icons/icon-about.png?v=9"
           alt="rideTO logo"
           width="56"
           height="56"
