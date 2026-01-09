@@ -382,7 +382,9 @@
    * Clean up accessibility alert description text by removing technical metadata.
    * Removes "Type: Elevator\nElevator Code: XXX" pattern and trailing "-TTC" from description.
    */
-  function cleanAccessibilityDescription(text: string | undefined | null): string {
+  function cleanAccessibilityDescription(
+    text: string | undefined | null
+  ): string {
     if (!text) return "";
     // Remove the technical metadata lines at the end
     // Pattern: "\n\nType: Elevator\nElevator Code: XXXXX" or similar
@@ -397,7 +399,7 @@
    */
   function getDisplayText(alert: Alert | undefined | null): string {
     if (!alert) return "";
-    
+
     // For accessibility alerts, clean up the description text
     if (isAccessibility) {
       const cleaned = cleanAccessibilityDescription(alert.description_text);
@@ -407,7 +409,7 @@
       }
       return alert.header_text || "";
     }
-    
+
     // For regular alerts, prefer description, fall back to header
     return alert.description_text || alert.header_text || "";
   }

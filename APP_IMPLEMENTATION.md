@@ -16,6 +16,21 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ---
 
+## 🆕 Recent Updates (Jan 9, 2026)
+
+| Component | Change | Status |
+| --------- | ------ | ------ |
+| **poll-alerts v110** | Strip "-TTC" suffix and technical metadata from elevator alerts | ✅ Deployed |
+| **find_or_create_thread** | DB function now excludes RSZ/ACCESSIBILITY from route-based matching | ✅ Deployed |
+| **AlertCard.svelte** | Clean up elevator alert descriptions (hide technical metadata) | ✅ Committed |
+| **CategoryFilterV3** | Improved count badge visibility (20% opacity bg) | ✅ Committed |
+| **ClosuresView** | Added CSS classes for count badges | ✅ Committed |
+| **PlannedContent** | Added dark mode support for sub-tab counts | ✅ Committed |
+| **alerts-v3** | Fixed tab count badge inactive state | ✅ Committed |
+| **getAllAlertsForLine()** | Exclude RSZ/ACCESSIBILITY from subway status calculation | ✅ Committed |
+
+---
+
 ## ⚠️ Production Domains (IMPORTANT)
 
 **Only deploy to these Cloudflare Pages domains:**

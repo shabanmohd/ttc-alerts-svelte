@@ -281,8 +281,7 @@
     >
       <LayoutGrid class="h-4 w-4" />
       {$_("closures.filterAll")}
-      <span
-        class="count-badge {activeFilter === 'all' ? 'active' : ''}"
+      <span class="count-badge {activeFilter === 'all' ? 'active' : ''}"
         >{allCount}</span
       >
     </button>
@@ -297,8 +296,7 @@
     >
       <CalendarDays class="h-4 w-4" />
       {$_("closures.filterWeekend")}
-      <span
-        class="count-badge {activeFilter === 'weekend' ? 'active' : ''}"
+      <span class="count-badge {activeFilter === 'weekend' ? 'active' : ''}"
         >{weekendCount}</span
       >
     </button>

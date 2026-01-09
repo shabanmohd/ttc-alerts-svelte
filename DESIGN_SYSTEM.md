@@ -1132,6 +1132,67 @@ On mobile, pills scroll horizontally with hidden scrollbars and a fade gradient 
 
 > **Pattern reuse:** This fade indicator pattern is also used in `MyRouteAlerts.svelte` for route filter tabs.
 
+### Count Badges (Filter Tabs)
+
+Pill-shaped count badges shown next to filter labels. Used in CategoryFilterV3, ClosuresView, and PlannedContent.
+
+**Base Styling:**
+
+| Property        | Value              |
+| --------------- | ------------------ |
+| `min-width`     | `1.125-1.25rem`    |
+| `height`        | `1.125-1.25rem`    |
+| `padding`       | `0 0.25-0.375rem`  |
+| `font-size`     | `0.625-0.6875rem`  |
+| `font-weight`   | `600`              |
+| `border-radius` | `9999px` (pill)    |
+
+**State Colors:**
+
+| State              | Light Mode                           | Dark Mode                            |
+| ------------------ | ------------------------------------ | ------------------------------------ |
+| **Inactive**       | `hsl(var(--muted-foreground) / 0.2)` | `hsl(var(--muted-foreground) / 0.25)`|
+| **Active (solid)** | Category-specific color              | Category-specific color              |
+
+**Category-Specific Active Colors:**
+
+| Category     | Light Mode          | Dark Mode           |
+| ------------ | ------------------- | ------------------- |
+| Disruptions  | `hsl(0 72% 45%)`    | `hsl(0 85% 65%)`    |
+| Slow Zones   | `hsl(45 93% 35%)`   | `hsl(45 93% 57%)`   |
+| Elevators    | `hsl(217 91% 45%)`  | `hsl(217 91% 70%)`  |
+| Closures     | `hsl(25 95% 45%)`   | `hsl(25 95% 60%)`   |
+| Route Changes| `hsl(262 83% 50%)`  | `hsl(262 83% 68%)`  |
+
+**CSS Pattern:**
+
+```css
+/* Base count badge */
+.pill-count, .count-badge, .sub-tab-count, .tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  background-color: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 9999px;
+}
+
+/* Dark mode */
+:global(.dark) .pill-count {
+  background-color: hsl(var(--muted-foreground) / 0.25);
+}
+
+/* Active state - solid color */
+.category-pill.disruptions.active .pill-count {
+  background-color: hsl(0 72% 45%);
+  color: white;
+}
+```
+
 ### Toast Notifications (Sonner)
 
 Toast notifications use svelte-sonner with dark solid backgrounds for high contrast.

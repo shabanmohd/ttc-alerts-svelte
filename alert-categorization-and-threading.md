@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.15  
+**Version:** 3.16  
 **Date:** January 9, 2026  
-**poll-alerts Version:** 108  
+**poll-alerts Version:** 110  
 **scrape-maintenance Version:** 3  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
@@ -569,6 +569,7 @@ function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
 **Why RSZ and ACCESSIBILITY are excluded:**
 
 1. **RSZ (Reduced Speed Zone)** - "Slower than usual" alerts are informational, not disruptions
+
    - Trains still running, just slower
    - Users should see these in "Slow Zones" section, not affect status cards
 
@@ -578,12 +579,12 @@ function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
 
 **Status determination:**
 
-| Condition | Status | Display |
-|-----------|--------|---------|
-| No MAJOR alerts, no active maintenance | `ok` | "Normal service" ✅ |
-| Has alert with DELAY effect | `delay` | "Delay" 🕐 |
-| Has alert with DISRUPTION/NO_SERVICE effect | `disruption` | "Disruption" ⛔ |
-| Has active scheduled maintenance only | `scheduled` | "Scheduled" 📅 |
+| Condition                                   | Status       | Display             |
+| ------------------------------------------- | ------------ | ------------------- |
+| No MAJOR alerts, no active maintenance      | `ok`         | "Normal service" ✅ |
+| Has alert with DELAY effect                 | `delay`      | "Delay" 🕐          |
+| Has alert with DISRUPTION/NO_SERVICE effect | `disruption` | "Disruption" ⛔     |
+| Has active scheduled maintenance only       | `scheduled`  | "Scheduled" 📅      |
 
 ---
 
@@ -697,6 +698,7 @@ CREATE TABLE planned_maintenance (
    - **De-duplicates by elevatorCode** - TTC API sometimes returns duplicate alerts for same elevator
    - Multiple elevators at same station appear as separate alerts
    - No threading between different elevators at same station
+   - **Text cleanup (v110+):** Strips "-TTC" suffix and technical metadata from descriptions
 8. **STEP 6b:** Auto-resolve elevator threads
    - New threads: resolve by specific `elevatorCode` from thread_id
 
@@ -720,8 +722,10 @@ WHERE t.is_resolved = false
   AND NOT (t.categories ? 'RSZ')
   AND NOT (t.categories ? 'ACCESSIBILITY')
 ```
-   - Legacy threads: fall back to station name matching
-   - Uses `.filter('categories', 'cs', '["ACCESSIBILITY"]')` for JSONB containment
+
+- Legacy threads: fall back to station name matching
+- Uses `.filter('categories', 'cs', '["ACCESSIBILITY"]')` for JSONB containment
+
 9. **STEP 6c:** RSZ thread lifecycle management (v105+)
    - **STEP 6c-repair:** Un-resolve incorrectly resolved RSZ threads if TTC API has alerts
    - **STEP 6c-resolve:** Resolve RSZ threads if line no longer has RSZ in TTC API
@@ -745,14 +749,14 @@ The alert system is **self-healing** - even if processing errors occur, automati
 
 ### Backend Auto-Repair Steps
 
-| Step              | Protection                        | Runs           | Description                                            |
-| ----------------- | --------------------------------- | -------------- | ------------------------------------------------------ |
-| STEP 4            | LAYER 1: Category check           | Every poll     | Skip RSZ/ACCESSIBILITY categories during matching      |
-| STEP 4            | **LAYER 2: Thread ID pattern**    | Every poll     | Skip threads with `rsz`, `elev`, `accessibility` in ID |
-| STEP 4            | Never resolve protected threads   | Every poll     | Block SERVICE_RESUMED from resolving RSZ/ACCESSIBILITY |
-| STEP 6c-repair    | Un-resolve RSZ                    | Every poll     | Restore incorrectly resolved RSZ threads               |
-| STEP 6c-fix-title | Fix RSZ titles                    | Every poll     | Replace "resumed" text with actual RSZ alert           |
-| **STEP 6d**       | **Repair orphaned elevators**     | **Every poll** | **Create threads for alerts without thread_id**        |
+| Step              | Protection                      | Runs           | Description                                            |
+| ----------------- | ------------------------------- | -------------- | ------------------------------------------------------ |
+| STEP 4            | LAYER 1: Category check         | Every poll     | Skip RSZ/ACCESSIBILITY categories during matching      |
+| STEP 4            | **LAYER 2: Thread ID pattern**  | Every poll     | Skip threads with `rsz`, `elev`, `accessibility` in ID |
+| STEP 4            | Never resolve protected threads | Every poll     | Block SERVICE_RESUMED from resolving RSZ/ACCESSIBILITY |
+| STEP 6c-repair    | Un-resolve RSZ                  | Every poll     | Restore incorrectly resolved RSZ threads               |
+| STEP 6c-fix-title | Fix RSZ titles                  | Every poll     | Replace "resumed" text with actual RSZ alert           |
+| **STEP 6d**       | **Repair orphaned elevators**   | **Every poll** | **Create threads for alerts without thread_id**        |
 
 ### Thread ID Pattern Protection (v108+)
 
@@ -760,12 +764,19 @@ As a belt-and-suspenders defense, the code now also checks `thread_id` patterns:
 
 ```typescript
 // LAYER 1: Category-based skip
-if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) {
+if (
+  threadCategories.includes("RSZ") ||
+  threadCategories.includes("ACCESSIBILITY")
+) {
   continue;
 }
 
 // LAYER 2: Thread ID pattern skip (prevents issues if categories malformed)
-if (threadId.includes('rsz') || threadId.includes('elev') || threadId.includes('accessibility')) {
+if (
+  threadId.includes("rsz") ||
+  threadId.includes("elev") ||
+  threadId.includes("accessibility")
+) {
   console.log(`Skipping protected thread ${threadId} during Bluesky matching`);
   continue;
 }
@@ -1086,6 +1097,10 @@ const { data } = await supabase
 
 | Version | Date       | Changes                                                                                                                                          |
 | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| v3.16   | 2026-01-09 | poll-alerts v110: Strip "-TTC" suffix from elevator descriptions; Clean technical metadata from elevator alerts                                  |
+| v3.15   | 2026-01-09 | Database function `find_or_create_thread` protection: exclude RSZ/ACCESSIBILITY threads from route-based matching                                |
+| v3.14   | 2026-01-09 | Frontend: `getAllAlertsForLine()` now excludes MINOR (RSZ) and ACCESSIBILITY alerts from subway status calculation                               |
+| v3.13   | 2026-01-09 | LAYER 2: Thread ID pattern protection (belt-and-suspenders) - skip threads containing 'rsz', 'elev', 'accessibility' in ID                      |
 | v3.12   | 2026-01-09 | scrape-maintenance v3: Handle single-day closures (sa-effective-date fallback), TTC API duplicate documentation                                  |
 | v3.11   | 2026-01-09 | Added STEP 6d: repair orphaned elevator alerts (alerts with thread_id = null); Frontend: prefer is_latest flag for latestAlert selection         |
 | v3.10   | 2026-01-08 | Enhanced RSZ protection: auto-fix title/is_latest when SERVICE_RESUMED text detected in RSZ threads                                              |
