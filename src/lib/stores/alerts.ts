@@ -183,10 +183,16 @@ export const threadsWithAlerts = derived(
         // Deduplicate alerts with >90% similar text, keeping the newest
         const deduplicatedAlerts = deduplicateAlerts(threadAlerts);
         
+        // Find the alert marked as is_latest (set by poll-alerts backend)
+        // This is critical for RSZ/ACCESSIBILITY threads where we manually set is_latest
+        // to point to the correct alert (not SERVICE_RESUMED that was incorrectly matched)
+        const latestFlaggedAlert = deduplicatedAlerts.find(a => a.is_latest);
+        
         return {
           ...thread,
           alerts: deduplicatedAlerts,
-          latestAlert: deduplicatedAlerts[0]
+          // Prefer the is_latest flagged alert, fallback to most recent by timestamp
+          latestAlert: latestFlaggedAlert || deduplicatedAlerts[0]
         };
       })
       // Filter out threads with no alerts, missing critical data, invalid timestamps, or planned alerts
