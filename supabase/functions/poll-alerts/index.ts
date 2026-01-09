@@ -376,14 +376,9 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
     const stationMatch = headerText.match(/^([^:]+):/);
     const station = stationMatch ? stationMatch[1].trim() : 'Unknown Station';
     
-    // Build description
-    let description = headerText;
-    if (elevator.routeType) {
-      description += `\n\nType: ${elevator.routeType}`;
-    }
-    if (elevatorCode) {
-      description += `\nElevator Code: ${elevatorCode}`;
-    }
+    // Build description - use header text only (no technical metadata for display)
+    // The elevatorCode is already embedded in alert_id and thread_id for debugging
+    const description = headerText;
 
     // Create alert record - use station as "route" for grouping
     const alert = {
