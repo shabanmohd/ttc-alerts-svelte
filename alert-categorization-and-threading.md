@@ -659,14 +659,73 @@ CREATE TABLE planned_maintenance (
    - **STEP 6c-resolve:** Resolve RSZ threads if line no longer has RSZ in TTC API
    - **STEP 6c-fix-title (v106+):** Fix RSZ thread titles if they have SERVICE_RESUMED text
    - Uses `.filter('categories', 'cs', '["RSZ"]')` for JSONB containment
-10. **STEP 7:** Merge duplicate threads only
+10. **STEP 6d:** Auto-repair orphaned elevator alerts (v107+)
+    - Scans for alerts with `thread_id IS NULL` and `effect = ACCESSIBILITY_ISSUE`
+    - Extracts elevator code from alert_id (e.g., `ttc-elev-15S2L-...` → `15S2L`)
+    - Creates missing thread if needed (`thread-elev-{elevatorCode}`)
+    - Links alert to thread with `is_latest = true`
+11. **STEP 7:** Merge duplicate threads only
     - Groups visible threads by affected_routes + categories
     - Keeps newest, hides older duplicates
     - **No longer unhides hidden threads** (fixed in v110)
 
-**RSZ/ACCESSIBILITY Thread Protection (v106+):**
+---
 
-RSZ and ACCESSIBILITY threads have a **4-layer protection** system managed only by TTC API:
+## Self-Healing System (v107+)
+
+The alert system is **self-healing** - even if processing errors occur, automatic repair mechanisms fix issues on the next poll cycle (within 1 minute).
+
+### Backend Auto-Repair Steps
+
+| Step | Protection | Runs | Description |
+|------|-----------|------|-------------|
+| STEP 4 | Skip RSZ/ACCESSIBILITY | Every poll | Skip these threads during Bluesky matching |
+| STEP 4 | Never resolve protected threads | Every poll | Block SERVICE_RESUMED from resolving RSZ/ACCESSIBILITY |
+| STEP 6c-repair | Un-resolve RSZ | Every poll | Restore incorrectly resolved RSZ threads |
+| STEP 6c-fix-title | Fix RSZ titles | Every poll | Replace "resumed" text with actual RSZ alert |
+| **STEP 6d** | **Repair orphaned elevators** | **Every poll** | **Create threads for alerts without thread_id** |
+
+### Frontend Defense-in-Depth
+
+| Protection | Location | Purpose |
+|-----------|----------|---------|
+| `isResolved()` category check | alerts-v3, routes, MyRouteAlerts | RSZ/ACCESSIBILITY only trust `is_resolved` flag |
+| `latestAlert` prefers `is_latest` | alerts.ts store | Ensures correct alert is displayed, not SERVICE_RESUMED |
+
+### Monitoring
+
+The poll-alerts response includes repair counters:
+```json
+{
+  "repairedRszThreads": 0,    // RSZ threads un-resolved
+  "repairedElevators": 0      // Orphaned elevators fixed
+}
+```
+
+If these numbers are consistently > 0, it indicates an upstream issue to investigate.
+
+### Before vs After
+
+**Before (broken):**
+```
+Alert created → Thread creation fails → Alert orphaned → Never displayed
+SERVICE_RESUMED matches RSZ → Thread resolved → RSZ hidden
+```
+
+**After (self-healing):**
+```
+Alert created → Thread creation fails → STEP 6d detects → Creates thread → Alert displayed ✅
+SERVICE_RESUMED matches RSZ → STEP 4 skips RSZ → RSZ protected ✅
+SERVICE_RESUMED somehow resolves RSZ → STEP 6c-repair detects → Un-resolves → RSZ displayed ✅
+```
+
+---
+
+**RSZ/ACCESSIBILITY Thread Protection (v107+):**
+
+RSZ and ACCESSIBILITY threads have a **6-layer protection** system ensuring they're only managed by TTC API:
+
+**RSZ Protection (4 layers):**
 
 1. **Layer 1 - Skip during Bluesky matching (STEP 4 loop):**
 
@@ -689,8 +748,25 @@ RSZ and ACCESSIBILITY threads have a **4-layer protection** system managed only 
    - If found, reset `is_latest` flags and update title to match actual RSZ alert
    - Prevents frontend `isResolved()` false positives
 
+**Elevator Protection (2 layers):**
+
+5. **Layer 5 - Bluesky skip (same as RSZ, STEP 4):**
+   - Skip ACCESSIBILITY threads during Bluesky matching
+   - Elevators only resolve via TTC API (STEP 6b)
+
+6. **Layer 6 - Orphan repair (STEP 6d, v107+):**
+   - Detect alerts with `thread_id IS NULL` and `effect = ACCESSIBILITY_ISSUE`
+   - Extract elevator code from alert_id
+   - Create missing thread if needed
+   - Link alert to thread with `is_latest = true`
+
 **Why is_latest and title matter:**
 The frontend `isResolved()` function checks the **latest alert text** (not just `is_resolved` flag) for "resumed" keywords. If a SERVICE_RESUMED alert gets `is_latest: true`, the thread will appear resolved in the UI even if `is_resolved: false`.
+
+**Frontend Defense (additional protection):**
+- `isResolved()` in alerts-v3, routes, MyRouteAlerts checks categories first
+- RSZ/ACCESSIBILITY threads **only** trust the `is_resolved` flag, never text matching
+- Store `latestAlert` prefers `is_latest: true` alert over timestamp-based selection
 
 **False Positive Prevention:**
 
