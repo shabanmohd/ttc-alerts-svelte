@@ -443,11 +443,26 @@
   }
 
   // Get ALL active alerts for a specific subway line (for count and grouping)
+  // EXCLUDES: RSZ (MINOR) and ACCESSIBILITY alerts - these don't affect line status
   function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
     const active = activeAlerts();
     return active.filter((thread) => {
       const routes = getThreadRoutes(thread);
-      return routes.some((r) => routeMatchesLine(r, lineId));
+      if (!routes.some((r) => routeMatchesLine(r, lineId))) return false;
+
+      // Exclude RSZ and ACCESSIBILITY alerts from line status calculation
+      // RSZ alerts are "slower than usual" - not a disruption or delay
+      // Accessibility alerts are elevator/escalator issues - separate concern
+      const categories = Array.isArray(thread.latestAlert?.categories)
+        ? thread.latestAlert.categories
+        : [];
+      const effect = thread.latestAlert?.effect || "";
+      const headerText = thread.latestAlert?.header_text || "";
+
+      const severity = getSeverityCategory(categories, effect, headerText);
+
+      // Only MAJOR alerts affect line status (disruptions, delays, etc.)
+      return severity === "MAJOR";
     });
   }
 

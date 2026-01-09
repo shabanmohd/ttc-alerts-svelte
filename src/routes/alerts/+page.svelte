@@ -213,6 +213,7 @@
   }
 
   // Get ALL active alerts for a specific subway line
+  // EXCLUDES: RSZ (MINOR) and ACCESSIBILITY alerts - these don't affect line status
   function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
     const active = $threadsWithAlerts.filter(
       (t) => !t.is_resolved && !t.is_hidden
@@ -220,13 +221,24 @@
     return active.filter((thread) => {
       const routes = thread.affected_routes || [];
       // Check if any route matches this line
-      return routes.some((r) => {
+      const matchesLine = routes.some((r) => {
         if (r === lineId) return true;
         // Handle "Line 1" vs "1" format
         const routeNum = r.match(/^(\d+)/)?.[1];
         const lineNum = lineId.match(/\d+/)?.[0];
         return routeNum === lineNum;
       });
+      if (!matchesLine) return false;
+
+      // Exclude RSZ and ACCESSIBILITY alerts from line status calculation
+      const categories = Array.isArray(thread.latestAlert?.categories)
+        ? thread.latestAlert.categories
+        : [];
+      const effect = thread.latestAlert?.effect || "";
+      const headerText = thread.latestAlert?.header_text || "";
+
+      const severity = getSeverityCategory(categories, effect, headerText);
+      return severity === "MAJOR";
     });
   }
 

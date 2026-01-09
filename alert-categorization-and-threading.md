@@ -1,6 +1,6 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.13  
+**Version:** 3.14  
 **Date:** January 9, 2026  
 **poll-alerts Version:** 108  
 **scrape-maintenance Version:** 3  
@@ -539,6 +539,51 @@ Filters are displayed as chips in `FilterChips.svelte`:
 - Click a chip → Show only alerts in that category
 - Click active chip → Clear filter (show all)
 - Categories come from `ALERT_CATEGORIES` in poll-alerts Edge Function
+
+### Subway Line Status Calculation
+
+**Implemented in:** `src/routes/alerts-v3/+page.svelte` and `src/routes/alerts/+page.svelte`
+
+The subway status cards ("Normal service", "Delay", "Disruption", "Scheduled") are calculated based on MAJOR severity alerts only:
+
+```typescript
+// Get ALL active alerts for a specific subway line
+// EXCLUDES: RSZ (MINOR) and ACCESSIBILITY alerts - these don't affect line status
+function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
+  const active = activeAlerts();
+  return active.filter((thread) => {
+    const routes = getThreadRoutes(thread);
+    if (!routes.some((r) => routeMatchesLine(r, lineId))) return false;
+
+    // Only MAJOR alerts affect line status
+    const categories = thread.latestAlert?.categories || [];
+    const effect = thread.latestAlert?.effect || "";
+    const headerText = thread.latestAlert?.header_text || "";
+
+    const severity = getSeverityCategory(categories, effect, headerText);
+    return severity === "MAJOR";
+  });
+}
+```
+
+**Why RSZ and ACCESSIBILITY are excluded:**
+
+1. **RSZ (Reduced Speed Zone)** - "Slower than usual" alerts are informational, not disruptions
+   - Trains still running, just slower
+   - Users should see these in "Slow Zones" section, not affect status cards
+
+2. **ACCESSIBILITY** - Elevator/escalator issues are separate concern
+   - Displayed in dedicated "Accessibility" section
+   - Don't indicate service disruptions for the line
+
+**Status determination:**
+
+| Condition | Status | Display |
+|-----------|--------|---------|
+| No MAJOR alerts, no active maintenance | `ok` | "Normal service" ✅ |
+| Has alert with DELAY effect | `delay` | "Delay" 🕐 |
+| Has alert with DISRUPTION/NO_SERVICE effect | `disruption` | "Disruption" ⛔ |
+| Has active scheduled maintenance only | `scheduled` | "Scheduled" 📅 |
 
 ---
 
