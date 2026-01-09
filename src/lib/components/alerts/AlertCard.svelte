@@ -380,13 +380,16 @@
 
   /**
    * Clean up accessibility alert description text by removing technical metadata.
-   * Removes "Type: Elevator\nElevator Code: XXX" pattern from description.
+   * Removes "Type: Elevator\nElevator Code: XXX" pattern and trailing "-TTC" from description.
    */
   function cleanAccessibilityDescription(text: string | undefined | null): string {
     if (!text) return "";
     // Remove the technical metadata lines at the end
     // Pattern: "\n\nType: Elevator\nElevator Code: XXXXX" or similar
-    return text.replace(/\n\nType:\s*\w+\nElevator Code:\s*\w+/gi, "").trim();
+    let cleaned = text.replace(/\n\nType:\s*\w+\nElevator Code:\s*\w+/gi, "");
+    // Remove trailing "-TTC" suffix that appears in some TTC API responses
+    cleaned = cleaned.replace(/-TTC\s*$/i, "");
+    return cleaned.trim();
   }
 
   /**

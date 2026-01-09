@@ -378,12 +378,14 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
     
     // Build description - use header text only (no technical metadata for display)
     // The elevatorCode is already embedded in alert_id and thread_id for debugging
-    const description = headerText;
+    // Also strip trailing "-TTC" suffix that appears in some API responses
+    const cleanedHeaderText = headerText.replace(/-TTC\s*$/i, '').trim();
+    const description = cleanedHeaderText;
 
     // Create alert record - use station as "route" for grouping
     const alert = {
       alert_id: alertId,
-      header_text: headerText.substring(0, 200),
+      header_text: cleanedHeaderText.substring(0, 200),
       description_text: description,
       categories: ['ACCESSIBILITY'],
       affected_routes: [station], // Use station name for filtering/display
