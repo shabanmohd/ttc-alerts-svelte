@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '106'; // Enhanced RSZ protection: auto-fix title and is_latest when SERVICE_RESUMED text detected
+const VERSION = '107'; // Added STEP 6d: repair orphaned elevator alerts
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -1071,6 +1071,61 @@ serve(async (req) => {
         }
       }
     }
+    
+    // STEP 6d: Repair orphaned elevator alerts (alerts with no thread_id)
+    // This can happen if thread creation failed after alert insert
+    const { data: orphanedAlerts } = await supabase
+      .from('alert_cache')
+      .select('alert_id, header_text, effect')
+      .is('thread_id', null)
+      .eq('effect', 'ACCESSIBILITY_ISSUE');
+    
+    let repairedElevators = 0;
+    for (const orphan of orphanedAlerts || []) {
+      // Extract elevator code from alert_id (e.g., "ttc-elev-15S2L-..." -> "15S2L")
+      const codeMatch = orphan.alert_id.match(/^ttc-elev-([^-]+)-/);
+      if (!codeMatch) continue;
+      
+      const elevatorCode = codeMatch[1];
+      const threadId = `thread-elev-${elevatorCode}`;
+      
+      // Extract station name from header text
+      const stationMatch = orphan.header_text?.match(/^([^:]+):/);
+      const station = stationMatch ? stationMatch[1].trim() : 'Unknown Station';
+      
+      // Check if thread exists
+      const { data: existingThread } = await supabase
+        .from('incident_threads')
+        .select('thread_id')
+        .eq('thread_id', threadId)
+        .single();
+      
+      if (!existingThread) {
+        // Create the missing thread
+        console.log(`STEP 6d: Creating missing thread ${threadId} for orphaned elevator alert ${orphan.alert_id}`);
+        await supabase
+          .from('incident_threads')
+          .insert({
+            thread_id: threadId,
+            title: orphan.header_text,
+            affected_routes: [station],
+            categories: ['ACCESSIBILITY'],
+            is_resolved: false,
+            is_hidden: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+      }
+      
+      // Link the alert to the thread
+      await supabase
+        .from('alert_cache')
+        .update({ thread_id: threadId, is_latest: true })
+        .eq('alert_id', orphan.alert_id);
+      
+      repairedElevators++;
+      console.log(`STEP 6d: Linked orphaned elevator alert ${orphan.alert_id} to ${threadId}`);
+    }
 
     // STEP 7: Merge duplicate RSZ/ACCESSIBILITY threads by keeping only the newest one per station/line
     // Note: We no longer automatically unhide hidden threads - STEP 6b/6c handle auto-resolving properly
@@ -1133,6 +1188,7 @@ serve(async (req) => {
         resolvedElevators,
         resolvedRszThreads,
         repairedRszThreads,
+        repairedElevators,
         unhiddenRszAccessibility,
         mergedDuplicates,
         newAlerts, 

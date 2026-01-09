@@ -262,7 +262,9 @@
 
     // RSZ and ACCESSIBILITY threads should NEVER be resolved by text matching
     // Their lifecycle is managed exclusively by TTC API through poll-alerts
-    const categories = Array.isArray(thread.categories) ? thread.categories : [];
+    const categories = Array.isArray(thread.categories)
+      ? thread.categories
+      : [];
     if (categories.includes("RSZ") || categories.includes("ACCESSIBILITY")) {
       // For RSZ/ACCESSIBILITY, only trust the is_resolved flag
       return false;

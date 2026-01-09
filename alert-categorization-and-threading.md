@@ -669,14 +669,17 @@ CREATE TABLE planned_maintenance (
 RSZ and ACCESSIBILITY threads have a **4-layer protection** system managed only by TTC API:
 
 1. **Layer 1 - Skip during Bluesky matching (STEP 4 loop):**
+
    - When iterating Bluesky posts to find matching threads, skip RSZ/ACCESSIBILITY threads entirely
    - These threads should only be managed by TTC API, not Bluesky
 
 2. **Layer 2 - Never resolve via SERVICE_RESUMED (STEP 4 resolve):**
+
    - Even if a Bluesky SERVICE_RESUMED post matches by route, do NOT resolve RSZ/ACCESSIBILITY threads
    - Log warning and skip resolution
 
 3. **Layer 3 - Auto-repair (STEP 6c-repair):**
+
    - If RSZ threads are incorrectly resolved, check TTC API for active RSZ alerts
    - If TTC API has RSZ alerts for that line, un-resolve the thread
    - Also fixes `is_latest` flag and thread title to point to correct RSZ alert
@@ -905,13 +908,13 @@ const { data } = await supabase
 
 ## Version History
 
-| Version | Date       | Changes                                                                                    |
-| ------- | ---------- | ------------------------------------------------------------------------------------------ |
-| v3.10   | 2026-01-08 | Enhanced RSZ protection: auto-fix title/is_latest when SERVICE_RESUMED text detected in RSZ threads |
+| Version | Date       | Changes                                                                                                                                          |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| v3.10   | 2026-01-08 | Enhanced RSZ protection: auto-fix title/is_latest when SERVICE_RESUMED text detected in RSZ threads                                              |
 | v3.9    | 2026-01-08 | Comprehensive RSZ/ACCESSIBILITY protection: skip during Bluesky matching, never resolve via SERVICE_RESUMED, auto-repair if incorrectly resolved |
-| v3.8    | 2026-01-08 | STEP 2b: Only match SERVICE_RESUMED if created AFTER the thread (prevents false positives) |
-| v3.7    | 2026-01-08 | Fixed JSONB queries (`.filter()` not `.contains()`), per-elevator threading                |
-| v3.6    | 2026-01-07 | Fixed STEP 7 unhide bug, added elevator code extraction                                    |
+| v3.8    | 2026-01-08 | STEP 2b: Only match SERVICE_RESUMED if created AFTER the thread (prevents false positives)                                                       |
+| v3.7    | 2026-01-08 | Fixed JSONB queries (`.filter()` not `.contains()`), per-elevator threading                                                                      |
+| v3.6    | 2026-01-07 | Fixed STEP 7 unhide bug, added elevator code extraction                                                                                          |
 
 ---
 
