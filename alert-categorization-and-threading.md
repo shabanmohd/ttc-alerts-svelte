@@ -1,9 +1,9 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.11  
+**Version:** 3.12  
 **Date:** January 9, 2026  
 **poll-alerts Version:** 107  
-**scrape-maintenance Version:** 2  
+**scrape-maintenance Version:** 3  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
@@ -999,6 +999,7 @@ const { data } = await supabase
 
 | Version | Date       | Changes                                                                                                                                          |
 | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| v3.12   | 2026-01-09 | scrape-maintenance v3: Handle single-day closures (sa-effective-date fallback), TTC API duplicate documentation                                  |
 | v3.11   | 2026-01-09 | Added STEP 6d: repair orphaned elevator alerts (alerts with thread_id = null); Frontend: prefer is_latest flag for latestAlert selection         |
 | v3.10   | 2026-01-08 | Enhanced RSZ protection: auto-fix title/is_latest when SERVICE_RESUMED text detected in RSZ threads                                              |
 | v3.9    | 2026-01-08 | Comprehensive RSZ/ACCESSIBILITY protection: skip during Bluesky matching, never resolve via SERVICE_RESUMED, auto-repair if incorrectly resolved |

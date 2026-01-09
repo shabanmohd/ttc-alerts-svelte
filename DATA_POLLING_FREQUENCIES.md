@@ -154,11 +154,35 @@ This document describes all data sources, their polling frequencies, and update 
 
 ## Automated Workflows Summary
 
-| Workflow               | Schedule                | Data Source            | Output                                |
-| ---------------------- | ----------------------- | ---------------------- | ------------------------------------- |
-| **Schedule Refresh**   | Monthly (1st, 4 AM UTC) | Toronto Open Data GTFS | `ttc-schedules.json`                  |
-| **Route Data Refresh** | Weekly (Sun, 2 AM UTC)  | NextBus API            | `ttc-routes.json`, `ttc-route-*.json` |
-| **Alert Polling**      | Every 30 seconds        | TTC Service Alerts API | Supabase `alerts` table               |
+| Workflow                   | Schedule                   | Data Source              | Output                                |
+| -------------------------- | -------------------------- | ------------------------ | ------------------------------------- |
+| **Alert Polling**          | Every 30 seconds           | TTC Service Alerts API   | Supabase `alert_cache` table          |
+| **Subway Closures Scrape** | Every 6 hours (cron)       | TTC Sitecore API         | Supabase `planned_maintenance` table  |
+| **Schedule Refresh**       | Monthly (1st, 4 AM UTC)    | Toronto Open Data GTFS   | `ttc-schedules.json`                  |
+| **Route Data Refresh**     | Weekly (Sun, 2 AM UTC)     | NextBus API              | `ttc-routes.json`, `ttc-route-*.json` |
+
+### Edge Function: scrape-maintenance
+
+| Property             | Value                                                            |
+| -------------------- | ---------------------------------------------------------------- |
+| **Source**           | TTC Sitecore API (subway-service page)                           |
+| **Update Frequency** | Every 6 hours (pg_cron: 0, 6, 12, 18 UTC)                        |
+| **Version**          | v3                                                               |
+| **Data Type**        | Planned subway closures (nightly, weekend, scheduled)            |
+| **Output**           | Supabase `planned_maintenance` table                             |
+
+**What's included:**
+
+- Subway line (Line 1-4)
+- Affected stations (e.g., "Finch to Eglinton")
+- Start/end dates
+- Start time (for nightly closures)
+- Closure type detection (Nightly/Weekend/Scheduled)
+
+**v3 Improvements:**
+
+- Single-day closure support (sa-effective-date fallback)
+- Better error logging with HTML snippets
 
 ### Workflow Triggers
 
