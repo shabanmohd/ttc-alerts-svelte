@@ -1350,13 +1350,17 @@
     font-size: 0.6875rem;
     font-weight: 600;
     border-radius: 9999px;
-    background-color: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
+    background-color: hsl(var(--muted-foreground) / 0.2);
+    color: hsl(var(--foreground));
+  }
+
+  :global(.dark) .tab-count {
+    background-color: hsl(var(--muted-foreground) / 0.25);
   }
 
   .alerts-tab.active .tab-count {
-    background-color: hsl(var(--muted));
-    color: hsl(var(--foreground));
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
   }
 
   /* Responsive: smaller text on small screens */

@@ -171,9 +171,13 @@
     padding: 0 0.375rem;
     font-size: calc(0.6875rem * var(--text-scale, 1));
     font-weight: 600;
-    background-color: hsl(var(--muted-foreground) / 0.15);
+    background-color: hsl(var(--muted-foreground) / 0.2);
     border-radius: 9999px;
     margin-left: 0.125rem;
+  }
+
+  :global(.dark) .sub-tab-count {
+    background-color: hsl(var(--muted-foreground) / 0.25);
   }
 
   /* Active state counts */

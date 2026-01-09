@@ -212,9 +212,13 @@
     padding: 0 0.25rem;
     font-size: 0.625rem;
     font-weight: 600;
-    background-color: hsl(var(--muted-foreground) / 0.15);
+    background-color: hsl(var(--muted-foreground) / 0.2);
     border-radius: 9999px;
     margin-left: 0.125rem;
+  }
+
+  :global(.dark) .pill-count {
+    background-color: hsl(var(--muted-foreground) / 0.25);
   }
 
   /* Active state - category-specific colors */
