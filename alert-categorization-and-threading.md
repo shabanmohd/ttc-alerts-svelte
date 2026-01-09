@@ -1,6 +1,6 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.14  
+**Version:** 3.15  
 **Date:** January 9, 2026  
 **poll-alerts Version:** 108  
 **scrape-maintenance Version:** 3  
@@ -664,7 +664,7 @@ CREATE TABLE planned_maintenance (
 
 ## Edge Functions
 
-### `poll-alerts` (v105)
+### `poll-alerts` (v108)
 
 **Trigger:** Cron schedule (every 2 minutes)  
 **Purpose:** Fetch, categorize, and thread alerts; manage thread lifecycle
@@ -684,9 +684,10 @@ CREATE TABLE planned_maintenance (
    - Re-activates threads if alert comes back
 5. **STEP 4:** Fetch Bluesky posts for context/history
    - Extract routes, categorize, thread matching
-   - **CRITICAL (v105):** Skips RSZ and ACCESSIBILITY threads during matching
-   - **CRITICAL (v105):** Never resolves RSZ/ACCESSIBILITY threads even if matched
-   - Create new threads if no match found
+   - **LAYER 1 (v105):** Skips RSZ/ACCESSIBILITY by categories array
+   - **LAYER 2 (v108):** Skips threads by thread_id pattern (`rsz`, `elev`, `accessibility`)
+   - Never resolves RSZ/ACCESSIBILITY threads even if matched
+   - Create new threads via `find_or_create_thread()` if no match found
 6. **STEP 5:** Process RSZ alerts from TTC API
    - Normalize route format ("1" → "Line 1")
    - Create/update RSZ threads and alerts
@@ -698,6 +699,27 @@ CREATE TABLE planned_maintenance (
    - No threading between different elevators at same station
 8. **STEP 6b:** Auto-resolve elevator threads
    - New threads: resolve by specific `elevatorCode` from thread_id
+
+### `find_or_create_thread` Database Function
+
+**Purpose:** Find or create incident thread with thread_hash collision prevention
+
+**Critical RSZ/ACCESSIBILITY Protection:**
+
+The function now excludes protected threads from route-based matching to prevent DELAY/DISRUPTION alerts from being incorrectly attached:
+
+```sql
+-- Route-based matching stage EXCLUDES protected threads
+WHERE t.is_resolved = false
+  AND t.is_hidden = false
+  -- LAYER 1: thread_id pattern check
+  AND t.thread_id NOT LIKE '%rsz%'
+  AND t.thread_id NOT LIKE '%elev%'
+  AND t.thread_id NOT LIKE '%accessibility%'
+  -- LAYER 2: categories check
+  AND NOT (t.categories ? 'RSZ')
+  AND NOT (t.categories ? 'ACCESSIBILITY')
+```
    - Legacy threads: fall back to station name matching
    - Uses `.filter('categories', 'cs', '["ACCESSIBILITY"]')` for JSONB containment
 9. **STEP 6c:** RSZ thread lifecycle management (v105+)
