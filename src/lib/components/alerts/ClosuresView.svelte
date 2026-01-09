@@ -282,10 +282,8 @@
       <LayoutGrid class="h-4 w-4" />
       {$_("closures.filterAll")}
       <span
-        class="inline-flex items-center justify-center rounded-full text-xs font-semibold min-w-[1.25rem] h-5 px-1.5 {activeFilter ===
-        'all'
-          ? 'bg-primary-foreground/30 text-primary-foreground'
-          : 'bg-muted-foreground/15 text-foreground'}">{allCount}</span
+        class="count-badge {activeFilter === 'all' ? 'active' : ''}"
+        >{allCount}</span
       >
     </button>
     <button
@@ -300,10 +298,8 @@
       <CalendarDays class="h-4 w-4" />
       {$_("closures.filterWeekend")}
       <span
-        class="inline-flex items-center justify-center rounded-full text-xs font-semibold min-w-[1.25rem] h-5 px-1.5 {activeFilter ===
-        'weekend'
-          ? 'bg-primary-foreground/30 text-primary-foreground'
-          : 'bg-muted-foreground/15 text-foreground'}">{weekendCount}</span
+        class="count-badge {activeFilter === 'weekend' ? 'active' : ''}"
+        >{weekendCount}</span
       >
     </button>
   </div>
@@ -385,5 +381,35 @@
     color: hsl(var(--muted-foreground));
     max-width: 280px;
     line-height: 1.5;
+  }
+
+  /* Count badge styles for filter buttons */
+  .count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    background-color: hsl(var(--muted-foreground) / 0.2);
+    color: hsl(var(--foreground));
+  }
+
+  /* Active state - when button is selected (dark bg) */
+  .count-badge.active {
+    background-color: hsl(var(--primary-foreground) / 0.25);
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* Dark mode adjustments */
+  :global(.dark) .count-badge {
+    background-color: hsl(var(--muted-foreground) / 0.25);
+  }
+
+  :global(.dark) .count-badge.active {
+    background-color: hsl(var(--primary-foreground) / 0.3);
   }
 </style>
