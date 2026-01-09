@@ -2,6 +2,8 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createHash } from 'https://deno.land/std@0.168.0/crypto/mod.ts';
 
+// v3 - Added fallback date parsing for single-day closures (sa-effective-date)
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -221,11 +223,21 @@ function parseMaintenanceItem(item: any): {
       ? stationsMatch[1].trim().replace(/stations?$/i, 'stations')
       : description;
     
-    // Extract start date
+    // Extract start date - try field-starteffectivedate first, then fall back to sa-effective-date
+    let startDateStr = '';
     const startDateMatch = html.match(/field-starteffectivedate[^>]*>([^<]+)</i);
-    const startDateStr = startDateMatch ? startDateMatch[1].trim() : '';
+    if (startDateMatch) {
+      startDateStr = startDateMatch[1].trim();
+    } else {
+      // Fall back: extract date from sa-effective-date div (single-day closures)
+      // Format: <div class="sa-effective-date...">January 10, 2026<span>
+      const effectiveDateMatch = html.match(/sa-effective-date[^>]*>(?:<[^>]*>)*([A-Za-z]+\s+\d{1,2},?\s+\d{4})/i);
+      if (effectiveDateMatch) {
+        startDateStr = effectiveDateMatch[1].trim();
+      }
+    }
     
-    // Extract end date
+    // Extract end date - try field-endeffectivedate first, then use start date
     const endDateMatch = html.match(/field-endeffectivedate[^>]*>([^<]+)</i);
     const endDateStr = endDateMatch ? endDateMatch[1].trim() : startDateStr;
     
@@ -234,7 +246,7 @@ function parseMaintenanceItem(item: any): {
     const endDate = parseDate(endDateStr);
     
     if (!startDate) {
-      console.warn('Could not parse start date from:', startDateStr);
+      console.warn('Could not parse start date from:', startDateStr, 'HTML snippet:', html.substring(0, 500));
       return null;
     }
     
