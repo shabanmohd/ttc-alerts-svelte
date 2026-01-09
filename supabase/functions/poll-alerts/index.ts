@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '107'; // Added STEP 6d: repair orphaned elevator alerts
+const VERSION = '108'; // Added LAYER 2 belt-and-suspenders RSZ/ACCESSIBILITY protection
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -509,13 +509,19 @@ serve(async (req) => {
       for (const thread of activeThreads || []) {
         const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
         const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
+        const threadId = thread.thread_id || '';
         
         // Skip threads with no routes (can't cross-reference)
         if (threadRoutes.length === 0) continue;
         
-        // Skip RSZ and ACCESSIBILITY threads - they have their own lifecycle
+        // LAYER 1: Skip RSZ and ACCESSIBILITY threads - they have their own lifecycle
         // These threads use station names or subway line numbers, not route numbers
         if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) {
+          continue;
+        }
+        
+        // LAYER 2: Belt-and-suspenders check on thread_id patterns
+        if (threadId.includes('rsz') || threadId.includes('elev') || threadId.includes('accessibility')) {
           continue;
         }
         
@@ -624,10 +630,16 @@ serve(async (req) => {
       for (const thread of hiddenThreadsData || []) {
         const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
         const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
+        const threadId = thread.thread_id || '';
         if (threadRoutes.length === 0) continue;
         
-        // Skip RSZ and ACCESSIBILITY threads
+        // LAYER 1: Skip RSZ and ACCESSIBILITY threads
         if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) {
+          continue;
+        }
+        
+        // LAYER 2: Belt-and-suspenders check on thread_id patterns
+        if (threadId.includes('rsz') || threadId.includes('elev') || threadId.includes('accessibility')) {
           continue;
         }
         
@@ -733,11 +745,20 @@ serve(async (req) => {
       for (const thread of unresolvedThreads || []) {
         const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
         const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
+        const threadId = thread.thread_id || '';
         
         // CRITICAL: Skip RSZ and ACCESSIBILITY threads during Bluesky matching
         // These threads have their own lifecycle managed by TTC API (STEP 6b/6c)
         // SERVICE_RESUMED posts should NOT resolve these threads
+        // LAYER 1: Check categories array
         if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) {
+          continue;
+        }
+        
+        // LAYER 2: Belt-and-suspenders check on thread_id patterns
+        // Prevents issues if categories array is malformed
+        if (threadId.includes('rsz') || threadId.includes('elev') || threadId.includes('accessibility')) {
+          console.log(`Skipping protected thread ${threadId} during Bluesky matching (thread_id pattern match)`);
           continue;
         }
         

@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.12  
+**Version:** 3.13  
 **Date:** January 9, 2026  
-**poll-alerts Version:** 107  
+**poll-alerts Version:** 108  
 **scrape-maintenance Version:** 3  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
@@ -678,13 +678,33 @@ The alert system is **self-healing** - even if processing errors occur, automati
 
 ### Backend Auto-Repair Steps
 
-| Step              | Protection                      | Runs           | Description                                            |
-| ----------------- | ------------------------------- | -------------- | ------------------------------------------------------ |
-| STEP 4            | Skip RSZ/ACCESSIBILITY          | Every poll     | Skip these threads during Bluesky matching             |
-| STEP 4            | Never resolve protected threads | Every poll     | Block SERVICE_RESUMED from resolving RSZ/ACCESSIBILITY |
-| STEP 6c-repair    | Un-resolve RSZ                  | Every poll     | Restore incorrectly resolved RSZ threads               |
-| STEP 6c-fix-title | Fix RSZ titles                  | Every poll     | Replace "resumed" text with actual RSZ alert           |
-| **STEP 6d**       | **Repair orphaned elevators**   | **Every poll** | **Create threads for alerts without thread_id**        |
+| Step              | Protection                        | Runs           | Description                                            |
+| ----------------- | --------------------------------- | -------------- | ------------------------------------------------------ |
+| STEP 4            | LAYER 1: Category check           | Every poll     | Skip RSZ/ACCESSIBILITY categories during matching      |
+| STEP 4            | **LAYER 2: Thread ID pattern**    | Every poll     | Skip threads with `rsz`, `elev`, `accessibility` in ID |
+| STEP 4            | Never resolve protected threads   | Every poll     | Block SERVICE_RESUMED from resolving RSZ/ACCESSIBILITY |
+| STEP 6c-repair    | Un-resolve RSZ                    | Every poll     | Restore incorrectly resolved RSZ threads               |
+| STEP 6c-fix-title | Fix RSZ titles                    | Every poll     | Replace "resumed" text with actual RSZ alert           |
+| **STEP 6d**       | **Repair orphaned elevators**     | **Every poll** | **Create threads for alerts without thread_id**        |
+
+### Thread ID Pattern Protection (v108+)
+
+As a belt-and-suspenders defense, the code now also checks `thread_id` patterns:
+
+```typescript
+// LAYER 1: Category-based skip
+if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) {
+  continue;
+}
+
+// LAYER 2: Thread ID pattern skip (prevents issues if categories malformed)
+if (threadId.includes('rsz') || threadId.includes('elev') || threadId.includes('accessibility')) {
+  console.log(`Skipping protected thread ${threadId} during Bluesky matching`);
+  continue;
+}
+```
+
+This ensures that even if the categories array is somehow corrupted, the thread ID patterns will still protect RSZ and elevator threads from incorrect matching.
 
 ### Frontend Defense-in-Depth
 
