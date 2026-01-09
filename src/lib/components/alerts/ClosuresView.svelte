@@ -284,8 +284,8 @@
       <span
         class="inline-flex items-center justify-center rounded-full text-xs font-semibold min-w-[1.25rem] h-5 px-1.5 {activeFilter ===
         'all'
-          ? 'bg-primary-foreground/20'
-          : 'bg-muted'}">{allCount}</span
+          ? 'bg-primary-foreground/30 text-primary-foreground'
+          : 'bg-muted-foreground/15 text-foreground'}">{allCount}</span
       >
     </button>
     <button
@@ -302,8 +302,8 @@
       <span
         class="inline-flex items-center justify-center rounded-full text-xs font-semibold min-w-[1.25rem] h-5 px-1.5 {activeFilter ===
         'weekend'
-          ? 'bg-primary-foreground/20'
-          : 'bg-muted'}">{weekendCount}</span
+          ? 'bg-primary-foreground/30 text-primary-foreground'
+          : 'bg-muted-foreground/15 text-foreground'}">{weekendCount}</span
       >
     </button>
   </div>
