@@ -377,6 +377,37 @@
   );
 
   const cardId = $derived(`alert-${thread.thread_id}`);
+
+  /**
+   * Clean up accessibility alert description text by removing technical metadata.
+   * Removes "Type: Elevator\nElevator Code: XXX" pattern from description.
+   */
+  function cleanAccessibilityDescription(text: string | undefined | null): string {
+    if (!text) return "";
+    // Remove the technical metadata lines at the end
+    // Pattern: "\n\nType: Elevator\nElevator Code: XXXXX" or similar
+    return text.replace(/\n\nType:\s*\w+\nElevator Code:\s*\w+/gi, "").trim();
+  }
+
+  /**
+   * Get the display text for an alert, cleaning up accessibility alerts.
+   */
+  function getDisplayText(alert: Alert | undefined | null): string {
+    if (!alert) return "";
+    
+    // For accessibility alerts, clean up the description text
+    if (isAccessibility) {
+      const cleaned = cleanAccessibilityDescription(alert.description_text);
+      // If description is same as header after cleaning, just use header
+      if (cleaned && cleaned !== alert.header_text) {
+        return cleaned;
+      }
+      return alert.header_text || "";
+    }
+    
+    // For regular alerts, prefer description, fall back to header
+    return alert.description_text || alert.header_text || "";
+  }
 </script>
 
 <article
@@ -459,9 +490,9 @@
             </a>
           {/if}
         {:else}
-          <!-- Regular alerts: description OR header -->
+          <!-- Regular alerts: description OR header (cleaned for accessibility alerts) -->
           <p class="text-sm leading-relaxed" id="{cardId}-title">
-            {displayAlert?.description_text || displayAlert?.header_text || ""}
+            {getDisplayText(displayAlert)}
           </p>
         {/if}
       </div>
