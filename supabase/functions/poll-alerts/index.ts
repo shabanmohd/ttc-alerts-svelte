@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '113'; // RSZ FIX: Exclude RSZ from STEP 7 deduplication - each zone is unique
+const VERSION = '114'; // RSZ FIX: STEP 6c now tracks individual zones, not just lines - hides zones removed from TTC API
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -1049,18 +1049,36 @@ serve(async (req) => {
     // STEP 6c: Manage RSZ thread lifecycle based on TTC API
     let resolvedRszThreads = 0;
     let repairedRszThreads = 0;
-    const ttcLinesWithRsz = new Set(
-      ttcData.rszAlerts.map(rsz => {
-        // RSZ alerts have route like "1" - normalize to "Line 1"
-        const route = rsz.route || rsz.affectedRoute || '';
-        return /^\d$/.test(route) ? `Line ${route}` : route;
-      }).filter(Boolean)
-    );
+    
+    // Build a set of active RSZ thread_ids from TTC API alerts
+    // This allows us to track individual zones, not just lines
+    const activeRszThreadIds = new Set<string>();
+    const ttcLinesWithRsz = new Set<string>();
+    
+    for (const rsz of ttcData.rszAlerts) {
+      const route = rsz.route || rsz.affectedRoute || '';
+      const stopStart = rsz.stopStart || '';
+      const stopEnd = rsz.stopEnd || '';
+      const headerText = rsz.headerText || '';
+      
+      // Normalize line name
+      const lineName = /^\d$/.test(route) ? `Line ${route}` : route;
+      if (lineName) ttcLinesWithRsz.add(lineName);
+      
+      // Generate the alert_id and thread_id using the same logic as processRszAlerts
+      const alertId = generateTtcAlertId('rsz', route, headerText, stopStart, stopEnd);
+      const { threadId } = generateRszThreadId(alertId);
+      activeRszThreadIds.add(threadId);
+      
+      console.log(`STEP 6c: Active RSZ thread_id: ${threadId} (${lineName} ${stopStart} -> ${stopEnd})`);
+    }
+    
+    console.log(`STEP 6c: Found ${activeRszThreadIds.size} active RSZ zones from TTC API`);
     
     // STEP 6c-repair: Un-resolve RSZ threads that were incorrectly resolved
-    // If TTC API has RSZ alerts for a line, ensure the thread is active
+    // If the specific RSZ zone is in TTC API, ensure the thread is active
     // Also fixes title and is_latest flag to point to actual RSZ alert (not SERVICE_RESUMED)
-    if (ttcLinesWithRsz.size > 0) {
+    if (activeRszThreadIds.size > 0) {
       const { data: resolvedRszData } = await supabase
         .from('incident_threads')
         .select('thread_id, title, affected_routes')
@@ -1068,12 +1086,9 @@ serve(async (req) => {
         .eq('is_resolved', true);
       
       for (const thread of resolvedRszData || []) {
-        const lineName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
-        if (!lineName) continue;
-        
-        // If TTC API has RSZ alerts for this line, un-resolve the thread
-        if (ttcLinesWithRsz.has(lineName)) {
-          console.log(`STEP 6c-repair: Un-resolving RSZ thread: "${thread.title}" - ${lineName} has active RSZ alerts in TTC API`);
+        // Check if this specific thread_id is in the active set
+        if (activeRszThreadIds.has(thread.thread_id)) {
+          console.log(`STEP 6c-repair: Un-resolving RSZ thread: "${thread.title}" - thread_id "${thread.thread_id}" is active in TTC API`);
           
           // First, reset all is_latest flags for this thread's alerts
           await supabase
@@ -1119,7 +1134,7 @@ serve(async (req) => {
       }
     }
     
-    // STEP 6c-resolve: Resolve RSZ threads that no longer have alerts in TTC API
+    // STEP 6c-resolve: Resolve RSZ threads that no longer have their specific zone in TTC API
     // Get all active RSZ threads - use filter() with 'cs' operator for JSONB containment
     const { data: rszThreads } = await supabase
       .from('incident_threads')
@@ -1129,12 +1144,14 @@ serve(async (req) => {
       .eq('is_hidden', false);
     
     for (const thread of rszThreads || []) {
-      const lineName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
-      if (!lineName) continue;
+      // Skip legacy threads - they don't follow the zone-based pattern
+      if (thread.thread_id?.includes('legacy')) {
+        continue;
+      }
       
-      // Check if this line still has RSZ alerts in TTC API
-      if (!ttcLinesWithRsz.has(lineName)) {
-        console.log(`STEP 6c-resolve: Resolving RSZ thread: "${thread.title}" - no RSZ alerts for ${lineName} in TTC API`);
+      // Check if this specific thread_id is in the active set from TTC API
+      if (!activeRszThreadIds.has(thread.thread_id)) {
+        console.log(`STEP 6c-resolve: Hiding RSZ thread: "${thread.title}" - thread_id "${thread.thread_id}" no longer in TTC API`);
         
         await supabase
           .from('incident_threads')
