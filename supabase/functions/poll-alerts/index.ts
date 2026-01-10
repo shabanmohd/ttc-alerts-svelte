@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '112'; // RSZ FIX: Consistent thread ID generation with generateRszThreadId() and STEP 6e auto-repair
+const VERSION = '113'; // RSZ FIX: Exclude RSZ from STEP 7 deduplication - each zone is unique
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -1330,8 +1330,9 @@ serve(async (req) => {
       console.log(`STEP 6e: Linked orphaned RSZ alert ${orphan.alert_id} to ${threadId}`);
     }
 
-    // STEP 7: Merge duplicate RSZ/ACCESSIBILITY threads by keeping only the newest one per station/line
-    // Note: We no longer automatically unhide hidden threads - STEP 6b/6c handle auto-resolving properly
+    // STEP 7: Merge duplicate ACCESSIBILITY threads by keeping only the newest one per station
+    // NOTE: RSZ threads are EXCLUDED - each RSZ zone is unique even on the same line
+    // RSZ threads have thread_id like "thread-rsz-line1-eglinton-davisville" which encodes location
     const { data: rszAccessibilityThreads } = await supabase
       .from('incident_threads')
       .select('thread_id, title, categories, affected_routes, is_hidden, created_at')
@@ -1347,8 +1348,14 @@ serve(async (req) => {
     for (const thread of rszAccessibilityThreads || []) {
       const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
       
-      // Only process RSZ and ACCESSIBILITY threads
-      if (!threadCategories.includes('RSZ') && !threadCategories.includes('ACCESSIBILITY')) {
+      // SKIP RSZ threads - each zone is unique, never merge them
+      // RSZ threads encode their location in thread_id (thread-rsz-line1-eglinton-davisville)
+      if (threadCategories.includes('RSZ')) {
+        continue;
+      }
+      
+      // Only process ACCESSIBILITY threads for deduplication
+      if (!threadCategories.includes('ACCESSIBILITY')) {
         continue;
       }
       
