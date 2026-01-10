@@ -243,33 +243,68 @@ export async function fetchAlerts(): Promise<void> {
   error.set(null);
   
   try {
-    // Fetch alerts - select only needed columns to reduce egress
-    const { data: alertsData, error: alertsError } = await supabase
+    // STEP 1: Fetch recent alerts (last 24 hours) - this gets most active alerts
+    const { data: recentAlerts, error: recentError } = await supabase
       .from('alert_cache')
       .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
       .limit(200);
     
-    if (alertsError) throw alertsError;
+    if (recentError) throw recentError;
     
-    // Get unique thread IDs from alerts
-    const threadIds = [...new Set((alertsData || []).map(a => a.thread_id).filter(Boolean))];
+    // STEP 2: Fetch active, non-hidden threads (including long-running ones like elevators)
+    // These may have alerts older than 24 hours but are still active
+    const { data: activeThreads, error: threadsError } = await supabase
+      .from('incident_threads')
+      .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at')
+      .eq('is_hidden', false)
+      .eq('is_resolved', false);
     
-    // Fetch threads - select only needed columns to reduce egress (include is_hidden, resolved_at)
-    let threadsData: Thread[] = [];
-    if (threadIds.length > 0) {
-      const { data, error: threadsError } = await supabase
+    if (threadsError) throw threadsError;
+    
+    // STEP 3: Get thread IDs from recent alerts that aren't in activeThreads
+    const recentThreadIds = [...new Set((recentAlerts || []).map(a => a.thread_id).filter(Boolean))];
+    const activeThreadIds = new Set((activeThreads || []).map(t => t.thread_id));
+    const additionalThreadIds = recentThreadIds.filter(id => !activeThreadIds.has(id));
+    
+    // Fetch additional threads (resolved threads that had recent alerts)
+    let additionalThreads: Thread[] = [];
+    if (additionalThreadIds.length > 0) {
+      const { data, error: addlError } = await supabase
         .from('incident_threads')
         .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at')
-        .in('thread_id', threadIds);
+        .in('thread_id', additionalThreadIds);
       
-      if (threadsError) throw threadsError;
-      threadsData = data || [];
+      if (addlError) throw addlError;
+      additionalThreads = data || [];
     }
     
-    threads.set(threadsData);
-    alerts.set(alertsData || []);
+    // STEP 4: Fetch alerts for active threads (may be older than 24h)
+    const allActiveThreadIds = [...activeThreadIds];
+    let activeThreadAlerts: Alert[] = [];
+    if (allActiveThreadIds.length > 0) {
+      const { data, error: alertsErr } = await supabase
+        .from('alert_cache')
+        .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
+        .in('thread_id', allActiveThreadIds)
+        .eq('is_latest', true);
+      
+      if (alertsErr) throw alertsErr;
+      activeThreadAlerts = data || [];
+    }
+    
+    // Combine all threads and alerts, deduplicating
+    const allThreads = [...(activeThreads || []), ...additionalThreads];
+    const allAlerts = [...(recentAlerts || []), ...activeThreadAlerts];
+    
+    // Deduplicate alerts by alert_id
+    const uniqueAlerts = Array.from(
+      new Map(allAlerts.map(a => [a.alert_id, a])).values()
+    );
+    
+    threads.set(allThreads);
+    alerts.set(uniqueAlerts);
     lastUpdated.set(new Date());
     
   } catch (e) {

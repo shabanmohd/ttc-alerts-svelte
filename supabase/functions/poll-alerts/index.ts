@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '108'; // Added LAYER 2 belt-and-suspenders RSZ/ACCESSIBILITY protection
+const VERSION = '111'; // COMPREHENSIVE FIX: Consistent Non-TTC elevator thread ID generation across all steps
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -130,6 +130,53 @@ function jaccardSimilarity(text1: string, text2: string): number {
   const union = new Set([...words1, ...words2]);
   
   return intersection.size / union.size;
+}
+
+// ============================================================================
+// ELEVATOR THREAD ID GENERATION - SINGLE SOURCE OF TRUTH
+// ============================================================================
+// This function MUST be used everywhere elevator thread IDs are generated
+// to ensure consistency between creation, resolution, and orphan repair.
+
+interface ElevatorInfo {
+  elevatorCode: string | null | undefined;
+  headerText: string;
+  alertId?: string; // For fallback when detail can't be extracted
+}
+
+function generateElevatorThreadId(info: ElevatorInfo): { threadId: string; suffix: string } {
+  const { elevatorCode, headerText, alertId } = info;
+  
+  // Extract station name from header text (e.g., "TMU: Elevator out of service...")
+  const stationMatch = headerText.match(/^([^:]+):/);
+  const station = stationMatch ? stationMatch[1].trim() : 'Unknown';
+  const cleanStation = station.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  
+  // Standard TTC elevator with unique code (e.g., 57P2L, 16Y2L)
+  if (elevatorCode && elevatorCode !== 'Non-TTC') {
+    return {
+      threadId: `thread-elev-${elevatorCode}`,
+      suffix: elevatorCode
+    };
+  }
+  
+  // Non-TTC or unknown elevator - use "nonttc-{station}-{detail}" pattern
+  // Extract detail from description (text between "between" and " and")
+  // FIXED: Use lookahead for " and " instead of character class [^and] which 
+  // incorrectly matches any char except 'a', 'n', or 'd'
+  const detailMatch = headerText.match(/between\s+(.+?)\s+and\s+/i);
+  const detail = detailMatch 
+    ? detailMatch[1].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 20) 
+    : '';
+  
+  // Build suffix: nonttc-{station}-{detail}
+  // Using "nonttc" prefix ensures clear separation from standard elevator codes
+  const suffix = `nonttc-${cleanStation}-${detail || (alertId ? alertId.slice(-8) : 'unknown')}`;
+  
+  return {
+    threadId: `thread-elev-${suffix}`,
+    suffix: suffix
+  };
 }
 
 // Type for TTC API alert
@@ -408,11 +455,13 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
 
     newAlerts++;
 
-    // For elevator alerts, create a deterministic thread ID based on elevatorCode
-    // This ensures each elevator gets its own thread, but the same elevator doesn't create duplicates
-    const threadId = elevatorCode 
-      ? `thread-elev-${elevatorCode}` 
-      : `thread-elev-${station.replace(/\s+/g, '-').toLowerCase()}-${alertId.slice(-8)}`;
+    // Use centralized thread ID generator for consistency
+    // This ensures STEP 6b resolution logic matches this creation logic
+    const { threadId } = generateElevatorThreadId({
+      elevatorCode,
+      headerText: cleanedHeaderText,
+      alertId
+    });
     
     // Check if thread already exists (for this specific elevator)
     const { data: existingThread } = await supabase
@@ -862,16 +911,21 @@ serve(async (req) => {
     updatedThreads += elevatorResult.updatedThreads;
 
     // STEP 6b: Resolve ACCESSIBILITY threads that are no longer in TTC API
-    // Each elevator has a unique elevatorCode, and thread_id = thread-elev-{elevatorCode}
-    // Resolve threads where that specific elevator is no longer in TTC API
+    // Uses the same generateElevatorThreadId() function as processElevatorAlerts
+    // to ensure consistent thread ID matching between creation and resolution.
     let resolvedElevators = 0;
     
-    // Build a set of active elevator codes from TTC API
-    const ttcActiveElevatorCodes = new Set(
-      ttcData.elevatorAlerts
-        .map(e => e.elevatorCode)
-        .filter(Boolean)
-    );
+    // Build a set of active thread ID suffixes from TTC API using the SAME logic
+    // as processElevatorAlerts. This is critical for matching!
+    const activeElevatorSuffixes = new Set<string>();
+    for (const e of ttcData.elevatorAlerts) {
+      const { suffix } = generateElevatorThreadId({
+        elevatorCode: e.elevatorCode,
+        headerText: e.headerText || ''
+      });
+      activeElevatorSuffixes.add(suffix);
+      console.log(`STEP 6b: Active elevator suffix: ${suffix} (code: ${e.elevatorCode || 'Non-TTC'})`);
+    }
     
     // Get all active ACCESSIBILITY threads - use filter() with 'cs' operator for JSONB containment
     const { data: accessibilityThreads, error: accError } = await supabase
@@ -886,13 +940,12 @@ serve(async (req) => {
     }
     
     for (const thread of accessibilityThreads || []) {
-      // Extract elevator code from thread_id (format: thread-elev-{elevatorCode})
-      const elevatorCodeMatch = thread.thread_id?.match(/^thread-elev-(.+)$/);
-      const elevatorCode = elevatorCodeMatch ? elevatorCodeMatch[1] : null;
+      // Extract suffix from thread_id (format: thread-elev-{suffix})
+      const suffixMatch = thread.thread_id?.match(/^thread-elev-(.+)$/);
+      const threadSuffix = suffixMatch ? suffixMatch[1] : null;
       
       // Skip threads that don't follow the elevator thread ID pattern (legacy threads)
-      // For legacy threads, use station name matching as fallback
-      if (!elevatorCode) {
+      if (!threadSuffix) {
         const stationName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
         // Check if ANY elevator at this station is still in TTC API
         const stationHasActiveElevator = ttcData.elevatorAlerts.some(e => {
@@ -920,10 +973,9 @@ serve(async (req) => {
         continue;
       }
       
-      // For new-style threads with elevatorCode in thread_id
-      // Check if this specific elevator is still in TTC API
-      if (!ttcActiveElevatorCodes.has(elevatorCode)) {
-        console.log(`STEP 6b: Resolving elevator thread: "${thread.title}" - elevator "${elevatorCode}" no longer in TTC API`);
+      // Check if this thread's suffix is still in the active set
+      if (!activeElevatorSuffixes.has(threadSuffix)) {
+        console.log(`STEP 6b: Resolving elevator thread: "${thread.title}" - suffix "${threadSuffix}" no longer in TTC API`);
         
         const { error: updateError } = await supabase
           .from('incident_threads')
@@ -1092,6 +1144,7 @@ serve(async (req) => {
     
     // STEP 6d: Repair orphaned elevator alerts (alerts with no thread_id)
     // This can happen if thread creation failed after alert insert
+    // Uses the same generateElevatorThreadId() function for consistency
     const { data: orphanedAlerts } = await supabase
       .from('alert_cache')
       .select('alert_id, header_text, effect')
@@ -1100,16 +1153,33 @@ serve(async (req) => {
     
     let repairedElevators = 0;
     for (const orphan of orphanedAlerts || []) {
-      // Extract elevator code from alert_id (e.g., "ttc-elev-15S2L-..." -> "15S2L")
-      const codeMatch = orphan.alert_id.match(/^ttc-elev-([^-]+)-/);
-      if (!codeMatch) continue;
+      // Extract elevator code from alert_id
+      // Handle both "ttc-elev-15S2L-..." -> "15S2L" AND "ttc-elev-Non-TTC-..." -> "Non-TTC"
+      let elevatorCode: string | null = null;
       
-      const elevatorCode = codeMatch[1];
-      const threadId = `thread-elev-${elevatorCode}`;
+      // First check for Non-TTC pattern
+      if (orphan.alert_id.startsWith('ttc-elev-Non-TTC-')) {
+        elevatorCode = 'Non-TTC';
+      } else {
+        // Standard pattern: ttc-elev-{code}-...
+        const codeMatch = orphan.alert_id.match(/^ttc-elev-([^-]+)-/);
+        if (codeMatch) {
+          elevatorCode = codeMatch[1];
+        }
+      }
+      
+      if (!elevatorCode) continue;
       
       // Extract station name from header text
       const stationMatch = orphan.header_text?.match(/^([^:]+):/);
       const station = stationMatch ? stationMatch[1].trim() : 'Unknown Station';
+      
+      // Use centralized thread ID generator for consistency with processElevatorAlerts and STEP 6b
+      const { threadId } = generateElevatorThreadId({
+        elevatorCode,
+        headerText: orphan.header_text || '',
+        alertId: orphan.alert_id
+      });
       
       // Check if thread exists
       const { data: existingThread } = await supabase

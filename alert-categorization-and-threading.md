@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.16  
-**Date:** January 9, 2026  
-**poll-alerts Version:** 110  
+**Version:** 3.17  
+**Date:** January 10, 2026  
+**poll-alerts Version:** 111  
 **scrape-maintenance Version:** 3  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
@@ -694,13 +694,29 @@ CREATE TABLE planned_maintenance (
    - Create/update RSZ threads and alerts
 7. **STEP 6:** Process elevator alerts from TTC API
    - Extract station name from header
-   - **Each elevator gets its own thread** (thread_id = `thread-elev-{elevatorCode}`)
+   - **Each elevator gets its own thread** via centralized `generateElevatorThreadId()` function (v111+)
    - **De-duplicates by elevatorCode** - TTC API sometimes returns duplicate alerts for same elevator
    - Multiple elevators at same station appear as separate alerts
    - No threading between different elevators at same station
    - **Text cleanup (v110+):** Strips "-TTC" suffix and technical metadata from descriptions
+   
+   **Thread ID Patterns (v111+):**
+   - **Standard TTC elevators:** `thread-elev-{elevatorCode}` (e.g., `thread-elev-57P2L`)
+   - **Non-TTC elevators:** `thread-elev-nonttc-{station}-{detail}` (e.g., `thread-elev-nonttc-tmu-10dundassteentrance`)
+   
+   **Non-TTC Elevator Handling:**
+   Non-TTC elevators (at TMU, Bloor-Yonge PATH, etc.) share `elevatorCode: "Non-TTC"` in the API.
+   To prevent threading conflicts, detail is extracted from headerText:
+   ```typescript
+   // Extract detail from "between X and Y" pattern
+   const detailMatch = headerText.match(/between\s+(.+?)\s+and\s+/i);
+   const detail = detailMatch ? detailMatch[1].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 20) : '';
+   ```
+   
 8. **STEP 6b:** Auto-resolve elevator threads
-   - New threads: resolve by specific `elevatorCode` from thread_id
+   - Uses same `generateElevatorThreadId()` function to match active suffixes
+   - Builds `activeElevatorSuffixes` set from current TTC API alerts
+   - Resolves threads whose suffix is no longer in the active set
 
 ### `find_or_create_thread` Database Function
 
@@ -733,13 +749,78 @@ WHERE t.is_resolved = false
    - Uses `.filter('categories', 'cs', '["RSZ"]')` for JSONB containment
 10. **STEP 6d:** Auto-repair orphaned elevator alerts (v107+)
     - Scans for alerts with `thread_id IS NULL` and `effect = ACCESSIBILITY_ISSUE`
-    - Extracts elevator code from alert_id (e.g., `ttc-elev-15S2L-...` → `15S2L`)
-    - Creates missing thread if needed (`thread-elev-{elevatorCode}`)
+    - Uses centralized `generateElevatorThreadId()` function for consistent thread ID generation
+    - Extracts elevator code from alert_id (e.g., `ttc-elev-15S2L-...` → `15S2L`) or generates from headerText
+    - Creates missing thread if needed (respects Non-TTC patterns)
     - Links alert to thread with `is_latest = true`
 11. **STEP 7:** Merge duplicate threads only
     - Groups visible threads by affected_routes + categories
     - Keeps newest, hides older duplicates
     - **No longer unhides hidden threads** (fixed in v110)
+
+---
+
+## Elevator Thread ID Generation (v111+)
+
+### Centralized Function: `generateElevatorThreadId()`
+
+**Added in v111** to ensure consistent thread ID generation across all elevator-related steps.
+
+```typescript
+interface ElevatorInfo {
+  elevatorCode: string | null | undefined;
+  headerText: string;
+  alertId?: string;
+}
+
+function generateElevatorThreadId(info: ElevatorInfo): { threadId: string; suffix: string } {
+  const { elevatorCode, headerText, alertId } = info;
+  const stationMatch = headerText.match(/^([^:]+):/);
+  const station = stationMatch ? stationMatch[1].trim() : 'Unknown';
+  const cleanStation = station.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  
+  // Standard TTC elevators - use elevator code directly
+  if (elevatorCode && elevatorCode !== 'Non-TTC') {
+    return { threadId: `thread-elev-${elevatorCode}`, suffix: elevatorCode };
+  }
+  
+  // Non-TTC elevators - use station + detail from "between X and Y" pattern
+  const detailMatch = headerText.match(/between\s+(.+?)\s+and\s+/i);
+  const detail = detailMatch 
+    ? detailMatch[1].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 20) 
+    : '';
+  const suffix = `nonttc-${cleanStation}-${detail || (alertId ? alertId.slice(-8) : 'unknown')}`;
+  return { threadId: `thread-elev-${suffix}`, suffix: suffix };
+}
+```
+
+### Thread ID Patterns
+
+| Elevator Type | Example headerText | Thread ID |
+| ------------- | ------------------ | --------- |
+| Standard TTC | "Bessarion: Elevator out of service..." | `thread-elev-57P2L` |
+| Non-TTC | "TMU: Elevator out of service between 10 Dundas St E entrance and..." | `thread-elev-nonttc-tmu-10dundassteentrance` |
+| Non-TTC | "Bloor-Yonge: Elevator out of service between Bloor St E south side entrance and..." | `thread-elev-nonttc-blooryonge-bloorstesouthsideent` |
+
+### Why This Fix Was Needed
+
+**Problem:** Non-TTC elevators (TMU, Bloor-Yonge PATH, etc.) share `elevatorCode: "Non-TTC"` in the TTC API. Previously, this caused:
+1. **Threading conflicts** - Multiple Non-TTC elevators shared `thread-elev-Non` thread ID
+2. **Incorrect resolution** - When one Non-TTC elevator was fixed, all were marked resolved
+3. **Pattern mismatch** - STEP 6 created threads with different patterns than STEP 6b expected
+
+**Previous Bug:** The regex `/between\s+([^and]+)/i` used `[^and]` which is a **character class** (any char except 'a', 'n', 'd'), not a word boundary. For "between 10 Dundas...", it captured only "10 " because 'D' contains 'd'.
+
+**Fix (v111):** Non-greedy capture `/between\s+(.+?)\s+and\s+/i` extracts full detail text up to " and ".
+
+### Consistency Guarantee
+
+The centralized function is now used in **three locations**:
+1. **STEP 6 (processElevatorAlerts)** - When creating new elevator alerts/threads
+2. **STEP 6b** - When building `activeElevatorSuffixes` set for resolution checking
+3. **STEP 6d** - When repairing orphaned elevator alerts
+
+This ensures thread IDs are always generated consistently, preventing mismatches between creation and resolution.
 
 ---
 
@@ -1100,7 +1181,7 @@ const { data } = await supabase
 | v3.16   | 2026-01-09 | poll-alerts v110: Strip "-TTC" suffix from elevator descriptions; Clean technical metadata from elevator alerts                                  |
 | v3.15   | 2026-01-09 | Database function `find_or_create_thread` protection: exclude RSZ/ACCESSIBILITY threads from route-based matching                                |
 | v3.14   | 2026-01-09 | Frontend: `getAllAlertsForLine()` now excludes MINOR (RSZ) and ACCESSIBILITY alerts from subway status calculation                               |
-| v3.13   | 2026-01-09 | LAYER 2: Thread ID pattern protection (belt-and-suspenders) - skip threads containing 'rsz', 'elev', 'accessibility' in ID                      |
+| v3.13   | 2026-01-09 | LAYER 2: Thread ID pattern protection (belt-and-suspenders) - skip threads containing 'rsz', 'elev', 'accessibility' in ID                       |
 | v3.12   | 2026-01-09 | scrape-maintenance v3: Handle single-day closures (sa-effective-date fallback), TTC API duplicate documentation                                  |
 | v3.11   | 2026-01-09 | Added STEP 6d: repair orphaned elevator alerts (alerts with thread_id = null); Frontend: prefer is_latest flag for latestAlert selection         |
 | v3.10   | 2026-01-08 | Enhanced RSZ protection: auto-fix title/is_latest when SERVICE_RESUMED text detected in RSZ threads                                              |
