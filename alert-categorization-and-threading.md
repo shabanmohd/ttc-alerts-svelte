@@ -753,7 +753,14 @@ WHERE t.is_resolved = false
     - Extracts elevator code from alert_id (e.g., `ttc-elev-15S2L-...` → `15S2L`) or generates from headerText
     - Creates missing thread if needed (respects Non-TTC patterns)
     - Links alert to thread with `is_latest = true`
-11. **STEP 7:** Merge duplicate threads only
+11. **STEP 6e:** Auto-repair orphaned RSZ alerts (v112+)
+    - Scans for alerts with `thread_id IS NULL` and `effect = RSZ`
+    - Uses centralized `generateRszThreadId()` function for consistent thread ID generation
+    - Pattern: `ttc-rsz-{line}-{start}-{end}` → `thread-rsz-line{line}-{start}-{end}`
+    - Creates missing thread if needed, unhides if hidden
+    - Links alert to thread with `is_latest = true`
+    - Skips legacy format alerts (prevent creating more legacy threads)
+12. **STEP 7:** Merge duplicate threads only
     - Groups visible threads by affected_routes + categories
     - Keeps newest, hides older duplicates
     - **No longer unhides hidden threads** (fixed in v110)
@@ -824,6 +831,58 @@ This ensures thread IDs are always generated consistently, preventing mismatches
 
 ---
 
+## RSZ Thread ID Generation (v112+)
+
+### Centralized Function: `generateRszThreadId()`
+
+**Added in v112** to ensure consistent thread ID generation across RSZ-related steps.
+
+```typescript
+function generateRszThreadId(alertId: string): { threadId: string; lineNumber: string; location: string } {
+  // Pattern: ttc-rsz-{line}-{start}-{end}
+  // Example: ttc-rsz-1-eglinton-davisville -> thread-rsz-line1-eglinton-davisville
+  
+  const parts = alertId.replace(/^ttc-rsz-/i, '').split('-');
+  const lineNumber = parts[0]; // "1" or "2"
+  const location = parts.slice(1).join('-'); // "eglinton-davisville"
+  
+  // Check for legacy format (e.g., "line1yongeuniversitysubwaytrainswillmoves")
+  if (location.toLowerCase().startsWith('line')) {
+    return { threadId: `thread-rsz-legacy-${lineNumber}`, lineNumber, location: 'legacy' };
+  }
+  
+  return { threadId: `thread-rsz-line${lineNumber}-${location}`, lineNumber, location };
+}
+```
+
+### Thread ID Patterns
+
+| Alert ID | Thread ID |
+| -------- | --------- |
+| `ttc-rsz-1-eglinton-davisville` | `thread-rsz-line1-eglinton-davisville` |
+| `ttc-rsz-2-chester-broadview` | `thread-rsz-line2-chester-broadview` |
+| `ttc-rsz-1-line1yongeuniversity...` | `thread-rsz-legacy-1` (legacy format) |
+
+### Why This Fix Was Needed
+
+**Problem:** RSZ alerts were created with `thread_id = null` (orphaned) because:
+1. The old `find_or_create_thread` RPC generated generic hash-based thread IDs
+2. Thread creation sometimes failed silently after alert insert
+3. Frontend check for `ttc-RSZ-` was case-sensitive (alerts use lowercase `ttc-rsz-`)
+
+**Fixes (v112):**
+1. `generateRszThreadId()` creates location-based thread IDs from alert_id pattern
+2. STEP 6e auto-repairs orphaned RSZ alerts on every poll
+3. Frontend `isRSZAlert()` now uses case-insensitive `.toLowerCase().startsWith('ttc-rsz-')`
+
+### Consistency Guarantee
+
+The centralized function is now used in **two locations**:
+1. **STEP 5 (processRszAlerts)** - When creating new RSZ alerts/threads
+2. **STEP 6e** - When repairing orphaned RSZ alerts
+
+---
+
 ## Self-Healing System (v107+)
 
 The alert system is **self-healing** - even if processing errors occur, automatic repair mechanisms fix issues on the next poll cycle (within 1 minute).
@@ -838,6 +897,7 @@ The alert system is **self-healing** - even if processing errors occur, automati
 | STEP 6c-repair    | Un-resolve RSZ                  | Every poll     | Restore incorrectly resolved RSZ threads               |
 | STEP 6c-fix-title | Fix RSZ titles                  | Every poll     | Replace "resumed" text with actual RSZ alert           |
 | **STEP 6d**       | **Repair orphaned elevators**   | **Every poll** | **Create threads for alerts without thread_id**        |
+| **STEP 6e**       | **Repair orphaned RSZ**         | **Every poll** | **Create threads for RSZ alerts without thread_id**    |
 
 ### Thread ID Pattern Protection (v108+)
 

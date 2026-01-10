@@ -760,9 +760,9 @@
     const alert = thread.latestAlert;
     if (!alert) return false;
 
-    // Primary: RSZ alerts have alert_id starting with "ttc-RSZ-"
+    // Primary: RSZ alerts have alert_id starting with "ttc-rsz-" (case-insensitive)
     // This is the most reliable way to detect RSZ from TTC API
-    if (alert.alert_id?.startsWith("ttc-RSZ-")) {
+    if (alert.alert_id?.toLowerCase().startsWith("ttc-rsz-")) {
       return true;
     }
 

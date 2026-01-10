@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '111'; // COMPREHENSIVE FIX: Consistent Non-TTC elevator thread ID generation across all steps
+const VERSION = '112'; // RSZ FIX: Consistent thread ID generation with generateRszThreadId() and STEP 6e auto-repair
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -298,6 +298,33 @@ function generateTtcAlertId(type: string, route: string, text: string, stopStart
   return idBase.substring(0, 100);
 }
 
+// Generate thread ID for RSZ alerts based on alert_id pattern
+// This ensures consistent thread IDs across processRszAlerts() and STEP 6e repair
+function generateRszThreadId(alertId: string): { threadId: string; lineNumber: string; location: string } {
+  // Pattern: ttc-rsz-{line}-{start}-{end}
+  // Example: ttc-rsz-1-eglinton-davisville -> thread-rsz-line1-eglinton-davisville
+  
+  // Remove ttc-rsz- prefix
+  const parts = alertId.replace(/^ttc-rsz-/i, '').split('-');
+  const lineNumber = parts[0]; // "1" or "2"
+  const location = parts.slice(1).join('-'); // "eglinton-davisville"
+  
+  // Check for legacy format (e.g., "line1yongeuniversitysubwaytrainswillmoves")
+  if (location.toLowerCase().startsWith('line')) {
+    return { 
+      threadId: `thread-rsz-legacy-${lineNumber}`, 
+      lineNumber, 
+      location: 'legacy' 
+    };
+  }
+  
+  return { 
+    threadId: `thread-rsz-line${lineNumber}-${location}`, 
+    lineNumber, 
+    location 
+  };
+}
+
 // Process RSZ alerts from TTC API
 async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promise<{ newAlerts: number; updatedThreads: number }> {
   let newAlerts = 0;
@@ -371,27 +398,53 @@ async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promis
 
     newAlerts++;
 
-    // Create/find thread for RSZ alert
-    const { data: threadResult, error: threadError } = await supabase
-      .rpc('find_or_create_thread', {
-        p_title: headerText.substring(0, 200),
-        p_routes: routes,
-        p_categories: ['RSZ'],
-        p_is_resolved: false
-      });
+    // Create/find thread for RSZ alert using consistent generateRszThreadId
+    const { threadId, lineNumber } = generateRszThreadId(alertId);
+    
+    // Check if thread exists
+    const { data: existingThread } = await supabase
+      .from('incident_threads')
+      .select('thread_id, is_hidden')
+      .eq('thread_id', threadId)
+      .single();
+    
+    if (!existingThread) {
+      // Create the thread
+      const { error: threadError } = await supabase
+        .from('incident_threads')
+        .insert({
+          thread_id: threadId,
+          title: headerText.substring(0, 200),
+          affected_routes: routes,
+          categories: ['RSZ'],
+          is_resolved: false,
+          is_hidden: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
 
-    if (threadError) {
-      console.error('RSZ thread creation error:', threadError);
-    } else if (threadResult && threadResult.length > 0) {
-      const threadId = threadResult[0].out_thread_id;
+      if (threadError) {
+        console.error('RSZ thread creation error:', threadError);
+      } else {
+        console.log(`RSZ: Created new thread ${threadId}`);
+      }
+    } else if (existingThread.is_hidden) {
+      // Thread exists but is hidden - unhide it
       await supabase
-        .from('alert_cache')
-        .update({ thread_id: threadId })
-        .eq('alert_id', newAlert.alert_id);
-      
-      console.log(`RSZ alert ${alertId} linked to thread ${threadId}`);
-      updatedThreads++;
+        .from('incident_threads')
+        .update({ is_hidden: false, updated_at: new Date().toISOString() })
+        .eq('thread_id', threadId);
+      console.log(`RSZ: Unhid existing thread ${threadId}`);
     }
+
+    // Link alert to thread
+    await supabase
+      .from('alert_cache')
+      .update({ thread_id: threadId })
+      .eq('alert_id', newAlert.alert_id);
+    
+    console.log(`RSZ alert ${alertId} linked to thread ${threadId}`);
+    updatedThreads++;
   }
 
   console.log(`RSZ processing: ${newAlerts} new alerts, ${updatedThreads} threads updated`);
@@ -1215,6 +1268,68 @@ serve(async (req) => {
       console.log(`STEP 6d: Linked orphaned elevator alert ${orphan.alert_id} to ${threadId}`);
     }
 
+    // STEP 6e: Repair orphaned RSZ alerts (alerts with no thread_id)
+    // This can happen if thread creation failed after alert insert
+    // Uses the generateRszThreadId() function for consistent thread IDs
+    const { data: orphanedRszAlerts } = await supabase
+      .from('alert_cache')
+      .select('alert_id, header_text, affected_routes')
+      .is('thread_id', null)
+      .eq('effect', 'RSZ');
+    
+    let repairedRsz = 0;
+    for (const orphan of orphanedRszAlerts || []) {
+      // Generate thread ID from alert_id pattern
+      const { threadId, lineNumber, location } = generateRszThreadId(orphan.alert_id);
+      
+      if (!threadId || location === 'legacy') {
+        // Skip legacy format - shouldn't create more legacy threads
+        console.log(`STEP 6e: Skipping legacy RSZ alert ${orphan.alert_id}`);
+        continue;
+      }
+      
+      // Check if thread exists
+      const { data: existingThread } = await supabase
+        .from('incident_threads')
+        .select('thread_id, is_hidden')
+        .eq('thread_id', threadId)
+        .single();
+      
+      if (!existingThread) {
+        // Create the missing thread
+        const routes = Array.isArray(orphan.affected_routes) ? orphan.affected_routes : [`Line ${lineNumber}`];
+        console.log(`STEP 6e: Creating missing thread ${threadId} for orphaned RSZ alert ${orphan.alert_id}`);
+        await supabase
+          .from('incident_threads')
+          .insert({
+            thread_id: threadId,
+            title: orphan.header_text,
+            affected_routes: routes,
+            categories: ['RSZ'],
+            is_resolved: false,
+            is_hidden: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+      } else if (existingThread.is_hidden) {
+        // Thread exists but is hidden - unhide it
+        console.log(`STEP 6e: Unhiding hidden RSZ thread ${threadId}`);
+        await supabase
+          .from('incident_threads')
+          .update({ is_hidden: false, updated_at: new Date().toISOString() })
+          .eq('thread_id', threadId);
+      }
+      
+      // Link the alert to the thread
+      await supabase
+        .from('alert_cache')
+        .update({ thread_id: threadId, is_latest: true })
+        .eq('alert_id', orphan.alert_id);
+      
+      repairedRsz++;
+      console.log(`STEP 6e: Linked orphaned RSZ alert ${orphan.alert_id} to ${threadId}`);
+    }
+
     // STEP 7: Merge duplicate RSZ/ACCESSIBILITY threads by keeping only the newest one per station/line
     // Note: We no longer automatically unhide hidden threads - STEP 6b/6c handle auto-resolving properly
     const { data: rszAccessibilityThreads } = await supabase
@@ -1277,6 +1392,7 @@ serve(async (req) => {
         resolvedRszThreads,
         repairedRszThreads,
         repairedElevators,
+        repairedRsz, // STEP 6e: Orphaned RSZ alerts repaired
         unhiddenRszAccessibility,
         mergedDuplicates,
         newAlerts, 
