@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.17  
+**Version:** 3.18  
 **Date:** January 10, 2026  
-**poll-alerts Version:** 111  
+**poll-alerts Version:** 113  
 **scrape-maintenance Version:** 3  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
@@ -586,6 +586,71 @@ function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
 | Has alert with DISRUPTION/NO_SERVICE effect | `disruption` | "Disruption" ⛔     |
 | Has active scheduled maintenance only       | `scheduled`  | "Scheduled" 📅      |
 
+### Slow Zones Tab Filtering (v3.18+)
+
+**Implemented in:** `src/routes/alerts/+page.svelte`
+
+The Slow Zones tab (`?category=slowzones`) displays **ONLY RSZ alerts**, NOT regular DELAY alerts:
+
+```typescript
+// Slow Zones tab shows ONLY RSZ alerts via RSZAlertCard - no regular alerts
+let activeAlerts = $derived.by(() => {
+  if (selectedCategory === "delays") {
+    return [];  // RSZ alerts rendered separately via RSZAlertCard
+  }
+  // ... normal filtering for other categories
+});
+
+// RSZ alerts displayed via dedicated component
+let rszAlerts = $derived.by(() => {
+  if (selectedCategory !== "delays") return [];
+  return $threadsWithAlerts.filter(t => !t.is_resolved && !t.is_hidden && isRSZAlert(t));
+});
+```
+
+**Why this separation is critical:**
+
+1. **DELAY alerts have MINOR severity** - `getSeverityCategory(['DELAY'], 'DISRUPTION', ...)` returns `'MINOR'`
+2. **RSZ alerts also have MINOR severity** - They're classified as informational, not disruptive
+3. **Without separation:** Regular DELAY alerts (e.g., "medical emergency at Osgoode") would appear in Slow Zones tab
+4. **With separation:** Only true RSZ alerts ("slower than usual between X and Y") appear in Slow Zones tab
+
+**RSZ Detection (`isRSZAlert` helper):**
+
+```typescript
+function isRSZAlert(thread: ThreadWithAlerts): boolean {
+  const alert = thread.latestAlert;
+  if (!alert) return false;
+  
+  // Primary: TTC API RSZ alerts have alert_id starting with "ttc-rsz-"
+  if (alert.alert_id?.toLowerCase().startsWith('ttc-rsz-')) return true;
+  
+  // Secondary: Bluesky-sourced RSZ detected by text patterns
+  const headerText = (alert.header_text || '').toLowerCase();
+  return headerText.includes('slower than usual') ||
+         headerText.includes('reduced speed') ||
+         headerText.includes('move slower') ||
+         headerText.includes('running slower') ||
+         headerText.includes('slow zone');
+}
+```
+
+**Category Counts:**
+
+The pill badge count for "Slow Zones" shows only RSZ alerts, not all MINOR alerts:
+
+```typescript
+let categoryCounts = $derived.by(() => {
+  const active = $threadsWithAlerts.filter(t => !t.is_resolved && !t.is_hidden);
+  return {
+    // ... other counts
+    delays: active.filter(t => isRSZAlert(t)).reduce((total, thread) => {
+      return total + (thread.alerts?.length || 0);
+    }, 0),
+  };
+});
+```
+
 ---
 
 ## Database Schema
@@ -665,7 +730,7 @@ CREATE TABLE planned_maintenance (
 
 ## Edge Functions
 
-### `poll-alerts` (v108)
+### `poll-alerts` (v113)
 
 **Trigger:** Cron schedule (every 2 minutes)  
 **Purpose:** Fetch, categorize, and thread alerts; manage thread lifecycle
@@ -691,7 +756,10 @@ CREATE TABLE planned_maintenance (
    - Create new threads via `find_or_create_thread()` if no match found
 6. **STEP 5:** Process RSZ alerts from TTC API
    - Normalize route format ("1" → "Line 1")
+   - Uses `generateRszThreadId()` function (v112+) for consistent thread IDs
    - Create/update RSZ threads and alerts
+   - **Thread ID Pattern:** `thread-rsz-line{line}-{start}-{end}` (e.g., `thread-rsz-line1-eglinton-davisville`)
+   - **STEP 6e (v112+):** Auto-repair orphaned RSZ alerts with null `thread_id`
 7. **STEP 6:** Process elevator alerts from TTC API
    - Extract station name from header
    - **Each elevator gets its own thread** via centralized `generateElevatorThreadId()` function (v111+)
@@ -717,6 +785,12 @@ CREATE TABLE planned_maintenance (
    - Uses same `generateElevatorThreadId()` function to match active suffixes
    - Builds `activeElevatorSuffixes` set from current TTC API alerts
    - Resolves threads whose suffix is no longer in the active set
+
+9. **STEP 7:** Deduplicate similar threads (v113+)
+   - Finds threads with identical `affected_routes` and high text similarity (>70%)
+   - Hides duplicate threads (newer ones get hidden)
+   - **EXCLUDES RSZ threads** - RSZ alerts share same `affected_routes` (e.g., `["Line 1"]`) but are unique zones
+   - RSZ threads are identified by `thread_id LIKE 'thread-rsz%'`
 
 ### `find_or_create_thread` Database Function
 
