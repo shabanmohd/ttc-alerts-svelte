@@ -331,17 +331,17 @@
   }
 
   // Get active alerts (not resolved, not hidden)
-  // For delays tab, exclude RSZ alerts (they're shown separately via RSZAlertCard)
+  // For delays/slowzones tab: return empty - RSZ alerts shown via RSZAlertCard only
+  // Regular DELAY alerts should NOT appear in Slow Zones tab
   let activeAlerts = $derived.by(() => {
+    // Slow Zones tab shows ONLY RSZ alerts via RSZAlertCard - no regular alerts
+    if (selectedCategory === "delays") {
+      return [];
+    }
     const active = $threadsWithAlerts.filter(
       (t) => !t.is_resolved && !t.is_hidden
     );
-    const filtered = filterByCategory(active);
-    // When on delays tab, exclude RSZ alerts (they render separately)
-    if (selectedCategory === "delays") {
-      return filtered.filter((t) => !isRSZAlert(t));
-    }
-    return filtered;
+    return filterByCategory(active);
   });
 
   // Get RSZ alerts (for delays tab) - using same isRSZAlert helper
@@ -424,18 +424,9 @@
           ) === "MAJOR"
         );
       }).length,
-      // For RSZ (slow zones), count total alerts across all RSZ threads, not just thread count
+      // For Slow Zones tab: count ONLY RSZ alerts (not regular DELAY alerts)
       delays: active
-        .filter((t) => {
-          const categories = (t.categories as string[]) || [];
-          return (
-            getSeverityCategory(
-              categories,
-              t.latestAlert?.effect ?? undefined,
-              t.latestAlert?.header_text ?? undefined
-            ) === "MINOR"
-          );
-        })
+        .filter((t) => isRSZAlert(t))
         .reduce((total, thread) => {
           // Count alerts in each RSZ thread
           const alertCount = thread.alerts?.length || 0;
@@ -569,6 +560,8 @@
       <div aria-live="polite" aria-atomic="true" class="sr-only">
         {#if $isLoading}
           {$_("common.loading")}
+        {:else if selectedCategory === "delays"}
+          {rszAlerts.length} slow zone{rszAlerts.length === 1 ? "" : "s"} found
         {:else if activeAlerts.length > 0}
           {activeAlerts.length}
           {selectedCategory} alert{activeAlerts.length === 1 ? "" : "s"} found
