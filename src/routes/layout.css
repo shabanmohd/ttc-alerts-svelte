@@ -695,12 +695,12 @@ header.sticky {
 }
 
 /* Dark mode: brighter purple for better visibility */
-:global(.dark) .mobile-bottom-nav .nav-item.active {
+.dark .mobile-bottom-nav .nav-item.active {
   color: #b954ec;
   background: hsl(280 60% 60% / 0.25);
 }
 
-:global(.dark) .mobile-bottom-nav .nav-item.active::before {
+.dark .mobile-bottom-nav .nav-item.active::before {
   background: #b954ec;
 }
 
