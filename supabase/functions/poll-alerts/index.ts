@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '114'; // RSZ FIX: STEP 6c now tracks individual zones, not just lines - hides zones removed from TTC API
+const VERSION = '115'; // STEP 6b-repair: Unhide elevator threads that reappear in TTC API
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -1045,6 +1045,42 @@ serve(async (req) => {
         }
       }
     }
+    
+    // STEP 6b-repair: Unhide ACCESSIBILITY threads that ARE in TTC API but were incorrectly hidden
+    // This can happen due to race conditions or temporary API glitches
+    let unhiddenElevators = 0;
+    
+    // Get all hidden (but not resolved) ACCESSIBILITY threads
+    const { data: hiddenElevatorThreads } = await supabase
+      .from('incident_threads')
+      .select('thread_id, title')
+      .filter('categories', 'cs', '["ACCESSIBILITY"]')
+      .eq('is_hidden', true)
+      .eq('is_resolved', false);
+    
+    for (const thread of hiddenElevatorThreads || []) {
+      const suffixMatch = thread.thread_id?.match(/^thread-elev-(.+)$/);
+      const threadSuffix = suffixMatch ? suffixMatch[1] : null;
+      
+      // Check if this thread's suffix is in the active set (should be visible)
+      if (threadSuffix && activeElevatorSuffixes.has(threadSuffix)) {
+        console.log(`STEP 6b-repair: Unhiding elevator thread: "${thread.title}" - suffix "${threadSuffix}" is active in TTC API`);
+        
+        const { error: updateError } = await supabase
+          .from('incident_threads')
+          .update({ 
+            is_hidden: false,
+            updated_at: new Date().toISOString()
+          })
+          .eq('thread_id', thread.thread_id);
+        
+        if (!updateError) {
+          unhiddenElevators++;
+        }
+      }
+    }
+    
+    console.log(`STEP 6b: Resolved ${resolvedElevators} elevator threads, unhid ${unhiddenElevators}`);
 
     // STEP 6c: Manage RSZ thread lifecycle based on TTC API
     let resolvedRszThreads = 0;
@@ -1413,6 +1449,7 @@ serve(async (req) => {
         elevatorAlerts: ttcData.elevatorAlerts.length,
         hiddenThreads,
         resolvedElevators,
+        unhiddenElevators,
         resolvedRszThreads,
         repairedRszThreads,
         repairedElevators,
