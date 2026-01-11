@@ -1,6 +1,6 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.21  
+**Version:** 3.22  
 **Date:** January 11, 2026  
 **poll-alerts Version:** 116  
 **scrape-maintenance Version:** 3  
@@ -736,6 +736,42 @@ CREATE TABLE planned_maintenance (
 | `start_time: null` + Sat-Sun     | Weekend           | "Weekend Closure"       |
 | Everything else                  | Generic scheduled | "Scheduled Closure"     |
 
+### Trigger: `validate_alert_thread_routes`
+
+**Purpose:** Prevent route mismatches between alerts and threads to maintain data integrity.
+
+**Logic:**
+- On INSERT/UPDATE of `alert_cache`, validates that alert's `affected_routes` overlap with thread's `affected_routes`
+- **BYPASS CONDITIONS** (no validation required):
+  1. `thread_id` starts with `thread-elev-` (elevator threads use station names, not route numbers)
+  2. Alert `categories` contains `ACCESSIBILITY`
+  3. Alert `effect` contains `ACCESSIBILITY`
+  4. Thread `categories` contains `ACCESSIBILITY`
+- For non-elevator alerts: blocks if no route overlap exists
+
+**Why elevator bypass is needed:**
+- Elevator threads: `affected_routes = ["Castle Frank"]` (station name)
+- Elevator alerts: `affected_routes = ["2", "65", "94", "300"]` (bus/subway routes serving station)
+- These intentionally don't match because elevators are station-based, not route-based
+
+```sql
+CREATE OR REPLACE FUNCTION validate_alert_thread_routes()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Bypass for elevator/accessibility alerts
+  IF NEW.thread_id LIKE 'thread-elev-%' THEN RETURN NEW; END IF;
+  IF NEW.categories::text ILIKE '%ACCESSIBILITY%' THEN RETURN NEW; END IF;
+  IF NEW.effect ILIKE '%ACCESSIBILITY%' THEN RETURN NEW; END IF;
+  
+  -- ... route validation logic for non-elevator alerts ...
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER validate_alert_thread_routes_trigger
+  BEFORE INSERT OR UPDATE ON alert_cache
+  FOR EACH ROW EXECUTE FUNCTION validate_alert_thread_routes();
+```
+
 ---
 
 ## Edge Functions
@@ -1454,23 +1490,24 @@ const { data } = await supabase
 
 ## Version History
 
-| Version | Date       | Changes                                                                                                                                          |
-| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Version | Date       | Changes                                                                                                                                                               |
+| ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| v3.22   | 2026-01-11 | Fix `validate_alert_thread_routes` trigger: bypass route validation for elevator/ACCESSIBILITY alerts (station names don't match route numbers)                       |
 | v3.21   | 2026-01-11 | poll-alerts v116: Fix effect recognition - ALL non-RSZ, non-ServiceResumed alerts now recognized as disruptions (fixes "Subway Closure - Early Access" not appearing) |
-| v3.20   | 2026-01-11 | Added verify-elevators v1, verify-rsz v1 verification functions; scrape-rsz v4 with pg_cron; poll-alerts v115 unhide elevator repair            |
-| v3.19   | 2026-01-10 | poll-alerts v114: Individual RSZ zone tracking via `activeRszThreadIds` set; hide zones not in TTC API instead of checking entire lines          |
-| v3.18   | 2026-01-10 | Frontend slow zones fix: `activeAlerts` returns `[]` for delays tab; `categoryCounts.delays` counts only `isRSZAlert()` threads                  |
-| v3.16   | 2026-01-09 | poll-alerts v110: Strip "-TTC" suffix from elevator descriptions; Clean technical metadata from elevator alerts                                  |
-| v3.15   | 2026-01-09 | Database function `find_or_create_thread` protection: exclude RSZ/ACCESSIBILITY threads from route-based matching                                |
-| v3.14   | 2026-01-09 | Frontend: `getAllAlertsForLine()` now excludes MINOR (RSZ) and ACCESSIBILITY alerts from subway status calculation                               |
-| v3.13   | 2026-01-09 | LAYER 2: Thread ID pattern protection (belt-and-suspenders) - skip threads containing 'rsz', 'elev', 'accessibility' in ID                       |
-| v3.12   | 2026-01-09 | scrape-maintenance v3: Handle single-day closures (sa-effective-date fallback), TTC API duplicate documentation                                  |
-| v3.11   | 2026-01-09 | Added STEP 6d: repair orphaned elevator alerts (alerts with thread_id = null); Frontend: prefer is_latest flag for latestAlert selection         |
-| v3.10   | 2026-01-08 | Enhanced RSZ protection: auto-fix title/is_latest when SERVICE_RESUMED text detected in RSZ threads                                              |
-| v3.9    | 2026-01-08 | Comprehensive RSZ/ACCESSIBILITY protection: skip during Bluesky matching, never resolve via SERVICE_RESUMED, auto-repair if incorrectly resolved |
-| v3.8    | 2026-01-08 | STEP 2b: Only match SERVICE_RESUMED if created AFTER the thread (prevents false positives)                                                       |
-| v3.7    | 2026-01-08 | Fixed JSONB queries (`.filter()` not `.contains()`), per-elevator threading                                                                      |
-| v3.6    | 2026-01-07 | Fixed STEP 7 unhide bug, added elevator code extraction                                                                                          |
+| v3.20   | 2026-01-11 | Added verify-elevators v1, verify-rsz v1 verification functions; scrape-rsz v4 with pg_cron; poll-alerts v115 unhide elevator repair                                  |
+| v3.19   | 2026-01-10 | poll-alerts v114: Individual RSZ zone tracking via `activeRszThreadIds` set; hide zones not in TTC API instead of checking entire lines                               |
+| v3.18   | 2026-01-10 | Frontend slow zones fix: `activeAlerts` returns `[]` for delays tab; `categoryCounts.delays` counts only `isRSZAlert()` threads                                       |
+| v3.16   | 2026-01-09 | poll-alerts v110: Strip "-TTC" suffix from elevator descriptions; Clean technical metadata from elevator alerts                                                       |
+| v3.15   | 2026-01-09 | Database function `find_or_create_thread` protection: exclude RSZ/ACCESSIBILITY threads from route-based matching                                                     |
+| v3.14   | 2026-01-09 | Frontend: `getAllAlertsForLine()` now excludes MINOR (RSZ) and ACCESSIBILITY alerts from subway status calculation                                                    |
+| v3.13   | 2026-01-09 | LAYER 2: Thread ID pattern protection (belt-and-suspenders) - skip threads containing 'rsz', 'elev', 'accessibility' in ID                                            |
+| v3.12   | 2026-01-09 | scrape-maintenance v3: Handle single-day closures (sa-effective-date fallback), TTC API duplicate documentation                                                       |
+| v3.11   | 2026-01-09 | Added STEP 6d: repair orphaned elevator alerts (alerts with thread_id = null); Frontend: prefer is_latest flag for latestAlert selection                              |
+| v3.10   | 2026-01-08 | Enhanced RSZ protection: auto-fix title/is_latest when SERVICE_RESUMED text detected in RSZ threads                                                                   |
+| v3.9    | 2026-01-08 | Comprehensive RSZ/ACCESSIBILITY protection: skip during Bluesky matching, never resolve via SERVICE_RESUMED, auto-repair if incorrectly resolved                      |
+| v3.8    | 2026-01-08 | STEP 2b: Only match SERVICE_RESUMED if created AFTER the thread (prevents false positives)                                                                            |
+| v3.7    | 2026-01-08 | Fixed JSONB queries (`.filter()` not `.contains()`), per-elevator threading                                                                                           |
+| v3.6    | 2026-01-07 | Fixed STEP 7 unhide bug, added elevator code extraction                                                                                                               |
 
 ---
 
