@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.20  
+**Version:** 3.21  
 **Date:** January 11, 2026  
-**poll-alerts Version:** 115  
+**poll-alerts Version:** 116  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
@@ -749,6 +749,10 @@ CREATE TABLE planned_maintenance (
 
 1. **STEP 1:** Fetch TTC API (`/api/alerts/live-alerts`)
    - Get authoritative list of active routes, RSZ alerts, and elevator alerts
+   - **Effect Recognition (v116+):** Now includes ALL non-RSZ, non-ServiceResumed alerts as active disruptions
+     - Previous bug: Only recognized effects like `NO_SERVICE`, `SIGNIFICANT_DELAYS`, `DETOUR`
+     - Fix: Effects like `"Subway Closure - Early Access"` (nightly closures) now properly recognized
+     - Any TTC API route alert (except RSZ and Service Resumed) is considered an active disruption
 2. **STEP 2:** Hide threads no longer in TTC API
    - Excludes RSZ and ACCESSIBILITY (they have their own lifecycle)
 3. **STEP 2b:** Resolve threads with matching SERVICE_RESUMED alerts
@@ -1230,13 +1234,16 @@ function getClosureType(maintenance: PlannedMaintenance): string {
    - **Hide stale:** If thread in database but elevator no longer in TTC API
 
 **Response:**
+
 ```json
 {
   "success": true,
   "ttcApiCount": 6,
   "databaseCount": 6,
   "corrections": { "created": 0, "unhidden": 0, "hidden": 0 },
-  "details": { /* per-elevator breakdown */ }
+  "details": {
+    /* per-elevator breakdown */
+  }
 }
 ```
 
@@ -1259,13 +1266,16 @@ function getClosureType(maintenance: PlannedMaintenance): string {
    - **Hide stale:** If thread in database but zone no longer in TTC API
 
 **Response:**
+
 ```json
 {
   "success": true,
   "ttcApiCount": 11,
   "databaseCount": 11,
   "corrections": { "created": 0, "unhidden": 0, "hidden": 0 },
-  "details": { /* per-zone breakdown */ }
+  "details": {
+    /* per-zone breakdown */
+  }
 }
 ```
 
@@ -1292,6 +1302,7 @@ function getClosureType(maintenance: PlannedMaintenance): string {
 3. Upsert threads and alerts to database
 
 **Why Website Scraping:** The TTC website provides richer data than the API:
+
 - Defect length
 - Target removal date
 - Reason for slow zone
@@ -1445,6 +1456,8 @@ const { data } = await supabase
 
 | Version | Date       | Changes                                                                                                                                          |
 | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| v3.21   | 2026-01-11 | poll-alerts v116: Fix effect recognition - ALL non-RSZ, non-ServiceResumed alerts now recognized as disruptions (fixes "Subway Closure - Early Access" not appearing) |
+| v3.20   | 2026-01-11 | Added verify-elevators v1, verify-rsz v1 verification functions; scrape-rsz v4 with pg_cron; poll-alerts v115 unhide elevator repair            |
 | v3.19   | 2026-01-10 | poll-alerts v114: Individual RSZ zone tracking via `activeRszThreadIds` set; hide zones not in TTC API instead of checking entire lines          |
 | v3.18   | 2026-01-10 | Frontend slow zones fix: `activeAlerts` returns `[]` for delays tab; `categoryCounts.delays` counts only `isRSZAlert()` threads                  |
 | v3.16   | 2026-01-09 | poll-alerts v110: Strip "-TTC" suffix from elevator descriptions; Clean technical metadata from elevator alerts                                  |

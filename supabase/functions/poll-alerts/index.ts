@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '115'; // STEP 6b-repair: Unhide elevator threads that reappear in TTC API
+const VERSION = '116'; // Fix: Include ALL non-RSZ TTC API alerts in activeRoutes (was missing effects like "Subway Closure - Early Access")
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -244,19 +244,27 @@ async function fetchTtcData(): Promise<RszElevatorData> {
         continue;
       }
       
-      // Regular disruption alerts - add to active routes for thread hiding logic
-      const isRealDisruption = 
-        effect === 'NO_SERVICE' || 
-        effect === 'SIGNIFICANT_DELAYS' ||
-        effect === 'DETOUR' ||
-        routeAlert.severity === 'Critical' ||
-        routeAlert.severity === 'High';
+      // Skip service resumed alerts - these go to Recently Resolved
+      const isServiceResumed = 
+        effectDesc === 'Service Resumed' ||
+        headerText.includes('regular service has resumed') ||
+        headerText.includes('service has resumed');
       
-      if (isRealDisruption) {
-        const routeId = routeAlert.route || routeAlert.id;
-        if (routeId) {
-          result.activeRoutes.add(routeId);
-        }
+      if (isServiceResumed) {
+        continue;
+      }
+      
+      // All other TTC API route alerts are real disruptions
+      // This includes:
+      // - NO_SERVICE, SIGNIFICANT_DELAYS, DETOUR (standard GTFS-RT)
+      // - MODIFIED_SERVICE, SHUTTLE (custom TTC effects)  
+      // - "Subway Closure - Early Access" (nightly closures)
+      // - Any alert with Critical/High severity
+      // We now add ALL non-RSZ, non-ServiceResumed alerts to activeRoutes
+      const routeId = routeAlert.route || routeAlert.id;
+      if (routeId) {
+        result.activeRoutes.add(routeId);
+        console.log(`TTC disruption: route=${routeId}, effect=${effect}, effectDesc=${effectDesc}`);
       }
     }
     

@@ -221,13 +221,13 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ### Authentication Functions
 
-| Function      | Status | Purpose              | URL                                                                   |
-| ------------- | ------ | -------------------- | --------------------------------------------------------------------- |
-| auth-register | ✅     | WebAuthn registration| `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register` |
-| auth-challenge| ✅     | WebAuthn challenge   | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge`|
-| auth-verify   | ✅     | WebAuthn verification| `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`   |
-| auth-session  | ✅     | Session management   | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`  |
-| auth-recover  | ✅     | Recovery codes       | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`  |
+| Function       | Status | Purpose               | URL                                                                    |
+| -------------- | ------ | --------------------- | ---------------------------------------------------------------------- |
+| auth-register  | ✅     | WebAuthn registration | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register`  |
+| auth-challenge | ✅     | WebAuthn challenge    | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge` |
+| auth-verify    | ✅     | WebAuthn verification | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`    |
+| auth-session   | ✅     | Session management    | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`   |
+| auth-recover   | ✅     | Recovery codes        | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`   |
 
 ### Alert Processing Functions
 
@@ -242,14 +242,14 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ### Cron Jobs (pg_cron)
 
-| Job Name                  | Schedule           | Function               |
-| ------------------------- | ------------------ | ---------------------- |
-| poll-alerts-2min          | `*/2 * * * *`      | poll-alerts            |
-| verify-elevators-15min    | `*/15 * * * *`     | verify-elevators       |
-| verify-rsz-15min          | `7,22,37,52 * * *` | verify-rsz             |
-| scrape-rsz-30min          | `*/30 * * * *`     | scrape-rsz             |
-| scrape-maintenance-6hr    | `0 */6 * * *`      | scrape-maintenance     |
-| monitor-accuracy-5min     | `*/5 * * * *`      | monitor-alert-accuracy |
+| Job Name               | Schedule           | Function               |
+| ---------------------- | ------------------ | ---------------------- |
+| poll-alerts-2min       | `*/2 * * * *`      | poll-alerts            |
+| verify-elevators-15min | `*/15 * * * *`     | verify-elevators       |
+| verify-rsz-15min       | `7,22,37,52 * * *` | verify-rsz             |
+| scrape-rsz-30min       | `*/30 * * * *`     | scrape-rsz             |
+| scrape-maintenance-6hr | `0 */6 * * *`      | scrape-maintenance     |
+| monitor-accuracy-5min  | `*/5 * * * *`      | monitor-alert-accuracy |
 
 ---
 

@@ -879,11 +879,13 @@
 
   // Derived: Combined active alerts and maintenance, grouped by subway line with section headers
   let combinedActiveAlerts = $derived(() => {
-    // Use nonRSZAlerts when in MINOR mode (RSZ alerts render separately)
-    const alerts =
-      $selectedSeverityCategory === "MINOR"
-        ? nonRSZAlerts()
-        : filteredActiveAlerts();
+    // MINOR (Slow Zones tab) ONLY shows RSZ alerts via RSZAlertCard - return empty array here
+    // RSZ alerts render separately at the bottom of the page
+    if ($selectedSeverityCategory === "MINOR") {
+      return []; // RSZ alerts shown via RSZAlertCard, not here
+    }
+
+    const alerts = filteredActiveAlerts();
 
     // Only include maintenance in MAJOR tab (scheduled closures are MAJOR)
     const maintenance =
