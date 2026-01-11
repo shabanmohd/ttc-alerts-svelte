@@ -665,7 +665,7 @@ header.sticky {
 
 .mobile-bottom-nav .nav-item.active {
   color: hsl(280 65% 42%);
-  background: hsl(280 55% 52% / 0.1);
+  background: #72269840;
 }
 
 .mobile-bottom-nav .nav-item.active svg {
@@ -697,7 +697,7 @@ header.sticky {
 /* Dark mode: brighter purple for better visibility */
 .dark .mobile-bottom-nav .nav-item.active {
   color: #b954ec;
-  background: hsl(280 60% 60% / 0.25);
+  background: #72269840;
 }
 
 .dark .mobile-bottom-nav .nav-item.active::before {
