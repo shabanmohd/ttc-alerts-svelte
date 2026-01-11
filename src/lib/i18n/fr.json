@@ -150,10 +150,10 @@
     "recentlyResolved": "Récemment résolues",
     "noneInLastHours": "Aucune au cours des 6 dernières heures",
     "plannedSubtabs": {
-      "closures": "Fermetures",
-      "routeChanges": "Changements de parcours",
-      "ariaClosures": "Afficher les fermetures planifiées",
-      "ariaRouteChanges": "Afficher les changements de parcours prévus"
+      "closures": "Fermetures métro",
+      "routeChanges": "Changements de service",
+      "ariaClosures": "Afficher les fermetures de métro planifiées",
+      "ariaRouteChanges": "Afficher les changements de service prévus"
     },
     "attribution": {
       "dataFrom": "Données de",

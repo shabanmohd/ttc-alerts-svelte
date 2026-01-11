@@ -168,10 +168,10 @@
     "recentlyResolved": "Recently Resolved",
     "noneInLastHours": "None in last 6 hours",
     "plannedSubtabs": {
-      "closures": "Closures",
-      "routeChanges": "Route Changes",
-      "ariaClosures": "Show scheduled closures",
-      "ariaRouteChanges": "Show planned route changes"
+      "closures": "Subway Closures",
+      "routeChanges": "Service Changes",
+      "ariaClosures": "Show scheduled subway closures",
+      "ariaRouteChanges": "Show planned service changes"
     },
     "attribution": {
       "dataFrom": "Data from",
