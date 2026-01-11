@@ -254,10 +254,6 @@
             </div>
           </div>
           <div class="rsz-header-right">
-            <span class="rsz-zone-count">
-              {entries.length}
-              <span class="zone-label">{entries.length === 1 ? "zone" : "zones"}</span>
-            </span>
             <ChevronDown
               class={cn(
                 "h-4 w-4 transition-transform duration-200",
@@ -406,13 +402,6 @@
     flex-shrink: 0;
   }
 
-  .rsz-zone-count {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-  }
-
   /* Mobile responsive adjustments */
   @media (max-width: 480px) {
     .rsz-header-body {
@@ -447,32 +436,8 @@
     .rsz-label {
       font-size: 0.625rem;
     }
-
-    .rsz-zone-count {
-      font-size: 0.875rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0;
-      line-height: 1.2;
-    }
-
-    .zone-label {
-      font-size: 0.625rem;
-      text-transform: uppercase;
-    }
   }
 
-  /* Zone label hidden on desktop, only shown in mobile column layout */
-  .zone-label {
-    display: none;
-  }
-
-  @media (max-width: 480px) {
-    .zone-label {
-      display: block;
-    }
-  }
 
   .rsz-accordion-content {
     max-height: 0;
