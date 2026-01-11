@@ -700,7 +700,7 @@
               class="px-4 py-2 bg-purple-500/20 dark:bg-purple-800/15 border-b border-purple-500/20 dark:border-purple-700/10"
             >
               <div
-                class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-400/60"
+                class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-[#b954ec]"
               >
                 <Calendar class="h-3.5 w-3.5" />
                 <span>Scheduled Next Bus</span>
