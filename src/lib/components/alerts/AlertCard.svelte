@@ -466,12 +466,15 @@
                 : getMainCategory(categories(), rawRoutes)}
             />
           {/if}
-          <time
-            class="alert-card-timestamp"
-            datetime={displayAlert?.created_at || ""}
-          >
-            {formatTimestamp(displayAlert?.created_at || "")}
-          </time>
+          <!-- Hide timestamp for accessibility alerts and closures -->
+          {#if !isAccessibility && !["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes))}
+            <time
+              class="alert-card-timestamp"
+              datetime={displayAlert?.created_at || ""}
+            >
+              {formatTimestamp(displayAlert?.created_at || "")}
+            </time>
+          {/if}
         </div>
 
         {#if ["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes))}
