@@ -94,11 +94,12 @@
 
 The app uses a purple accent color for interactive/selected UI elements:
 
-| Element                           | Light Mode                    | Dark Mode      |
-| --------------------------------- | ----------------------------- | -------------- |
-| Bottom nav active item            | `hsl(280 65% 42%)` (~#8225B1) | `#b954ec`      |
-| Scheduled Next Bus section header | `text-purple-700`             | `#b954ec`      |
-| Scheduled Next Bus background     | `purple-500/10`               | `purple-900/10`|
+| Element                           | Light Mode                    | Dark Mode       |
+| --------------------------------- | ----------------------------- | --------------- |
+| Bottom nav active text/icon       | `hsl(280 65% 42%)` (~#8225B1) | `#b954ec`       |
+| Bottom nav active background      | `hsl(280 55% 52% / 0.1)`      | `#72269840`     |
+| Scheduled Next Bus section header | `text-purple-700`             | `#b954ec`       |
+| Scheduled Next Bus background     | `purple-500/10`               | `purple-900/10` |
 
 **Base Color**: `#9B44C7` (used for deriving light/dark variants)
 
@@ -100582,8 +100583,10 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
 - Labels should be **single words** for consistent alignment (e.g., "Alerts" not "Service Alerts")
 - Text centered under icons via `text-align: center`
 - Active state uses **purple accent color**:
-  - Light mode: `hsl(280 65% 42%)` (~#8225B1)
-  - Dark mode: `#b954ec` (brighter for visibility)
+  - Light mode text/icon: `hsl(280 65% 42%)` (~#8225B1)
+  - Light mode background: `hsl(280 55% 52% / 0.1)`
+  - Dark mode text/icon: `#b954ec` (brighter for visibility)
+  - Dark mode background: `#72269840` (~25% opacity dark purple)
 - 4 tabs max for mobile usability
 - **Solid background** required (no `backdrop-filter` or transparency - causes content bleed-through on Android Chrome)
 - Safe area padding: `padding-bottom: max(0.5rem, env(safe-area-inset-bottom))`
