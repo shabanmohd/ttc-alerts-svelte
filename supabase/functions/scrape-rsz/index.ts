@@ -2,7 +2,9 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { DOMParser, Element } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts';
 
-// v1 - Scrape RSZ data from TTC website as alternative to live-alerts API
+// v3 - Scrape RSZ data from TTC website as alternative to live-alerts API
+// Fixed to use correct database schema (incident_threads + alert_cache)
+// Fixed thread_hash to use threadId for uniqueness
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -203,7 +205,7 @@ serve(async (req) => {
       // Check if thread exists
       const { data: existingThread } = await supabase
         .from('incident_threads')
-        .select('id, is_hidden')
+        .select('thread_id, is_hidden')
         .eq('thread_id', threadId)
         .single();
       
@@ -214,36 +216,37 @@ serve(async (req) => {
             .from('incident_threads')
             .update({
               is_hidden: false,
-              header_text: headerText,
-              raw_data: zone,
+              title: headerText,
+              updated_at: new Date().toISOString(),
             })
             .eq('thread_id', threadId);
           console.log(`Un-hidden thread: ${threadId}`);
         } else {
-          // Just update raw_data
+          // Just update title and timestamp
           await supabase
             .from('incident_threads')
             .update({
-              raw_data: zone,
+              title: headerText,
+              updated_at: new Date().toISOString(),
             })
             .eq('thread_id', threadId);
         }
         upserted++;
       } else {
-        // Create new thread
+        // Create new thread with explicit thread_hash to avoid collision from auto-generated hash
+        // Use threadId as hash source since it's guaranteed unique per zone
         const { error: threadError } = await supabase
           .from('incident_threads')
           .insert({
             thread_id: threadId,
-            header_text: headerText,
-            source: 'TTC_WEBSITE',
+            title: headerText,
             affected_routes: [`Line ${zone.line}`],
-            severity: 'MINOR',
-            effect: 'RSZ',
             categories: ['RSZ'],
             is_resolved: false,
             is_hidden: false,
-            raw_data: zone,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            thread_hash: threadId, // Use threadId as hash to guarantee uniqueness
           });
         
         if (threadError) {
@@ -254,32 +257,39 @@ serve(async (req) => {
         }
       }
       
-      // Upsert alert
+      // Upsert alert to alert_cache
+      // Build description with metadata
+      const descriptionParts: string[] = [];
+      if (zone.reducedSpeed && zone.normalSpeed) {
+        descriptionParts.push(`Speed: ${zone.reducedSpeed} km/h (normally ${zone.normalSpeed} km/h)`);
+      }
+      if (zone.defectLength) {
+        descriptionParts.push(`Length: ${zone.defectLength}m`);
+      }
+      if (zone.trackPercent) {
+        descriptionParts.push(`Track affected: ${zone.trackPercent}%`);
+      }
+      if (zone.reason) {
+        descriptionParts.push(`Reason: ${zone.reason}`);
+      }
+      if (zone.targetRemoval) {
+        descriptionParts.push(`Target removal: ${zone.targetRemoval}`);
+      }
+      const descriptionText = descriptionParts.join('\n');
+      
       const { error: alertError } = await supabase
         .from('alert_cache')
         .upsert({
           alert_id: alertId,
-          source: 'TTC_WEBSITE',
+          thread_id: threadId,
           header_text: headerText,
-          severity: 'MINOR',
+          description_text: descriptionText || null,
           effect: 'RSZ',
           categories: ['RSZ'],
           affected_routes: [`Line ${zone.line}`],
-          thread_id: threadId,
-          is_active: true,
           is_latest: true,
-          raw_data: {
-            ...zone,
-            stopStart: zone.stopStart,
-            stopEnd: zone.stopEnd,
-            direction: zone.direction,
-            rszLength: zone.defectLength?.toString() || null,
-            distance: zone.distanceBetweenStations?.toString() || null,
-            trackPercent: zone.trackPercent?.toString() || null,
-            reducedSpeed: zone.reducedSpeed?.toString() || null,
-            averageSpeed: zone.normalSpeed?.toString() || null,
-            targetRemoval: zone.targetRemoval,
-          },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         }, {
           onConflict: 'alert_id',
         });
