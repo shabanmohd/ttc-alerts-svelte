@@ -324,6 +324,11 @@ function handleAlertInsert(newAlert: Alert): void {
     return updated.slice(0, 100);
   });
   lastUpdated.set(new Date());
+  
+  // If alert has a thread_id, ensure we have the thread
+  if (newAlert.thread_id) {
+    fetchThreadForAlert(newAlert.thread_id);
+  }
 }
 
 function handleAlertUpdate(updatedAlert: Alert): void {
@@ -331,6 +336,11 @@ function handleAlertUpdate(updatedAlert: Alert): void {
     current.map(a => a.alert_id === updatedAlert.alert_id ? updatedAlert : a)
   );
   lastUpdated.set(new Date());
+  
+  // If alert's thread changed or became latest, ensure we have the thread
+  if (updatedAlert.thread_id && updatedAlert.is_latest) {
+    fetchThreadForAlert(updatedAlert.thread_id);
+  }
 }
 
 function handleAlertDelete(deletedAlert: { alert_id: string }): void {
@@ -387,6 +397,45 @@ async function fetchAlertForThread(threadId: string): Promise<void> {
     console.log(`Fetched alert for thread ${threadId}:`, data.alert_id);
   } catch (e) {
     console.error(`Failed to fetch alert for thread ${threadId}:`, e);
+  }
+}
+
+// Fetch thread for a specific alert (used when alert is added but thread doesn't exist)
+async function fetchThreadForAlert(threadId: string): Promise<void> {
+  const currentThreads = get(threads);
+  // Check if we already have this thread
+  const hasThread = currentThreads.some(t => t.thread_id === threadId);
+  if (hasThread) return;
+  
+  try {
+    const { data, error: threadError } = await supabase
+      .from('incident_threads')
+      .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at')
+      .eq('thread_id', threadId)
+      .single();
+    
+    if (threadError || !data) {
+      console.warn(`No thread found for alert's thread_id ${threadId}`);
+      return;
+    }
+    
+    // Only add if thread is visible (not hidden)
+    if (data.is_hidden) {
+      console.log(`Thread ${threadId} is hidden, not adding to store`);
+      return;
+    }
+    
+    // Add the thread to the store
+    threads.update(current => {
+      // Check again in case it was added concurrently
+      if (current.some(t => t.thread_id === data.thread_id)) {
+        return current;
+      }
+      return [data, ...current];
+    });
+    console.log(`Fetched thread for alert:`, data.thread_id);
+  } catch (e) {
+    console.error(`Failed to fetch thread for alert's thread_id ${threadId}:`, e);
   }
 }
 
