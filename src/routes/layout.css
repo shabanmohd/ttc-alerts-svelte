@@ -696,12 +696,12 @@ header.sticky {
 
 /* Dark mode: brighter purple for better visibility */
 :global(.dark) .mobile-bottom-nav .nav-item.active {
-  color: hsl(280 80% 82%);
+  color: #b954ec;
   background: hsl(280 60% 60% / 0.25);
 }
 
 :global(.dark) .mobile-bottom-nav .nav-item.active::before {
-  background: hsl(280 80% 82%);
+  background: #b954ec;
 }
 
 /* ============================================
