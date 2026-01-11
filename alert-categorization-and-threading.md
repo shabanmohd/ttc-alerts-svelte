@@ -741,6 +741,7 @@ CREATE TABLE planned_maintenance (
 **Purpose:** Prevent route mismatches between alerts and threads to maintain data integrity.
 
 **Logic:**
+
 - On INSERT/UPDATE of `alert_cache`, validates that alert's `affected_routes` overlap with thread's `affected_routes`
 - **BYPASS CONDITIONS** (no validation required):
   1. `thread_id` starts with `thread-elev-` (elevator threads use station names, not route numbers)
@@ -750,6 +751,7 @@ CREATE TABLE planned_maintenance (
 - For non-elevator alerts: blocks if no route overlap exists
 
 **Why elevator bypass is needed:**
+
 - Elevator threads: `affected_routes = ["Castle Frank"]` (station name)
 - Elevator alerts: `affected_routes = ["2", "65", "94", "300"]` (bus/subway routes serving station)
 - These intentionally don't match because elevators are station-based, not route-based
@@ -762,7 +764,7 @@ BEGIN
   IF NEW.thread_id LIKE 'thread-elev-%' THEN RETURN NEW; END IF;
   IF NEW.categories::text ILIKE '%ACCESSIBILITY%' THEN RETURN NEW; END IF;
   IF NEW.effect ILIKE '%ACCESSIBILITY%' THEN RETURN NEW; END IF;
-  
+
   -- ... route validation logic for non-elevator alerts ...
 END;
 $$ LANGUAGE plpgsql;
