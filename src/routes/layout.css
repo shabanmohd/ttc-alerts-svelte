@@ -665,7 +665,7 @@ header.sticky {
 
 .mobile-bottom-nav .nav-item.active {
   color: hsl(280 65% 42%);
-  background: #72269840;
+  background: hsl(280 55% 52% / 0.1);
 }
 
 .mobile-bottom-nav .nav-item.active svg {
