@@ -304,13 +304,29 @@ function getLine6FrequencyMinutes(): number {
 /**
  * Generate estimated schedule-based arrivals for Line 6
  * Used when NTAS API returns no real-time data
+ * 
+ * Calculates deterministic arrival times based on current time:
+ * - Assumes trains depart at regular intervals (frequency)
+ * - Shows "minutes until next arrival" based on current position in the cycle
  */
 function generateLine6ScheduledArrivals(directionText: string): number[] {
 	const frequency = getLine6FrequencyMinutes();
-	// Generate 3 estimated arrival times based on frequency
-	// Add a random offset 0-frequency to simulate "train could arrive anytime within frequency window"
-	const randomOffset = Math.floor(Math.random() * frequency);
-	return [randomOffset, randomOffset + frequency, randomOffset + frequency * 2];
+	
+	// Get current time in Toronto timezone
+	const now = new Date();
+	const torontoTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Toronto' }));
+	const currentMinutes = torontoTime.getHours() * 60 + torontoTime.getMinutes();
+	
+	// Calculate minutes until next scheduled train
+	// Assumes trains depart at regular intervals starting from service start (e.g., 6:00 AM)
+	const minutesIntoFrequency = currentMinutes % frequency;
+	const minutesUntilNext = frequency - minutesIntoFrequency;
+	
+	// If we're exactly on a departure time, show next 3 arrivals starting from 0
+	const firstArrival = minutesUntilNext === frequency ? 0 : minutesUntilNext;
+	
+	// Generate 3 estimated arrival times
+	return [firstArrival, firstArrival + frequency, firstArrival + frequency * 2];
 }
 
 /**
