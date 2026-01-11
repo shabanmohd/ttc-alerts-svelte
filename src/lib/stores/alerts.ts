@@ -342,12 +342,52 @@ function handleAlertDelete(deletedAlert: { alert_id: string }): void {
 // Handle incoming thread from Realtime
 function handleThreadInsert(newThread: Thread): void {
   threads.update(current => [newThread, ...current]);
+  // Fetch the alert for this new thread
+  fetchAlertForThread(newThread.thread_id);
 }
 
 function handleThreadUpdate(updatedThread: Thread): void {
   threads.update(current => 
     current.map(t => t.thread_id === updatedThread.thread_id ? updatedThread : t)
   );
+  // If thread is now visible (unhidden), ensure we have its alert
+  if (!updatedThread.is_hidden && !updatedThread.is_resolved) {
+    fetchAlertForThread(updatedThread.thread_id);
+  }
+}
+
+// Fetch alert for a specific thread (used when thread is added/unhidden)
+async function fetchAlertForThread(threadId: string): Promise<void> {
+  const currentAlerts = get(alerts);
+  // Check if we already have an alert for this thread
+  const hasAlert = currentAlerts.some(a => a.thread_id === threadId);
+  if (hasAlert) return;
+  
+  try {
+    const { data, error: alertError } = await supabase
+      .from('alert_cache')
+      .select('alert_id, thread_id, header_text, description_text, effect, categories, affected_routes, is_latest, created_at')
+      .eq('thread_id', threadId)
+      .eq('is_latest', true)
+      .single();
+    
+    if (alertError || !data) {
+      console.warn(`No latest alert found for thread ${threadId}`);
+      return;
+    }
+    
+    // Add the alert to the store
+    alerts.update(current => {
+      // Check again in case it was added concurrently
+      if (current.some(a => a.alert_id === data.alert_id)) {
+        return current;
+      }
+      return [data, ...current];
+    });
+    console.log(`Fetched alert for thread ${threadId}:`, data.alert_id);
+  } catch (e) {
+    console.error(`Failed to fetch alert for thread ${threadId}:`, e);
+  }
 }
 
 function handleThreadDelete(deletedThread: { thread_id: string }): void {
