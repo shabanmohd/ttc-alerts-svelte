@@ -438,7 +438,6 @@
     }
   }
 
-
   .rsz-accordion-content {
     max-height: 0;
     overflow: hidden;

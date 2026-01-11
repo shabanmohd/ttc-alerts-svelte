@@ -90,6 +90,23 @@
 --ttc-community: #6b7280; /* 400-series border */
 ```
 
+### App Accent Color (Purple)
+
+The app uses a purple accent color for interactive/selected UI elements:
+
+| Element                           | Light Mode                    | Dark Mode      |
+| --------------------------------- | ----------------------------- | -------------- |
+| Bottom nav active item            | `hsl(280 65% 42%)` (~#8225B1) | `#b954ec`      |
+| Scheduled Next Bus section header | `text-purple-700`             | `#b954ec`      |
+| Scheduled Next Bus background     | `purple-500/10`               | `purple-900/10`|
+
+**Base Color**: `#9B44C7` (used for deriving light/dark variants)
+
+**Usage**:
+- Mobile bottom navigation active state
+- Scheduled Next Bus section header and icon
+- Secondary accent elements that need distinction from TTC brand colors
+
 ---
 
 ## 2a. Motion & Transitions
@@ -1760,16 +1777,18 @@ The ETA display must check `prediction.isLive` to determine the display format:
 
 #### Scheduled Section (GTFS First Bus Times)
 
-When routes don't have real-time ETA data, ETACard shows their scheduled first bus times from GTFS data. This section is **visually distinct** using a blue tint to differentiate from live ETA predictions above.
+When routes don't have real-time ETA data, ETACard shows their scheduled first bus times from GTFS data. This section is **visually distinct** using a purple tint to differentiate from live ETA predictions above, matching the app's accent color.
 
-| Element            | Light Mode           | Dark Mode            |
-| ------------------ | -------------------- | -------------------- |
-| Section background | `bg-blue-500/10`     | `bg-blue-950/30`     |
-| Header background  | `bg-blue-500/20`     | `bg-blue-900/40`     |
-| Header text        | `text-blue-700`      | `text-blue-300/80`   |
-| Border             | `border-blue-500/20` | `border-blue-500/20` |
+| Element            | Light Mode             | Dark Mode                 |
+| ------------------ | ---------------------- | ------------------------- |
+| Section background | `bg-purple-500/10`     | `bg-purple-900/10`        |
+| Header background  | `bg-purple-500/20`     | `bg-purple-800/15`        |
+| Header text        | `text-purple-700`      | `text-[#b954ec]`          |
+| Border             | `border-purple-500/20` | `border-purple-700/10`    |
 
-**Header Format**: "Scheduled Next Bus · Weekday (Friday)" with Calendar icon
+**Header Format**: "Scheduled Next Bus" with Calendar icon
+
+**Note**: The dark mode text color `#b954ec` matches the bottom navigation bar active item color for visual consistency across the app.
 
 **Special States**:
 
@@ -100562,7 +100581,9 @@ box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
 
 - Labels should be **single words** for consistent alignment (e.g., "Alerts" not "Service Alerts")
 - Text centered under icons via `text-align: center`
-- Active state uses primary color
+- Active state uses **purple accent color**:
+  - Light mode: `hsl(280 65% 42%)` (~#8225B1)
+  - Dark mode: `#b954ec` (brighter for visibility)
 - 4 tabs max for mobile usability
 - **Solid background** required (no `backdrop-filter` or transparency - causes content bleed-through on Android Chrome)
 - Safe area padding: `padding-bottom: max(0.5rem, env(safe-area-inset-bottom))`
