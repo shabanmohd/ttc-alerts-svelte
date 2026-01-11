@@ -27,13 +27,13 @@
     "6": { color: "#636569", textColor: "#ffffff" }, // TTC Grey (Finch West)
   };
 
-  // Full line names for display
+  // Full line names for display (without "Line X" prefix since badge shows that)
   const LINE_NAMES: Record<string, string> = {
-    "1": "Line 1 Yonge-University",
-    "2": "Line 2 Bloor-Danforth",
-    "4": "Line 4 Sheppard",
-    "5": "Line 5 Eglinton",
-    "6": "Line 6 Finch West",
+    "1": "Yonge-University",
+    "2": "Bloor-Danforth",
+    "4": "Sheppard",
+    "5": "Eglinton",
+    "6": "Finch West",
   };
 
   let { threads }: { threads: ThreadWithAlerts[] } = $props();
@@ -355,20 +355,20 @@
     min-width: 2rem;
     height: 2rem;
     padding: 0 0.5rem;
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 700;
     border-radius: 0.375rem;
     white-space: nowrap;
   }
 
   .badge-line-text {
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: inherit;
+    font-weight: inherit;
   }
 
   .badge-number {
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: inherit;
+    font-weight: inherit;
   }
 
   .rsz-line-info {
@@ -431,11 +431,11 @@
       height: auto;
       padding: 0.375rem 0.5rem;
       gap: 0;
+      font-size: 0.75rem;
     }
 
     .badge-line-text {
-      font-size: 0.625rem;
-      line-height: 1;
+      line-height: 1.1;
     }
 
     .badge-number {
