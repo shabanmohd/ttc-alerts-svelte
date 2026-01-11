@@ -243,7 +243,8 @@
               class="rsz-line-badge"
               style="background-color: {lineInfo.color}; color: {lineInfo.textColor}"
             >
-              Line {route}
+              <span class="badge-line-text">Line</span>
+              <span class="badge-number">{route}</span>
             </span>
             <div class="rsz-line-info">
               <span class="rsz-line-name"
@@ -255,7 +256,7 @@
           <div class="rsz-header-right">
             <span class="rsz-zone-count">
               {entries.length}
-              {entries.length === 1 ? "zone" : "zones"}
+              <span class="zone-label">{entries.length === 1 ? "zone" : "zones"}</span>
             </span>
             <ChevronDown
               class={cn(
@@ -350,12 +351,24 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.25rem;
     min-width: 2rem;
     height: 2rem;
     padding: 0 0.5rem;
     font-size: 1rem;
     font-weight: 700;
     border-radius: 0.375rem;
+    white-space: nowrap;
+  }
+
+  .badge-line-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .badge-number {
+    font-size: 1rem;
+    font-weight: 700;
   }
 
   .rsz-line-info {
@@ -390,12 +403,86 @@
     align-items: center;
     gap: 0.5rem;
     color: hsl(var(--muted-foreground));
+    flex-shrink: 0;
   }
 
   .rsz-zone-count {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  /* Mobile responsive adjustments */
+  @media (max-width: 480px) {
+    .rsz-header-body {
+      padding: 0.75rem;
+      gap: 0.5rem;
+    }
+
+    .rsz-header-left {
+      flex: 1;
+      min-width: 0; /* Allow shrinking */
+    }
+
+    .rsz-line-badge {
+      flex-direction: column;
+      min-width: 2.75rem;
+      height: auto;
+      padding: 0.375rem 0.5rem;
+      gap: 0;
+    }
+
+    .badge-line-text {
+      font-size: 0.625rem;
+      line-height: 1;
+    }
+
+    .badge-number {
+      font-size: 1.125rem;
+      line-height: 1.1;
+    }
+
+    .rsz-line-info {
+      min-width: 0; /* Allow text wrapping */
+      flex: 1;
+    }
+
+    .rsz-line-name {
+      font-size: 0.875rem;
+      word-break: normal;
+      overflow-wrap: break-word;
+      hyphens: none;
+    }
+
+    .rsz-label {
+      font-size: 0.625rem;
+    }
+
+    .rsz-zone-count {
+      font-size: 0.875rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      line-height: 1.2;
+    }
+
+    .zone-label {
+      font-size: 0.625rem;
+      text-transform: uppercase;
+    }
+  }
+
+  /* Zone label hidden on desktop, only shown in mobile column layout */
+  .zone-label {
+    display: none;
+  }
+
+  @media (max-width: 480px) {
+    .zone-label {
+      display: block;
+    }
   }
 
   .rsz-accordion-content {
