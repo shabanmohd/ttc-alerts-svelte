@@ -426,21 +426,10 @@
     }
 
     .rsz-line-badge {
-      flex-direction: column;
-      min-width: 2.75rem;
-      height: auto;
+      /* Keep horizontal layout on mobile - no flex-direction change */
+      min-width: auto;
       padding: 0.375rem 0.5rem;
-      gap: 0;
-      font-size: 0.75rem;
-    }
-
-    .badge-line-text {
-      line-height: 1.1;
-    }
-
-    .badge-number {
-      font-size: 1.125rem;
-      line-height: 1.1;
+      font-size: 0.8125rem;
     }
 
     .rsz-line-info {
