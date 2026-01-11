@@ -59,13 +59,16 @@
   };
 
   // URL param to subtab mapping
+  // Using descriptive names in URL: "subwayclosures" and "servicechanges"
   const URL_TO_SUBTAB: Record<string, "closures" | "changes"> = {
-    closures: "closures",
-    routechanges: "changes",
+    closures: "closures", // Legacy support
+    subwayclosures: "closures",
+    routechanges: "changes", // Legacy support
+    servicechanges: "changes",
   };
   const SUBTAB_TO_URL: Record<"closures" | "changes", string> = {
-    closures: "closures",
-    changes: "routechanges",
+    closures: "subwayclosures",
+    changes: "servicechanges",
   };
 
   // Parse URL params to get initial state
