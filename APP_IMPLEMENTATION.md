@@ -16,7 +16,17 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ---
 
-## 🆕 Recent Updates (Jan 9, 2026)
+## 🆕 Recent Updates (Jan 11, 2026)
+
+| Component                | Change                                                            | Status       |
+| ------------------------ | ----------------------------------------------------------------- | ------------ |
+| **verify-elevators**     | New Edge Function: validates elevator data against TTC API        | ✅ Deployed  |
+| **verify-rsz**           | New Edge Function: validates RSZ data against TTC website         | ✅ Deployed  |
+| **poll-alerts v115**     | STEP 6b-repair: unhide elevator threads that reappear in TTC API  | ✅ Deployed  |
+| **alerts.ts**            | Bidirectional realtime sync: fetch alerts for threads & vice versa| ✅ Committed |
+| **pg_cron**              | Auto-verification jobs every 15 minutes                           | ✅ Deployed  |
+
+### Previous Updates (Jan 9, 2026)
 
 | Component                 | Change                                                               | Status       |
 | ------------------------- | -------------------------------------------------------------------- | ------------ |
@@ -82,7 +92,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation                                          |
 | `components/ui/*`                               | ✅     | shadcn-svelte base components                              |
 | `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                               |
-| `stores/alerts.ts`                              | ✅     | Alerts state + date validation filter                      |
+| `stores/alerts.ts`                              | ✅     | Alerts state + realtime sync with bidirectional fetch      |
 | `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store                                 |
 | `stores/preferences.ts`                         | ✅     | User preferences state                                     |
 | `types/auth.ts`                                 | ✅     | Auth TypeScript types                                      |
