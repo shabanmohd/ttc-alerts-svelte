@@ -664,7 +664,7 @@ header.sticky {
 }
 
 .mobile-bottom-nav .nav-item.active {
-  color: hsl(280 55% 52%);
+  color: hsl(280 65% 42%);
   background: hsl(280 55% 52% / 0.1);
 }
 
@@ -684,7 +684,7 @@ header.sticky {
   transform: translateX(-50%);
   width: 32px;
   height: 3px;
-  background: hsl(280 55% 52%);
+  background: hsl(280 65% 42%);
   border-radius: 0 0 3px 3px;
   transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -692,6 +692,16 @@ header.sticky {
 /* Compact mode: adjust active indicator position */
 .mobile-bottom-nav.compact .nav-item.active::before {
   top: -0.125rem;
+}
+
+/* Dark mode: lighter purple for better contrast */
+:global(.dark) .mobile-bottom-nav .nav-item.active {
+  color: hsl(280 55% 65%);
+  background: hsl(280 55% 55% / 0.15);
+}
+
+:global(.dark) .mobile-bottom-nav .nav-item.active::before {
+  background: hsl(280 55% 65%);
 }
 
 /* ============================================
