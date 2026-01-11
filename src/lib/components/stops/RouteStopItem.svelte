@@ -694,13 +694,13 @@
         <!-- No Predictions - Show scheduled fallback if available -->
         {#if scheduleLoaded && scheduledDeparture && scheduledDeparture.time}
           <!-- Scheduled departure fallback -->
-          <div class="bg-purple-500/10 dark:bg-purple-950/50">
+          <div class="bg-purple-500/10 dark:bg-purple-900/15">
             <!-- Section Header -->
             <div
-              class="px-4 py-2 bg-purple-500/20 dark:bg-purple-950/70 border-b border-purple-500/20"
+              class="px-4 py-2 bg-purple-500/20 dark:bg-purple-800/25 border-b border-purple-500/20 dark:border-purple-700/20"
             >
               <div
-                class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-400/90"
+                class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-400/70"
               >
                 <Calendar class="h-3.5 w-3.5" />
                 <span>Scheduled Next Bus</span>

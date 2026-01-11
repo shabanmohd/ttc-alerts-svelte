@@ -460,13 +460,13 @@
 
       {#if scheduleLoaded && scheduledDepartures.size > 0}
         <!-- Show scheduled departures in same style as live ETA -->
-        <div class="bg-purple-500/10 dark:bg-purple-950/50">
+        <div class="bg-purple-500/10 dark:bg-purple-900/15">
           <!-- Section Header -->
           <div
-            class="px-4 py-2 bg-purple-500/20 dark:bg-purple-950/70 border-b border-purple-500/20"
+            class="px-4 py-2 bg-purple-500/20 dark:bg-purple-800/25 border-b border-purple-500/20 dark:border-purple-700/20"
           >
             <div
-              class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-400/90"
+              class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-400/70"
             >
               <Calendar class="h-3.5 w-3.5" />
               <span>Scheduled Next Bus</span>
@@ -841,14 +841,14 @@
       <!-- Routes without real-time data - show scheduled times -->
       {#if scheduleLoaded && missingRoutesSchedule.size > 0}
         <div
-          class="border-t border-purple-500/20 bg-purple-500/10 dark:bg-purple-950/50"
+          class="border-t border-purple-500/20 dark:border-purple-700/20 bg-purple-500/10 dark:bg-purple-900/15"
         >
           <!-- Section Header -->
           <div
-            class="px-4 py-2 bg-purple-500/20 dark:bg-purple-950/70 border-b border-purple-500/20"
+            class="px-4 py-2 bg-purple-500/20 dark:bg-purple-800/25 border-b border-purple-500/20 dark:border-purple-700/20"
           >
             <div
-              class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-400/90"
+              class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-400/70"
             >
               <Calendar class="h-3.5 w-3.5" />
               <span>Scheduled Next Bus</span>
