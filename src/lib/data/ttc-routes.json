@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-01-04T03:41:13.449Z",
+  "lastUpdated": "2026-01-11T03:30:43.450Z",
   "source": "NextBus API",
   "categories": {
     "subway": [
@@ -86,6 +86,10 @@
       {
         "route": "905",
         "name": "Eglinton East Express"
+      },
+      {
+        "route": "906",
+        "name": "Airport-Humber College Express"
       },
       {
         "route": "924",
@@ -178,16 +182,16 @@
         "name": "Bloor-Danforth"
       },
       {
-        "route": "302",
-        "name": "Kingston Rd-McCowan"
-      },
-      {
         "route": "307",
         "name": "Bathurst"
       },
       {
         "route": "315",
         "name": "Evans-Brown's Line"
+      },
+      {
+        "route": "316",
+        "name": "Kingston Rd-McCowan"
       },
       {
         "route": "320",
