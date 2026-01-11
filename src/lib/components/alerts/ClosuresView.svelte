@@ -94,18 +94,45 @@
 
   /**
    * Get the upcoming weekend date range (Saturday to Sunday).
+   * "This Weekend" refers to:
+   * - The current Sat-Sun if we're currently in the weekend period (Sat 00:00 to Mon 06:00)
+   * - The next Sat-Sun if we're after Monday 6am
    */
   function getWeekendRange(): { start: Date; end: Date } {
     const now = new Date();
     const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+    const hour = now.getHours();
 
-    // Calculate days until Saturday
-    let daysUntilSat = 6 - dayOfWeek;
-    if (dayOfWeek === 0) daysUntilSat = 6; // Sunday -> next Saturday
-    if (dayOfWeek === 6) daysUntilSat = 0; // Already Saturday
+    // Determine if we're still in the "current weekend" period
+    // Weekend period extends until Monday 6am to allow Sunday night viewing
+    const isInCurrentWeekendPeriod =
+      dayOfWeek === 6 || // Saturday
+      dayOfWeek === 0 || // Sunday
+      (dayOfWeek === 1 && hour < 6); // Monday before 6am
 
-    const saturday = new Date(now);
-    saturday.setDate(now.getDate() + daysUntilSat);
+    let saturday: Date;
+
+    if (isInCurrentWeekendPeriod) {
+      // We're in the weekend period - show current/just-passed weekend
+      if (dayOfWeek === 6) {
+        // Saturday - current day is Saturday
+        saturday = new Date(now);
+      } else if (dayOfWeek === 0) {
+        // Sunday - yesterday was Saturday
+        saturday = new Date(now);
+        saturday.setDate(now.getDate() - 1);
+      } else {
+        // Monday before 6am - 2 days ago was Saturday
+        saturday = new Date(now);
+        saturday.setDate(now.getDate() - 2);
+      }
+    } else {
+      // We're past the weekend period - calculate next Saturday
+      const daysUntilSat = (6 - dayOfWeek + 7) % 7;
+      saturday = new Date(now);
+      saturday.setDate(now.getDate() + (daysUntilSat === 0 ? 7 : daysUntilSat));
+    }
+
     saturday.setHours(0, 0, 0, 0);
 
     const sunday = new Date(saturday);
