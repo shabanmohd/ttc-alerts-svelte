@@ -154,12 +154,47 @@ This document describes all data sources, their polling frequencies, and update 
 
 ## Automated Workflows Summary
 
-| Workflow                   | Schedule                | Data Source            | Output                                |
-| -------------------------- | ----------------------- | ---------------------- | ------------------------------------- |
-| **Alert Polling**          | Every 30 seconds        | TTC Service Alerts API | Supabase `alert_cache` table          |
-| **Subway Closures Scrape** | Every 6 hours (cron)    | TTC Sitecore API       | Supabase `planned_maintenance` table  |
-| **Schedule Refresh**       | Monthly (1st, 4 AM UTC) | Toronto Open Data GTFS | `ttc-schedules.json`                  |
-| **Route Data Refresh**     | Weekly (Sun, 2 AM UTC)  | NextBus API            | `ttc-routes.json`, `ttc-route-*.json` |
+| Workflow                     | Schedule                       | Data Source            | Output                               |
+| ---------------------------- | ------------------------------ | ---------------------- | ------------------------------------ |
+| **Alert Polling**            | Every 2 minutes (pg_cron)      | TTC Service Alerts API | Supabase `alert_cache` table         |
+| **Subway Closures Scrape**   | Every 6 hours (pg_cron)        | TTC Sitecore API       | Supabase `planned_maintenance` table |
+| **Elevator Verification**    | Every 15 min (pg_cron)         | TTC API accessibility  | Supabase `incident_threads` table    |
+| **RSZ Verification**         | Every 15 min (pg_cron, offset) | TTC API/website        | Supabase `incident_threads` table    |
+| **RSZ Scrape**               | Every 30 min (pg_cron)         | TTC website HTML       | Supabase `incident_threads` table    |
+| **Alert Accuracy Monitoring**| Every 5 min (pg_cron)          | TTC API + database     | Supabase `alert_accuracy_logs` table |
+| **Schedule Refresh**         | Monthly (1st, 4 AM UTC)        | Toronto Open Data GTFS | `ttc-schedules.json`                 |
+| **Route Data Refresh**       | Weekly (Sun, 2 AM UTC)         | NextBus API            | `ttc-routes.json`, `ttc-route-*.json`|
+
+### Data Integrity Verification Functions
+
+These Edge Functions run periodically to ensure data consistency:
+
+#### verify-elevators (v1)
+
+| Property             | Value                                                        |
+| -------------------- | ------------------------------------------------------------ |
+| **Source**           | TTC API `accessibility` array                                |
+| **Update Frequency** | Every 15 minutes (pg_cron: :00, :15, :30, :45)               |
+| **Data Type**        | Elevator outages                                             |
+| **Auto-Corrections** | Create missing, unhide hidden-but-active, hide stale threads |
+
+#### verify-rsz (v1)
+
+| Property             | Value                                                        |
+| -------------------- | ------------------------------------------------------------ |
+| **Source**           | TTC API routes with `effectDesc = "Reduced Speed Zone"`      |
+| **Update Frequency** | Every 15 minutes (pg_cron: :07, :22, :37, :52, offset by 7)  |
+| **Data Type**        | Reduced Speed Zones (slow orders)                            |
+| **Auto-Corrections** | Create missing, unhide hidden-but-active, hide stale threads |
+
+#### scrape-rsz (v4)
+
+| Property             | Value                                            |
+| -------------------- | ------------------------------------------------ |
+| **Source**           | TTC website HTML tables                          |
+| **Update Frequency** | Every 30 minutes (pg_cron)                       |
+| **Data Type**        | RSZ with extended info (defect length, reason)   |
+| **Purpose**          | Backup/supplementary source with richer metadata |
 
 ### Edge Function: scrape-maintenance
 

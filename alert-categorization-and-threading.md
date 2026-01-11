@@ -1,9 +1,11 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.19  
-**Date:** January 10, 2026  
-**poll-alerts Version:** 114  
+**Version:** 3.20  
+**Date:** January 11, 2026  
+**poll-alerts Version:** 115  
 **scrape-maintenance Version:** 3  
+**verify-elevators Version:** 1  
+**verify-rsz Version:** 1  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
@@ -596,7 +598,7 @@ The Slow Zones tab (`?category=slowzones`) displays **ONLY RSZ alerts**, NOT reg
 // Slow Zones tab shows ONLY RSZ alerts via RSZAlertCard - no regular alerts
 let activeAlerts = $derived.by(() => {
   if (selectedCategory === "delays") {
-    return [];  // RSZ alerts rendered separately via RSZAlertCard
+    return []; // RSZ alerts rendered separately via RSZAlertCard
   }
   // ... normal filtering for other categories
 });
@@ -604,7 +606,9 @@ let activeAlerts = $derived.by(() => {
 // RSZ alerts displayed via dedicated component
 let rszAlerts = $derived.by(() => {
   if (selectedCategory !== "delays") return [];
-  return $threadsWithAlerts.filter(t => !t.is_resolved && !t.is_hidden && isRSZAlert(t));
+  return $threadsWithAlerts.filter(
+    (t) => !t.is_resolved && !t.is_hidden && isRSZAlert(t)
+  );
 });
 ```
 
@@ -621,17 +625,19 @@ let rszAlerts = $derived.by(() => {
 function isRSZAlert(thread: ThreadWithAlerts): boolean {
   const alert = thread.latestAlert;
   if (!alert) return false;
-  
+
   // Primary: TTC API RSZ alerts have alert_id starting with "ttc-rsz-"
-  if (alert.alert_id?.toLowerCase().startsWith('ttc-rsz-')) return true;
-  
+  if (alert.alert_id?.toLowerCase().startsWith("ttc-rsz-")) return true;
+
   // Secondary: Bluesky-sourced RSZ detected by text patterns
-  const headerText = (alert.header_text || '').toLowerCase();
-  return headerText.includes('slower than usual') ||
-         headerText.includes('reduced speed') ||
-         headerText.includes('move slower') ||
-         headerText.includes('running slower') ||
-         headerText.includes('slow zone');
+  const headerText = (alert.header_text || "").toLowerCase();
+  return (
+    headerText.includes("slower than usual") ||
+    headerText.includes("reduced speed") ||
+    headerText.includes("move slower") ||
+    headerText.includes("running slower") ||
+    headerText.includes("slow zone")
+  );
 }
 ```
 
@@ -641,12 +647,16 @@ The pill badge count for "Slow Zones" shows only RSZ alerts, not all MINOR alert
 
 ```typescript
 let categoryCounts = $derived.by(() => {
-  const active = $threadsWithAlerts.filter(t => !t.is_resolved && !t.is_hidden);
+  const active = $threadsWithAlerts.filter(
+    (t) => !t.is_resolved && !t.is_hidden
+  );
   return {
     // ... other counts
-    delays: active.filter(t => isRSZAlert(t)).reduce((total, thread) => {
-      return total + (thread.alerts?.length || 0);
-    }, 0),
+    delays: active
+      .filter((t) => isRSZAlert(t))
+      .reduce((total, thread) => {
+        return total + (thread.alerts?.length || 0);
+      }, 0),
   };
 });
 ```
@@ -761,27 +771,36 @@ CREATE TABLE planned_maintenance (
    - **Thread ID Pattern:** `thread-rsz-line{line}-{start}-{end}` (e.g., `thread-rsz-line1-eglinton-davisville`)
    - **STEP 6e (v112+):** Auto-repair orphaned RSZ alerts with null `thread_id`
 7. **STEP 6:** Process elevator alerts from TTC API
+
    - Extract station name from header
    - **Each elevator gets its own thread** via centralized `generateElevatorThreadId()` function (v111+)
    - **De-duplicates by elevatorCode** - TTC API sometimes returns duplicate alerts for same elevator
    - Multiple elevators at same station appear as separate alerts
    - No threading between different elevators at same station
    - **Text cleanup (v110+):** Strips "-TTC" suffix and technical metadata from descriptions
-   
+
    **Thread ID Patterns (v111+):**
+
    - **Standard TTC elevators:** `thread-elev-{elevatorCode}` (e.g., `thread-elev-57P2L`)
    - **Non-TTC elevators:** `thread-elev-nonttc-{station}-{detail}` (e.g., `thread-elev-nonttc-tmu-10dundassteentrance`)
-   
+
    **Non-TTC Elevator Handling:**
    Non-TTC elevators (at TMU, Bloor-Yonge PATH, etc.) share `elevatorCode: "Non-TTC"` in the API.
    To prevent threading conflicts, detail is extracted from headerText:
+
    ```typescript
    // Extract detail from "between X and Y" pattern
    const detailMatch = headerText.match(/between\s+(.+?)\s+and\s+/i);
-   const detail = detailMatch ? detailMatch[1].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 20) : '';
+   const detail = detailMatch
+     ? detailMatch[1]
+         .replace(/[^a-zA-Z0-9]/g, "")
+         .toLowerCase()
+         .substring(0, 20)
+     : "";
    ```
-   
+
 8. **STEP 6b:** Auto-resolve elevator threads
+
    - Uses same `generateElevatorThreadId()` function to match active suffixes
    - Builds `activeElevatorSuffixes` set from current TTC API alerts
    - Resolves threads whose suffix is no longer in the active set
@@ -857,38 +876,47 @@ interface ElevatorInfo {
   alertId?: string;
 }
 
-function generateElevatorThreadId(info: ElevatorInfo): { threadId: string; suffix: string } {
+function generateElevatorThreadId(info: ElevatorInfo): {
+  threadId: string;
+  suffix: string;
+} {
   const { elevatorCode, headerText, alertId } = info;
   const stationMatch = headerText.match(/^([^:]+):/);
-  const station = stationMatch ? stationMatch[1].trim() : 'Unknown';
-  const cleanStation = station.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-  
+  const station = stationMatch ? stationMatch[1].trim() : "Unknown";
+  const cleanStation = station.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+
   // Standard TTC elevators - use elevator code directly
-  if (elevatorCode && elevatorCode !== 'Non-TTC') {
+  if (elevatorCode && elevatorCode !== "Non-TTC") {
     return { threadId: `thread-elev-${elevatorCode}`, suffix: elevatorCode };
   }
-  
+
   // Non-TTC elevators - use station + detail from "between X and Y" pattern
   const detailMatch = headerText.match(/between\s+(.+?)\s+and\s+/i);
-  const detail = detailMatch 
-    ? detailMatch[1].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 20) 
-    : '';
-  const suffix = `nonttc-${cleanStation}-${detail || (alertId ? alertId.slice(-8) : 'unknown')}`;
+  const detail = detailMatch
+    ? detailMatch[1]
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toLowerCase()
+        .substring(0, 20)
+    : "";
+  const suffix = `nonttc-${cleanStation}-${
+    detail || (alertId ? alertId.slice(-8) : "unknown")
+  }`;
   return { threadId: `thread-elev-${suffix}`, suffix: suffix };
 }
 ```
 
 ### Thread ID Patterns
 
-| Elevator Type | Example headerText | Thread ID |
-| ------------- | ------------------ | --------- |
-| Standard TTC | "Bessarion: Elevator out of service..." | `thread-elev-57P2L` |
-| Non-TTC | "TMU: Elevator out of service between 10 Dundas St E entrance and..." | `thread-elev-nonttc-tmu-10dundassteentrance` |
-| Non-TTC | "Bloor-Yonge: Elevator out of service between Bloor St E south side entrance and..." | `thread-elev-nonttc-blooryonge-bloorstesouthsideent` |
+| Elevator Type | Example headerText                                                                   | Thread ID                                            |
+| ------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| Standard TTC  | "Bessarion: Elevator out of service..."                                              | `thread-elev-57P2L`                                  |
+| Non-TTC       | "TMU: Elevator out of service between 10 Dundas St E entrance and..."                | `thread-elev-nonttc-tmu-10dundassteentrance`         |
+| Non-TTC       | "Bloor-Yonge: Elevator out of service between Bloor St E south side entrance and..." | `thread-elev-nonttc-blooryonge-bloorstesouthsideent` |
 
 ### Why This Fix Was Needed
 
 **Problem:** Non-TTC elevators (TMU, Bloor-Yonge PATH, etc.) share `elevatorCode: "Non-TTC"` in the TTC API. Previously, this caused:
+
 1. **Threading conflicts** - Multiple Non-TTC elevators shared `thread-elev-Non` thread ID
 2. **Incorrect resolution** - When one Non-TTC elevator was fixed, all were marked resolved
 3. **Pattern mismatch** - STEP 6 created threads with different patterns than STEP 6b expected
@@ -900,6 +928,7 @@ function generateElevatorThreadId(info: ElevatorInfo): { threadId: string; suffi
 ### Consistency Guarantee
 
 The centralized function is now used in **three locations**:
+
 1. **STEP 6 (processElevatorAlerts)** - When creating new elevator alerts/threads
 2. **STEP 6b** - When building `activeElevatorSuffixes` set for resolution checking
 3. **STEP 6d** - When repairing orphaned elevator alerts
@@ -915,39 +944,53 @@ This ensures thread IDs are always generated consistently, preventing mismatches
 **Added in v112** to ensure consistent thread ID generation across RSZ-related steps.
 
 ```typescript
-function generateRszThreadId(alertId: string): { threadId: string; lineNumber: string; location: string } {
+function generateRszThreadId(alertId: string): {
+  threadId: string;
+  lineNumber: string;
+  location: string;
+} {
   // Pattern: ttc-rsz-{line}-{start}-{end}
   // Example: ttc-rsz-1-eglinton-davisville -> thread-rsz-line1-eglinton-davisville
-  
-  const parts = alertId.replace(/^ttc-rsz-/i, '').split('-');
+
+  const parts = alertId.replace(/^ttc-rsz-/i, "").split("-");
   const lineNumber = parts[0]; // "1" or "2"
-  const location = parts.slice(1).join('-'); // "eglinton-davisville"
-  
+  const location = parts.slice(1).join("-"); // "eglinton-davisville"
+
   // Check for legacy format (e.g., "line1yongeuniversitysubwaytrainswillmoves")
-  if (location.toLowerCase().startsWith('line')) {
-    return { threadId: `thread-rsz-legacy-${lineNumber}`, lineNumber, location: 'legacy' };
+  if (location.toLowerCase().startsWith("line")) {
+    return {
+      threadId: `thread-rsz-legacy-${lineNumber}`,
+      lineNumber,
+      location: "legacy",
+    };
   }
-  
-  return { threadId: `thread-rsz-line${lineNumber}-${location}`, lineNumber, location };
+
+  return {
+    threadId: `thread-rsz-line${lineNumber}-${location}`,
+    lineNumber,
+    location,
+  };
 }
 ```
 
 ### Thread ID Patterns
 
-| Alert ID | Thread ID |
-| -------- | --------- |
-| `ttc-rsz-1-eglinton-davisville` | `thread-rsz-line1-eglinton-davisville` |
-| `ttc-rsz-2-chester-broadview` | `thread-rsz-line2-chester-broadview` |
-| `ttc-rsz-1-line1yongeuniversity...` | `thread-rsz-legacy-1` (legacy format) |
+| Alert ID                            | Thread ID                              |
+| ----------------------------------- | -------------------------------------- |
+| `ttc-rsz-1-eglinton-davisville`     | `thread-rsz-line1-eglinton-davisville` |
+| `ttc-rsz-2-chester-broadview`       | `thread-rsz-line2-chester-broadview`   |
+| `ttc-rsz-1-line1yongeuniversity...` | `thread-rsz-legacy-1` (legacy format)  |
 
 ### Why This Fix Was Needed
 
 **Problem:** RSZ alerts were created with `thread_id = null` (orphaned) because:
+
 1. The old `find_or_create_thread` RPC generated generic hash-based thread IDs
 2. Thread creation sometimes failed silently after alert insert
 3. Frontend check for `ttc-RSZ-` was case-sensitive (alerts use lowercase `ttc-rsz-`)
 
 **Fixes (v112):**
+
 1. `generateRszThreadId()` creates location-based thread IDs from alert_id pattern
 2. STEP 6e auto-repairs orphaned RSZ alerts on every poll
 3. Frontend `isRSZAlert()` now uses case-insensitive `.toLowerCase().startsWith('ttc-rsz-')`
@@ -955,6 +998,7 @@ function generateRszThreadId(alertId: string): { threadId: string; lineNumber: s
 ### Consistency Guarantee
 
 The centralized function is now used in **two locations**:
+
 1. **STEP 5 (processRszAlerts)** - When creating new RSZ alerts/threads
 2. **STEP 6e** - When repairing orphaned RSZ alerts
 
@@ -966,16 +1010,16 @@ The alert system is **self-healing** - even if processing errors occur, automati
 
 ### Backend Auto-Repair Steps
 
-| Step              | Protection                      | Runs           | Description                                                   |
-| ----------------- | ------------------------------- | -------------- | ------------------------------------------------------------- |
-| STEP 4            | LAYER 1: Category check         | Every poll     | Skip RSZ/ACCESSIBILITY categories during matching             |
-| STEP 4            | **LAYER 2: Thread ID pattern**  | Every poll     | Skip threads with `rsz`, `elev`, `accessibility` in ID        |
-| STEP 4            | Never resolve protected threads | Every poll     | Block SERVICE_RESUMED from resolving RSZ/ACCESSIBILITY        |
-| STEP 6c-repair    | Un-resolve RSZ                  | Every poll     | Restore threads if zone is in TTC API `activeRszThreadIds`    |
-| STEP 6c-resolve   | Hide stale RSZ                  | Every poll     | Hide threads if zone NOT in TTC API `activeRszThreadIds`      |
-| STEP 6c-fix-title | Fix RSZ titles                  | Every poll     | Replace "resumed" text with actual RSZ alert                  |
-| **STEP 6d**       | **Repair orphaned elevators**   | **Every poll** | **Create threads for alerts without thread_id**               |
-| **STEP 6e**       | **Repair orphaned RSZ**         | **Every poll** | **Create threads for RSZ alerts without thread_id**           |
+| Step              | Protection                      | Runs           | Description                                                |
+| ----------------- | ------------------------------- | -------------- | ---------------------------------------------------------- |
+| STEP 4            | LAYER 1: Category check         | Every poll     | Skip RSZ/ACCESSIBILITY categories during matching          |
+| STEP 4            | **LAYER 2: Thread ID pattern**  | Every poll     | Skip threads with `rsz`, `elev`, `accessibility` in ID     |
+| STEP 4            | Never resolve protected threads | Every poll     | Block SERVICE_RESUMED from resolving RSZ/ACCESSIBILITY     |
+| STEP 6c-repair    | Un-resolve RSZ                  | Every poll     | Restore threads if zone is in TTC API `activeRszThreadIds` |
+| STEP 6c-resolve   | Hide stale RSZ                  | Every poll     | Hide threads if zone NOT in TTC API `activeRszThreadIds`   |
+| STEP 6c-fix-title | Fix RSZ titles                  | Every poll     | Replace "resumed" text with actual RSZ alert               |
+| **STEP 6d**       | **Repair orphaned elevators**   | **Every poll** | **Create threads for alerts without thread_id**            |
+| **STEP 6e**       | **Repair orphaned RSZ**         | **Every poll** | **Create threads for RSZ alerts without thread_id**        |
 
 ### Thread ID Pattern Protection (v108+)
 
@@ -1168,6 +1212,91 @@ function getClosureType(maintenance: PlannedMaintenance): string {
   return "SCHEDULED_CLOSURE";
 }
 ```
+
+---
+
+### `verify-elevators` (v1)
+
+**Trigger:** Cron schedule (`verify-elevators-15min` - every 15 minutes at :00, :15, :30, :45)  
+**Purpose:** Verify elevator data integrity against TTC API
+
+**Flow:**
+
+1. Fetch current elevator alerts from TTC API (`accessibility` array)
+2. Query database for elevator threads (category = `ACCESSIBILITY`)
+3. Compare and auto-correct discrepancies:
+   - **Create missing:** If elevator in TTC API but not in database
+   - **Unhide hidden:** If elevator in TTC API but thread is `is_hidden = true`
+   - **Hide stale:** If thread in database but elevator no longer in TTC API
+
+**Response:**
+```json
+{
+  "success": true,
+  "ttcApiCount": 6,
+  "databaseCount": 6,
+  "corrections": { "created": 0, "unhidden": 0, "hidden": 0 },
+  "details": { /* per-elevator breakdown */ }
+}
+```
+
+**Thread ID Generation:** Uses same `generateElevatorThreadId()` as `poll-alerts` for consistency.
+
+---
+
+### `verify-rsz` (v1)
+
+**Trigger:** Cron schedule (`verify-rsz-15min` - every 15 minutes at :07, :22, :37, :52)  
+**Purpose:** Verify RSZ data integrity against TTC API/website
+
+**Flow:**
+
+1. Fetch RSZ alerts from TTC API (routes with `effectDesc = "Reduced Speed Zone"`)
+2. Query database for RSZ threads (category = `RSZ`)
+3. Compare and auto-correct discrepancies:
+   - **Create missing:** If RSZ zone in TTC API but not in database
+   - **Unhide hidden:** If RSZ zone in TTC API but thread is `is_hidden = true`
+   - **Hide stale:** If thread in database but zone no longer in TTC API
+
+**Response:**
+```json
+{
+  "success": true,
+  "ttcApiCount": 11,
+  "databaseCount": 11,
+  "corrections": { "created": 0, "unhidden": 0, "hidden": 0 },
+  "details": { /* per-zone breakdown */ }
+}
+```
+
+**Thread ID Generation:** Uses same `generateRszThreadId()` as `poll-alerts` for consistency.
+
+---
+
+### `scrape-rsz` (v4)
+
+**Trigger:** Cron schedule (`scrape-rsz-30min` - every 30 minutes)  
+**Purpose:** Alternative RSZ data source from TTC website
+
+**Data Source:** `https://www.ttc.ca/riding-the-ttc/Updates/Reduced-Speed-Zones`
+
+**Flow:**
+
+1. Fetch TTC website HTML page
+2. Parse HTML tables to extract:
+   - Line (1 or 2)
+   - Direction (Northbound, Southbound, etc.)
+   - Location (stop start - stop end)
+   - Defect length, distance, track %, reduced speed, normal speed
+   - Reason, target removal date
+3. Upsert threads and alerts to database
+
+**Why Website Scraping:** The TTC website provides richer data than the API:
+- Defect length
+- Target removal date
+- Reason for slow zone
+
+**Hybrid Approach:** Used as backup/supplementary source alongside TTC API.
 
 ---
 

@@ -18,13 +18,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## 🆕 Recent Updates (Jan 11, 2026)
 
-| Component                | Change                                                            | Status       |
-| ------------------------ | ----------------------------------------------------------------- | ------------ |
-| **verify-elevators**     | New Edge Function: validates elevator data against TTC API        | ✅ Deployed  |
-| **verify-rsz**           | New Edge Function: validates RSZ data against TTC website         | ✅ Deployed  |
-| **poll-alerts v115**     | STEP 6b-repair: unhide elevator threads that reappear in TTC API  | ✅ Deployed  |
-| **alerts.ts**            | Bidirectional realtime sync: fetch alerts for threads & vice versa| ✅ Committed |
-| **pg_cron**              | Auto-verification jobs every 15 minutes                           | ✅ Deployed  |
+| Component            | Change                                                             | Status       |
+| -------------------- | ------------------------------------------------------------------ | ------------ |
+| **verify-elevators** | New Edge Function: validates elevator data against TTC API         | ✅ Deployed  |
+| **verify-rsz**       | New Edge Function: validates RSZ data against TTC website          | ✅ Deployed  |
+| **poll-alerts v115** | STEP 6b-repair: unhide elevator threads that reappear in TTC API   | ✅ Deployed  |
+| **alerts.ts**        | Bidirectional realtime sync: fetch alerts for threads & vice versa | ✅ Committed |
+| **pg_cron**          | Auto-verification jobs every 15 minutes                            | ✅ Deployed  |
 
 ### Previous Updates (Jan 9, 2026)
 
@@ -219,15 +219,37 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ## Deployed Edge Functions
 
-| Function               | Status | URL                                                                            |
-| ---------------------- | ------ | ------------------------------------------------------------------------------ |
-| auth-register          | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register`          |
-| auth-challenge         | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge`         |
-| auth-verify            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`            |
-| auth-session           | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`           |
-| auth-recover           | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`           |
-| poll-alerts            | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/poll-alerts`            |
-| monitor-alert-accuracy | ✅     | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/monitor-alert-accuracy` |
+### Authentication Functions
+
+| Function      | Status | Purpose              | URL                                                                   |
+| ------------- | ------ | -------------------- | --------------------------------------------------------------------- |
+| auth-register | ✅     | WebAuthn registration| `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-register` |
+| auth-challenge| ✅     | WebAuthn challenge   | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-challenge`|
+| auth-verify   | ✅     | WebAuthn verification| `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-verify`   |
+| auth-session  | ✅     | Session management   | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-session`  |
+| auth-recover  | ✅     | Recovery codes       | `https://wmchvmegxcpyfjcuzqzk.supabase.co/functions/v1/auth-recover`  |
+
+### Alert Processing Functions
+
+| Function               | Version | Status | Purpose                                      |
+| ---------------------- | ------- | ------ | -------------------------------------------- |
+| poll-alerts            | v115    | ✅     | Main alert fetcher from TTC API + Bluesky    |
+| verify-elevators       | v1      | ✅     | Validates elevator data against TTC API      |
+| verify-rsz             | v1      | ✅     | Validates RSZ data against TTC website       |
+| scrape-rsz             | v4      | ✅     | Alternative RSZ source from TTC website      |
+| scrape-maintenance     | v3      | ✅     | Fetches planned maintenance from TTC website |
+| monitor-alert-accuracy | v5      | ✅     | Compares TTC API vs database (metrics)       |
+
+### Cron Jobs (pg_cron)
+
+| Job Name                  | Schedule           | Function               |
+| ------------------------- | ------------------ | ---------------------- |
+| poll-alerts-2min          | `*/2 * * * *`      | poll-alerts            |
+| verify-elevators-15min    | `*/15 * * * *`     | verify-elevators       |
+| verify-rsz-15min          | `7,22,37,52 * * *` | verify-rsz             |
+| scrape-rsz-30min          | `*/30 * * * *`     | scrape-rsz             |
+| scrape-maintenance-6hr    | `0 */6 * * *`      | scrape-maintenance     |
+| monitor-accuracy-5min     | `*/5 * * * *`      | monitor-alert-accuracy |
 
 ---
 
