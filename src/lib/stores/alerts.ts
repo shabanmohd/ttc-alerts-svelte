@@ -146,37 +146,35 @@ function deduplicateAlerts(alerts: Alert[]): Alert[] {
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
   
+  // Separate TTC API alerts and non-TTC alerts
+  const ttcApiAlerts = sorted.filter(a => a.alert_id.startsWith('ttc-alert-'));
+  const nonTtcAlerts = sorted.filter(a => !a.alert_id.startsWith('ttc-alert-'));
+  
   const kept: Alert[] = [];
   
-  for (const alert of sorted) {
-    // Always keep TTC API alerts - they're needed for disruption detection
-    // getTTCApiDisruptionAlert() specifically looks for ttc-alert-* prefix
-    const isTTCApiAlert = alert.alert_id.startsWith('ttc-alert-');
+  // FIRST: Process TTC API alerts (always keep unique ones)
+  // These are needed for getTTCApiDisruptionAlert() to detect official disruptions
+  for (const alert of ttcApiAlerts) {
+    const hasSimilarTTCAlert = kept.some(keptAlert => {
+      const similarity = textSimilarity(
+        alert.header_text || '', 
+        keptAlert.header_text || ''
+      );
+      return similarity > 0.9;
+    });
     
-    if (isTTCApiAlert) {
-      // Check if we already have a TTC API alert with >90% similar text
-      const hasSimilarTTCAlert = kept.some(keptAlert => {
-        if (!keptAlert.alert_id.startsWith('ttc-alert-')) return false;
-        const similarity = textSimilarity(
-          alert.header_text || '', 
-          keptAlert.header_text || ''
-        );
-        return similarity > 0.9;
-      });
-      
-      if (!hasSimilarTTCAlert) {
-        kept.push(alert);
-      }
-      continue;
+    if (!hasSimilarTTCAlert) {
+      kept.push(alert);
     }
-    
-    // For non-TTC alerts, check if too similar to any kept alert
+  }
+  
+  // SECOND: Process non-TTC alerts, deduplicating against ALL kept alerts (including TTC API)
+  for (const alert of nonTtcAlerts) {
     const isDuplicate = kept.some(keptAlert => {
       const similarity = textSimilarity(
         alert.header_text || '', 
         keptAlert.header_text || ''
       );
-      // If >90% similar, consider it duplicate
       return similarity > 0.9;
     });
     
@@ -185,7 +183,10 @@ function deduplicateAlerts(alerts: Alert[]): Alert[] {
     }
   }
   
-  return kept;
+  // Re-sort by date (TTC API alerts may have been inserted out of order)
+  return kept.sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 }
 
 // Derived: threads with their alerts grouped
