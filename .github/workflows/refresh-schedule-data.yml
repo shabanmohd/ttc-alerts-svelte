@@ -2,9 +2,9 @@ name: Refresh TTC Schedule Data (GTFS)
 
 on:
   schedule:
-    # Run monthly on the 1st at 4:00 AM UTC (11:00 PM EST previous day)
+    # Run weekly on Sundays at 4:00 AM UTC (11:00 PM EST Saturday)
     # TTC publishes GTFS updates approximately every 6 weeks
-    - cron: "0 4 1 * *"
+    - cron: "0 4 * * 0"
   workflow_dispatch:
     # Allow manual trigger from GitHub Actions UI
 

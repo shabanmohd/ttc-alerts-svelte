@@ -64,7 +64,7 @@ This document describes all data sources, their polling frequencies, and update 
 | ------------------------- | ----------------------------------------------------------------------------------- |
 | **Source**                | [Toronto Open Data GTFS](https://open.toronto.ca/dataset/ttc-routes-and-schedules/) |
 | **TTC Update Frequency**  | Approximately every 6 weeks                                                         |
-| **Our Refresh Frequency** | Monthly (1st of month, 4:00 AM UTC)                                                 |
+| **Our Refresh Frequency** | Weekly (Sundays, 4:00 AM UTC)                                                       |
 | **Workflow**              | `.github/workflows/refresh-schedule-data.yml`                                       |
 | **Output**                | `static/data/ttc-schedules.json` (~9,267 stops)                                     |
 | **Data Contents**         | First AM/PM departures per route per stop                                           |
@@ -162,7 +162,7 @@ This document describes all data sources, their polling frequencies, and update 
 | **RSZ Verification**          | Every 15 min (pg_cron, offset) | TTC API/website        | Supabase `incident_threads` table     |
 | **RSZ Scrape**                | Every 30 min (pg_cron)         | TTC website HTML       | Supabase `incident_threads` table     |
 | **Alert Accuracy Monitoring** | Every 5 min (pg_cron)          | TTC API + database     | Supabase `alert_accuracy_logs` table  |
-| **Schedule Refresh**          | Monthly (1st, 4 AM UTC)        | Toronto Open Data GTFS | `ttc-schedules.json`                  |
+| **Schedule Refresh**          | Weekly (Sun, 4 AM UTC)         | Toronto Open Data GTFS | `ttc-schedules.json`                  |
 | **Route Data Refresh**        | Weekly (Sun, 2 AM UTC)         | NextBus API            | `ttc-routes.json`, `ttc-route-*.json` |
 
 ### Data Integrity Verification Functions
@@ -312,7 +312,7 @@ If TTC changes stop sequences or significantly changes routes:
 
 TTC publishes new GTFS approximately every 6 weeks:
 
-1. Monthly schedule refresh will catch it within ~4-6 weeks
+1. Weekly schedule refresh will catch it within ~1 week
 2. Manual trigger: GitHub Actions → "Refresh TTC Schedule Data" → "Run workflow"
 
 ### Monitoring
