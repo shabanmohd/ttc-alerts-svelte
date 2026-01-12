@@ -179,14 +179,43 @@ export async function fetchRouteChanges(): Promise<RouteChange[]> {
 
 /**
  * Check if a route change is currently active or upcoming
+ * Considers both date AND time when filtering
  */
 export function isRouteChangeActive(change: RouteChange): boolean {
   const now = new Date();
 
   // If there's an end date, check if we've passed it
   if (change.endDate) {
-    const endDate = new Date(change.endDate);
-    if (endDate < now) {
+    // Parse date and time together for accurate comparison
+    // TTC data is in EST, JavaScript will parse it in local time
+    let endDateTime: Date;
+    
+    if (change.endTime) {
+      // Parse time like "05:00 AM" or "11:30 PM"
+      const timeMatch = change.endTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+      if (timeMatch) {
+        let hours = parseInt(timeMatch[1], 10);
+        const minutes = parseInt(timeMatch[2], 10);
+        const isPM = timeMatch[3].toUpperCase() === 'PM';
+        
+        // Convert to 24-hour format
+        if (isPM && hours !== 12) hours += 12;
+        if (!isPM && hours === 12) hours = 0;
+        
+        // Create date with time
+        endDateTime = new Date(change.endDate);
+        endDateTime.setHours(hours, minutes, 0, 0);
+      } else {
+        // Fallback: just use date
+        endDateTime = new Date(change.endDate);
+      }
+    } else {
+      // No time specified, use end of day (11:59 PM)
+      endDateTime = new Date(change.endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+    }
+    
+    if (endDateTime < now) {
       return false;
     }
   }
