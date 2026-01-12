@@ -1289,6 +1289,8 @@ Toasts appear above the mobile bottom nav:
 
 Direction badges indicate the travel direction of a stop (extracted from GTFS trip headsigns). Used in StopSearch dropdown and ETACard headers.
 
+**i18n Support (Jan 2026):** All direction labels are now translatable. The English text (Eastbound, Westbound, etc.) is passed through `$_("directions.eastbound")` etc. to display French translations (Direction est, Direction ouest, etc.) when the user's locale is French.
+
 ```svelte
 <!-- Tailwind classes for direction colors -->
 {@const dirColor = direction === 'Eastbound' ? 'bg-sky-600/20 text-sky-700 dark:text-sky-400 border-sky-600/40'
@@ -1296,24 +1298,33 @@ Direction badges indicate the travel direction of a stop (extracted from GTFS tr
   : direction === 'Northbound' ? 'bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40'
   : 'bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40'}
 
+<!-- Translation helper function -->
+{@const translatedDir = direction === 'Eastbound' ? $_('directions.eastbound')
+  : direction === 'Westbound' ? $_('directions.westbound')
+  : direction === 'Northbound' ? $_('directions.northbound')
+  : $_('directions.southbound')}
+
 <span class="text-[10px] font-medium px-1.5 py-0.5 rounded border uppercase {dirColor}">
-  {direction}
+  {translatedDir}
 </span>
 ```
 
 **Color Mapping (WCAG AA Compliant):**
 
-| Direction      | Background       | Light Text    | Dark Text     | Border           |
-| -------------- | ---------------- | ------------- | ------------- | ---------------- |
-| **Eastbound**  | `sky-600/20`     | `sky-700`     | `sky-400`     | `sky-600/40`     |
-| **Westbound**  | `amber-600/20`   | `amber-700`   | `amber-400`   | `amber-600/40`   |
-| **Northbound** | `emerald-600/20` | `emerald-700` | `emerald-400` | `emerald-600/40` |
-| **Southbound** | `rose-600/20`    | `rose-700`    | `rose-400`    | `rose-600/40`    |
+| Direction      | Background       | Light Text    | Dark Text     | Border           | French            |
+| -------------- | ---------------- | ------------- | ------------- | ---------------- | ----------------- |
+| **Eastbound**  | `sky-600/20`     | `sky-700`     | `sky-400`     | `sky-600/40`     | Direction est     |
+| **Westbound**  | `amber-600/20`   | `amber-700`   | `amber-400`   | `amber-600/40`   | Direction ouest   |
+| **Northbound** | `emerald-600/20` | `emerald-700` | `emerald-400` | `emerald-600/40` | Direction nord    |
+| **Southbound** | `rose-600/20`    | `rose-700`    | `rose-400`    | `rose-600/40`    | Direction sud     |
 
 **Usage Locations:**
 
 - `StopSearch.svelte` - Search dropdown results
 - `ETACard.svelte` - Saved stop card headers
+- `ETADirectionSlide.svelte` - Direction carousel slides
+- `RSZAlertCard.svelte` - Reduced speed zone direction badges
+- `RouteDirectionTabs.svelte` - Route page direction tabs
 
 ### Alert Cards
 
