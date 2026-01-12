@@ -345,7 +345,9 @@
     "refreshArrivalTimes": "Rafraîchir les heures d'arrivée",
     "failedToFindNearby": "N'a pas trouvé d'arrêts à proximité",
     "removeFromBookmarks": "Supprimer {nom d'arrêt} des signets",
-    "liveArrivals": "Arrivées en direct"
+    "liveArrivals": "Arrivées en direct",
+    "showingStops": "Affichage de {count} arrêts",
+    "totalOnRoute": "{count} au total sur la ligne"
   },
   "eta": {
     "liveArrivals": "Arrivées en direct",

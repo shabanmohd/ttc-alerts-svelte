@@ -718,7 +718,21 @@
   // Derived: selected display label (for tabs)
   let selectedDisplayLabel = $derived(() => {
     const displayMap = directionDisplayLabels();
-    return displayMap[selectedDirection] || selectedDirection;
+    const label = displayMap[selectedDirection] || selectedDirection;
+    
+    // Translate "Towards X" labels
+    if (label.startsWith("Towards ")) {
+      const destination = label.replace("Towards ", "");
+      return $_("eta.towardsDestination", { values: { destination } });
+    }
+    
+    // Translate cardinal directions
+    const dirKey = label.toLowerCase();
+    if (["eastbound", "westbound", "northbound", "southbound"].includes(dirKey)) {
+      return $_(`directions.${dirKey}`);
+    }
+    
+    return label;
   });
 
   // Derived: filtered direction groups (matching directionLabels)
@@ -1251,9 +1265,9 @@
 
         <!-- Total stops count -->
         <p class="stops-count">
-          Showing {currentStops().length} stops
+          {$_("stops.showingStops", { values: { count: currentStops().length } })}
           {#if directionGroups.length > 1}
-            · {allStops().length} total on route
+            · {$_("stops.totalOnRoute", { values: { count: allStops().length } })}
           {/if}
         </p>
       {/if}

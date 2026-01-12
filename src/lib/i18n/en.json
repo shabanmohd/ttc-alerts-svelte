@@ -363,6 +363,8 @@
     "refreshArrivalTimes": "Refresh arrival times",
     "failedToFindNearby": "Failed to find nearby stops",
     "removeFromBookmarks": "Remove {stopName} from bookmarks",
+    "showingStops": "Showing {count} stops",
+    "totalOnRoute": "{count} total on route",
     "liveArrivals": "Live Arrivals"
   },
   "eta": {
