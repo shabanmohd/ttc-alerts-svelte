@@ -286,3 +286,164 @@ If this solution doesn't work in your case, try:
 Implemented in commit: `703ae8f` (Dec 11, 2025)
 
 - "fix: iOS bottom nav offset when swiping up in Chrome/Safari"
+
+---
+
+## ISSUE 2: iOS PWA First-Load Gap (UNRESOLVED)
+
+### Problem Description
+
+When the PWA is first launched on iOS (iPhone with Face ID), there is a visible dark gap between the bottom navigation bar and the actual bottom of the screen. **This gap disappears after refreshing the page.**
+
+### Environment
+- Device: iPhone with Face ID (safe area: 34px)
+- Mode: PWA standalone (added to home screen)
+- Behavior: First launch only - works correctly after refresh
+
+### Visual Description
+- Bottom nav appears positioned higher than expected
+- Dark gap visible below the nav bar
+- Gap is approximately the same size as safe area (~34px)
+
+### Root Cause Analysis
+
+The issue appears to be related to iOS Safari/WebKit's viewport calculation on PWA first launch:
+
+1. **Initial viewport is taller than actual visible area** - iOS reports a viewport height that extends beyond the physical screen
+2. **`bottom: 0` positions correctly relative to incorrect viewport** - The nav is at the "bottom" but the viewport extends past the screen
+3. **Safe area inset IS being calculated correctly** - Console logs show `[iOS Safe Area] Measured: 34px`
+4. **Refresh fixes it** - Suggesting the viewport recalculates correctly on subsequent loads
+
+This is likely a WebKit timing bug where the PWA viewport isn't finalized before the initial render.
+
+### Approaches Attempted (All Failed - Jan 12, 2026)
+
+#### Attempt 1: JS-based Safe Area Fallback
+**Approach**: Measure safe area with a test element and set CSS variable
+```javascript
+function setSafeAreaInset() {
+  const test = document.createElement('div');
+  test.style.cssText = 'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom)';
+  document.body.appendChild(test);
+  const value = parseInt(getComputedStyle(test).paddingBottom) || 0;
+  document.body.removeChild(test);
+  document.documentElement.style.setProperty('--safe-area-inset-bottom-computed', `${value}px`);
+}
+```
+**Result**: Safe area measured correctly (34px) but gap still appeared
+
+#### Attempt 2: Multiple setTimeout Checks
+**Approach**: Re-measure safe area at 50ms, 100ms, 300ms, 500ms intervals
+**Result**: Same - measurements correct, gap persists
+
+#### Attempt 3: Minimum Safe Area with max()
+**Approach**: Force minimum 34px padding
+```css
+padding-bottom: calc(0.5rem + max(34px, env(safe-area-inset-bottom)));
+```
+**Result**: Padding applied but viewport issue persists
+
+#### Attempt 4: html.ios-pwa position: fixed
+**Approach**: Fix the html element to prevent viewport miscalculation
+```css
+html.ios-pwa {
+  position: fixed;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+```
+**Result**: Did not resolve gap issue
+
+#### Attempt 5: html::after Pseudo-element
+**Approach**: Add background pseudo-element below nav to cover gap
+```css
+html.ios-pwa::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background-color: hsl(var(--background));
+  z-index: 40;
+}
+```
+**Result**: Pseudo-element rendered but didn't cover the gap (viewport extends beyond it too)
+
+#### Attempt 6: nav::after Extension
+**Approach**: Extend nav's own pseudo-element 100px below
+```css
+.mobile-bottom-nav::after {
+  content: '';
+  position: absolute;
+  bottom: -100px;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background-color: inherit;
+}
+```
+**Result**: Same issue - the extension goes into the incorrect viewport area
+
+#### Attempt 7: max-height: 100dvh Constraint
+**Approach**: Constrain viewport to dynamic viewport height
+```css
+html.ios-pwa {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+```
+**Result**: Did not resolve issue
+
+### Diagnostic Information
+
+Console logs show everything working correctly:
+```
+[iOS Safe Area] Measured: 34px
+Storage initialized successfully
+✅ TTC stops database ready (9346 stops)
+Realtime subscription status: "SUBSCRIBED"
+```
+
+### Future Approaches to Explore
+
+1. **Force Window Resize on Mount**
+   ```javascript
+   if (navigator.standalone) {
+     window.scrollTo(0, 1);
+     setTimeout(() => window.scrollTo(0, 0), 100);
+   }
+   ```
+
+2. **visualViewport API**
+   ```javascript
+   if (window.visualViewport) {
+     const vh = window.visualViewport.height;
+     document.documentElement.style.setProperty('--actual-viewport-height', `${vh}px`);
+   }
+   ```
+
+3. **resize Event Listener**
+   ```javascript
+   window.addEventListener('resize', () => {
+     document.body.style.height = `${window.innerHeight}px`;
+   });
+   ```
+
+4. **Research WebKit PWA viewport bugs** for established workarounds
+
+5. **Service Worker cache priming** - perhaps timing related to initial resource loading
+
+6. **Splash screen timing** - coordinate with iOS PWA splash dismissal
+
+### Current State
+
+**Status**: UNRESOLVED - Reverted to commit `ac2e6ad` (stable state without experimental fixes)
+**Impact**: Visual issue on iOS PWA first launch only; resolves on refresh
+**Priority**: Low (workaround: user can refresh)
+
+---
+
+Last Updated: 2026-01-12
