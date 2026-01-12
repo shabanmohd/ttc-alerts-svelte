@@ -339,7 +339,7 @@
       "DELAY",
       "PLANNED_CLOSURE",
     ];
-    
+
     // Must have at least one disruption category
     const hasDisruptionCategory = disruptionCategories.some((cat) =>
       categories.includes(cat)
@@ -374,7 +374,7 @@
     if (selectedCategory === "delays") {
       return [];
     }
-    
+
     // For disruptions tab: ONLY show TTC API disruption alerts
     // This excludes Bluesky alerts, RSZ alerts, elevator alerts, and service resumed
     if (selectedCategory === "disruptions") {
@@ -388,7 +388,7 @@
       );
       return ttcApiDisruptions;
     }
-    
+
     // For other tabs (station-alerts): use severity-based filtering
     const active = $threadsWithAlerts.filter(
       (t) => !t.is_resolved && !t.is_hidden

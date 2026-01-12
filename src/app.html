@@ -47,6 +47,23 @@
       })();
     </script>
     
+    <!-- iOS PWA safe area detection - runs early to prevent layout shift -->
+    <script>
+      (function() {
+        // Detect iOS PWA standalone mode
+        var isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                          (window.navigator && window.navigator.standalone === true);
+        if (isStandalone) {
+          document.documentElement.classList.add('ios-pwa');
+          // Force safe area calculation by adding a temporary style
+          // This primes the browser to calculate env() values
+          var style = document.createElement('style');
+          style.textContent = ':root { --primed-safe-area: env(safe-area-inset-bottom, 0px); }';
+          document.head.appendChild(style);
+        }
+      })();
+    </script>
+    
     <!-- SEO -->
     <meta name="description" content="Track TTC service alerts, subway closures, elevator outages & delays in real-time. Free transit tracker for Toronto subway, bus & streetcar routes." />
     <meta name="keywords" content="TTC, Toronto, transit, alerts, subway, bus, streetcar, delays, service disruptions, real-time" />

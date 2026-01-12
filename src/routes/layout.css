@@ -600,8 +600,9 @@ header.sticky {
   background-color: hsl(var(--background));
   border-top: 1px solid hsl(var(--border));
   padding-top: 0.5rem;
-  /* Simple padding with safe area inset - no fallback needed */
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  /* Safe area padding with JS-calculated fallback for iOS PWA */
+  /* First check JS-calculated fallback, then env(), then 0 */
+  padding-bottom: calc(0.5rem + var(--safe-area-inset-bottom-fallback, env(safe-area-inset-bottom, 0px)));
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -616,7 +617,7 @@ header.sticky {
 /* Compact mode: reduce padding only, keep solid background */
 .mobile-bottom-nav.compact {
   padding-top: 0.25rem;
-  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(0.25rem + var(--safe-area-inset-bottom-fallback, env(safe-area-inset-bottom, 0px)));
 }
 
 @media (min-width: 1024px) {

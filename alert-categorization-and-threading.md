@@ -112,16 +112,17 @@ This document describes the alert categorization and threading system designed t
 
 ### Frontend Data Flow
 
-| UI Section | Data Source | Filter Logic |
-|------------|-------------|--------------|
-| Disruptions & Delays | TTC API only | `alert_id.startsWith('ttc-alert-')` |
-| Slow Zones | TTC API only | `alert_id.startsWith('ttc-rsz-')` |
-| Station Alerts | TTC API only | `alert_id.startsWith('ttc-elev-')` |
-| Recently Resolved | Bluesky | `categories.includes('SERVICE_RESUMED')` |
+| UI Section           | Data Source  | Filter Logic                             |
+| -------------------- | ------------ | ---------------------------------------- |
+| Disruptions & Delays | TTC API only | `alert_id.startsWith('ttc-alert-')`      |
+| Slow Zones           | TTC API only | `alert_id.startsWith('ttc-rsz-')`        |
+| Station Alerts       | TTC API only | `alert_id.startsWith('ttc-elev-')`       |
+| Recently Resolved    | Bluesky      | `categories.includes('SERVICE_RESUMED')` |
 
 ### Data Integrity Verification
 
 **verify-disruptions Edge Function (runs every 15 minutes):**
+
 - Compares TTC API disruptions with database
 - Reports missing alerts, hidden alerts that should be visible
 - Cron schedule: `3,18,33,48 * * * *`

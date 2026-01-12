@@ -62,7 +62,7 @@
     lastScrollY = currentScrollY;
   }
 
-  // Fix for iOS dynamic viewport + scroll handling
+  // Fix for iOS dynamic viewport + scroll handling + safe area
   onMount(() => {
     const setViewportHeight = () => {
       document.documentElement.style.setProperty(
@@ -71,8 +71,36 @@
       );
     };
 
+    // iOS PWA fix: Calculate safe area inset on mount
+    // env(safe-area-inset-bottom) isn't always available immediately in PWA
+    const setSafeAreaInset = () => {
+      // Create a test element to measure the computed safe area inset
+      const testEl = document.createElement('div');
+      testEl.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;';
+      document.body.appendChild(testEl);
+      
+      // Get computed height
+      const safeAreaHeight = testEl.offsetHeight;
+      document.body.removeChild(testEl);
+      
+      // Set as CSS variable (fallback for when env() isn't ready)
+      if (safeAreaHeight > 0) {
+        document.documentElement.style.setProperty(
+          '--safe-area-inset-bottom-fallback',
+          `${safeAreaHeight}px`
+        );
+      }
+    };
+
     setViewportHeight();
+    setSafeAreaInset();
+    
+    // Re-check safe area after a delay (iOS sometimes needs time)
+    setTimeout(setSafeAreaInset, 100);
+    setTimeout(setSafeAreaInset, 500);
+    
     window.addEventListener("resize", setViewportHeight);
+    window.addEventListener("resize", setSafeAreaInset);
 
     // Also handle orientation change
     window.addEventListener("orientationchange", () => {
@@ -99,6 +127,7 @@
 
     return () => {
       window.removeEventListener("resize", setViewportHeight);
+      window.removeEventListener("resize", setSafeAreaInset);
       window.removeEventListener("scroll", handleScroll);
       document.body.removeEventListener("scroll", handleScroll);
       document.documentElement.classList.remove("ios-chrome-browser");
