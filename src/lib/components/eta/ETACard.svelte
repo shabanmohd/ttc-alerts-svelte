@@ -385,10 +385,11 @@
                     : primaryDirection.toLowerCase().includes("south")
                       ? "bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40"
                       : "bg-muted text-muted-foreground border-muted-foreground/30"}
+              {@const translatedDir = translateDirection(primaryDirection)}
               <span
                 class="text-[10px] font-semibold px-1.5 py-0.5 rounded border uppercase {dirColor}"
               >
-                {primaryDirection}
+                {translatedDir}
               </span>
             {/if}
             <span class="text-xs text-muted-foreground">#{eta.stopId}</span>
@@ -424,10 +425,11 @@
                     : primaryDirection.toLowerCase().includes("south")
                       ? "bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40"
                       : "bg-muted text-muted-foreground border-muted-foreground/30"}
+              {@const translatedDir = translateDirection(primaryDirection)}
               <span
                 class="text-[10px] font-semibold px-1.5 py-0.5 rounded border uppercase {dirColor}"
               >
-                {primaryDirection}
+                {translatedDir}
               </span>
             {/if}
             <span class="text-xs text-muted-foreground">#{eta.stopId}</span>
@@ -498,11 +500,7 @@
                 <div class="sm:hidden">
                   <!-- Row 1: Route Badge + Route Name -->
                   <div class="flex items-start gap-3">
-                    <RouteBadge
-                      route={routeId}
-                      size="lg"
-                      class="shrink-0"
-                    />
+                    <RouteBadge route={routeId} size="lg" class="shrink-0" />
                     <div class="flex-1 min-w-0">
                       <p
                         class="text-sm font-medium text-foreground leading-snug"
@@ -551,11 +549,7 @@
                 <div class="hidden sm:flex items-center justify-between gap-4">
                   <!-- Left: Route Badge + Route Name -->
                   <div class="flex items-center gap-3 min-w-0 flex-1">
-                    <RouteBadge
-                      route={routeId}
-                      size="lg"
-                      class="shrink-0"
-                    />
+                    <RouteBadge route={routeId} size="lg" class="shrink-0" />
                     <div class="min-w-0 flex-1">
                       <p
                         class="text-sm font-medium text-foreground leading-snug"
@@ -881,11 +875,7 @@
                 <div class="sm:hidden">
                   <!-- Row 1: Route Badge + Route Name -->
                   <div class="flex items-start gap-3">
-                    <RouteBadge
-                      route={routeId}
-                      size="lg"
-                      class="shrink-0"
-                    />
+                    <RouteBadge route={routeId} size="lg" class="shrink-0" />
                     <div class="flex-1 min-w-0">
                       <p
                         class="text-sm font-medium text-foreground leading-snug"
@@ -934,11 +924,7 @@
                 <div class="hidden sm:flex items-center justify-between gap-4">
                   <!-- Left: Route Badge + Route Name -->
                   <div class="flex items-center gap-3 min-w-0 flex-1">
-                    <RouteBadge
-                      route={routeId}
-                      size="lg"
-                      class="shrink-0"
-                    />
+                    <RouteBadge route={routeId} size="lg" class="shrink-0" />
                     <div class="min-w-0 flex-1">
                       <p
                         class="text-sm font-medium text-foreground leading-snug"
