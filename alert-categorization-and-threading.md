@@ -1,6 +1,6 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.26  
+**Version:** 3.27  
 **Date:** January 12, 2026  
 **poll-alerts Version:** 136  
 **scrape-maintenance Version:** 3  
@@ -484,11 +484,39 @@ function deduplicateAlerts(alerts: Alert[]): Alert[] {
 }
 ```
 
-**Why this matters:**
-- Bluesky and TTC API alerts for the same incident often have >90% similar text
-- Without preservation, the TTC API alert would be removed (Bluesky is usually newer)
-- Frontend's `getTTCApiDisruptionAlert()` would then fail to find a TTC API alert
-- Disruptions wouldn't show in the "Disruptions & Delays" tab
+### Disruptions Tab: TTC API Only (No Bluesky)
+
+**Critical Design Decision:** The Disruptions & Delays tab shows **ONLY** TTC API alerts. Bluesky alerts are completely excluded from this tab, including from the "earlier updates" section.
+
+```typescript
+// src/routes/alerts/+page.svelte - activeAlerts derived
+if (selectedCategory === "disruptions") {
+  const ttcApiDisruptions = $threadsWithAlerts
+    .filter((t) => !t.is_resolved && !t.is_hidden && isTTCApiDisruption(t))
+    .map((thread) => {
+      // Filter thread.alerts to ONLY include TTC API alerts
+      // This prevents Bluesky alerts from showing in "earlier updates"
+      const ttcApiAlertsOnly = thread.alerts.filter((a) =>
+        a.alert_id?.startsWith("ttc-alert-")
+      );
+      
+      const ttcAlert = getTTCApiDisruptionAlert(thread);
+      
+      return {
+        ...thread,
+        alerts: ttcApiAlertsOnly,
+        latestAlert: ttcAlert || thread.latestAlert,
+      };
+    });
+  return ttcApiDisruptions;
+}
+```
+
+**Why TTC API Only:**
+1. **Data integrity** - TTC API is the official source of truth for active disruptions
+2. **No conflicts** - Bluesky and TTC API often report the same incident with slightly different text
+3. **Prevents duplicates** - Without filtering, both sources would show in "earlier updates"
+4. **Bluesky role is limited** - Bluesky is only used for "Recently Resolved" (SERVICE_RESUMED) alerts
 
 **SQL Query includes `resolved_at`:**
 
