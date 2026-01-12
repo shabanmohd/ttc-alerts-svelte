@@ -90,6 +90,22 @@
   }
 
   /**
+   * Translate cardinal direction word
+   */
+  function translateDirection(dir: string): string {
+    const lower = dir.toLowerCase();
+    if (lower === "north") return $_("directions.north");
+    if (lower === "south") return $_("directions.south");
+    if (lower === "east") return $_("directions.east");
+    if (lower === "west") return $_("directions.west");
+    if (lower === "northbound") return $_("directions.northbound");
+    if (lower === "southbound") return $_("directions.southbound");
+    if (lower === "eastbound") return $_("directions.eastbound");
+    if (lower === "westbound") return $_("directions.westbound");
+    return dir;
+  }
+
+  /**
    * Parse direction into a single destination line
    * "North - 133 Neilson towards Morningside Heights via Scarborough Centre Stn"
    * → { direction: "North", destination: "Morningside Heights via Scarborough Centre Stn" }
@@ -640,6 +656,7 @@
       <div class="divide-y divide-border">
         {#each sortedPredictions as prediction (prediction.route + prediction.direction)}
           {@const parsed = parseDirection(prediction.direction)}
+          {@const translatedDir = translateDirection(parsed.direction)}
           {@const primaryTime = prediction.arrivals[0]}
           {@const secondaryTimes = prediction.arrivals.slice(1, 3)}
 
@@ -656,8 +673,8 @@
                 />
                 <div class="min-w-0 flex-1">
                   <p class="text-sm font-medium text-foreground leading-snug">
-                    {parsed.direction}{parsed.direction && parsed.destination
-                      ? " to "
+                    {translatedDir}{translatedDir && parsed.destination
+                      ? " " + $_("eta.to") + " "
                       : ""}{parsed.destination}
                   </p>
                   <p class="text-xs text-muted-foreground mt-0.5">
@@ -750,8 +767,8 @@
                 />
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium text-foreground leading-snug">
-                    {parsed.direction}{parsed.direction && parsed.destination
-                      ? " to "
+                    {translatedDir}{translatedDir && parsed.destination
+                      ? " " + $_("eta.to") + " "
                       : ""}{parsed.destination}
                   </p>
                   <p class="text-xs text-muted-foreground mt-0.5">
