@@ -1,6 +1,12 @@
 /**
  * Date and time formatting utilities for consistent display across the app.
  * Centralizes formatting logic to avoid duplication and ensure consistency.
+ * 
+ * TIMEZONE POLICY:
+ * - All user-facing times display in local timezone (EST/EDT for Toronto users)
+ * - Database timestamps are stored as UTC (ISO 8601) but displayed in local time
+ * - TTC service times are published in EST and parsed as local time
+ * - For explicit EST handling, use `timeZone: 'America/Toronto'` option
  */
 
 /**

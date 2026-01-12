@@ -4,6 +4,50 @@ This document describes all data sources, their polling frequencies, and update 
 
 ---
 
+## Timezone Policy: EST/EDT (America/Toronto)
+
+All time-related logic in this app uses **Eastern Time (America/Toronto)** for consistency with TTC operations. This section documents the timezone strategy:
+
+### UI Display
+- All user-facing times display in **local EST/EDT** via `toLocaleDateString()`/`toLocaleTimeString()`
+- Holiday checking uses explicit `timeZone: 'America/Toronto'` (see `ttc-holidays.ts`)
+- Route change filtering uses local time parsing (TTC publishes times in EST)
+
+### Database Timestamps
+- Stored as **ISO 8601 UTC** (`toISOString()`) for database consistency
+- PostgreSQL `timestamptz` columns handle timezone conversion automatically
+- UTC storage ensures correct sorting and comparison across timezones
+
+### Cron Jobs (pg_cron in Supabase)
+| Type | Timezone Handling |
+|------|-------------------|
+| Interval-based (`*/2 * * * *`) | Timezone-agnostic (runs every N minutes from now) |
+| Fixed-time (cleanup at 4 AM) | DST-aware wrapper using `AT TIME ZONE 'America/Toronto'` |
+
+**DST-aware cleanup example:**
+```sql
+-- Scheduled at both 8 AM and 9 AM UTC to handle DST transitions
+-- Function checks if it's actually 4 AM Toronto time before running
+toronto_hour := EXTRACT(hour FROM now() AT TIME ZONE 'America/Toronto');
+IF toronto_hour = 4 THEN ... 
+```
+
+### GitHub Actions Cron
+- Cron expressions are in **UTC** (GitHub standard)
+- Comments document **EST equivalent** for clarity
+- Example: `"0 4 * * 0"` = 4:00 AM UTC = **11:00 PM EST Saturday**
+
+### Summary
+| Context | Timezone | Example |
+|---------|----------|---------|
+| UI display | EST/EDT (local) | "Jan 12, 5:00 AM" |
+| Database storage | UTC (ISO 8601) | "2025-01-12T10:00:00.000Z" |
+| Interval cron | N/A (relative) | "*/15 * * * *" |
+| Fixed-time cron | DST-aware EST | Cleanup at 4 AM Toronto |
+| GitHub Actions | UTC with EST comment | "0 4 * * 0" (11 PM EST Sat) |
+
+---
+
 ## Real-Time Data (Live Updates)
 
 ### 1. Service Alerts
@@ -154,16 +198,16 @@ This document describes all data sources, their polling frequencies, and update 
 
 ## Automated Workflows Summary
 
-| Workflow                      | Schedule                       | Data Source            | Output                                |
-| ----------------------------- | ------------------------------ | ---------------------- | ------------------------------------- |
-| **Alert Polling**             | Every 2 minutes (pg_cron)      | TTC Service Alerts API | Supabase `alert_cache` table          |
-| **Subway Closures Scrape**    | Every 6 hours (pg_cron)        | TTC Sitecore API       | Supabase `planned_maintenance` table  |
-| **Elevator Verification**     | Every 15 min (pg_cron)         | TTC API accessibility  | Supabase `incident_threads` table     |
-| **RSZ Verification**          | Every 15 min (pg_cron, offset) | TTC API/website        | Supabase `incident_threads` table     |
-| **RSZ Scrape**                | Every 30 min (pg_cron)         | TTC website HTML       | Supabase `incident_threads` table     |
-| **Alert Accuracy Monitoring** | Every 5 min (pg_cron)          | TTC API + database     | Supabase `alert_accuracy_logs` table  |
-| **Schedule Refresh**          | Weekly (Sun, 4 AM UTC)         | Toronto Open Data GTFS | `ttc-schedules.json`                  |
-| **Route Data Refresh**        | Weekly (Sun, 2 AM UTC)         | NextBus API            | `ttc-routes.json`, `ttc-route-*.json` |
+| Workflow                      | Schedule                             | EST Equivalent       | Output                                |
+| ----------------------------- | ------------------------------------ | -------------------- | ------------------------------------- |
+| **Alert Polling**             | Every 2 min (pg_cron)                | Every 2 min          | Supabase `alert_cache` table          |
+| **Subway Closures Scrape**    | Every 6 hours (pg_cron)              | Every 6 hours        | Supabase `planned_maintenance` table  |
+| **Elevator Verification**     | Every 15 min (pg_cron)               | Every 15 min         | Supabase `incident_threads` table     |
+| **RSZ Verification**          | Every 15 min (pg_cron, +7min offset) | Every 15 min         | Supabase `incident_threads` table     |
+| **RSZ Scrape**                | Every 30 min (pg_cron)               | Every 30 min         | Supabase `incident_threads` table     |
+| **Database Cleanup**          | 8 & 9 AM UTC (pg_cron)               | 4:00 AM EST (DST-aware) | Deletes old threads/alerts         |
+| **Schedule Refresh**          | Sun 4:00 AM UTC (GitHub)             | Sat 11:00 PM EST     | `ttc-schedules.json`                  |
+| **Route Data Refresh**        | Sun 2:00 AM UTC (GitHub)             | Sat 9:00 PM EST      | `ttc-routes.json`, `ttc-route-*.json` |
 
 ### Data Integrity Verification Functions
 

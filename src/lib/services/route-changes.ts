@@ -180,6 +180,11 @@ export async function fetchRouteChanges(): Promise<RouteChange[]> {
 /**
  * Check if a route change is currently active or upcoming
  * Considers both date AND time when filtering
+ * 
+ * TIMEZONE NOTE: TTC publishes dates/times in EST (America/Toronto).
+ * JavaScript's Date constructor parses dates like "January 12, 2026" as local time,
+ * which is correct since users in Toronto will have EST as their local timezone.
+ * For users outside Toronto, this may show slight inaccuracies (acceptable trade-off).
  */
 export function isRouteChangeActive(change: RouteChange): boolean {
   const now = new Date();
