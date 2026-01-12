@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '118'; // Fix: Auto-repair is_latest flag for elevator alerts in active threads
+const VERSION = '119'; // Fix: Auto-repair is_latest flag for both elevator and RSZ alerts
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -1281,6 +1281,30 @@ serve(async (req) => {
           
           console.log(`STEP 6c-fix-title: Fixed RSZ thread title to: "${latestRszAlert.header_text}"`);
         }
+      }
+    }
+    
+    // STEP 6c-repair-alerts: Ensure all alerts in visible RSZ threads have is_latest = true
+    // This fixes data integrity issues similar to elevator alerts
+    const { data: activeRszThreadIds2 } = await supabase
+      .from('incident_threads')
+      .select('thread_id')
+      .filter('categories', 'cs', '["RSZ"]')
+      .eq('is_hidden', false)
+      .eq('is_resolved', false);
+    
+    if (activeRszThreadIds2 && activeRszThreadIds2.length > 0) {
+      const rszThreadIdList = activeRszThreadIds2.map(t => t.thread_id);
+      
+      const { data: rszAlertsFixed, error: rszAlertFixError } = await supabase
+        .from('alert_cache')
+        .update({ is_latest: true })
+        .in('thread_id', rszThreadIdList)
+        .eq('is_latest', false)
+        .select('alert_id');
+      
+      if (!rszAlertFixError && rszAlertsFixed && rszAlertsFixed.length > 0) {
+        console.log(`STEP 6c-repair-alerts: Fixed is_latest flag for ${rszAlertsFixed.length} RSZ alerts`);
       }
     }
     
