@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '117'; // Fix: Sort ALERT_CATEGORIES by priority to ensure consistent categorization (was returning OTHER instead of SERVICE_DISRUPTION)
+const VERSION = '118'; // Fix: Auto-repair is_latest flag for elevator alerts in active threads
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -1093,6 +1093,30 @@ serve(async (req) => {
     }
     
     console.log(`STEP 6b: Resolved ${resolvedElevators} elevator threads, unhid ${unhiddenElevators}`);
+    
+    // STEP 6b-repair-alerts: Ensure all alerts in visible ACCESSIBILITY threads have is_latest = true
+    // This fixes data integrity issues where alerts may have incorrect is_latest flags
+    const { data: activeAccessibilityThreadIds } = await supabase
+      .from('incident_threads')
+      .select('thread_id')
+      .filter('categories', 'cs', '["ACCESSIBILITY"]')
+      .eq('is_hidden', false)
+      .eq('is_resolved', false);
+    
+    if (activeAccessibilityThreadIds && activeAccessibilityThreadIds.length > 0) {
+      const threadIds = activeAccessibilityThreadIds.map(t => t.thread_id);
+      
+      const { data: alertsFixed, error: alertFixError } = await supabase
+        .from('alert_cache')
+        .update({ is_latest: true })
+        .in('thread_id', threadIds)
+        .eq('is_latest', false)
+        .select('alert_id');
+      
+      if (!alertFixError && alertsFixed && alertsFixed.length > 0) {
+        console.log(`STEP 6b-repair-alerts: Fixed is_latest flag for ${alertsFixed.length} elevator alerts`);
+      }
+    }
 
     // STEP 6c: Manage RSZ thread lifecycle based on TTC API
     let resolvedRszThreads = 0;
