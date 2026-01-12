@@ -16,7 +16,15 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ---
 
-## 🆕 Recent Updates (Jan 11, 2026)
+## 🆕 Recent Updates (Jan 12, 2026)
+
+| Component               | Change                                                            | Status       |
+| ----------------------- | ----------------------------------------------------------------- | ------------ |
+| **route-changes.ts**    | Fix filtering to include end time (was only checking date)        | ✅ Deployed  |
+| **Timezone Docs**       | Added comprehensive timezone policy (EST/America/Toronto)         | ✅ Committed |
+| **DATA_POLLING_FREQUENCIES.md** | Updated with EST equivalents for all cron jobs           | ✅ Committed |
+
+### Previous Updates (Jan 11, 2026)
 
 | Component            | Change                                                             | Status       |
 | -------------------- | ------------------------------------------------------------------ | ------------ |
@@ -25,8 +33,6 @@ Real-time Toronto Transit alerts with biometric authentication.
 | **poll-alerts v115** | STEP 6b-repair: unhide elevator threads that reappear in TTC API   | ✅ Deployed  |
 | **alerts.ts**        | Bidirectional realtime sync: fetch alerts for threads & vice versa | ✅ Committed |
 | **pg_cron**          | Auto-verification jobs every 15 minutes                            | ✅ Deployed  |
-
-### Previous Updates (Jan 9, 2026)
 
 | Component                 | Change                                                               | Status       |
 | ------------------------- | -------------------------------------------------------------------- | ------------ |
@@ -233,23 +239,32 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 | Function               | Version | Status | Purpose                                      |
 | ---------------------- | ------- | ------ | -------------------------------------------- |
-| poll-alerts            | v115    | ✅     | Main alert fetcher from TTC API + Bluesky    |
+| poll-alerts            | v119    | ✅     | Main alert fetcher from TTC API + Bluesky    |
 | verify-elevators       | v1      | ✅     | Validates elevator data against TTC API      |
 | verify-rsz             | v1      | ✅     | Validates RSZ data against TTC website       |
 | scrape-rsz             | v4      | ✅     | Alternative RSZ source from TTC website      |
 | scrape-maintenance     | v3      | ✅     | Fetches planned maintenance from TTC website |
-| monitor-alert-accuracy | v5      | ✅     | Compares TTC API vs database (metrics)       |
+| monitor-alert-accuracy | v5      | ❌     | Compares TTC API vs database (DISABLED)      |
 
 ### Cron Jobs (pg_cron)
 
-| Job Name               | Schedule           | Function               |
-| ---------------------- | ------------------ | ---------------------- |
-| poll-alerts-2min       | `*/2 * * * *`      | poll-alerts            |
-| verify-elevators-15min | `*/15 * * * *`     | verify-elevators       |
-| verify-rsz-15min       | `7,22,37,52 * * *` | verify-rsz             |
-| scrape-rsz-30min       | `*/30 * * * *`     | scrape-rsz             |
-| scrape-maintenance-6hr | `0 */6 * * *`      | scrape-maintenance     |
-| monitor-accuracy-5min  | `*/5 * * * *`      | monitor-alert-accuracy |
+| Job Name               | Schedule           | Function               | Status      |
+| ---------------------- | ------------------ | ---------------------- | ----------- |
+| poll-alerts-2min       | `*/2 * * * *`      | poll-alerts            | ✅ Active   |
+| verify-elevators-15min | `*/15 * * * *`     | verify-elevators       | ✅ Active   |
+| verify-rsz-15min       | `7,22,37,52 * * *` | verify-rsz             | ✅ Active   |
+| scrape-rsz-30min       | `*/30 * * * *`     | scrape-rsz             | ✅ Active   |
+| scrape-maintenance-6hr | `0 */6 * * *`      | scrape-maintenance     | ✅ Active   |
+| cleanup-alerts-8am-utc | `0 8 * * *`        | cleanup_old_alerts     | ✅ Active   |
+| cleanup-alerts-9am-utc | `0 9 * * *`        | cleanup_old_alerts     | ✅ Active   |
+| monitor-accuracy-5min  | `*/5 * * * *`      | monitor-alert-accuracy | ❌ Disabled |
+
+### GitHub Actions Workflows
+
+| Workflow               | Schedule           | EST Equivalent   | Purpose                      |
+| ---------------------- | ------------------ | ---------------- | ---------------------------- |
+| refresh-schedule-data  | `0 4 * * 0` (Sun)  | Sat 11:00 PM EST | Update GTFS schedule data    |
+| refresh-route-data     | `0 2 * * 0` (Sun)  | Sat 9:00 PM EST  | Update route/stop data       |
 
 ---
 

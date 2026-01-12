@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.22  
-**Date:** January 11, 2026  
-**poll-alerts Version:** 116  
+**Version:** 3.23  
+**Date:** January 12, 2026  
+**poll-alerts Version:** 119  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
