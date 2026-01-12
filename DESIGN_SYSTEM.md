@@ -96,9 +96,9 @@ The app uses a purple accent color for interactive/selected UI elements:
 
 | Element                           | Light Mode                    | Dark Mode       |
 | --------------------------------- | ----------------------------- | --------------- |
-| Bottom nav active text/icon       | `hsl(280 65% 42%)` (~#8225B1) | `#b954ec`       |
+| Bottom nav active text/icon       | `hsl(280 65% 42%)` (~#8225B1) | `#db95ff`       |
 | Bottom nav active background      | `hsl(280 55% 52% / 0.1)`      | `#72269840`     |
-| Scheduled Next Bus section header | `text-purple-700`             | `#b954ec`       |
+| Scheduled Next Bus section header | `#652393`                     | `#e8baff`       |
 | Scheduled Next Bus background     | `purple-500/10`               | `purple-900/10` |
 
 **Base Color**: `#9B44C7` (used for deriving light/dark variants)
