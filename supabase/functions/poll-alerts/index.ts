@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '119'; // Fix: Auto-repair is_latest flag for both elevator and RSZ alerts
+const VERSION = '120'; // TTC API as primary source for disruptions (delays, closures, shuttles)
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -63,11 +63,37 @@ function extractRoutes(text: string): string[] {
     });
   }
   
+  // Match route branches with name: "97B Yonge", "36A Finch West", etc.
+  // Branch letter is A-E (TTC uses A, B, C, D, E for branches)
+  const routeBranchWithNameMatch = cleanedText.match(/\b(\d{1,3}[A-E])\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/gi);
+  if (routeBranchWithNameMatch) {
+    routeBranchWithNameMatch.forEach(m => {
+      // Normalize branch letter to uppercase
+      const normalized = m.replace(/^(\d+)([a-e])/i, (_, num, letter) => `${num}${letter.toUpperCase()}`);
+      routes.push(normalized); // Keep "97B Yonge" format
+    });
+  }
+  
   // Match numbered routes with optional name: "306 Carlton", "504 King", etc.
   const routeWithNameMatch = cleanedText.match(/\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g);
   if (routeWithNameMatch) {
     routeWithNameMatch.forEach(m => {
-      routes.push(m); // Keep "306 Carlton" format
+      // Skip if already captured as a branch route
+      const routeNum = m.match(/^\d+/)?.[0];
+      if (!routes.some(r => r.match(/^\d+/)?.[0] === routeNum)) {
+        routes.push(m); // Keep "306 Carlton" format
+      }
+    });
+  }
+  
+  // Match standalone route branches: "97B", "36A", etc.
+  const standaloneBranchMatch = cleanedText.match(/\b(\d{1,3}[A-E])(?=\s|:|,|$)/gi);
+  if (standaloneBranchMatch) {
+    standaloneBranchMatch.forEach(route => {
+      const num = parseInt(route);
+      if (num < 1000 && !routes.some(r => r.toUpperCase().startsWith(route.toUpperCase()))) {
+        routes.push(route.toUpperCase());
+      }
     });
   }
   
@@ -203,18 +229,20 @@ interface TtcApiAlert {
 }
 
 // Type for RSZ/Elevator alert data
-interface RszElevatorData {
+interface TtcAlertData {
   activeRoutes: Set<string>;
   rszAlerts: TtcApiAlert[];
   elevatorAlerts: TtcApiAlert[];
+  disruptionAlerts: TtcApiAlert[]; // NEW: Regular disruptions (delays, closures, shuttles)
 }
 
 // Fetch active routes, RSZ alerts, and elevator alerts from TTC API
-async function fetchTtcData(): Promise<RszElevatorData> {
-  const result: RszElevatorData = {
+async function fetchTtcData(): Promise<TtcAlertData> {
+  const result: TtcAlertData = {
     activeRoutes: new Set<string>(),
     rszAlerts: [],
-    elevatorAlerts: []
+    elevatorAlerts: [],
+    disruptionAlerts: [] // NEW
   };
   
   try {
@@ -268,6 +296,7 @@ async function fetchTtcData(): Promise<RszElevatorData> {
       const routeId = routeAlert.route || routeAlert.id;
       if (routeId) {
         result.activeRoutes.add(routeId);
+        result.disruptionAlerts.push(routeAlert); // NEW: Collect for processing
         console.log(`TTC disruption: route=${routeId}, effect=${effect}, effectDesc=${effectDesc}`);
       }
     }
@@ -277,7 +306,7 @@ async function fetchTtcData(): Promise<RszElevatorData> {
       result.elevatorAlerts.push(accessAlert);
     }
     
-    console.log(`TTC API: ${result.activeRoutes.size} disruptions, ${result.rszAlerts.length} RSZ, ${result.elevatorAlerts.length} elevators`);
+    console.log(`TTC API: ${result.disruptionAlerts.length} disruptions, ${result.rszAlerts.length} RSZ, ${result.elevatorAlerts.length} elevators`);
   } catch (error) {
     console.error('Failed to fetch TTC API:', error);
   }
@@ -573,6 +602,157 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
   }
 
   console.log(`Elevator processing: ${newAlerts} new alerts, ${updatedThreads} threads updated`);
+  return { newAlerts, updatedThreads };
+}
+
+// NEW: Process disruption alerts from TTC API (delays, closures, shuttles)
+// This is the primary source of truth for active disruptions
+async function processDisruptionAlerts(supabase: any, disruptionAlerts: TtcApiAlert[]): Promise<{ newAlerts: number; updatedThreads: number }> {
+  let newAlerts = 0;
+  let updatedThreads = 0;
+
+  for (const disruption of disruptionAlerts) {
+    const headerText = disruption.headerText || '';
+    const route = disruption.route || '';
+    const effect = disruption.effect || '';
+    const effectDesc = disruption.effectDesc || '';
+    const severity = disruption.severity || '';
+    const ttcAlertId = disruption.id || '';
+    
+    // Generate unique alert ID based on TTC API alert ID
+    const alertId = `ttc-alert-${ttcAlertId}`;
+    
+    // Check if this alert already exists
+    const { data: existing } = await supabase
+      .from('alert_cache')
+      .select('alert_id')
+      .eq('alert_id', alertId)
+      .single();
+    
+    if (existing) {
+      continue; // Already have this alert
+    }
+
+    // Categorize based on effect/effectDesc
+    let category = 'OTHER';
+    if (effect === 'NO_SERVICE' || effectDesc.includes('Closure') || effectDesc.includes('No Service')) {
+      category = 'SERVICE_DISRUPTION';
+    } else if (effect === 'SIGNIFICANT_DELAYS' || effectDesc === 'Delays') {
+      category = 'DELAY';
+    } else if (effect === 'MODIFIED_SERVICE' || effectDesc === 'Replaced' || effectDesc.includes('Shuttle')) {
+      category = 'SHUTTLE';
+    } else if (effect === 'DETOUR' || effectDesc === 'Detour') {
+      category = 'DIVERSION';
+    } else if (effect === 'REDUCED_SERVICE') {
+      category = 'PLANNED_CLOSURE';
+    }
+
+    // Extract routes from the alert
+    let routes: string[] = [];
+    if (disruption.routeType === 'Subway') {
+      // Subway: use "Line X" format
+      routes = [`Line ${route}`];
+    } else if (route) {
+      // Bus/Streetcar: extract route with name from headerText or use route number
+      const routeNameMatch = headerText.match(new RegExp(`^(${route}[A-E]?\\s+[A-Z][a-z]+):`));
+      if (routeNameMatch) {
+        routes = [routeNameMatch[1]];
+      } else {
+        routes = [route];
+      }
+    }
+
+    // Create alert record
+    const alert = {
+      alert_id: alertId,
+      header_text: headerText.substring(0, 200),
+      description_text: headerText,
+      categories: [category],
+      affected_routes: routes,
+      created_at: new Date().toISOString(),
+      is_latest: true,
+      effect: effect || category
+    };
+
+    // Insert alert
+    const { data: newAlert, error: insertError } = await supabase
+      .from('alert_cache')
+      .insert(alert)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Disruption insert error:', insertError);
+      continue;
+    }
+
+    newAlerts++;
+
+    // Generate thread ID based on route and effect type
+    const routeKey = routes[0]?.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'unknown';
+    const threadId = `thread-ttc-${routeKey}-${category.toLowerCase()}`;
+
+    // Check if thread exists
+    const { data: existingThread } = await supabase
+      .from('incident_threads')
+      .select('thread_id, is_hidden')
+      .eq('thread_id', threadId)
+      .single();
+    
+    if (!existingThread) {
+      // Create new thread
+      const { error: threadError } = await supabase
+        .from('incident_threads')
+        .insert({
+          thread_id: threadId,
+          title: headerText.substring(0, 200),
+          affected_routes: routes,
+          categories: [category],
+          is_resolved: false,
+          is_hidden: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (threadError) {
+        console.error('Disruption thread creation error:', threadError);
+      } else {
+        console.log(`TTC API: Created new thread ${threadId}`);
+      }
+    } else if (existingThread.is_hidden) {
+      // Thread exists but is hidden - unhide it since alert is back
+      await supabase
+        .from('incident_threads')
+        .update({ 
+          is_hidden: false, 
+          is_resolved: false,
+          title: headerText.substring(0, 200),
+          updated_at: new Date().toISOString() 
+        })
+        .eq('thread_id', threadId);
+      console.log(`TTC API: Unhid existing thread ${threadId}`);
+    } else {
+      // Thread exists and visible - update title to latest
+      await supabase
+        .from('incident_threads')
+        .update({ 
+          title: headerText.substring(0, 200),
+          updated_at: new Date().toISOString() 
+        })
+        .eq('thread_id', threadId);
+    }
+
+    // Link alert to thread
+    await supabase
+      .from('alert_cache')
+      .update({ thread_id: threadId })
+      .eq('alert_id', newAlert.alert_id);
+    
+    console.log(`TTC API: Alert ${alertId} linked to thread ${threadId}`);
+    updatedThreads++;
+  }
+
+  console.log(`Disruption processing: ${newAlerts} new alerts, ${updatedThreads} threads updated`);
   return { newAlerts, updatedThreads };
 }
 
@@ -969,6 +1149,12 @@ serve(async (req) => {
     const rszResult = await processRszAlerts(supabase, ttcData.rszAlerts);
     newAlerts += rszResult.newAlerts;
     updatedThreads += rszResult.updatedThreads;
+
+    // STEP 5b: Process disruption alerts from TTC API (delays, closures, shuttles)
+    // This is the PRIMARY source for active disruptions - NOT Bluesky
+    const disruptionResult = await processDisruptionAlerts(supabase, ttcData.disruptionAlerts);
+    newAlerts += disruptionResult.newAlerts;
+    updatedThreads += disruptionResult.updatedThreads;
 
     // STEP 6: Process elevator/escalator alerts from TTC API
     const elevatorResult = await processElevatorAlerts(supabase, ttcData.elevatorAlerts);
@@ -1505,6 +1691,7 @@ serve(async (req) => {
         success: true,
         version: VERSION,
         ttcApiActiveRoutes: [...ttcActiveRoutes],
+        disruptionAlerts: ttcData.disruptionAlerts.length,
         rszAlerts: ttcData.rszAlerts.length,
         elevatorAlerts: ttcData.elevatorAlerts.length,
         hiddenThreads,

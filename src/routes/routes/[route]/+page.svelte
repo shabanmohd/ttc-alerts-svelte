@@ -719,19 +719,21 @@
   let selectedDisplayLabel = $derived(() => {
     const displayMap = directionDisplayLabels();
     const label = displayMap[selectedDirection] || selectedDirection;
-    
+
     // Translate "Towards X" labels
     if (label.startsWith("Towards ")) {
       const destination = label.replace("Towards ", "");
       return $_("eta.towardsDestination", { values: { destination } });
     }
-    
+
     // Translate cardinal directions
     const dirKey = label.toLowerCase();
-    if (["eastbound", "westbound", "northbound", "southbound"].includes(dirKey)) {
+    if (
+      ["eastbound", "westbound", "northbound", "southbound"].includes(dirKey)
+    ) {
       return $_(`directions.${dirKey}`);
     }
-    
+
     return label;
   });
 
@@ -1265,9 +1267,13 @@
 
         <!-- Total stops count -->
         <p class="stops-count">
-          {$_("stops.showingStops", { values: { count: currentStops().length } })}
+          {$_("stops.showingStops", {
+            values: { count: currentStops().length },
+          })}
           {#if directionGroups.length > 1}
-            · {$_("stops.totalOnRoute", { values: { count: allStops().length } })}
+            · {$_("stops.totalOnRoute", {
+              values: { count: allStops().length },
+            })}
           {/if}
         </p>
       {/if}

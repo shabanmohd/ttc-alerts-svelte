@@ -476,7 +476,7 @@ header.sticky {
     left: 0;
     bottom: 0;
     width: 16rem;
-    background-color: hsl(var(--card));
+    background-color: hsl(var(--background));
     border-right: 1px solid hsl(var(--border));
     z-index: 40;
   }
@@ -538,12 +538,23 @@ header.sticky {
 }
 
 .sidebar-nav-item:hover {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+  background-color: hsl(280 55% 52% / 0.1);
+  color: hsl(var(--foreground));
 }
 
 .sidebar-nav-item.active {
-  background-color: hsl(var(--accent));
+  color: hsl(280 65% 42%);
+  background: hsl(280 55% 52% / 0.1);
+}
+
+/* Dark mode: brighter purple for sidebar active state */
+.dark .sidebar-nav-item.active {
+  color: #db95ff;
+  background: #72269840;
+}
+
+.dark .sidebar-nav-item:hover {
+  background: #72269840;
   color: hsl(var(--foreground));
 }
 

@@ -319,6 +319,38 @@
     return isBlueskyRSZ;
   }
 
+  // Helper: Check if a thread is a TTC API disruption alert (NOT Bluesky)
+  // Only ttc-alert-* IDs are from TTC Live Alerts API for disruptions
+  function isTTCApiDisruption(thread: ThreadWithAlerts): boolean {
+    const alert = thread.latestAlert;
+    if (!alert) return false;
+
+    // Must have alert_id starting with "ttc-alert-" (from TTC Live Alerts API)
+    if (!alert.alert_id?.toLowerCase().startsWith("ttc-alert-")) {
+      return false;
+    }
+
+    // Must be a disruption category (not RSZ, not elevator, not service resumed)
+    const categories = (alert.categories as string[]) || [];
+    const disruptionCategories = [
+      "SERVICE_DISRUPTION",
+      "SHUTTLE",
+      "DIVERSION",
+      "DELAY",
+      "PLANNED_CLOSURE",
+    ];
+    
+    // Must have at least one disruption category
+    const hasDisruptionCategory = disruptionCategories.some((cat) =>
+      categories.includes(cat)
+    );
+
+    // Exclude SERVICE_RESUMED (these are resolved alerts)
+    const isResumed = categories.includes("SERVICE_RESUMED");
+
+    return hasDisruptionCategory && !isResumed;
+  }
+
   // Filter threads by category
   function filterByCategory(threads: ThreadWithAlerts[]): ThreadWithAlerts[] {
     const targetSeverity = mapCategoryToSeverity(selectedCategory);
@@ -334,6 +366,7 @@
   }
 
   // Get active alerts (not resolved, not hidden)
+  // For disruptions tab: ONLY show TTC API disruptions (ttc-alert-*)
   // For delays/slowzones tab: return empty - RSZ alerts shown via RSZAlertCard only
   // Regular DELAY alerts should NOT appear in Slow Zones tab
   let activeAlerts = $derived.by(() => {
@@ -341,6 +374,22 @@
     if (selectedCategory === "delays") {
       return [];
     }
+    
+    // For disruptions tab: ONLY show TTC API disruption alerts
+    // This excludes Bluesky alerts, RSZ alerts, elevator alerts, and service resumed
+    if (selectedCategory === "disruptions") {
+      const ttcApiDisruptions = $threadsWithAlerts.filter(
+        (t) => !t.is_resolved && !t.is_hidden && isTTCApiDisruption(t)
+      );
+      console.log(
+        "=== DEBUG: activeAlerts (disruptions - TTC API only) ===",
+        ttcApiDisruptions.length,
+        ttcApiDisruptions.map((t) => t.latestAlert?.alert_id)
+      );
+      return ttcApiDisruptions;
+    }
+    
+    // For other tabs (station-alerts): use severity-based filtering
     const active = $threadsWithAlerts.filter(
       (t) => !t.is_resolved && !t.is_hidden
     );
@@ -417,16 +466,9 @@
     });
 
     return {
-      disruptions: active.filter((t) => {
-        const categories = (t.categories as string[]) || [];
-        return (
-          getSeverityCategory(
-            categories,
-            t.latestAlert?.effect ?? undefined,
-            t.latestAlert?.header_text ?? undefined
-          ) === "MAJOR"
-        );
-      }).length,
+      // Disruptions: ONLY count TTC API disruption alerts (ttc-alert-*)
+      // This excludes Bluesky alerts, RSZ, elevators, and service resumed
+      disruptions: active.filter((t) => isTTCApiDisruption(t)).length,
       // For Slow Zones tab: count ONLY RSZ alerts (not regular DELAY alerts)
       delays: active
         .filter((t) => isRSZAlert(t))

@@ -17,10 +17,14 @@
    */
   function translateDirection(dir: string): string {
     const lower = dir.toLowerCase();
-    if (lower === "north" || lower === "northbound") return $_("directions.northbound");
-    if (lower === "south" || lower === "southbound") return $_("directions.southbound");
-    if (lower === "east" || lower === "eastbound") return $_("directions.eastbound");
-    if (lower === "west" || lower === "westbound") return $_("directions.westbound");
+    if (lower === "north" || lower === "northbound")
+      return $_("directions.northbound");
+    if (lower === "south" || lower === "southbound")
+      return $_("directions.southbound");
+    if (lower === "east" || lower === "eastbound")
+      return $_("directions.eastbound");
+    if (lower === "west" || lower === "westbound")
+      return $_("directions.westbound");
     return dir;
   }
 
@@ -76,8 +80,9 @@
 
       // Translate direction word if it's at the start
       const dirMatch = beforeTowards.match(/^(North|South|East|West)(\s|$)/i);
-      const translatedBefore = dirMatch 
-        ? translateDirection(dirMatch[1]) + beforeTowards.slice(dirMatch[1].length)
+      const translatedBefore = dirMatch
+        ? translateDirection(dirMatch[1]) +
+          beforeTowards.slice(dirMatch[1].length)
         : beforeTowards;
 
       // Check if there's a "via" in the destination

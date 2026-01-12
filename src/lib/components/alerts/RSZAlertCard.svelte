@@ -175,10 +175,14 @@
   // Format direction for display (simplify compound directions) - using translations
   function formatDirection(dir: string): string {
     const lower = dir.toLowerCase();
-    if (lower.includes("northbound")) return $_("directions.northbound").toUpperCase();
-    if (lower.includes("southbound")) return $_("directions.southbound").toUpperCase();
-    if (lower.includes("eastbound")) return $_("directions.eastbound").toUpperCase();
-    if (lower.includes("westbound")) return $_("directions.westbound").toUpperCase();
+    if (lower.includes("northbound"))
+      return $_("directions.northbound").toUpperCase();
+    if (lower.includes("southbound"))
+      return $_("directions.southbound").toUpperCase();
+    if (lower.includes("eastbound"))
+      return $_("directions.eastbound").toUpperCase();
+    if (lower.includes("westbound"))
+      return $_("directions.westbound").toUpperCase();
     return dir.toUpperCase();
   }
 

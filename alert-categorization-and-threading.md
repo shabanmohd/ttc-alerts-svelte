@@ -1,11 +1,12 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.23  
+**Version:** 3.24  
 **Date:** January 12, 2026  
-**poll-alerts Version:** 119  
+**poll-alerts Version:** 135  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
+**verify-disruptions Version:** 1  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
@@ -30,8 +31,8 @@
 
 This document describes the alert categorization and threading system designed to:
 
-1. **Bluesky integration** - Primary source from @ttcalerts.bsky.social
-2. **TTC API integration** - RSZ (Reduced Speed Zone) and Elevator/Escalator alerts
+1. **TTC API as primary source** - Disruptions, RSZ, and Elevator alerts from official TTC API
+2. **Bluesky as secondary source** - "Recently Resolved" alerts (SERVICE_RESUMED) only
 3. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
 4. **Effect-based categorization** - Focus on service impact, not cause
 5. **Incident threading** - Group related updates using Jaccard similarity + route matching
@@ -48,13 +49,14 @@ This document describes the alert categorization and threading system designed t
 │  live-alerts    │     │  (Edge Function)     │     │  alert_cache    │
 │  - routes       │     │                      │     │  incident_      │
 │  - accessibility│     │  1. Fetch TTC API    │     │  threads        │
-└─────────────────┘     │  2. Process RSZ      │     └────────┬────────┘
-        │               │  3. Process Elevator │              │
-        │               │  4. Hide stale       │              │
-┌───────▼───────┐       │  5. Process Bluesky  │              │
-│  Bluesky API  │──────▶│                      │              │
-│  @ttcalerts   │       └──────────────────────┘              │
-└───────────────┘                                              ▼
+└─────────────────┘     │  2. Process Disrupt  │     └────────┬────────┘
+        │               │  3. Process RSZ      │              │
+        │               │  4. Process Elevator │              │
+┌───────▼───────┐       │  5. Hide stale       │              │
+│  Bluesky API  │──────▶│  6. Process Bluesky  │              │
+│  @ttcalerts   │       │     (resolved only)  │              │
+└───────────────┘       └──────────────────────┘              │
+                                                               ▼
                         ┌──────────────────────┐
                         │  Svelte Frontend     │◀──────────────┘
                         │  alerts.ts store     │
@@ -68,44 +70,68 @@ This document describes the alert categorization and threading system designed t
 - **Backend:** Supabase (PostgreSQL + Edge Functions + Realtime)
 - **Hosting:** Cloudflare Pages
 - **Data Sources:**
-  - **TTC API** (Authority for active status + RSZ + Elevators): `https://alerts.ttc.ca/api/alerts/live-alerts`
-  - **Bluesky** (Context/History): `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
+  - **TTC API** (Primary for active disruptions + RSZ + Elevators): `https://alerts.ttc.ca/api/alerts/live-alerts`
+  - **Bluesky** (Recently Resolved only): `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
 
 ---
 
 ## Alert Sources
 
-### Current Implementation (v93+)
+### Current Implementation (v120+)
 
-**Authority Source: TTC API**
+**Primary Source: TTC API (for Active Disruptions)**
 
 - Official TTC live alerts API
 - **Endpoint:** `https://alerts.ttc.ca/api/alerts/live-alerts`
 - **Data Used:**
-  - `routes` array - Active service disruptions and RSZ alerts
+  - `routes` array - Active service disruptions (closures, shuttles, diversions)
+  - `routes` array - RSZ (Reduced Speed Zone) alerts
   - `accessibility` array - Elevator/escalator outages
+- **Alert ID Format:** `ttc-alert-{id}` for disruptions, `ttc-rsz-{route}-{start}-{end}` for RSZ, `ttc-elev-{code}` for elevators
+- **Categories Imported:**
+  - `SERVICE_DISRUPTION` - Subway closures, no service
+  - `SHUTTLE` - Bus replacement service
+  - `DIVERSION` - Route detours
+  - `DELAY` - Significant delays
+  - `RSZ` - Reduced Speed Zones (minor severity)
+  - `ACCESSIBILITY` - Elevator/escalator outages
 - **Behavior:** If a route has no TTC API alert, threads for that route are hidden
-- **RSZ Alerts:** Ingested with category `RSZ`, effect `RSZ`, classified as `MINOR` severity
-- **Elevator Alerts:** Ingested with category `ACCESSIBILITY`, effect `ACCESSIBILITY_ISSUE`
-- **Status:** ✅ Enabled as authority
+- **Status:** ✅ Primary source for Disruptions & Delays tab
 
-**Context Source: Bluesky**
+**Secondary Source: Bluesky (for Recently Resolved only)**
 
 - Official TTC account: [@ttcalerts.bsky.social](https://bsky.app/profile/ttcalerts.bsky.social)
 - **API:** Bluesky AT Protocol public API
 - **Endpoint:** `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
 - **Polling:** Edge function fetches last 50 posts per invocation
 - **Deduplication:** Uses `bluesky_uri` as unique identifier
-- **Purpose:** Provides context, threading, and history for alerts
-- **Status:** ✅ Enabled (supplements TTC API)
+- **Purpose:** Provides `SERVICE_RESUMED` alerts for "Recently Resolved" section
+- **Status:** ✅ Enabled (Recently Resolved section only)
 
-**GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear on Bluesky)
+**GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear via TTC API/Bluesky)
+
+### Frontend Data Flow
+
+| UI Section | Data Source | Filter Logic |
+|------------|-------------|--------------|
+| Disruptions & Delays | TTC API only | `alert_id.startsWith('ttc-alert-')` |
+| Slow Zones | TTC API only | `alert_id.startsWith('ttc-rsz-')` |
+| Station Alerts | TTC API only | `alert_id.startsWith('ttc-elev-')` |
+| Recently Resolved | Bluesky | `categories.includes('SERVICE_RESUMED')` |
+
+### Data Integrity Verification
+
+**verify-disruptions Edge Function (runs every 15 minutes):**
+- Compares TTC API disruptions with database
+- Reports missing alerts, hidden alerts that should be visible
+- Cron schedule: `3,18,33,48 * * * *`
 
 ### Key Principles
 
-- **TTC API is Authority** - If TTC API says route has no alert, thread is hidden
-- **RSZ alerts from TTC API** - Reduced Speed Zone alerts now ingested (category: `RSZ`)
-- **Elevator alerts from TTC API** - Accessibility alerts now ingested (category: `ACCESSIBILITY`)
+- **TTC API is Primary Source** - Disruptions come from TTC API, not Bluesky
+- **Bluesky for Resolved only** - Only used for "Recently Resolved" section
+- **RSZ alerts from TTC API** - Reduced Speed Zone alerts (category: `RSZ`)
+- **Elevator alerts from TTC API** - Accessibility alerts (category: `ACCESSIBILITY`)
 - **Effect > Cause** - "No service" matters more than "due to security incident"
 - **Non-exclusive categories** - Alert can be `SERVICE_DISRUPTION` + `SUBWAY`
 - **Simple threading** - 50% text similarity for general matching, 20% for SERVICE_RESUMED

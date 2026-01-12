@@ -388,11 +388,14 @@
                         : stop.dir === "Northbound"
                           ? "bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40"
                           : "bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40"}
-                  {@const dirTranslation = 
-                    stop.dir === "Eastbound" ? $_("directions.eastbound") 
-                    : stop.dir === "Westbound" ? $_("directions.westbound")
-                    : stop.dir === "Northbound" ? $_("directions.northbound")
-                    : $_("directions.southbound")}
+                  {@const dirTranslation =
+                    stop.dir === "Eastbound"
+                      ? $_("directions.eastbound")
+                      : stop.dir === "Westbound"
+                        ? $_("directions.westbound")
+                        : stop.dir === "Northbound"
+                          ? $_("directions.northbound")
+                          : $_("directions.southbound")}
                   <span
                     class="text-[10px] font-medium px-1.5 py-0.5 rounded border shrink-0 uppercase {dirColor}"
                   >

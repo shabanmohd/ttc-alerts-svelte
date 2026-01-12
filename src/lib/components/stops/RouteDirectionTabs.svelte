@@ -156,7 +156,9 @@
 
     // Handle cardinal directions
     const dirKey = label.toLowerCase();
-    if (["eastbound", "westbound", "northbound", "southbound"].includes(dirKey)) {
+    if (
+      ["eastbound", "westbound", "northbound", "southbound"].includes(dirKey)
+    ) {
       return $_(`directions.${dirKey}`);
     }
 
@@ -168,7 +170,7 @@
    */
   function translateShortLabel(label: string): string {
     const shortLabel = getShortLabel(label);
-    
+
     // Translate short cardinal directions
     switch (shortLabel) {
       case "East":

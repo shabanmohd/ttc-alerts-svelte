@@ -664,7 +664,9 @@
             class:show-feedback={showSavedFeedback}
             onclick={handleSaveStop}
             disabled={!isSaved && atMax}
-            aria-label={isSaved ? $_("stops.removeFromMyStops") : $_("stops.saveToMyStops")}
+            aria-label={isSaved
+              ? $_("stops.removeFromMyStops")
+              : $_("stops.saveToMyStops")}
           >
             {#if showSavedFeedback}
               <Check class="h-4 w-4" />
@@ -783,7 +785,9 @@
             class:show-feedback={showSavedFeedback}
             onclick={handleSaveStop}
             disabled={!isSaved && atMax}
-            aria-label={isSaved ? $_("stops.removeFromMyStops") : $_("stops.saveToMyStops")}
+            aria-label={isSaved
+              ? $_("stops.removeFromMyStops")
+              : $_("stops.saveToMyStops")}
           >
             {#if showSavedFeedback}
               <Check class="h-4 w-4" />
@@ -1025,7 +1029,9 @@
             class:show-feedback={showSavedFeedback}
             onclick={handleSaveStop}
             disabled={!isSaved && atMax}
-            aria-label={isSaved ? $_("stops.removeFromMyStops") : $_("stops.saveToMyStops")}
+            aria-label={isSaved
+              ? $_("stops.removeFromMyStops")
+              : $_("stops.saveToMyStops")}
           >
             {#if showSavedFeedback}
               <Check class="h-4 w-4" />
