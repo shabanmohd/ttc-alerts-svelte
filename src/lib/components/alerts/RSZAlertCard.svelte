@@ -172,13 +172,13 @@
     })
   );
 
-  // Format direction for display (simplify compound directions) - ALL CAPS
+  // Format direction for display (simplify compound directions) - using translations
   function formatDirection(dir: string): string {
     const lower = dir.toLowerCase();
-    if (lower.includes("northbound")) return "NORTHBOUND";
-    if (lower.includes("southbound")) return "SOUTHBOUND";
-    if (lower.includes("eastbound")) return "EASTBOUND";
-    if (lower.includes("westbound")) return "WESTBOUND";
+    if (lower.includes("northbound")) return $_("directions.northbound").toUpperCase();
+    if (lower.includes("southbound")) return $_("directions.southbound").toUpperCase();
+    if (lower.includes("eastbound")) return $_("directions.eastbound").toUpperCase();
+    if (lower.includes("westbound")) return $_("directions.westbound").toUpperCase();
     return dir.toUpperCase();
   }
 
@@ -270,8 +270,8 @@
         <div class="rsz-accordion-body">
           <!-- Table Header -->
           <div class="rsz-table-header">
-            <div>Direction</div>
-            <div>Stations</div>
+            <div>{$_("alerts.direction")}</div>
+            <div>{$_("alerts.stations")}</div>
           </div>
 
           <!-- Table Rows -->

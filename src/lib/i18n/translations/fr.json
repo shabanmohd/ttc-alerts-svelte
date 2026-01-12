@@ -114,6 +114,8 @@
     "reducedSpeedZone": "Zone de vitesse réduite",
     "reducedSpeedZones": "Zones de vitesse réduite",
     "reducedSpeedZonesDesc": "Les trains roulent plus lentement que d'habitude dans ces sections en raison de travaux sur les voies",
+    "direction": "Direction",
+    "stations": "Stations",
     "tabs": {
       "now": "Maintenant",
       "scheduled": "Planifié",

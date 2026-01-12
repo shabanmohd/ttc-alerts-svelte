@@ -132,6 +132,8 @@
     "reducedSpeedZone": "Reduced Speed Zone",
     "reducedSpeedZones": "Reduced Speed Zones",
     "reducedSpeedZonesDesc": "Trains are running slower than usual in these sections due to track work",
+    "direction": "Direction",
+    "stations": "Stations",
     "tabs": {
       "now": "Now",
       "scheduled": "Scheduled",
