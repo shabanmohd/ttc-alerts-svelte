@@ -68,7 +68,7 @@
 
 <SEO
   title={$_("pages.home.title")}
-  description="Track your TTC stops and routes with real-time service alerts. Get instant updates on delays, disruptions, and service changes in Toronto."
+  description="Track TTC service alerts, subway closures, elevator outages & delays in real-time. Free transit tracker for Toronto subway, bus & streetcar routes."
 />
 
 <Header onOpenDialog={handleOpenDialog} />

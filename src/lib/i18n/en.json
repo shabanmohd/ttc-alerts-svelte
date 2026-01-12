@@ -613,8 +613,8 @@
   },
   "pages": {
     "home": {
-      "title": "Home - rideTO",
-      "description": "Your personalized TTC transit dashboard with live alerts and arrival times."
+      "title": "rideTO - Live TTC Alerts & Transit Tracker",
+      "description": "Track TTC service alerts, subway closures, elevator outages & delays in real-time. Free transit tracker for Toronto subway, bus & streetcar routes."
     },
     "alerts": {
       "title": "Service Alerts - rideTO"
