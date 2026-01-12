@@ -298,7 +298,7 @@
 
   <!-- Back to Home -->
   <div class="mt-8 text-center">
-    <Button variant="outline" onclick={() => goto("/")}>← Back to Home</Button>
+    <Button variant="outline" onclick={() => goto("/")}>← {$_("common.backToHome")}</Button>
   </div>
 </main>
 

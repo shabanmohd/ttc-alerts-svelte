@@ -38,7 +38,8 @@
     "canAddBackAnytime": "Vous pouvez le rajouter à tout moment.",
     "days": "Jours",
     "other": "Autre",
-    "optional": "optionnel"
+    "optional": "optionnel",
+    "backToHome": "Retour à l'accueil"
   },
   "time": {
     "justNow": "À l'instant",

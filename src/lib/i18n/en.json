@@ -38,7 +38,8 @@
     "canAddBackAnytime": "You can add it back anytime.",
     "days": "Days",
     "other": "Other",
-    "optional": "optional"
+    "optional": "optional",
+    "backToHome": "Back to Home"
   },
   "time": {
     "justNow": "Just now",
