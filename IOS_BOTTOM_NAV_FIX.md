@@ -289,7 +289,7 @@ Implemented in commit: `703ae8f` (Dec 11, 2025)
 
 ---
 
-## ISSUE 2: iOS PWA First-Load Gap (UNRESOLVED)
+## ISSUE 2: iOS PWA First-Load Gap (RESOLVED)
 
 ### Problem Description
 

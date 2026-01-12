@@ -18,23 +18,27 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## 🆕 Recent Updates (Jan 12, 2026)
 
-| Component                       | Change                                                           | Status       |
-| ------------------------------- | ---------------------------------------------------------------- | ------------ |
-| **poll-alerts v136**            | Scheduled closure filtering - hide alerts not currently active   | ✅ Deployed  |
-| **verify-disruptions v2**       | Data integrity validation for TTC API disruptions (every 15 min) | ✅ Deployed  |
-| **alerts/+page.svelte**         | Disruptions tab: TTC API only (ttc-alert-\*), excludes Bluesky   | ✅ Committed |
-| **i18n: RSZAlertCard**          | Translate direction badges (NORTHBOUND→DIRECTION NORD, etc.)     | ✅ Deployed  |
-| **i18n: ETACard**               | Translate direction labels, "to" connector                       | ✅ Deployed  |
-| **i18n: ETADirectionSlide**     | Translate directions, "towards", "via" keywords                  | ✅ Deployed  |
-| **i18n: StopSearch**            | Translate direction badges in search results                     | ✅ Deployed  |
-| **i18n: RouteDirectionTabs**    | Translate direction tabs and labels                              | ✅ Deployed  |
-| **i18n: RouteStopItem**         | Translate "Scheduled" label                                      | ✅ Deployed  |
-| **i18n: routes/+page**          | Translate "Back to Home" button                                  | ✅ Deployed  |
-| **i18n: routes/[route]**        | Translate stop counts, direction labels                          | ✅ Deployed  |
-| **SEO: app.html**               | Updated meta title/description for Google                        | ✅ Deployed  |
-| **route-changes.ts**            | Fix filtering to include end time (was only checking date)       | ✅ Deployed  |
-| **Timezone Docs**               | Added comprehensive timezone policy (EST/America/Toronto)        | ✅ Committed |
-| **DATA_POLLING_FREQUENCIES.md** | Updated with EST equivalents for all cron jobs                   | ✅ Committed |
+| Component                          | Change                                                                     | Status       |
+| ---------------------------------- | -------------------------------------------------------------------------- | ------------ |
+| **alerts.ts deduplicateAlerts**    | TTC API alerts processed first, prevents duplicates with Bluesky           | ✅ Committed |
+| **alerts/+page.svelte activeAlerts** | Disruptions tab filters thread.alerts to TTC API only (no Bluesky in UI) | ✅ Deployed  |
+| **isScheduledClosureActive()**     | Time-based check: scheduled closures in Disruptions only 11 PM - 6 AM      | ✅ Deployed  |
+| **getTTCApiDisruptionAlert()**     | Excludes scheduled closures outside active period                          | ✅ Deployed  |
+| **MobileBottomNav.svelte**         | iOS PWA viewport fix using visualViewport API                              | ✅ Deployed  |
+| **poll-alerts v136**               | Scheduled closure filtering - hide alerts not currently active             | ✅ Deployed  |
+| **verify-disruptions v2**          | Data integrity validation for TTC API disruptions (every 15 min)           | ✅ Deployed  |
+| **i18n: RSZAlertCard**             | Translate direction badges (NORTHBOUND→DIRECTION NORD, etc.)               | ✅ Deployed  |
+| **i18n: ETACard**                  | Translate direction labels, "to" connector                                 | ✅ Deployed  |
+| **i18n: ETADirectionSlide**        | Translate directions, "towards", "via" keywords                            | ✅ Deployed  |
+| **i18n: StopSearch**               | Translate direction badges in search results                               | ✅ Deployed  |
+| **i18n: RouteDirectionTabs**       | Translate direction tabs and labels                                        | ✅ Deployed  |
+| **i18n: RouteStopItem**            | Translate "Scheduled" label                                                | ✅ Deployed  |
+| **i18n: routes/+page**             | Translate "Back to Home" button                                            | ✅ Deployed  |
+| **i18n: routes/[route]**           | Translate stop counts, direction labels                                    | ✅ Deployed  |
+| **SEO: app.html**                  | Updated meta title/description for Google                                  | ✅ Deployed  |
+| **route-changes.ts**               | Fix filtering to include end time (was only checking date)                 | ✅ Deployed  |
+| **Timezone Docs**                  | Added comprehensive timezone policy (EST/America/Toronto)                  | ✅ Committed |
+| **DATA_POLLING_FREQUENCIES.md**    | Updated with EST equivalents for all cron jobs                             | ✅ Committed |
 
 ### Previous Updates (Jan 11, 2026)
 
@@ -110,7 +114,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation + iOS PWA viewport fix (visualViewport API) |
 | `components/ui/*`                               | ✅     | shadcn-svelte base components                              |
 | `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                               |
-| `stores/alerts.ts`                              | ✅     | Alerts state + realtime sync with bidirectional fetch      |
+| `stores/alerts.ts`                              | ✅     | Alerts state + realtime sync + TTC API alert preservation in dedup |
 | `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store                                 |
 | `stores/preferences.ts`                         | ✅     | User preferences state                                     |
 | `types/auth.ts`                                 | ✅     | Auth TypeScript types                                      |
