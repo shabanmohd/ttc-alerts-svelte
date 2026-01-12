@@ -348,6 +348,7 @@
   },
   "eta": {
     "liveArrivals": "Arrivées en direct",
+    "scheduledNextBus": "Prochain bus prévu",
     "addStop": "Ajouter un arrêt",
     "moreStops": "+{count} arrêts de plus",
     "noSavedStops": "Aucun arrêt enregistré",

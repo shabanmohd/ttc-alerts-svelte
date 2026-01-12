@@ -469,7 +469,7 @@
               class="flex items-center gap-1.5 text-xs text-[#652393] dark:text-[#e8baff]"
             >
               <Calendar class="h-3.5 w-3.5" />
-              <span>Scheduled Next Bus</span>
+              <span>{$_("eta.scheduledNextBus")}</span>
             </div>
           </div>
 
@@ -851,7 +851,7 @@
               class="flex items-center gap-1.5 text-xs text-[#652393] dark:text-[#e8baff]"
             >
               <Calendar class="h-3.5 w-3.5" />
-              <span>Scheduled Next Bus</span>
+              <span>{$_("eta.scheduledNextBus")}</span>
             </div>
           </div>
 

@@ -664,17 +664,17 @@
             class:show-feedback={showSavedFeedback}
             onclick={handleSaveStop}
             disabled={!isSaved && atMax}
-            aria-label={isSaved ? "Remove from My Stops" : "Save to My Stops"}
+            aria-label={isSaved ? $_("stops.removeFromMyStops") : $_("stops.saveToMyStops")}
           >
             {#if showSavedFeedback}
               <Check class="h-4 w-4" />
-              <span>Saved!</span>
+              <span>{$_("common.saved")}</span>
             {:else if isSaved}
               <Bookmark class="h-4 w-4 fill-current" />
-              <span>Saved to My Stops</span>
+              <span>{$_("stops.savedToMyStops")}</span>
             {:else}
               <Bookmark class="h-4 w-4" />
-              <span>Save to My Stops</span>
+              <span>{$_("stops.saveToMyStops")}</span>
             {/if}
           </button>
           <button
@@ -682,7 +682,7 @@
             class="refresh-button"
             onclick={handleRefresh}
             disabled={isLoadingETA}
-            aria-label="Refresh arrival times"
+            aria-label={$_("stops.refreshArrivalTimes")}
           >
             <RefreshCw
               class="h-3.5 w-3.5 {isLoadingETA ? 'animate-spin' : ''}"
@@ -703,7 +703,7 @@
                 class="flex items-center gap-1.5 text-xs text-[#652393] dark:text-[#e8baff]"
               >
                 <Calendar class="h-3.5 w-3.5" />
-                <span>Scheduled Next Bus</span>
+                <span>{$_("eta.scheduledNextBus")}</span>
               </div>
             </div>
             <!-- Scheduled time display -->
@@ -783,17 +783,17 @@
             class:show-feedback={showSavedFeedback}
             onclick={handleSaveStop}
             disabled={!isSaved && atMax}
-            aria-label={isSaved ? "Remove from My Stops" : "Save to My Stops"}
+            aria-label={isSaved ? $_("stops.removeFromMyStops") : $_("stops.saveToMyStops")}
           >
             {#if showSavedFeedback}
               <Check class="h-4 w-4" />
-              <span>Saved!</span>
+              <span>{$_("common.saved")}</span>
             {:else if isSaved}
               <Bookmark class="h-4 w-4 fill-current" />
-              <span>Saved to My Stops</span>
+              <span>{$_("stops.savedToMyStops")}</span>
             {:else}
               <Bookmark class="h-4 w-4" />
-              <span>Save to My Stops</span>
+              <span>{$_("stops.saveToMyStops")}</span>
             {/if}
           </button>
           <button
@@ -801,7 +801,7 @@
             class="refresh-button"
             onclick={handleRefresh}
             disabled={isLoadingETA}
-            aria-label="Refresh arrival times"
+            aria-label={$_("stops.refreshArrivalTimes")}
           >
             <RefreshCw
               class="h-3.5 w-3.5 {isLoadingETA ? 'animate-spin' : ''}"
@@ -1025,17 +1025,17 @@
             class:show-feedback={showSavedFeedback}
             onclick={handleSaveStop}
             disabled={!isSaved && atMax}
-            aria-label={isSaved ? "Remove from My Stops" : "Save to My Stops"}
+            aria-label={isSaved ? $_("stops.removeFromMyStops") : $_("stops.saveToMyStops")}
           >
             {#if showSavedFeedback}
               <Check class="h-4 w-4" />
-              <span>Saved!</span>
+              <span>{$_("common.saved")}</span>
             {:else if isSaved}
               <Bookmark class="h-4 w-4 fill-current" />
-              <span>Saved to My Stops</span>
+              <span>{$_("stops.savedToMyStops")}</span>
             {:else}
               <Bookmark class="h-4 w-4" />
-              <span>Save to My Stops</span>
+              <span>{$_("stops.saveToMyStops")}</span>
             {/if}
           </button>
 
@@ -1046,7 +1046,7 @@
               class="refresh-button"
               onclick={handleRefresh}
               disabled={isLoadingETA}
-              aria-label="Refresh arrival times"
+              aria-label={$_("stops.refreshArrivalTimes")}
             >
               <RefreshCw
                 class="h-3.5 w-3.5 {isLoadingETA ? 'animate-spin' : ''}"

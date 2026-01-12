@@ -366,6 +366,7 @@
   },
   "eta": {
     "liveArrivals": "Live Arrivals",
+    "scheduledNextBus": "Scheduled Next Bus",
     "addStop": "Add Stop",
     "moreStops": "+{count} more stops",
     "noSavedStops": "No Saved Stops",
