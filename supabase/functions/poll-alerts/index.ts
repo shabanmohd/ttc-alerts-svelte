@@ -209,6 +209,13 @@ function generateElevatorThreadId(info: ElevatorInfo): { threadId: string; suffi
   };
 }
 
+// Type for child alert (scheduled time windows)
+interface TtcChildAlert {
+  id: string;
+  startTime: string;
+  endTime: string;
+}
+
 // Type for TTC API alert
 interface TtcApiAlert {
   id: string;
@@ -226,6 +233,36 @@ interface TtcApiAlert {
   elevatorCode?: string;
   stopStart?: string;
   stopEnd?: string;
+  childAlerts?: TtcChildAlert[]; // Scheduled time windows
+  activePeriod?: {
+    start: string;
+    end: string;
+  };
+}
+
+// Check if a scheduled alert is currently active based on childAlerts
+function isScheduledAlertCurrentlyActive(alert: TtcApiAlert): boolean {
+  // If no childAlerts, assume it's always active (non-scheduled)
+  if (!alert.childAlerts || alert.childAlerts.length === 0) {
+    return true;
+  }
+  
+  const now = new Date();
+  
+  // Check if current time falls within any childAlert window
+  for (const child of alert.childAlerts) {
+    const start = new Date(child.startTime);
+    const end = new Date(child.endTime);
+    
+    if (now >= start && now <= end) {
+      console.log(`Scheduled alert ${alert.id} is ACTIVE (child ${child.id}: ${child.startTime} - ${child.endTime})`);
+      return true;
+    }
+  }
+  
+  // No active time window - this is a future scheduled closure
+  console.log(`Scheduled alert ${alert.id} is NOT active yet (has ${alert.childAlerts.length} scheduled windows)`);
+  return false;
 }
 
 // Type for RSZ/Elevator alert data
@@ -286,17 +323,28 @@ async function fetchTtcData(): Promise<TtcAlertData> {
         continue;
       }
       
+      // Check if this is a scheduled closure with specific time windows
+      // If it has childAlerts, only include if currently within an active window
+      if (routeAlert.childAlerts && routeAlert.childAlerts.length > 0) {
+        if (!isScheduledAlertCurrentlyActive(routeAlert)) {
+          // Scheduled closure is NOT currently active - skip it for disruptions
+          // It will be visible in the "Scheduled" tab instead
+          console.log(`Skipping scheduled closure (not active yet): ${routeAlert.route} - ${routeAlert.headerText?.substring(0, 50)}`);
+          continue;
+        }
+      }
+      
       // All other TTC API route alerts are real disruptions
       // This includes:
       // - NO_SERVICE, SIGNIFICANT_DELAYS, DETOUR (standard GTFS-RT)
       // - MODIFIED_SERVICE, SHUTTLE (custom TTC effects)  
-      // - "Subway Closure - Early Access" (nightly closures)
+      // - "Subway Closure - Early Access" (nightly closures) - ONLY when currently active
       // - Any alert with Critical/High severity
-      // We now add ALL non-RSZ, non-ServiceResumed alerts to activeRoutes
+      // We now add ALL non-RSZ, non-ServiceResumed, non-scheduled-future alerts to activeRoutes
       const routeId = routeAlert.route || routeAlert.id;
       if (routeId) {
         result.activeRoutes.add(routeId);
-        result.disruptionAlerts.push(routeAlert); // NEW: Collect for processing
+        result.disruptionAlerts.push(routeAlert); // Collect for processing
         console.log(`TTC disruption: route=${routeId}, effect=${effect}, effectDesc=${effectDesc}`);
       }
     }

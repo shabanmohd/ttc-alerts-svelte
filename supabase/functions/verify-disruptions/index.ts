@@ -15,6 +15,12 @@ const corsHeaders = {
 
 const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 
+interface TtcChildAlert {
+  id: string;
+  startTime: string;
+  endTime: string;
+}
+
 interface TtcDisruptionAlert {
   id: string;
   route: string;
@@ -29,6 +35,7 @@ interface TtcDisruptionAlert {
   stopStart?: string;
   stopEnd?: string;
   shuttleType?: string | null;
+  childAlerts?: TtcChildAlert[]; // Scheduled time windows
   activePeriod?: {
     start: string;
     end: string;
@@ -102,6 +109,31 @@ function determineCategory(alert: TtcDisruptionAlert): string {
 }
 
 /**
+ * Check if a scheduled alert is currently active based on childAlerts
+ */
+function isScheduledAlertCurrentlyActive(alert: TtcDisruptionAlert): boolean {
+  // If no childAlerts, assume it's always active (non-scheduled)
+  if (!alert.childAlerts || alert.childAlerts.length === 0) {
+    return true;
+  }
+  
+  const now = new Date();
+  
+  // Check if current time falls within any childAlert window
+  for (const child of alert.childAlerts) {
+    const start = new Date(child.startTime);
+    const end = new Date(child.endTime);
+    
+    if (now >= start && now <= end) {
+      return true;
+    }
+  }
+  
+  // No active time window - this is a future scheduled closure
+  return false;
+}
+
+/**
  * Check if alert is a disruption we should track (not RSZ, not recently resolved)
  */
 function isTrackableDisruption(alert: TtcDisruptionAlert): boolean {
@@ -115,6 +147,12 @@ function isTrackableDisruption(alert: TtcDisruptionAlert): boolean {
   
   // Skip "regular service resumed" - these are recently resolved
   if (effect === 'NO_EFFECT' || effectDesc.includes('regular service')) {
+    return false;
+  }
+  
+  // Skip scheduled alerts that are not currently active
+  // These should show in "Scheduled" tab, not "Disruptions"
+  if (!isScheduledAlertCurrentlyActive(alert)) {
     return false;
   }
   
