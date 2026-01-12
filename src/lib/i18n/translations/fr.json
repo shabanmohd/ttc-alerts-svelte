@@ -349,6 +349,8 @@
   "eta": {
     "liveArrivals": "Arrivées en direct",
     "scheduledNextBus": "Prochain bus prévu",
+    "scheduled": "Prévu",
+    "towardsDestination": "Vers {destination}",
     "addStop": "Ajouter un arrêt",
     "moreStops": "+{count} arrêts de plus",
     "noSavedStops": "Aucun arrêt enregistré",
@@ -369,6 +371,10 @@
     "westbound": "Direction ouest",
     "northbound": "Direction nord",
     "southbound": "Direction sud",
+    "east": "Est",
+    "west": "Ouest",
+    "north": "Nord",
+    "south": "Sud",
     "towards": "vers",
     "via": "via"
   },

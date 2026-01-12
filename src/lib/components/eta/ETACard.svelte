@@ -728,7 +728,7 @@
                     </div>
                     <span
                       class="text-sm text-amber-600 dark:text-amber-400 font-medium"
-                      >Scheduled</span
+                      >{$_("eta.scheduled")}</span
                     >
                   </div>
                 {/if}
@@ -822,7 +822,7 @@
                       </div>
                       <span
                         class="text-sm text-amber-600 dark:text-amber-400 font-medium"
-                        >Scheduled</span
+                        >{$_("eta.scheduled")}</span
                       >
                     </div>
                   {/if}

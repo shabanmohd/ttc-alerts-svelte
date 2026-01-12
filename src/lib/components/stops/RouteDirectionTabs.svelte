@@ -1,6 +1,7 @@
 <script lang="ts">
   import { DIRECTION_COLORS, type DirectionLabel } from "$lib/data/stops-db";
   import { cn } from "$lib/utils";
+  import { _ } from "svelte-i18n";
   import {
     ArrowRight,
     ArrowLeft,
@@ -140,6 +141,48 @@
 
     return "bg-muted text-muted-foreground";
   }
+
+  /**
+   * Translate direction label for i18n
+   * "Towards X" -> $_("eta.towardsDestination", { values: { destination: "X" }})
+   * "Eastbound" -> $_("directions.eastbound")
+   */
+  function translateLabel(label: string): string {
+    // Handle "Towards X" labels
+    if (label.startsWith("Towards ")) {
+      const destination = label.replace("Towards ", "");
+      return $_("eta.towardsDestination", { values: { destination } });
+    }
+
+    // Handle cardinal directions
+    const dirKey = label.toLowerCase();
+    if (["eastbound", "westbound", "northbound", "southbound"].includes(dirKey)) {
+      return $_(`directions.${dirKey}`);
+    }
+
+    return label;
+  }
+
+  /**
+   * Translate short label for mobile display
+   */
+  function translateShortLabel(label: string): string {
+    const shortLabel = getShortLabel(label);
+    
+    // Translate short cardinal directions
+    switch (shortLabel) {
+      case "East":
+        return $_("directions.east");
+      case "West":
+        return $_("directions.west");
+      case "North":
+        return $_("directions.north");
+      case "South":
+        return $_("directions.south");
+      default:
+        return shortLabel;
+    }
+  }
 </script>
 
 <div class="direction-tabs" role="tablist" aria-label="Route directions">
@@ -159,8 +202,8 @@
     >
       <Icon class="tab-icon h-4 w-4" />
       <span class="tab-label">
-        <span class="full-label">{dir.label}</span>
-        <span class="short-label">{getShortLabel(dir.label)}</span>
+        <span class="full-label">{translateLabel(dir.label)}</span>
+        <span class="short-label">{translateShortLabel(dir.label)}</span>
       </span>
       {#if isSelected}
         <span class="selected-indicator"></span>
