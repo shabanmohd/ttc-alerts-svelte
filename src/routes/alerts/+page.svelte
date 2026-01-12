@@ -377,6 +377,14 @@
   // Helper: Check if a thread contains a TTC API disruption alert (NOT Bluesky)
   // Only ttc-alert-* IDs are from TTC Live Alerts API for disruptions
   // Returns the TTC API alert if found, so it can be used for display
+  // Check if a scheduled closure is currently in its active period (11 PM - 6 AM)
+  function isScheduledClosureActive(): boolean {
+    const now = new Date();
+    const hour = now.getHours();
+    // Active period: 11 PM (23:00) to 6 AM (06:00)
+    return hour >= 23 || hour < 6;
+  }
+
   function getTTCApiDisruptionAlert(
     thread: ThreadWithAlerts
   ): typeof thread.latestAlert | null {
@@ -388,7 +396,7 @@
       "SHUTTLE",
       "DIVERSION",
       "DELAY",
-      // PLANNED_CLOSURE removed - scheduled closures shown in Scheduled tab only
+      // PLANNED_CLOSURE is included but filtered by active period below
     ];
 
     // Find any TTC API disruption alert in the thread (prefer the most recent)
@@ -409,11 +417,14 @@
       // Exclude SERVICE_RESUMED (these are resolved alerts)
       const isResumed = categories.includes("SERVICE_RESUMED");
 
-      // Exclude scheduled future closures (nightly subway maintenance)
-      // These belong in the Scheduled tab, not Disruptions & Delays
+      // For scheduled closures: only show during active period (11 PM - 6 AM)
+      // Outside active period, they belong in the Scheduled tab only
       const isScheduled = isScheduledFutureClosure(headerText);
+      if (isScheduled && !isScheduledClosureActive()) {
+        continue; // Skip scheduled closures outside active period
+      }
 
-      if (hasDisruptionCategory && !isResumed && !isScheduled) {
+      if (hasDisruptionCategory && !isResumed) {
         return alert;
       }
     }
