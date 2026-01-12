@@ -1,6 +1,6 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.25  
+**Version:** 3.26  
 **Date:** January 12, 2026  
 **poll-alerts Version:** 136  
 **scrape-maintenance Version:** 3  
@@ -448,6 +448,47 @@ export const threadsWithAlerts = derived(
   }
 );
 ```
+
+**Alert Deduplication (with TTC API Alert Preservation):**
+
+The `deduplicateAlerts()` function removes alerts with >90% similar text within a thread, but **always preserves TTC API alerts** (`ttc-alert-*` prefix). This is critical because `getTTCApiDisruptionAlert()` in the frontend specifically looks for TTC API alerts to identify official disruptions.
+
+```typescript
+// src/lib/stores/alerts.ts
+function deduplicateAlerts(alerts: Alert[]): Alert[] {
+  // Sort by date descending (newest first)
+  const sorted = [...alerts].sort(/*...*/);
+  const kept: Alert[] = [];
+  
+  for (const alert of sorted) {
+    // Always keep TTC API alerts - they're needed for disruption detection
+    const isTTCApiAlert = alert.alert_id.startsWith('ttc-alert-');
+    
+    if (isTTCApiAlert) {
+      // Only deduplicate against other TTC API alerts
+      const hasSimilarTTCAlert = kept.some(keptAlert => {
+        if (!keptAlert.alert_id.startsWith('ttc-alert-')) return false;
+        return textSimilarity(alert.header_text, keptAlert.header_text) > 0.9;
+      });
+      if (!hasSimilarTTCAlert) kept.push(alert);
+      continue;
+    }
+    
+    // For non-TTC alerts, check similarity against all kept alerts
+    const isDuplicate = kept.some(keptAlert => 
+      textSimilarity(alert.header_text, keptAlert.header_text) > 0.9
+    );
+    if (!isDuplicate) kept.push(alert);
+  }
+  return kept;
+}
+```
+
+**Why this matters:**
+- Bluesky and TTC API alerts for the same incident often have >90% similar text
+- Without preservation, the TTC API alert would be removed (Bluesky is usually newer)
+- Frontend's `getTTCApiDisruptionAlert()` would then fail to find a TTC API alert
+- Disruptions wouldn't show in the "Disruptions & Delays" tab
 
 **SQL Query includes `resolved_at`:**
 
