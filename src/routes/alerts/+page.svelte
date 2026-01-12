@@ -205,12 +205,25 @@
     }
 
     const effect = thread.latestAlert.effect.toUpperCase();
+    const headerText = thread.latestAlert.header_text?.toLowerCase() || "";
 
     if (effect.includes("DELAY") || effect.includes("SIGNIFICANT_DELAYS"))
       return "delay";
 
     if (effect.includes("SCHEDULED") || effect.includes("CLOSURE"))
       return "scheduled";
+
+    // Detect scheduled/planned closures from header text
+    // Patterns: "starting X p.m., nightly", "for tunnel improvements", etc.
+    const scheduledPatterns = [
+      /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
+      /nightly.*from\s+\d+/i,
+      /for\s+(tunnel|track|signal|maintenance|construction)/i,
+      /there will be no.*service.*starting/i,
+    ];
+    if (scheduledPatterns.some((pattern) => pattern.test(headerText))) {
+      return "scheduled";
+    }
 
     return "disruption";
   }
@@ -319,19 +332,15 @@
     return isBlueskyRSZ;
   }
 
-  // Helper: Check if a thread is a TTC API disruption alert (NOT Bluesky)
+  // Helper: Check if a thread contains a TTC API disruption alert (NOT Bluesky)
   // Only ttc-alert-* IDs are from TTC Live Alerts API for disruptions
-  function isTTCApiDisruption(thread: ThreadWithAlerts): boolean {
-    const alert = thread.latestAlert;
-    if (!alert) return false;
+  // Returns the TTC API alert if found, so it can be used for display
+  function getTTCApiDisruptionAlert(
+    thread: ThreadWithAlerts
+  ): typeof thread.latestAlert | null {
+    if (!thread.alerts || thread.alerts.length === 0) return null;
 
-    // Must have alert_id starting with "ttc-alert-" (from TTC Live Alerts API)
-    if (!alert.alert_id?.toLowerCase().startsWith("ttc-alert-")) {
-      return false;
-    }
-
-    // Must be a disruption category (not RSZ, not elevator, not service resumed)
-    const categories = (alert.categories as string[]) || [];
+    // Disruption categories we accept
     const disruptionCategories = [
       "SERVICE_DISRUPTION",
       "SHUTTLE",
@@ -340,15 +349,34 @@
       "PLANNED_CLOSURE",
     ];
 
-    // Must have at least one disruption category
-    const hasDisruptionCategory = disruptionCategories.some((cat) =>
-      categories.includes(cat)
-    );
+    // Find any TTC API disruption alert in the thread (prefer the most recent)
+    for (const alert of thread.alerts) {
+      // Must be from TTC Live Alerts API
+      if (!alert.alert_id?.toLowerCase().startsWith("ttc-alert-")) {
+        continue;
+      }
 
-    // Exclude SERVICE_RESUMED (these are resolved alerts)
-    const isResumed = categories.includes("SERVICE_RESUMED");
+      const categories = (alert.categories as string[]) || [];
 
-    return hasDisruptionCategory && !isResumed;
+      // Must have at least one disruption category
+      const hasDisruptionCategory = disruptionCategories.some((cat) =>
+        categories.includes(cat)
+      );
+
+      // Exclude SERVICE_RESUMED (these are resolved alerts)
+      const isResumed = categories.includes("SERVICE_RESUMED");
+
+      if (hasDisruptionCategory && !isResumed) {
+        return alert;
+      }
+    }
+
+    return null;
+  }
+
+  // Helper: Check if a thread is a TTC API disruption (convenience wrapper)
+  function isTTCApiDisruption(thread: ThreadWithAlerts): boolean {
+    return getTTCApiDisruptionAlert(thread) !== null;
   }
 
   // Filter threads by category
@@ -378,9 +406,20 @@
     // For disruptions tab: ONLY show TTC API disruption alerts
     // This excludes Bluesky alerts, RSZ alerts, elevator alerts, and service resumed
     if (selectedCategory === "disruptions") {
-      const ttcApiDisruptions = $threadsWithAlerts.filter(
-        (t) => !t.is_resolved && !t.is_hidden && isTTCApiDisruption(t)
-      );
+      const ttcApiDisruptions = $threadsWithAlerts
+        .filter((t) => !t.is_resolved && !t.is_hidden && isTTCApiDisruption(t))
+        .map((thread) => {
+          // Use the TTC API alert instead of potentially-Bluesky latestAlert
+          const ttcAlert = getTTCApiDisruptionAlert(thread);
+          if (ttcAlert && ttcAlert !== thread.latestAlert) {
+            // Swap the latestAlert to be the TTC API alert for display purposes
+            return {
+              ...thread,
+              latestAlert: ttcAlert,
+            };
+          }
+          return thread;
+        });
       console.log(
         "=== DEBUG: activeAlerts (disruptions - TTC API only) ===",
         ttcApiDisruptions.length,
