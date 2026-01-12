@@ -149,13 +149,34 @@ function deduplicateAlerts(alerts: Alert[]): Alert[] {
   const kept: Alert[] = [];
   
   for (const alert of sorted) {
-    // Check if this alert is too similar to any already kept alert
+    // Always keep TTC API alerts - they're needed for disruption detection
+    // getTTCApiDisruptionAlert() specifically looks for ttc-alert-* prefix
+    const isTTCApiAlert = alert.alert_id.startsWith('ttc-alert-');
+    
+    if (isTTCApiAlert) {
+      // Check if we already have a TTC API alert with >90% similar text
+      const hasSimilarTTCAlert = kept.some(keptAlert => {
+        if (!keptAlert.alert_id.startsWith('ttc-alert-')) return false;
+        const similarity = textSimilarity(
+          alert.header_text || '', 
+          keptAlert.header_text || ''
+        );
+        return similarity > 0.9;
+      });
+      
+      if (!hasSimilarTTCAlert) {
+        kept.push(alert);
+      }
+      continue;
+    }
+    
+    // For non-TTC alerts, check if too similar to any kept alert
     const isDuplicate = kept.some(keptAlert => {
       const similarity = textSimilarity(
         alert.header_text || '', 
         keptAlert.header_text || ''
       );
-      // If >90% similar and within same thread, consider it duplicate
+      // If >90% similar, consider it duplicate
       return similarity > 0.9;
     });
     
