@@ -8,7 +8,7 @@ const IMMUTABLE_CACHE = 'ttc-immutable-v6';
 
 // SW Version for logging and debugging
 const SW_VERSION = '9.0.0';
-const BUILD_TIMESTAMP = '2026-01-11T23:02:46.849Z';
+const BUILD_TIMESTAMP = '2026-01-12T03:53:41.548Z';
 
 const STATIC_ASSETS = [
   '/',

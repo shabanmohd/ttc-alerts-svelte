@@ -100,9 +100,9 @@
   const primaryTime = $derived(prediction.arrivals[0]);
 
   /**
-   * Get secondary arrival times (rest of array)
+   * Get secondary arrival times (max 2 more, so 3 total)
    */
-  const secondaryTimes = $derived(prediction.arrivals.slice(1));
+  const secondaryTimes = $derived(prediction.arrivals.slice(1, 3));
 
   /**
    * Check if we have arrival data

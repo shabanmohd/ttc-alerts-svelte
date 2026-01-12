@@ -821,7 +821,7 @@
           {#each etaPredictions as prediction (prediction.route + prediction.direction)}
             {@const parsed = parseDirection(prediction.direction)}
             {@const primaryTime = prediction.arrivals[0]}
-            {@const secondaryTimes = prediction.arrivals.slice(1)}
+            {@const secondaryTimes = prediction.arrivals.slice(1, 3)}
 
             <div class="px-4 py-3">
               <!-- Mobile: Vertical layout -->
