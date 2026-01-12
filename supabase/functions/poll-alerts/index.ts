@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '116'; // Fix: Include ALL non-RSZ TTC API alerts in activeRoutes (was missing effects like "Subway Closure - Early Access")
+const VERSION = '117'; // Fix: Sort ALERT_CATEGORIES by priority to ensure consistent categorization (was returning OTHER instead of SERVICE_DISRUPTION)
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -84,11 +84,15 @@ function extractRoutes(text: string): string[] {
   return [...new Set(routes)];
 }
 
-// Categorize alert
+// Categorize alert - returns category with highest priority (lowest number)
 function categorizeAlert(text: string): { category: string; priority: number } {
   const lowerText = text.toLowerCase();
   
-  for (const [category, config] of Object.entries(ALERT_CATEGORIES)) {
+  // Sort entries by priority to ensure consistent matching order
+  const sortedCategories = Object.entries(ALERT_CATEGORIES)
+    .sort(([, a], [, b]) => a.priority - b.priority);
+  
+  for (const [category, config] of sortedCategories) {
     if (config.keywords.some(kw => lowerText.includes(kw))) {
       return { category, priority: config.priority };
     }
