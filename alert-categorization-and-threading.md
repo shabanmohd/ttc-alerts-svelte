@@ -1,6 +1,6 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.27  
+**Version:** 3.28  
 **Date:** January 12, 2026  
 **poll-alerts Version:** 136  
 **scrape-maintenance Version:** 3  
@@ -517,6 +517,31 @@ if (selectedCategory === "disruptions") {
 2. **No conflicts** - Bluesky and TTC API often report the same incident with slightly different text
 3. **Prevents duplicates** - Without filtering, both sources would show in "earlier updates"
 4. **Bluesky role is limited** - Bluesky is only used for "Recently Resolved" (SERVICE_RESUMED) alerts
+
+### Scheduled Closures: Time-Based Display
+
+Scheduled subway closures (nightly maintenance) appear in different tabs based on their active period:
+
+```typescript
+// Check if scheduled closure is currently active (11 PM - 6 AM)
+function isScheduledClosureActive(): boolean {
+  const now = new Date();
+  const hour = now.getHours();
+  return hour >= 23 || hour < 6;
+}
+
+// In getTTCApiDisruptionAlert():
+const isScheduled = isScheduledFutureClosure(headerText);
+if (isScheduled && !isScheduledClosureActive()) {
+  continue; // Skip scheduled closures outside active period
+}
+```
+
+**Behavior:**
+| Time | Disruptions Tab | Scheduled Tab | Subway Status Card |
+|------|----------------|---------------|-------------------|
+| 11 PM - 6 AM | Shows closure | Shows closure | Shows "Scheduled" |
+| 6 AM - 11 PM | Hidden | Shows closure | Shows "Normal service" |
 
 **SQL Query includes `resolved_at`:**
 
