@@ -388,7 +388,7 @@
       "SHUTTLE",
       "DIVERSION",
       "DELAY",
-      "PLANNED_CLOSURE",
+      // PLANNED_CLOSURE removed - scheduled closures shown in Scheduled tab only
     ];
 
     // Find any TTC API disruption alert in the thread (prefer the most recent)
@@ -399,6 +399,7 @@
       }
 
       const categories = (alert.categories as string[]) || [];
+      const headerText = alert.header_text || "";
 
       // Must have at least one disruption category
       const hasDisruptionCategory = disruptionCategories.some((cat) =>
@@ -408,7 +409,11 @@
       // Exclude SERVICE_RESUMED (these are resolved alerts)
       const isResumed = categories.includes("SERVICE_RESUMED");
 
-      if (hasDisruptionCategory && !isResumed) {
+      // Exclude scheduled future closures (nightly subway maintenance)
+      // These belong in the Scheduled tab, not Disruptions & Delays
+      const isScheduled = isScheduledFutureClosure(headerText);
+
+      if (hasDisruptionCategory && !isResumed && !isScheduled) {
         return alert;
       }
     }
