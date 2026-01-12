@@ -1,0 +1,23 @@
+# Cloudflare Worker for checking GTFS schedule updates
+# Runs weekly via Cron Trigger
+
+name = "gtfs-checker"
+main = "src/index.ts"
+compatibility_date = "2024-01-29"
+
+# KV namespace for storing last checked version
+[[kv_namespaces]]
+binding = "GTFS_STATE"
+id = "REPLACE_WITH_KV_ID"
+
+# Cron trigger - runs every Sunday at 6:00 AM UTC (2:00 AM EST)
+[triggers]
+crons = ["0 6 * * 0"]
+
+[vars]
+GTFS_URL = "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/7795b45e-e65a-4465-81fc-c36b9dfff169/resource/cfb6b2b8-6191-41e3-bda1-b175c51148cb/download/TTC%20Routes%20and%20Schedules%20Data.zip"
+GITHUB_REPO = "shaban/ttc-alerts-svelte"
+
+# For production, set these secrets:
+# wrangler secret put GITHUB_TOKEN
+# wrangler secret put DISCORD_WEBHOOK_URL (optional)
