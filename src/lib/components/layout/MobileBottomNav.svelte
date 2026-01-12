@@ -64,11 +64,13 @@
 
   // Fix for iOS dynamic viewport + scroll handling + safe area
   onMount(() => {
+    // CSS Tricks method: Set --vh custom property based on actual viewport height
+    // This fixes iOS PWA where viewport height can be incorrect on first load
     const setViewportHeight = () => {
-      document.documentElement.style.setProperty(
-        "--viewport-height",
-        `${window.innerHeight}px`
-      );
+      // Use visualViewport if available (more accurate on mobile)
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      document.documentElement.style.setProperty('--vh', `${vh * 0.01}px`);
+      document.documentElement.style.setProperty('--viewport-height', `${vh}px`);
     };
 
     // iOS PWA fix: Calculate safe area inset on mount
@@ -89,15 +91,53 @@
           '--safe-area-inset-bottom-fallback',
           `${safeAreaHeight}px`
         );
+        console.log(`[iOS Safe Area] Measured: ${safeAreaHeight}px`);
       }
     };
 
-    setViewportHeight();
-    setSafeAreaInset();
+    // Detect if we're in iOS PWA standalone mode
+    const isIOSPWA = (window.navigator as any).standalone === true;
     
-    // Re-check safe area after a delay (iOS sometimes needs time)
-    setTimeout(setSafeAreaInset, 100);
-    setTimeout(setSafeAreaInset, 500);
+    // iOS PWA specific fix: Force viewport recalculation
+    // The viewport can be incorrect on first launch, so we force multiple updates
+    if (isIOSPWA) {
+      document.documentElement.classList.add('ios-pwa');
+      
+      // Immediate set
+      setViewportHeight();
+      setSafeAreaInset();
+      
+      // Force a micro-scroll to trigger viewport recalculation
+      // This is a known workaround for iOS PWA viewport bugs
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 1);
+        requestAnimationFrame(() => {
+          window.scrollTo(0, 0);
+          setViewportHeight();
+          setSafeAreaInset();
+        });
+      });
+      
+      // Additional delayed checks for iOS timing issues
+      setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 50);
+      setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 150);
+      setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 300);
+      
+      // Listen to visualViewport resize for accurate updates
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          setViewportHeight();
+          setSafeAreaInset();
+        });
+      }
+    } else {
+      setViewportHeight();
+      setSafeAreaInset();
+      
+      // Re-check safe area after a delay (iOS sometimes needs time)
+      setTimeout(setSafeAreaInset, 100);
+      setTimeout(setSafeAreaInset, 500);
+    }
     
     window.addEventListener("resize", setViewportHeight);
     window.addEventListener("resize", setSafeAreaInset);

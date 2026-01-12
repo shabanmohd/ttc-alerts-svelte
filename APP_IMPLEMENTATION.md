@@ -107,7 +107,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                                         |
 | `components/layout/Header.svelte`               | ✅     | App header with auth controls                              |
 | `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation                                         |
-| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation                                          |
+| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation + iOS PWA viewport fix (visualViewport API) |
 | `components/ui/*`                               | ✅     | shadcn-svelte base components                              |
 | `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                               |
 | `stores/alerts.ts`                              | ✅     | Alerts state + realtime sync with bidirectional fetch      |

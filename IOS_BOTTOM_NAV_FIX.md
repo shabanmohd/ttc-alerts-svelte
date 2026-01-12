@@ -397,52 +397,109 @@ html.ios-pwa {
 ```
 **Result**: Did not resolve issue
 
-### Diagnostic Information
+### ✅ SOLUTION: Attempt 8 - visualViewport API + Micro-scroll Workaround (WORKING)
 
-Console logs show everything working correctly:
+**Status**: ✅ RESOLVED
+
+The fix combines multiple approaches based on CSS-Tricks research and MDN documentation:
+
+#### 1. visualViewport API for Accurate Height
+```javascript
+const setViewportHeight = () => {
+  // Use visualViewport if available (more accurate on mobile)
+  const vh = window.visualViewport?.height ?? window.innerHeight;
+  document.documentElement.style.setProperty('--vh', `${vh * 0.01}px`);
+  document.documentElement.style.setProperty('--viewport-height', `${vh}px`);
+};
 ```
-[iOS Safe Area] Measured: 34px
-Storage initialized successfully
-✅ TTC stops database ready (9346 stops)
-Realtime subscription status: "SUBSCRIBED"
+
+#### 2. Micro-scroll Workaround to Force Viewport Recalculation
+```javascript
+// Force a micro-scroll to trigger viewport recalculation
+// This is a known workaround for iOS PWA viewport bugs
+requestAnimationFrame(() => {
+  window.scrollTo(0, 1);
+  requestAnimationFrame(() => {
+    window.scrollTo(0, 0);
+    setViewportHeight();
+    setSafeAreaInset();
+  });
+});
 ```
 
-### Future Approaches to Explore
+#### 3. iOS PWA Class for CSS Targeting
+```javascript
+const isIOSPWA = (window.navigator as any).standalone === true;
+if (isIOSPWA) {
+  document.documentElement.classList.add('ios-pwa');
+}
+```
 
-1. **Force Window Resize on Mount**
-   ```javascript
-   if (navigator.standalone) {
-     window.scrollTo(0, 1);
-     setTimeout(() => window.scrollTo(0, 0), 100);
-   }
-   ```
+#### 4. CSS: Use JS-calculated Viewport Height
+```css
+html.ios-pwa {
+  height: calc(var(--vh, 1vh) * 100);
+  height: var(--viewport-height, 100vh);
+  overflow: hidden;
+  background-color: hsl(var(--background));
+}
 
-2. **visualViewport API**
-   ```javascript
-   if (window.visualViewport) {
-     const vh = window.visualViewport.height;
-     document.documentElement.style.setProperty('--actual-viewport-height', `${vh}px`);
-   }
-   ```
+html.ios-pwa body {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background-color: hsl(var(--background));
+}
+```
 
-3. **resize Event Listener**
-   ```javascript
-   window.addEventListener('resize', () => {
-     document.body.style.height = `${window.innerHeight}px`;
-   });
-   ```
+#### 5. Nav Extension Pseudo-element (Belt and Suspenders)
+```css
+/* iOS PWA: Extend nav background below to cover any viewport gap */
+html.ios-pwa .mobile-bottom-nav::after {
+  content: '';
+  position: absolute;
+  top: 100%; /* Start right below the nav */
+  left: 0;
+  right: 0;
+  height: 100px; /* Generous extension to cover any gap */
+  background-color: inherit;
+  pointer-events: none;
+}
+```
 
-4. **Research WebKit PWA viewport bugs** for established workarounds
+#### 6. visualViewport Resize Listener
+```javascript
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    setViewportHeight();
+    setSafeAreaInset();
+  });
+}
+```
 
-5. **Service Worker cache priming** - perhaps timing related to initial resource loading
+#### 7. Multiple Delayed Checks
+```javascript
+// Additional delayed checks for iOS timing issues
+setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 50);
+setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 150);
+setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 300);
+```
 
-6. **Splash screen timing** - coordinate with iOS PWA splash dismissal
+### Why This Works
 
-### Current State
+1. **visualViewport API** - Provides the actual visible viewport dimensions, which are more accurate than `window.innerHeight` on iOS PWA
+2. **Micro-scroll** - Forces WebKit to recalculate the viewport immediately after PWA launches
+3. **CSS custom properties** - Allow JavaScript to communicate accurate viewport height to CSS
+4. **Nav extension** - Ensures the background color extends beyond the nav even if there's a brief moment of incorrect viewport
 
-**Status**: UNRESOLVED - Reverted to commit `ac2e6ad` (stable state without experimental fixes)
-**Impact**: Visual issue on iOS PWA first launch only; resolves on refresh
-**Priority**: Low (workaround: user can refresh)
+### Files Modified
+- `src/lib/components/layout/MobileBottomNav.svelte` - Added iOS PWA detection, visualViewport API, micro-scroll workaround
+- `src/routes/layout.css` - Added `html.ios-pwa` styles and nav extension pseudo-element
+
+### References
+- [CSS-Tricks: The trick to viewport units on mobile](https://css-tricks.com/the-trick-to-viewport-units-on-mobile/)
+- [MDN: VisualViewport API](https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport)
+- [WebKit: Designing Websites for iPhone X](https://webkit.org/blog/7929/designing-websites-for-iphone-x/)
 
 ---
 
