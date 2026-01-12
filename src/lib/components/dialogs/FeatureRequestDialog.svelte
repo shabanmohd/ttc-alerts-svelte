@@ -293,7 +293,7 @@
           <div
             class="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm"
           >
-            <AlertCircle class="h-4 w-4 flex-shrink-0" />
+            <AlertCircle class="h-4 w-4 shrink-0" />
             <span>{$_("feedback.submitError")}</span>
           </div>
         {/if}

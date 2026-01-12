@@ -4,7 +4,7 @@ import { supabase } from '$lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 // Severity category type for filtering alerts
-export type SeverityCategory = 'MAJOR' | 'MINOR' | 'ACCESSIBILITY';
+export type SeverityCategory = 'ALL' | 'MAJOR' | 'MINOR' | 'ACCESSIBILITY';
 
 // Severity category filter state (for alerts-v3 and similar pages)
 export const selectedSeverityCategory = writable<SeverityCategory>('MAJOR');

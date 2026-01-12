@@ -1279,8 +1279,9 @@
 <style>
   .route-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
     padding: 1rem;
     background-color: hsl(var(--card));
     border-radius: var(--radius);
@@ -1313,15 +1314,6 @@
     border: none;
     border-top: 1px solid hsl(var(--border));
     margin: 1rem 0 0;
-  }
-
-  /* Mobile: stack header vertically */
-  @media (max-width: 400px) {
-    .route-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
-    }
   }
 
   /* Stops Section */

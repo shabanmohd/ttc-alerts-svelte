@@ -1,6 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// Deno types (for IDE only - Deno runtime provides these)
+declare const Deno: { env: { get(key: string): string | undefined } };
+
 // v1 - RSZ (Slow Zone) Data Verification and Auto-Correction System
 // Compares TTC API RSZ data with database and auto-fixes discrepancies
 
@@ -78,7 +81,7 @@ function generateRszThreadId(alertId: string): { threadId: string; lineNumber: s
   };
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -157,7 +160,7 @@ serve(async (req) => {
       throw new Error(`Database error: ${dbError.message}`);
     }
 
-    const visibleDbThreads = (dbThreads || []).filter(t => !t.is_hidden && !t.is_resolved);
+    const visibleDbThreads = (dbThreads || []).filter((t: any) => !t.is_hidden && !t.is_resolved);
     result.databaseCount = visibleDbThreads.length;
 
     console.log(`Database has ${dbThreads?.length || 0} total RSZ threads, ${visibleDbThreads.length} visible`);
@@ -324,7 +327,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('RSZ Verification error:', error);
     result.success = false;
-    result.details.error = error.message;
+    result.details.error = (error as Error).message;
     
     return new Response(
       JSON.stringify(result),

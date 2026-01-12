@@ -327,7 +327,7 @@
                 <Button
                   variant="ghost"
                   size="icon"
-                  class="h-8 w-8 flex-shrink-0"
+                  class="h-8 w-8 shrink-0"
                   onclick={() => promptRemoveStop(stop.id, stop.name)}
                 >
                   <Trash2 class="h-4 w-4 text-destructive" />
@@ -390,7 +390,7 @@
                 <Button
                   variant="ghost"
                   size="icon"
-                  class="h-8 w-8 flex-shrink-0"
+                  class="h-8 w-8 shrink-0"
                   onclick={() => promptRemoveRoute(route.id, route.name)}
                 >
                   <Trash2 class="h-4 w-4 text-destructive" />
@@ -439,14 +439,14 @@
           >
             {#if $localPreferences.language === "en"}
               <span
-                class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+                class="h-5 w-5 rounded-full flex items-center justify-center shrink-0"
                 style="background-color: hsl(var(--foreground));"
               >
                 <Check class="h-3 w-3" style="color: hsl(var(--background));" />
               </span>
             {:else}
               <span
-                class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"
+                class="h-5 w-5 rounded-full shrink-0 border-2 border-muted-foreground/30"
               ></span>
             {/if}
             <span>English</span>
@@ -463,14 +463,14 @@
           >
             {#if $localPreferences.language === "fr"}
               <span
-                class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+                class="h-5 w-5 rounded-full flex items-center justify-center shrink-0"
                 style="background-color: hsl(var(--foreground));"
               >
                 <Check class="h-3 w-3" style="color: hsl(var(--background));" />
               </span>
             {:else}
               <span
-                class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"
+                class="h-5 w-5 rounded-full shrink-0 border-2 border-muted-foreground/30"
               ></span>
             {/if}
             <span>Français</span>
@@ -496,7 +496,7 @@
             >
               {#if isSelected}
                 <span
-                  class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+                  class="h-5 w-5 rounded-full flex items-center justify-center shrink-0"
                   style="background-color: hsl(var(--foreground));"
                 >
                   <Check
@@ -506,7 +506,7 @@
                 </span>
               {:else}
                 <span
-                  class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"
+                  class="h-5 w-5 rounded-full shrink-0 border-2 border-muted-foreground/30"
                 ></span>
               {/if}
               <span>{$_(option.labelKey)}</span>

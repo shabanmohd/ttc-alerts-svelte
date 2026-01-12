@@ -1089,7 +1089,7 @@
                       >
                     {:else if type === "scheduled"}
                       <Calendar
-                        class="w-4 h-4 status-scheduled-icon flex-shrink-0"
+                        class="w-4 h-4 status-scheduled-icon shrink-0"
                       />
                       <span class="status-text status-scheduled-text"
                         >{$_("status.scheduled")}</span

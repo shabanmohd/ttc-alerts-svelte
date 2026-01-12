@@ -639,7 +639,7 @@
         <div class="p-4 space-y-3">
           {#each [1, 2] as _}
             <div class="animate-pulse flex items-center gap-3">
-              <div class="h-10 w-14 bg-muted rounded-lg flex-shrink-0"></div>
+              <div class="h-10 w-14 bg-muted rounded-lg shrink-0"></div>
               <div class="flex-1 space-y-2">
                 <div class="h-4 w-32 bg-muted rounded"></div>
                 <div class="h-3 w-24 bg-muted rounded"></div>
@@ -700,7 +700,7 @@
               class="px-4 py-2 bg-purple-500/20 dark:bg-purple-800/15 border-b border-purple-500/20 dark:border-purple-700/10"
             >
               <div
-                class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-[#b954ec]"
+                class="flex items-center gap-1.5 text-xs text-[#652393] dark:text-[#e8baff]"
               >
                 <Calendar class="h-3.5 w-3.5" />
                 <span>Scheduled Next Bus</span>
@@ -830,7 +830,7 @@
                   <RouteBadge
                     route={prediction.route}
                     size="lg"
-                    class="flex-shrink-0"
+                    class="shrink-0"
                   />
                   <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-foreground leading-snug">
@@ -925,7 +925,7 @@
                   <RouteBadge
                     route={prediction.route}
                     size="lg"
-                    class="flex-shrink-0"
+                    class="shrink-0"
                   />
                   <div class="min-w-0 flex-1">
                     <p class="text-sm font-medium text-foreground leading-snug">
@@ -939,7 +939,7 @@
                   </div>
                 </div>
                 {#if prediction.arrivals.length > 0}
-                  <div class="flex items-baseline gap-1 flex-shrink-0">
+                  <div class="flex items-baseline gap-1 shrink-0">
                     {#if prediction.isLive}
                       <!-- Live GPS data: show minutes countdown -->
                       <span

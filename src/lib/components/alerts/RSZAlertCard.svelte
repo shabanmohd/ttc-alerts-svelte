@@ -371,7 +371,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.125rem;
+    gap: 0.25rem;
   }
 
   .rsz-line-name {

@@ -411,7 +411,8 @@ header.sticky {
    Safe-area is applied to first visible banner child
    ============================================================================= */
 .banners-container {
-  /* Container for status/holiday banners */
+  /* Container for status/holiday banners - empty rule intentional */
+  display: contents;
 }
 
 /* Apply safe-area-inset-top to the first visible banner in the container */
@@ -696,12 +697,12 @@ header.sticky {
 
 /* Dark mode: brighter purple for better visibility */
 .dark .mobile-bottom-nav .nav-item.active {
-  color: #b954ec;
+  color: #db95ff;
   background: #72269840;
 }
 
 .dark .mobile-bottom-nav .nav-item.active::before {
-  background: #b954ec;
+  background: #db95ff;
 }
 
 /* ============================================
@@ -722,6 +723,7 @@ header.sticky {
   transition: all 0.15s;
   min-width: 1.75rem;
   border: 0px solid transparent;
+  white-space: nowrap; /* Prevent text wrapping in badges like "Line 6" */
 }
 
 /* Small route badge */

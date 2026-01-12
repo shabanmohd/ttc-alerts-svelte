@@ -188,7 +188,7 @@
           {#if !$isOnline}
             <!-- Offline: red cloud-off icon -->
             <span
-              class="flex-shrink-0 flex items-center justify-center w-4 h-4"
+              class="shrink-0 flex items-center justify-center w-4 h-4"
             >
               <CloudOff class="w-3 h-3 text-destructive" />
             </span>
@@ -205,7 +205,7 @@
           {:else}
             <!-- Disconnected: hollow gray circle -->
             <span
-              class="w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500 flex-shrink-0"
+              class="w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500 shrink-0"
             ></span>
           {/if}
           {#if $lastUpdated}
@@ -229,7 +229,7 @@
       >
         {#if !$isOnline}
           <!-- Offline: red cloud-off icon -->
-          <span class="flex-shrink-0 flex items-center justify-center w-4 h-4">
+          <span class="shrink-0 flex items-center justify-center w-4 h-4">
             <CloudOff class="w-3 h-3 text-destructive" />
           </span>
         {:else if $isConnected}
@@ -244,7 +244,7 @@
         {:else}
           <!-- Disconnected: hollow gray circle -->
           <span
-            class="w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500 flex-shrink-0"
+            class="w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500 shrink-0"
           ></span>
         {/if}
         {#if $lastUpdated}
@@ -396,14 +396,14 @@
           >
             {#if !isDark}
               <span
-                class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0 animate-scale-in"
+                class="h-5 w-5 rounded-full flex items-center justify-center shrink-0 animate-scale-in"
                 style="background-color: hsl(var(--foreground));"
               >
                 <Check class="h-3 w-3" style="color: hsl(var(--background));" />
               </span>
             {:else}
               <span
-                class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"
+                class="h-5 w-5 rounded-full shrink-0 border-2 border-muted-foreground/30"
               ></span>
             {/if}
             <Sun class="w-4 h-4" aria-hidden="true" />
@@ -425,14 +425,14 @@
           >
             {#if isDark}
               <span
-                class="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0 animate-scale-in"
+                class="h-5 w-5 rounded-full flex items-center justify-center shrink-0 animate-scale-in"
                 style="background-color: hsl(var(--foreground));"
               >
                 <Check class="h-3 w-3" style="color: hsl(var(--background));" />
               </span>
             {:else}
               <span
-                class="h-5 w-5 rounded-full flex-shrink-0 border-2 border-muted-foreground/30"
+                class="h-5 w-5 rounded-full shrink-0 border-2 border-muted-foreground/30"
               ></span>
             {/if}
             <Moon class="w-4 h-4" aria-hidden="true" />

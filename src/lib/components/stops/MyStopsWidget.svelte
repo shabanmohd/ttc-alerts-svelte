@@ -63,7 +63,7 @@
             class="flex items-start gap-3 text-left flex-1 min-w-0"
           >
             <MapPin
-              class="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0"
+              class="h-4 w-4 text-muted-foreground mt-0.5 shrink-0"
             />
             <div class="min-w-0 flex-1">
               <p class="text-sm font-medium truncate">{stop.name}</p>
@@ -77,7 +77,7 @@
           <button
             type="button"
             onclick={(e) => handleRemove(stop.id, e)}
-            class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-all flex-shrink-0"
+            class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
             aria-label="Remove {stop.name} from bookmarks"
           >
             <X class="h-4 w-4" />

@@ -17,7 +17,7 @@
   import { Input } from "$lib/components/ui/input";
   import { Button } from "$lib/components/ui/button";
   import { Toggle } from "$lib/components/ui/toggle";
-  import { activeFilters, setRouteFilter } from "$lib/stores/alerts";
+  import { activeFilters } from "$lib/stores/alerts";
   import { savedRoutes } from "$lib/stores/savedRoutes";
   import { goto } from "$app/navigation";
   import SEO from "$lib/components/SEO.svelte";
@@ -183,7 +183,7 @@
   <div class="mb-6">
     <div class="relative">
       <Search
-        class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 flex-shrink-0 text-muted-foreground"
+        class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 text-muted-foreground"
       />
       <Input
         type="text"

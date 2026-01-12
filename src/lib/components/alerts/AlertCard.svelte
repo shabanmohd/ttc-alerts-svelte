@@ -5,7 +5,11 @@
   import AccessibilityBadge from "./AccessibilityBadge.svelte";
   import { cn } from "$lib/utils";
   import { _ } from "svelte-i18n";
-  import type { ThreadWithAlerts, Alert } from "$lib/types/database";
+  import type {
+    ThreadWithAlerts,
+    Alert,
+    PartialAlert,
+  } from "$lib/types/database";
 
   let { thread, lineColor }: { thread: ThreadWithAlerts; lineColor?: string } =
     $props();
@@ -397,7 +401,9 @@
   /**
    * Get the display text for an alert, cleaning up accessibility alerts.
    */
-  function getDisplayText(alert: Alert | undefined | null): string {
+  function getDisplayText(
+    alert: Alert | PartialAlert | undefined | null
+  ): string {
     if (!alert) return "";
 
     // For accessibility alerts, clean up the description text
@@ -427,7 +433,7 @@
     <!-- Main content: Badge on left, details on right -->
     <div class="flex gap-3">
       <!-- Badge on left - fixed width for uniform alignment -->
-      <div class="w-20 flex flex-col items-center gap-2 flex-shrink-0">
+      <div class="w-20 flex flex-col items-center gap-2 shrink-0">
         {#if isAccessibility}
           <!-- Elevator/escalator/SiteWide alerts: Show accessibility icon badge -->
           <AccessibilityBadge size="lg" class="alert-badge-fixed" />

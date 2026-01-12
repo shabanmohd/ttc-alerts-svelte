@@ -355,7 +355,7 @@
       aria-expanded={!collapsed}
     >
       <div class="flex items-start gap-2.5 min-w-0 flex-1">
-        <MapPin class="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+        <MapPin class="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
         <div class="min-w-0 flex-1">
           <p class="font-medium text-base leading-tight">{crossStreets}</p>
           <div class="flex items-center gap-2 mt-1">
@@ -379,7 +379,7 @@
           </div>
         </div>
       </div>
-      <div class="flex items-center gap-1 flex-shrink-0">
+      <div class="flex items-center gap-1 shrink-0">
         <ChevronDown
           class={cn(
             "h-5 w-5 text-muted-foreground transition-transform duration-200",
@@ -394,7 +394,7 @@
       class="flex items-start justify-between gap-2 px-4 py-3 bg-zinc-100 dark:bg-zinc-800 border-b"
     >
       <div class="flex items-start gap-2.5 min-w-0 flex-1">
-        <MapPin class="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+        <MapPin class="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
         <div class="min-w-0 flex-1">
           <p class="font-medium text-base leading-tight">{crossStreets}</p>
           <div class="flex items-center gap-2 mt-1">
@@ -422,7 +422,7 @@
         <Button
           variant="ghost"
           size="icon"
-          class="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
+          class="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
           onclick={handleRemove}
           aria-label="Remove stop"
         >
@@ -437,7 +437,7 @@
     {#if eta.error}
       <!-- Error State -->
       <div class="flex items-center gap-2 text-destructive text-sm p-4">
-        <AlertCircle class="h-4 w-4 flex-shrink-0" />
+        <AlertCircle class="h-4 w-4 shrink-0" />
         <span>{eta.error}</span>
       </div>
     {:else if eta.isLoading && eta.predictions.length === 0}
@@ -445,7 +445,7 @@
       <div class="p-4 space-y-3">
         {#each [1, 2] as _}
           <div class="animate-pulse flex items-center gap-3">
-            <div class="h-10 w-14 bg-muted rounded-lg flex-shrink-0"></div>
+            <div class="h-10 w-14 bg-muted rounded-lg shrink-0"></div>
             <div class="flex-1 space-y-2">
               <div class="h-4 w-32 bg-muted rounded"></div>
               <div class="h-3 w-24 bg-muted rounded"></div>
@@ -466,7 +466,7 @@
             class="px-4 py-2 bg-purple-500/20 dark:bg-purple-800/15 border-b border-purple-500/20 dark:border-purple-700/10"
           >
             <div
-              class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-[#b954ec]"
+              class="flex items-center gap-1.5 text-xs text-[#652393] dark:text-[#e8baff]"
             >
               <Calendar class="h-3.5 w-3.5" />
               <span>Scheduled Next Bus</span>
@@ -485,7 +485,7 @@
                     <RouteBadge
                       route={routeId}
                       size="lg"
-                      class="flex-shrink-0"
+                      class="shrink-0"
                     />
                     <div class="flex-1 min-w-0">
                       <p
@@ -538,7 +538,7 @@
                     <RouteBadge
                       route={routeId}
                       size="lg"
-                      class="flex-shrink-0"
+                      class="shrink-0"
                     />
                     <div class="min-w-0 flex-1">
                       <p
@@ -552,7 +552,7 @@
                     </div>
                   </div>
                   <!-- Right: Time -->
-                  <div class="flex flex-col items-end flex-shrink-0">
+                  <div class="flex flex-col items-end shrink-0">
                     {#if departure && departure.time}
                       <span
                         class="text-4xl font-bold text-foreground/70 tabular-nums"
@@ -652,7 +652,7 @@
                 <RouteBadge
                   route={prediction.route}
                   size="lg"
-                  class="flex-shrink-0"
+                  class="shrink-0"
                 />
                 <div class="min-w-0 flex-1">
                   <p class="text-sm font-medium text-foreground leading-snug">
@@ -669,7 +669,7 @@
               {#if prediction.arrivals.length > 0}
                 {#if prediction.isLive}
                   <!-- Live GPS data: show minutes countdown with signal icon -->
-                  <div class="flex items-baseline gap-1 flex-shrink-0">
+                  <div class="flex items-baseline gap-1 shrink-0">
                     <span
                       class="text-4xl font-bold text-foreground tabular-nums"
                       >{primaryTime}</span
@@ -695,7 +695,7 @@
                   {@const allSamePeriod = allTimeObjs.every(
                     (t) => t.period === primaryTimeObj.period
                   )}
-                  <div class="flex flex-col items-end flex-shrink-0">
+                  <div class="flex flex-col items-end shrink-0">
                     <div class="flex items-baseline gap-1">
                       <span
                         class="text-4xl font-bold text-foreground tabular-nums"
@@ -746,7 +746,7 @@
                 <RouteBadge
                   route={prediction.route}
                   size="lg"
-                  class="flex-shrink-0"
+                  class="shrink-0"
                 />
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium text-foreground leading-snug">
@@ -848,7 +848,7 @@
             class="px-4 py-2 bg-purple-500/20 dark:bg-purple-800/15 border-b border-purple-500/20 dark:border-purple-700/10"
           >
             <div
-              class="flex items-center gap-1.5 text-xs text-purple-700 dark:text-[#b954ec]"
+              class="flex items-center gap-1.5 text-xs text-[#652393] dark:text-[#e8baff]"
             >
               <Calendar class="h-3.5 w-3.5" />
               <span>Scheduled Next Bus</span>
@@ -867,7 +867,7 @@
                     <RouteBadge
                       route={routeId}
                       size="lg"
-                      class="flex-shrink-0"
+                      class="shrink-0"
                     />
                     <div class="flex-1 min-w-0">
                       <p
@@ -920,7 +920,7 @@
                     <RouteBadge
                       route={routeId}
                       size="lg"
-                      class="flex-shrink-0"
+                      class="shrink-0"
                     />
                     <div class="min-w-0 flex-1">
                       <p
@@ -934,7 +934,7 @@
                     </div>
                   </div>
                   <!-- Right: Time -->
-                  <div class="flex flex-col items-end flex-shrink-0">
+                  <div class="flex flex-col items-end shrink-0">
                     {#if departure && departure.time}
                       <span
                         class="text-4xl font-bold text-foreground/70 tabular-nums"

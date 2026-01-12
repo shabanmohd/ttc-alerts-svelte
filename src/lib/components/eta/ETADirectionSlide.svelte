@@ -119,7 +119,7 @@
   <div class="flex items-center justify-between gap-4 w-full px-4 py-3">
     <!-- Left: Route Badge + Direction -->
     <div class="flex items-center gap-3 min-w-0 flex-1">
-      <RouteBadge route={prediction.route} size="lg" class="flex-shrink-0" />
+      <RouteBadge route={prediction.route} size="lg" class="shrink-0" />
       <div class="min-w-0 flex-1">
         <p class="text-sm font-medium text-foreground leading-tight truncate">
           {parsedDir.line1}
@@ -139,7 +139,7 @@
 
     <!-- Right: Arrival Times -->
     {#if hasData}
-      <div class="flex items-baseline gap-1 flex-shrink-0">
+      <div class="flex items-baseline gap-1 shrink-0">
         <span class="eta-primary-time">{primaryTime}</span>
         {#if secondaryTimes.length > 0}
           <span class="eta-secondary-times">, {secondaryTimes.join(", ")}</span>
@@ -148,7 +148,7 @@
       </div>
     {:else}
       <!-- No Data -->
-      <span class="eta-no-data flex-shrink-0">–</span>
+      <span class="eta-no-data shrink-0">–</span>
     {/if}
   </div>
 </div>

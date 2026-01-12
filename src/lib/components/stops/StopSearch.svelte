@@ -292,7 +292,7 @@
       aria-controls="stop-search-results"
     >
       <Search
-        class="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 flex-shrink-0 -translate-y-1/2"
+        class="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 shrink-0 -translate-y-1/2"
       />
       <Input
         bind:ref={inputRef}
@@ -371,7 +371,7 @@
             class:highlighted={highlightedIndex === index}
           >
             <MapPin
-              class="h-5 w-5 mt-0.5 text-muted-foreground flex-shrink-0"
+              class="h-5 w-5 mt-0.5 text-muted-foreground shrink-0"
               aria-hidden="true"
             />
             <div class="min-w-0 flex-1">
@@ -389,12 +389,12 @@
                           ? "bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border-emerald-600/40"
                           : "bg-rose-600/20 text-rose-700 dark:text-rose-400 border-rose-600/40"}
                   <span
-                    class="text-[10px] font-medium px-1.5 py-0.5 rounded border flex-shrink-0 uppercase {dirColor}"
+                    class="text-[10px] font-medium px-1.5 py-0.5 rounded border shrink-0 uppercase {dirColor}"
                   >
                     {stop.dir}
                   </span>
                 {/if}
-                <span class="text-xs text-muted-foreground/60 flex-shrink-0"
+                <span class="text-xs text-muted-foreground/60 shrink-0"
                   >#{stop.id}</span
                 >
               </div>
