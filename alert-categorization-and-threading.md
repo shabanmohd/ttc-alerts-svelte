@@ -1,12 +1,12 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.24  
+**Version:** 3.25  
 **Date:** January 12, 2026  
-**poll-alerts Version:** 135  
+**poll-alerts Version:** 136  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
-**verify-disruptions Version:** 1  
+**verify-disruptions Version:** 2  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 

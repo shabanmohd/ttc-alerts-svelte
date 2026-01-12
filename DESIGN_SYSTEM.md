@@ -108,6 +108,18 @@ The app uses a purple accent color for interactive/selected UI elements:
 - Scheduled Next Bus section header and icon
 - Secondary accent elements that need distinction from TTC brand colors
 
+### Navigation Backgrounds
+
+Both mobile bottom nav and desktop sidebar use matching backgrounds for visual consistency:
+
+| Element            | Light Mode           | Dark Mode              |
+| ------------------ | -------------------- | ---------------------- |
+| Mobile bottom nav  | `bg-white`           | `bg-zinc-900`          |
+| Desktop sidebar    | `bg-white`           | `bg-zinc-900`          |
+| Border (top/right) | `border-zinc-200`    | `border-zinc-800`      |
+
+**Note**: Both navigations use solid backgrounds (no transparency) to prevent content bleed-through issues.
+
 ---
 
 ## 2a. Motion & Transitions
