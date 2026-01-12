@@ -18,11 +18,11 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## 🆕 Recent Updates (Jan 12, 2026)
 
-| Component               | Change                                                            | Status       |
-| ----------------------- | ----------------------------------------------------------------- | ------------ |
-| **route-changes.ts**    | Fix filtering to include end time (was only checking date)        | ✅ Deployed  |
-| **Timezone Docs**       | Added comprehensive timezone policy (EST/America/Toronto)         | ✅ Committed |
-| **DATA_POLLING_FREQUENCIES.md** | Updated with EST equivalents for all cron jobs           | ✅ Committed |
+| Component                       | Change                                                     | Status       |
+| ------------------------------- | ---------------------------------------------------------- | ------------ |
+| **route-changes.ts**            | Fix filtering to include end time (was only checking date) | ✅ Deployed  |
+| **Timezone Docs**               | Added comprehensive timezone policy (EST/America/Toronto)  | ✅ Committed |
+| **DATA_POLLING_FREQUENCIES.md** | Updated with EST equivalents for all cron jobs             | ✅ Committed |
 
 ### Previous Updates (Jan 11, 2026)
 
@@ -261,10 +261,10 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ### GitHub Actions Workflows
 
-| Workflow               | Schedule           | EST Equivalent   | Purpose                      |
-| ---------------------- | ------------------ | ---------------- | ---------------------------- |
-| refresh-schedule-data  | `0 4 * * 0` (Sun)  | Sat 11:00 PM EST | Update GTFS schedule data    |
-| refresh-route-data     | `0 2 * * 0` (Sun)  | Sat 9:00 PM EST  | Update route/stop data       |
+| Workflow              | Schedule          | EST Equivalent   | Purpose                   |
+| --------------------- | ----------------- | ---------------- | ------------------------- |
+| refresh-schedule-data | `0 4 * * 0` (Sun) | Sat 11:00 PM EST | Update GTFS schedule data |
+| refresh-route-data    | `0 2 * * 0` (Sun) | Sat 9:00 PM EST  | Update route/stop data    |
 
 ---
 
