@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { Radio, Clock } from "lucide-svelte";
   import RouteBadge from "$lib/components/alerts/RouteBadge.svelte";
   import { cn } from "$lib/utils";
@@ -10,6 +11,18 @@
   }
 
   let { prediction, class: className = "" }: Props = $props();
+
+  /**
+   * Translate cardinal direction word
+   */
+  function translateDirection(dir: string): string {
+    const lower = dir.toLowerCase();
+    if (lower === "north" || lower === "northbound") return $_("directions.northbound");
+    if (lower === "south" || lower === "southbound") return $_("directions.southbound");
+    if (lower === "east" || lower === "eastbound") return $_("directions.eastbound");
+    if (lower === "west" || lower === "westbound") return $_("directions.westbound");
+    return dir;
+  }
 
   /**
    * Format direction text - split into up to 3 lines
@@ -38,15 +51,15 @@
         const destination = afterTo.substring(0, viaIndex).trim();
         const viaDetails = afterTo.substring(viaIndex + 5).trim();
         return {
-          line1: `${directionWord}bound`,
-          line2: `to ${destination}`,
-          line3: `via ${viaDetails}`,
+          line1: translateDirection(`${directionWord}bound`),
+          line2: `${$_("eta.to")} ${destination}`,
+          line3: `${$_("directions.via")} ${viaDetails}`,
         };
       }
 
       return {
-        line1: `${directionWord}bound`,
-        line2: `to ${afterTo}`,
+        line1: translateDirection(`${directionWord}bound`),
+        line2: `${$_("eta.to")} ${afterTo}`,
         line3: "",
       };
     }
@@ -61,21 +74,27 @@
       const beforeTowards = cleaned.substring(0, towardsIndex).trim();
       const afterTowards = cleaned.substring(towardsIndex + 9).trim(); // 9 = " towards ".length
 
+      // Translate direction word if it's at the start
+      const dirMatch = beforeTowards.match(/^(North|South|East|West)(\s|$)/i);
+      const translatedBefore = dirMatch 
+        ? translateDirection(dirMatch[1]) + beforeTowards.slice(dirMatch[1].length)
+        : beforeTowards;
+
       // Check if there's a "via" in the destination
       const viaIndex = afterTowards.toLowerCase().indexOf(" via ");
       if (viaIndex > -1) {
         const destination = afterTowards.substring(0, viaIndex).trim();
         const viaDetails = afterTowards.substring(viaIndex + 5).trim(); // 5 = " via ".length
         return {
-          line1: beforeTowards,
-          line2: `towards ${destination}`,
-          line3: `via ${viaDetails}`,
+          line1: translatedBefore,
+          line2: `${$_("directions.towards")} ${destination}`,
+          line3: `${$_("directions.via")} ${viaDetails}`,
         };
       }
 
       return {
-        line1: beforeTowards,
-        line2: `towards ${afterTowards}`,
+        line1: translatedBefore,
+        line2: `${$_("directions.towards")} ${afterTowards}`,
         line3: "",
       };
     }
@@ -83,8 +102,10 @@
     // Pattern: "Direction - Route" (no towards)
     const dashMatch = cleaned.match(/^(\w+)\s*-\s*(.+)$/);
     if (dashMatch) {
+      const dirWord = dashMatch[1].trim();
+      const translatedDir = translateDirection(dirWord);
       return {
-        line1: dashMatch[1].trim(),
+        line1: translatedDir !== dirWord ? translatedDir : dirWord,
         line2: dashMatch[2].trim(),
         line3: "",
       };
