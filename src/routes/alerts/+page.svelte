@@ -194,6 +194,7 @@
 
   // Get subway status for each line - matching production behavior
   // Returns status type based on most severe alert, plus uniqueTypes for compound display
+  // Note: Scheduled future closures are excluded by getAllAlertsForLine
   function getAlertStatusType(
     thread: ThreadWithAlerts
   ): "slowzone" | "delay" | "disruption" | "scheduled" {
@@ -205,7 +206,6 @@
     }
 
     const effect = thread.latestAlert.effect.toUpperCase();
-    const headerText = thread.latestAlert.header_text?.toLowerCase() || "";
 
     if (effect.includes("DELAY") || effect.includes("SIGNIFICANT_DELAYS"))
       return "delay";
@@ -213,23 +213,26 @@
     if (effect.includes("SCHEDULED") || effect.includes("CLOSURE"))
       return "scheduled";
 
-    // Detect scheduled/planned closures from header text
-    // Patterns: "starting X p.m., nightly", "for tunnel improvements", etc.
-    const scheduledPatterns = [
-      /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
-      /nightly.*from\s+\d+/i,
-      /for\s+(tunnel|track|signal|maintenance|construction)/i,
-      /there will be no.*service.*starting/i,
-    ];
-    if (scheduledPatterns.some((pattern) => pattern.test(headerText))) {
-      return "scheduled";
-    }
-
     return "disruption";
   }
 
+  // Helper function to check if an alert is about a future/scheduled closure
+  // (not a real-time disruption)
+  function isScheduledFutureClosure(headerText: string): boolean {
+    const lowerText = headerText?.toLowerCase() || "";
+    // Patterns indicating a future/scheduled event, not a real-time issue
+    const scheduledPatterns = [
+      /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
+      /nightly.*from\s+\d+/i,
+      /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
+      /there will be no.*service.*starting/i,
+      /no\s+(subway\s+)?service.*starting\s+\d+/i,
+    ];
+    return scheduledPatterns.some((pattern) => pattern.test(lowerText));
+  }
+
   // Get ALL active alerts for a specific subway line
-  // EXCLUDES: RSZ (MINOR) and ACCESSIBILITY alerts - these don't affect line status
+  // EXCLUDES: RSZ (MINOR), ACCESSIBILITY, and scheduled future closures
   function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
     const active = $threadsWithAlerts.filter(
       (t) => !t.is_resolved && !t.is_hidden
@@ -252,6 +255,11 @@
         : [];
       const effect = thread.latestAlert?.effect || "";
       const headerText = thread.latestAlert?.header_text || "";
+
+      // Exclude scheduled future closures - they're shown in the Scheduled tab
+      if (isScheduledFutureClosure(headerText)) {
+        return false;
+      }
 
       const severity = getSeverityCategory(categories, effect, headerText);
       return severity === "MAJOR";
