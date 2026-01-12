@@ -267,28 +267,62 @@
   }
 
   // Get active maintenance happening now for a specific line
+  // Checks if any scheduled maintenance is currently in its active period
   function getActiveMaintenanceForLine(lineId: string): boolean {
     const lineNum = lineId.match(/\d+/)?.[0];
     return $maintenanceItems.some((item) => {
       const matchesLine = item.routes.some((r: string) => {
         if (r === lineId) return true;
-        const routeNum = r.match(/^(\d+)/)?.[1];
+        // Handle "Line 1" vs "1" vs "Line 1 (Yonge - University)" format
+        const routeNum = r.match(/(\d+)/)?.[1];
         return routeNum === lineNum;
       });
-      // Check if maintenance is happening now
       if (!matchesLine) return false;
+
+      // Check if maintenance is happening NOW
       const now = new Date();
-      // If item has periods, check if any are active now
-      if ((item as any).periods?.length > 0) {
-        return (item as any).periods.some(
-          (p: { start: string; end: string }) => {
-            const start = new Date(p.start);
-            const end = new Date(p.end);
-            return now >= start && now <= end;
+
+      // Parse maintenance dates (in Toronto timezone)
+      const startDate = new Date(item.start_date + "T00:00:00");
+      const endDate = new Date(item.end_date + "T23:59:59");
+
+      // If maintenance has a start_time (e.g., "23:00:00" for nightly closures)
+      if (item.start_time) {
+        const [startHour] = item.start_time.split(":").map(Number);
+
+        // For nightly closures (start at 10 PM or later), check if we're in the active window
+        if (startHour >= 22) {
+          const nowHour = now.getHours();
+          const today = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+          );
+          const startDateOnly = new Date(item.start_date + "T00:00:00");
+          const endDateOnly = new Date(item.end_date + "T00:00:00");
+
+          // Active periods for nightly closure:
+          // - Each night from start_time (e.g., 11 PM) until ~6 AM next morning
+          // - During the date range (start_date to end_date)
+
+          // Check if we're after start_time today (and within date range)
+          if (nowHour >= startHour) {
+            return today >= startDateOnly && today <= endDateOnly;
           }
-        );
+
+          // Check if we're before 6 AM and closure started last night
+          if (nowHour < 6) {
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return yesterday >= startDateOnly && yesterday <= endDateOnly;
+          }
+
+          return false;
+        }
       }
-      return false;
+
+      // Default: check if we're within the date range
+      return now >= startDate && now <= endDate;
     });
   }
 
