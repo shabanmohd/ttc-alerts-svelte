@@ -227,7 +227,7 @@
       /there will be no.*service.*starting/i,
       /no\s+(subway\s+)?service.*starting\s+\d+/i,
       /full\s+weekend\s+closure/i,
-      /\bplanned\b/i,
+      /nightly\s+early\s+closure/i,
     ];
     return scheduledPatterns.some((pattern) => pattern.test(lowerText));
   }
