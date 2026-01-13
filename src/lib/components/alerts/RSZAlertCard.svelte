@@ -81,6 +81,17 @@
     // Get the latest alert from the thread
     const alerts = thread.alerts || [];
     for (const alert of alerts) {
+      // Skip SERVICE_RESUMED alerts - these may get incorrectly threaded into RSZ threads
+      // and would create phantom RSZ entries when parsed
+      const categories = (alert.categories as string[]) || [];
+      if (categories.includes("SERVICE_RESUMED")) {
+        continue;
+      }
+      const headerLower = (alert.header_text || "").toLowerCase();
+      if (headerLower.includes("resumed")) {
+        continue;
+      }
+
       const rawData = alert.raw_data as RSZData | null;
 
       // First try raw_data (for Bluesky RSZ alerts)
