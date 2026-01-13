@@ -27,6 +27,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 | **AlertCard.svelte**                 | Show SCHEDULED CLOSURE badge for scheduled maintenance alerts                | ✅ Deployed  |
 | **poll-alerts v143**                 | Skip Bluesky RSZ alerts - TTC API is exclusive source for Slow Zones         | ✅ Deployed  |
 | **poll-alerts v142**                 | Create separate threads for scheduled closures vs real-time incidents        | ✅ Deployed  |
+| **poll-alerts v147**                 | Auto-unhide threads when recurring scheduled closure alerts reappear         | ✅ Deployed  |
+| **SubwayStatusBar scheduled**        | Orange styling for scheduled closures, text wraps, icon top-aligned          | ✅ Deployed  |
+| **AlertCard thread_id detection**    | Use thread_id to detect scheduled closures (primary) instead of text pattern | ✅ Deployed  |
+| **poll-alerts v146**                 | Scheduled closure patterns: nightly early closures, full weekend closure     | ✅ Deployed  |
 | **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading    | ✅ Deployed  |
 | **poll-alerts v140**                 | Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth | ✅ Deployed  |
 | **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new              | ✅ Deployed  |
@@ -191,11 +195,12 @@ Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevat
 
 ### Static (`static/`)
 
-| File            | Status | Purpose                  |
-| --------------- | ------ | ------------------------ |
-| `manifest.json` | ✅     | PWA manifest             |
-| `sw.js`         | ✅     | Service worker           |
-| `icons/*`       | ✅     | All PWA icons (72-512px) |
+| File                     | Status | Purpose                                          |
+| ------------------------ | ------ | ------------------------------------------------ |
+| `manifest.json`          | ✅     | PWA manifest                                     |
+| `sw.js`                  | ✅     | Service worker                                   |
+| `icons/*`                | ✅     | All PWA icons (72-512px)                         |
+| `test-badge-styles.html` | ✅     | Reference page for all alert badge styles/colors |
 
 ### Configuration (`src/`)
 

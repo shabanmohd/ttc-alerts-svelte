@@ -1040,13 +1040,13 @@ Used alongside AccessibilityBadge to show the station name (e.g., "DUPONT", "DAV
 - `.status-badge-detour` - Gray (neutral for route changes)
 - `.status-badge-shuttle` - Lime/Green (shuttle bus replacements)
 - `.status-badge-planned` - Blue
-- `.status-badge-scheduled` - Purple (generic scheduled closure)
+- `.status-badge-scheduled` - Orange (scheduled closures - matches SubwayStatusBar)
 - `.status-badge-nightly` - Blue (nightly early closures starting 10 PM+)
 - `.status-badge-weekend` - Purple/Magenta (full weekend closures)
 
 **Text Handling:**
 
-- `white-space: nowrap` - Prevents badge text from wrapping onto multiple lines
+- `white-space: normal` - Allows text wrapping for longer labels
 - `text-transform: uppercase` - All badge text is uppercase
 
 ### Category Filter Tabs

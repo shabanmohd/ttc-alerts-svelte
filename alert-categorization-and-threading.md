@@ -498,8 +498,17 @@ function isScheduledClosure(headerText: string): boolean {
 }
 ```
 
-**AlertCard Badge Display (v146):**
-The `AlertCard` component uses `isScheduledFutureClosure()` (same patterns) to detect scheduled closures from header text and display "SCHEDULED CLOSURE" badge instead of "DISRUPTION" badge. This ensures visual clarity when scheduled maintenance appears in the Disruptions & Delays tab during active hours (11 PM - 6 AM).
+**AlertCard Badge Display (v147+):**
+The `AlertCard` component uses `thread_id` as the primary indicator for scheduled closures. If `thread.thread_id?.includes('scheduled_closure')`, it displays "SCHEDULED CLOSURE" badge (orange) instead of "DISRUPTION" badge. The `isScheduledFutureClosure()` helper (same patterns as backend) is used as a fallback for announcement text matching.
+
+**SubwayStatusBar Scheduled Closure Display (v147+):**
+The subway status cards on the alerts page now use consistent orange styling for scheduled closures:
+- **Background**: `rgba(249, 115, 22, 0.12)` (light) / `rgba(251, 146, 60, 0.15)` (dark)
+- **Icon/Text color**: `hsl(25 95% 45%)` (light) / `hsl(25 95% 60%)` (dark)
+- **Text**: "Scheduled Closure" (full text, wraps to next line if needed)
+- **Icon alignment**: Top-aligned when text wraps
+
+This ensures visual consistency between the SCHEDULED CLOSURE badge on alert cards and the subway status cards.
 
 **Thread Unhiding for Recurring Closures (v147):**
 When processing TTC API alerts, the function now checks if an existing alert's thread is hidden and unhides it automatically. This handles nightly scheduled closures that:
