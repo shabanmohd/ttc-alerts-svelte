@@ -16,10 +16,12 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ---
 
-## 🆕 Recent Updates (Jan 12, 2026)
+## 🆕 Recent Updates (Jan 13, 2026)
 
 | Component                            | Change                                                                       | Status       |
 | ------------------------------------ | ---------------------------------------------------------------------------- | ------------ |
+| **poll-alerts v144**                 | Add "full weekend closure" and "planned" detection patterns                  | ✅ Deployed  |
+| **AlertCard.svelte**                 | Show SCHEDULED CLOSURE badge for scheduled maintenance alerts                | ✅ Deployed  |
 | **poll-alerts v143**                 | Skip Bluesky RSZ alerts - TTC API is exclusive source for Slow Zones         | ✅ Deployed  |
 | **poll-alerts v142**                 | Create separate threads for scheduled closures vs real-time incidents        | ✅ Deployed  |
 | **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading    | ✅ Deployed  |
@@ -103,14 +105,14 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevators, Service Changes, or Scheduled Closures.
 
-| UI Tab | Data Source | Bluesky? | Edge Function | Notes |
-|--------|-------------|----------|---------------|-------|
-| **Disruptions & Delays** | TTC API + Bluesky context | ⚠️ Context only | `poll-alerts` | Bluesky links to existing TTC threads, cannot create new |
-| **Slow Zones (RSZ)** | TTC API exclusive | ❌ No | `poll-alerts` | v143: Bluesky RSZ skipped entirely |
-| **Station Alerts (Elevators)** | TTC API exclusive | ❌ No | `poll-alerts` | `accessibility` array from TTC API |
-| **Scheduled Subway Closures** | TTC website scraper | ❌ No | `scrape-maintenance` | Stored in `planned_maintenance` table |
-| **Service/Route Changes** | TTC Sitecore API | ❌ No | N/A (client-side) | Runtime fetch, not stored |
-| **Recently Resolved** | Bluesky exclusive | ✅ Yes | `poll-alerts` | `SERVICE_RESUMED` creates threads here |
+| UI Tab                         | Data Source               | Bluesky?        | Edge Function        | Notes                                                    |
+| ------------------------------ | ------------------------- | --------------- | -------------------- | -------------------------------------------------------- |
+| **Disruptions & Delays**       | TTC API + Bluesky context | ⚠️ Context only | `poll-alerts`        | Bluesky links to existing TTC threads, cannot create new |
+| **Slow Zones (RSZ)**           | TTC API exclusive         | ❌ No           | `poll-alerts`        | v143: Bluesky RSZ skipped entirely                       |
+| **Station Alerts (Elevators)** | TTC API exclusive         | ❌ No           | `poll-alerts`        | `accessibility` array from TTC API                       |
+| **Scheduled Subway Closures**  | TTC website scraper       | ❌ No           | `scrape-maintenance` | Stored in `planned_maintenance` table                    |
+| **Service/Route Changes**      | TTC Sitecore API          | ❌ No           | N/A (client-side)    | Runtime fetch, not stored                                |
+| **Recently Resolved**          | Bluesky exclusive         | ✅ Yes          | `poll-alerts`        | `SERVICE_RESUMED` creates threads here                   |
 
 > **See [`alert-categorization-and-threading.md`](alert-categorization-and-threading.md) for complete data flow documentation.**
 
@@ -172,17 +174,17 @@ Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevat
 
 ### Database (EXISTING in Supabase)
 
-| Table                    | Rows | Purpose                                                  |
-| ------------------------ | ---- | -------------------------------------------------------- |
+| Table                    | Rows | Purpose                                                            |
+| ------------------------ | ---- | ------------------------------------------------------------------ |
 | `alert_cache`            | 600+ | Alerts from TTC API + Bluesky (header_text, categories, is_latest) |
-| `incident_threads`       | 255K | Grouped alert threads (title, is_resolved)               |
-| `planned_maintenance`    | 9    | Scheduled maintenance                                    |
-| `alert_accuracy_logs`    | -    | Alert accuracy checks (every 5min)                       |
-| `alert_accuracy_reports` | -    | Daily accuracy summaries                                 |
-| `user_profiles`          | -    | User display_name, linked to auth.users                  |
-| `webauthn_credentials`   | -    | Public keys (credential_id as PK)                        |
-| `recovery_codes`         | -    | Bcrypt-hashed one-time codes                             |
-| `user_preferences`       | -    | Routes, modes, notification settings                     |
+| `incident_threads`       | 255K | Grouped alert threads (title, is_resolved)                         |
+| `planned_maintenance`    | 9    | Scheduled maintenance                                              |
+| `alert_accuracy_logs`    | -    | Alert accuracy checks (every 5min)                                 |
+| `alert_accuracy_reports` | -    | Daily accuracy summaries                                           |
+| `user_profiles`          | -    | User display_name, linked to auth.users                            |
+| `webauthn_credentials`   | -    | Public keys (credential_id as PK)                                  |
+| `recovery_codes`         | -    | Bcrypt-hashed one-time codes                                       |
+| `user_preferences`       | -    | Routes, modes, notification settings                               |
 
 ### Static (`static/`)
 

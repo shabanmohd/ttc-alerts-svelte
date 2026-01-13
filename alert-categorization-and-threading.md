@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.34  
-**Date:** January 12, 2026  
-**poll-alerts Version:** 143  
+**Version:** 3.35  
+**Date:** January 13, 2026  
+**poll-alerts Version:** 144  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
@@ -145,18 +145,18 @@ This separation ensures:
 
 This table documents the **exclusive data source** for each UI tab. Bluesky is **NOT** used for Elevators, Service Changes, or Scheduled Closures.
 
-| UI Tab | Data Source | Bluesky Used? | Database Table | Edge Function |
-|--------|-------------|---------------|----------------|---------------|
-| **Disruptions & Delays** | TTC API + Bluesky context | ⚠️ Context only | `alert_cache` | `poll-alerts` |
-| **Slow Zones (RSZ)** | TTC API exclusive (v143) | ❌ No | `alert_cache` | `poll-alerts` |
-| **Station Alerts (Elevators)** | TTC API exclusive | ❌ No | `alert_cache` | `poll-alerts` |
-| **Scheduled Subway Closures** | TTC website scraper | ❌ No | `planned_maintenance` | `scrape-maintenance` |
-| **Service/Route Changes** | TTC website scraper | ❌ No | Runtime fetch | N/A (client-side) |
-| **Recently Resolved** | Bluesky exclusive | ✅ Yes | `alert_cache` | `poll-alerts` |
+| UI Tab                         | Data Source               | Bluesky Used?   | Database Table        | Edge Function        |
+| ------------------------------ | ------------------------- | --------------- | --------------------- | -------------------- |
+| **Disruptions & Delays**       | TTC API + Bluesky context | ⚠️ Context only | `alert_cache`         | `poll-alerts`        |
+| **Slow Zones (RSZ)**           | TTC API exclusive (v143)  | ❌ No           | `alert_cache`         | `poll-alerts`        |
+| **Station Alerts (Elevators)** | TTC API exclusive         | ❌ No           | `alert_cache`         | `poll-alerts`        |
+| **Scheduled Subway Closures**  | TTC website scraper       | ❌ No           | `planned_maintenance` | `scrape-maintenance` |
+| **Service/Route Changes**      | TTC website scraper       | ❌ No           | Runtime fetch         | N/A (client-side)    |
+| **Recently Resolved**          | Bluesky exclusive         | ✅ Yes          | `alert_cache`         | `poll-alerts`        |
 
 **Clarifications:**
 
-1. **Disruptions & Delays**: TTC API creates threads; Bluesky adds historical context to *existing* threads only (cannot create new disruption threads since v140)
+1. **Disruptions & Delays**: TTC API creates threads; Bluesky adds historical context to _existing_ threads only (cannot create new disruption threads since v140)
 2. **Slow Zones**: TTC API is the **exclusive** source since v143 - Bluesky RSZ-like alerts are skipped entirely
 3. **Station Alerts (Elevators)**: Always TTC API only - uses `accessibility` array from live-alerts endpoint
 4. **Scheduled Subway Closures**: Scraped from TTC website by `scrape-maintenance` edge function, stored in `planned_maintenance` table
@@ -481,7 +481,7 @@ const threadId = matchedThreadId || `thread-ttc-${routeKey}-${threadType}`;
 
 **v142 Change:** Scheduled closures now create threads with `scheduled_closure` in the ID (e.g., `thread-ttc-line1-scheduled_closure`) instead of mixing with real-time incidents in threads like `thread-ttc-line1-service_disruption`.
 
-**Scheduled Closure Detection (v142):**
+**Scheduled Closure Detection (v144):**
 
 ```typescript
 function isScheduledClosure(headerText: string): boolean {
@@ -492,10 +492,15 @@ function isScheduledClosure(headerText: string): boolean {
     /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
     /there will be no.*service.*starting/i,
     /no\s+(subway\s+)?service.*starting\s+\d+/i,
+    /full\s+weekend\s+closure/i,
+    /\bplanned\b/i,
   ];
   return scheduledPatterns.some((pattern) => pattern.test(lowerText));
 }
 ```
+
+**AlertCard Badge Display (v144):**
+The `AlertCard` component uses `isScheduledFutureClosure()` (same patterns) to detect scheduled closures from header text and display "SCHEDULED CLOSURE" badge instead of "DISRUPTION" badge. This ensures visual clarity when scheduled maintenance appears in the Disruptions & Delays tab during active hours (11 PM - 6 AM).
 
 **v141 Change:** Added 25% similarity check when matching by route number to prevent grouping unrelated incidents on the same route (e.g., separate "Cedarvale security incident" from "Finch-Eglinton scheduled closure" even though both affect Line 1).
 
