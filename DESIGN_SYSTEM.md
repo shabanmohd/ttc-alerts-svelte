@@ -1889,6 +1889,14 @@ When routes don't have real-time ETA data, ETACard shows their scheduled first b
 
 The Subway Status Cards display the current service status for each subway line at the top of the Alerts page.
 
+#### Status Visibility (v148)
+
+Scheduled closure status now uses **thread visibility** (`is_hidden` flag) from the TTC API rather than time-based checks:
+
+- When `scheduled_closure` thread is **visible** → Shows "Scheduled Closure"
+- When `scheduled_closure` thread is **hidden** → Shows "Normal Service"
+- This ensures immediate UI updates when closures end (e.g., 3:30 AM)
+
 #### Typography
 
 | Element           | Class                | Size              | Weight |
@@ -1901,12 +1909,12 @@ The Subway Status Cards display the current service status for each subway line 
 
 Status priority determines card background color when multiple statuses are present:
 
-| Priority | Status         | Icon          | Background Color | Text             |
-| -------- | -------------- | ------------- | ---------------- | ---------------- |
-| 1        | **disruption** | `OctagonX`    | Red tint         | "Disruption"     |
-| 2        | **delay**      | `Clock`       | Orange tint      | "Delay"          |
-| 3        | **scheduled**  | `Calendar`    | Blue tint        | "Scheduled"      |
-| -        | **ok**         | `CheckCircle` | Green tint       | "Normal service" |
+| Priority | Status         | Icon          | Background Color | Text               |
+| -------- | -------------- | ------------- | ---------------- | ------------------ |
+| 1        | **disruption** | `OctagonX`    | Red tint         | "Disruption"       |
+| 2        | **delay**      | `Clock`       | Orange tint      | "Delay"            |
+| 3        | **scheduled**  | `Calendar`    | Orange tint      | "Scheduled Closure"|
+| -        | **ok**         | `CheckCircle` | Green tint       | "Normal Service"   |
 
 > **Note:** Slow zone status was removed from the subway status cards. Slow zones are still available as a filter category but no longer shown as a subway line status.
 
@@ -1915,6 +1923,7 @@ Status priority determines card background color when multiple statuses are pres
 - **No borders** - Cards use background color only for status indication (not clickable)
 - **Background-only status** - Uses subtle tinted backgrounds instead of borders
 - **2x2 grid on mobile** - Responsive layout with 4 columns on desktop
+- **Scheduled closure** - Uses orange styling (same as SCHEDULED CLOSURE badge on AlertCard)
 
 #### CSS Classes
 

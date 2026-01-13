@@ -1,8 +1,9 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.38  
+**Version:** 3.39  
 **Date:** January 13, 2026  
 **poll-alerts Version:** 147  
+**Frontend Version:** 148 (thread-based scheduled closure status)  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  

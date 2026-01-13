@@ -20,6 +20,9 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                            | Change                                                                       | Status       |
 | ------------------------------------ | ---------------------------------------------------------------------------- | ------------ |
+| **SubwayStatusBar v148**             | Use thread visibility (is_hidden) instead of time-based checks for closures  | ✅ Committed |
+| **hasActiveScheduledClosureThread**  | New function to check active scheduled_closure threads by line               | ✅ Committed |
+| **isScheduledClosureActive()**       | Updated to use 4 AM cutoff (was 6 AM) based on TTC API childAlerts           | ✅ Committed |
 | **poll-alerts v147**                 | Unhide scheduled closure threads when alert already exists in DB             | ✅ Deployed  |
 | **poll-alerts v146**                 | Replace "planned" with "nightly early closures" pattern                      | ✅ Deployed  |
 | **poll-alerts v145**                 | Remove overly broad tunnel/track pattern from scheduled closure detection    | ✅ Deployed  |
@@ -38,7 +41,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)            | ✅ Deployed  |
 | **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates with Bluesky             | ✅ Committed |
 | **alerts/+page.svelte activeAlerts** | Disruptions tab filters thread.alerts to TTC API only (no Bluesky in UI)     | ✅ Deployed  |
-| **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 6 AM        | ✅ Deployed  |
+| **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 4 AM        | ✅ Deployed  |
 | **getTTCApiDisruptionAlert()**       | Excludes scheduled closures outside active period                            | ✅ Deployed  |
 | **MobileBottomNav.svelte**           | iOS PWA viewport fix using visualViewport API                                | ✅ Deployed  |
 | **poll-alerts v136**                 | Scheduled closure filtering - hide alerts not currently active               | ✅ Deployed  |
