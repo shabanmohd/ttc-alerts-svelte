@@ -137,7 +137,7 @@ IF toronto_hour = 4 THEN ...
 | Property                  | Value                                                   |
 | ------------------------- | ------------------------------------------------------- |
 | **Source**                | NextBus API                                             |
-| **Our Refresh Frequency** | Weekly (Sundays, 2:00 AM UTC)                           |
+| **Our Refresh Frequency** | Weekly (Sundays, 2:00 AM UTC / Sat 9 PM EST)            |
 | **Workflow**              | `.github/workflows/refresh-route-data.yml`              |
 | **Output Files**          | `ttc-route-stop-orders.json`, `ttc-route-branches.json` |
 
@@ -146,12 +146,26 @@ IF toronto_hour = 4 THEN ...
 - Stop sequences for each route (which stops in which order)
 - Branch definitions (route variants like "501 Long Branch")
 - Direction labels
+- **118 route branch variations** across 66 routes
+
+**Branch Letters in Use:**
+
+| Letter | Count | Examples |
+|--------|-------|----------|
+| A | 47 | 97A, 100A, 504A |
+| B | 34 | 97B, 939B, 985B |
+| C | 16 | 102C, 927C |
+| D | 10 | 102D, 504D |
+| F | 2 | 52F, 123F |
+| G | 1 | 52G |
+| S | 2 | 79S, 336S |
 
 **Used for:**
 
 - Route browser stop lists
 - Stop sequencing in UI
 - Branch selection
+- Alert route extraction (poll-alerts v138+ supports A-Z)
 
 ### 6. Route List (Dynamic)
 

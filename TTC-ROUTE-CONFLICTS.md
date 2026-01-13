@@ -2,7 +2,7 @@
 
 **Purpose:** Documentation of route number conflicts that could cause threading issues
 
-**Last Updated:** December 4, 2025
+**Last Updated:** January 12, 2026
 
 ---
 
@@ -392,6 +392,64 @@ function isSubwayLineRoute(route: string): boolean {
 
 ---
 
+## Pattern E: Route Branch Variations (A-Z Suffixes)
+
+**Pattern:** Route number followed by branch letter suffix
+**Risk Level:** LOW (handled correctly)
+**Total Variations:** 118 branches across 66 routes
+
+TTC uses letter suffixes to indicate route branches (different service patterns on the same route number).
+
+### Branch Letters in Use
+
+| Letter | Count | Description | Examples |
+|--------|-------|-------------|----------|
+| **A** | 47 | Primary/default branch | 97A, 100A, 504A |
+| **B** | 34 | Secondary branch | 97B, 939B, 985B |
+| **C** | 16 | Tertiary branch | 102C, 927C, 939C |
+| **D** | 10 | Fourth branch | 102D, 504D, 960D |
+| **F** | 2 | Special variation | 52F, 123F |
+| **G** | 1 | Special variation | 52G |
+| **S** | 2 | Shuttle/special service | 79S, 336S |
+
+### Routes with Most Branches
+
+| Route | Branches | Full List |
+|-------|----------|-----------|
+| **52 Lawrence West** | 5 | 52A, 52B, 52D, 52F, 52G |
+| **97 Yonge** | 3 | 97A, 97B, 97C |
+| **102 Markham Rd** | 2 | 102C, 102D |
+| **939 Finch Express** | 2 | 939B, 939C |
+| **84 Sheppard West** | 3 | 84A, 84C, 84D |
+
+### Extraction Regex (poll-alerts v138+)
+
+```typescript
+// Supports ALL letters A-Z (future-proof)
+const routeBranchWithNameMatch = text.match(/\b(\d{1,3}[A-Z])\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/gi);
+
+// Stop words prevent capturing "97B Yonge Regular" as route name
+const stopWords = ['regular', 'service', 'detour', 'diversion', 'shuttle', 
+                   'delay', 'resumed', 'closed', 'suspended'];
+```
+
+### Why Branches Are NOT Conflicts
+
+- **97A** and **97B** are intentionally separate branches of route 97
+- Alerts may be specific to one branch (e.g., "97B Yonge Detour")
+- The `extractRouteNumber()` function extracts "97" from both, allowing them to thread together when appropriate
+- UI can show specific branch badge (e.g., "97B") when alert specifies it
+
+### Auto-Update Schedule
+
+Branch data is automatically refreshed weekly:
+- **Schedule:** Sundays 2:00 AM UTC
+- **Workflow:** `.github/workflows/refresh-route-data.yml`
+- **Source:** NextBus API
+- **Output:** `ttc-route-branches.json`
+
+---
+
 ## Monitoring
 
 The Edge Function logs route comparisons when debugging is needed. Check Supabase Edge Function logs for threading decisions.
@@ -406,7 +464,7 @@ The Edge Function logs route comparisons when debugging is needed. Check Supabas
 
 ---
 
-**Version:** 1.3
+**Version:** 1.4
 **Created:** November 20, 2025
-**Updated:** December 18, 2025
+**Updated:** January 12, 2026
 **Purpose:** Route conflict reference for alert threading system

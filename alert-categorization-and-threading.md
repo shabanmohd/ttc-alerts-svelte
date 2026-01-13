@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.28  
+**Version:** 3.29  
 **Date:** January 12, 2026  
-**poll-alerts Version:** 136  
+**poll-alerts Version:** 138  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
@@ -246,45 +246,82 @@ function routesMatch(route1: string, route2: string): boolean {
 
 ### Route Extraction
 
-Routes are extracted from alert text using regex patterns:
+Routes are extracted from alert text using regex patterns (poll-alerts v138+):
 
 ```typescript
 function extractRoutes(text: string): string[] {
   const routes: string[] = [];
+  
+  // Remove non-route patterns like "Bay 2", "Platform 1"
+  const nonRoutePatterns = /\b(bay|platform|track|door|gate|level|floor|exit|entrance|stop)\s+\d+/gi;
+  const cleanedText = text.replace(nonRoutePatterns, '');
 
-  // Match subway lines: Line 1, Line 2, Line 4
-  const lineMatch = text.match(/Line\s*(\d+)/gi);
+  // Match subway lines: Line 1, Line 2, Line 3, Line 4
+  const lineMatch = cleanedText.match(/\bLine\s+(1|2|3|4)\b/gi);
   if (lineMatch) {
-    lineMatch.forEach((m) => routes.push(m));
+    lineMatch.forEach(m => {
+      const num = m.match(/\d/)?.[0];
+      if (num) routes.push(`Line ${num}`);
+    });
+  }
+
+  // Match route branches with name: "97B Yonge", "52F Lawrence", "79S Scarborough"
+  // Supports ALL letters A-Z (TTC uses A-D commonly, plus F, G, S)
+  // Stop words prevent capturing "97B Yonge Regular" as route name
+  const stopWords = ['regular', 'service', 'detour', 'diversion', 'shuttle', 
+                     'delay', 'resumed', 'closed', 'suspended'];
+  const routeBranchWithNameMatch = cleanedText.match(/\b(\d{1,3}[A-Z])\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/gi);
+  if (routeBranchWithNameMatch) {
+    routeBranchWithNameMatch.forEach(m => {
+      const words = m.split(/\s+/);
+      let routeName = words[0]; // Always include route number (e.g., "97B")
+      if (words[1] && !stopWords.includes(words[1].toLowerCase())) {
+        routeName += ' ' + words[1];
+        if (words[2] && !stopWords.includes(words[2].toLowerCase())) {
+          routeName += ' ' + words[2];
+        }
+      }
+      routes.push(routeName.replace(/^(\d+)([a-z])/i, (_, num, letter) => `${num}${letter.toUpperCase()}`));
+    });
   }
 
   // Match numbered routes with names: "306 Carlton", "504 King"
-  const routeWithNameMatch = text.match(
-    /\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g
-  );
-  if (routeWithNameMatch) {
-    routeWithNameMatch.forEach((m) => routes.push(m));
-  }
+  // (skips if already captured as branch route)
+  const routeWithNameMatch = cleanedText.match(/\b(\d{1,3})\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/g);
+  // ... similar stop word filtering
 
+  // Match standalone route branches: "97B", "52F", "79S"
+  const standaloneBranchMatch = cleanedText.match(/\b(\d{1,3}[A-Z])(?=\s|:|,|$)/gi);
+  
   // Match standalone route numbers
-  const standaloneMatch = text.match(/\b(\d{1,3})(?=\s|:|,|$)/g);
-  if (standaloneMatch) {
-    standaloneMatch.forEach((num) => {
-      if (parseInt(num) < 1000 && !routes.some((r) => r.startsWith(num))) {
-        routes.push(num);
-      }
-    });
-  }
+  const standaloneMatch = cleanedText.match(/\b(\d{1,3})(?=\s|:|,|$)/g);
 
   return [...new Set(routes)];
 }
 ```
 
+**Branch Letters Supported (118 total variations):**
+
+| Letter | Count | Examples |
+|--------|-------|----------|
+| A | 47 | 97A, 100A, 504A |
+| B | 34 | 97B, 939B, 985B |
+| C | 16 | 102C, 927C, 939C |
+| D | 10 | 102D, 504D, 960D |
+| F | 2 | 52F, 123F |
+| G | 1 | 52G |
+| S | 2 | 79S, 336S |
+
+**Stop Words (prevent false route names):**
+- `regular`, `service`, `detour`, `diversion`, `shuttle`
+- `delay`, `resumed`, `closed`, `suspended`
+
 **Examples:**
 
 - "Line 1: No service" → `["Line 1"]`
 - "306 Carlton: Detour" → `["306 Carlton"]`
-- "504 King delays" → `["504 King"]`
+- "97B Yonge Regular service resumed" → `["97B Yonge"]` (stops at "Regular")
+- "52F Lawrence West delays" → `["52F Lawrence West"]`
 - "Routes 39, 85, 939" → `["39", "85", "939"]`
 
 ---
@@ -459,24 +496,25 @@ function deduplicateAlerts(alerts: Alert[]): Alert[] {
   // Sort by date descending (newest first)
   const sorted = [...alerts].sort(/*...*/);
   const kept: Alert[] = [];
-  
+
   for (const alert of sorted) {
     // Always keep TTC API alerts - they're needed for disruption detection
-    const isTTCApiAlert = alert.alert_id.startsWith('ttc-alert-');
-    
+    const isTTCApiAlert = alert.alert_id.startsWith("ttc-alert-");
+
     if (isTTCApiAlert) {
       // Only deduplicate against other TTC API alerts
-      const hasSimilarTTCAlert = kept.some(keptAlert => {
-        if (!keptAlert.alert_id.startsWith('ttc-alert-')) return false;
+      const hasSimilarTTCAlert = kept.some((keptAlert) => {
+        if (!keptAlert.alert_id.startsWith("ttc-alert-")) return false;
         return textSimilarity(alert.header_text, keptAlert.header_text) > 0.9;
       });
       if (!hasSimilarTTCAlert) kept.push(alert);
       continue;
     }
-    
+
     // For non-TTC alerts, check similarity against all kept alerts
-    const isDuplicate = kept.some(keptAlert => 
-      textSimilarity(alert.header_text, keptAlert.header_text) > 0.9
+    const isDuplicate = kept.some(
+      (keptAlert) =>
+        textSimilarity(alert.header_text, keptAlert.header_text) > 0.9
     );
     if (!isDuplicate) kept.push(alert);
   }
@@ -499,9 +537,9 @@ if (selectedCategory === "disruptions") {
       const ttcApiAlertsOnly = thread.alerts.filter((a) =>
         a.alert_id?.startsWith("ttc-alert-")
       );
-      
+
       const ttcAlert = getTTCApiDisruptionAlert(thread);
-      
+
       return {
         ...thread,
         alerts: ttcApiAlertsOnly,
@@ -513,6 +551,7 @@ if (selectedCategory === "disruptions") {
 ```
 
 **Why TTC API Only:**
+
 1. **Data integrity** - TTC API is the official source of truth for active disruptions
 2. **No conflicts** - Bluesky and TTC API often report the same incident with slightly different text
 3. **Prevents duplicates** - Without filtering, both sources would show in "earlier updates"

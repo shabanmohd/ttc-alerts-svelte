@@ -18,27 +18,29 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## 🆕 Recent Updates (Jan 12, 2026)
 
-| Component                          | Change                                                                     | Status       |
-| ---------------------------------- | -------------------------------------------------------------------------- | ------------ |
-| **alerts.ts deduplicateAlerts**    | TTC API alerts processed first, prevents duplicates with Bluesky           | ✅ Committed |
+| Component                            | Change                                                                   | Status       |
+| ------------------------------------ | ------------------------------------------------------------------------ | ------------ |
+| **poll-alerts v138**                 | Support all TTC branch letters (A-Z) not just A-E - includes F, G, S     | ✅ Deployed  |
+| **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)        | ✅ Deployed  |
+| **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates with Bluesky         | ✅ Committed |
 | **alerts/+page.svelte activeAlerts** | Disruptions tab filters thread.alerts to TTC API only (no Bluesky in UI) | ✅ Deployed  |
-| **isScheduledClosureActive()**     | Time-based check: scheduled closures in Disruptions only 11 PM - 6 AM      | ✅ Deployed  |
-| **getTTCApiDisruptionAlert()**     | Excludes scheduled closures outside active period                          | ✅ Deployed  |
-| **MobileBottomNav.svelte**         | iOS PWA viewport fix using visualViewport API                              | ✅ Deployed  |
-| **poll-alerts v136**               | Scheduled closure filtering - hide alerts not currently active             | ✅ Deployed  |
-| **verify-disruptions v2**          | Data integrity validation for TTC API disruptions (every 15 min)           | ✅ Deployed  |
-| **i18n: RSZAlertCard**             | Translate direction badges (NORTHBOUND→DIRECTION NORD, etc.)               | ✅ Deployed  |
-| **i18n: ETACard**                  | Translate direction labels, "to" connector                                 | ✅ Deployed  |
-| **i18n: ETADirectionSlide**        | Translate directions, "towards", "via" keywords                            | ✅ Deployed  |
-| **i18n: StopSearch**               | Translate direction badges in search results                               | ✅ Deployed  |
-| **i18n: RouteDirectionTabs**       | Translate direction tabs and labels                                        | ✅ Deployed  |
-| **i18n: RouteStopItem**            | Translate "Scheduled" label                                                | ✅ Deployed  |
-| **i18n: routes/+page**             | Translate "Back to Home" button                                            | ✅ Deployed  |
-| **i18n: routes/[route]**           | Translate stop counts, direction labels                                    | ✅ Deployed  |
-| **SEO: app.html**                  | Updated meta title/description for Google                                  | ✅ Deployed  |
-| **route-changes.ts**               | Fix filtering to include end time (was only checking date)                 | ✅ Deployed  |
-| **Timezone Docs**                  | Added comprehensive timezone policy (EST/America/Toronto)                  | ✅ Committed |
-| **DATA_POLLING_FREQUENCIES.md**    | Updated with EST equivalents for all cron jobs                             | ✅ Committed |
+| **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 6 AM    | ✅ Deployed  |
+| **getTTCApiDisruptionAlert()**       | Excludes scheduled closures outside active period                        | ✅ Deployed  |
+| **MobileBottomNav.svelte**           | iOS PWA viewport fix using visualViewport API                            | ✅ Deployed  |
+| **poll-alerts v136**                 | Scheduled closure filtering - hide alerts not currently active           | ✅ Deployed  |
+| **verify-disruptions v2**            | Data integrity validation for TTC API disruptions (every 15 min)         | ✅ Deployed  |
+| **i18n: RSZAlertCard**               | Translate direction badges (NORTHBOUND→DIRECTION NORD, etc.)             | ✅ Deployed  |
+| **i18n: ETACard**                    | Translate direction labels, "to" connector                               | ✅ Deployed  |
+| **i18n: ETADirectionSlide**          | Translate directions, "towards", "via" keywords                          | ✅ Deployed  |
+| **i18n: StopSearch**                 | Translate direction badges in search results                             | ✅ Deployed  |
+| **i18n: RouteDirectionTabs**         | Translate direction tabs and labels                                      | ✅ Deployed  |
+| **i18n: RouteStopItem**              | Translate "Scheduled" label                                              | ✅ Deployed  |
+| **i18n: routes/+page**               | Translate "Back to Home" button                                          | ✅ Deployed  |
+| **i18n: routes/[route]**             | Translate stop counts, direction labels                                  | ✅ Deployed  |
+| **SEO: app.html**                    | Updated meta title/description for Google                                | ✅ Deployed  |
+| **route-changes.ts**                 | Fix filtering to include end time (was only checking date)               | ✅ Deployed  |
+| **Timezone Docs**                    | Added comprehensive timezone policy (EST/America/Toronto)                | ✅ Committed |
+| **DATA_POLLING_FREQUENCIES.md**      | Updated with EST equivalents for all cron jobs                           | ✅ Committed |
 
 ### Previous Updates (Jan 11, 2026)
 
@@ -96,31 +98,31 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Frontend (`src/lib/`)
 
-| File                                            | Status | Purpose                                                    |
-| ----------------------------------------------- | ------ | ---------------------------------------------------------- |
-| `components/alerts/AlertCard.svelte`            | ✅     | Alert cards w/ route extraction from header_text           |
-| `components/alerts/ClosuresView.svelte`         | ✅     | Scheduled closures display (detects nightly/weekend types) |
-| `components/alerts/FilterChips.svelte`          | ✅     | Category filter buttons                                    |
-| `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display                              |
-| `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)              |
-| `components/alerts/StatusBadge.svelte`          | ✅     | Status badges (Nightly/Weekend Closure, Delay, etc.)       |
-| `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback                       |
-| `components/dialogs/CreateAccountDialog.svelte` | ✅     | Registration + recovery codes                              |
-| `components/dialogs/AuthRequiredDialog.svelte`  | ✅     | Auth prompt for protected features                         |
-| `components/dialogs/HowToUseDialog.svelte`      | ✅     | User guide                                                 |
-| `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                                         |
-| `components/layout/Header.svelte`               | ✅     | App header with auth controls                              |
-| `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation                                         |
-| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation + iOS PWA viewport fix (visualViewport API) |
-| `components/ui/*`                               | ✅     | shadcn-svelte base components                              |
-| `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                               |
+| File                                            | Status | Purpose                                                            |
+| ----------------------------------------------- | ------ | ------------------------------------------------------------------ |
+| `components/alerts/AlertCard.svelte`            | ✅     | Alert cards w/ route extraction from header_text                   |
+| `components/alerts/ClosuresView.svelte`         | ✅     | Scheduled closures display (detects nightly/weekend types)         |
+| `components/alerts/FilterChips.svelte`          | ✅     | Category filter buttons                                            |
+| `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display                                      |
+| `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)                      |
+| `components/alerts/StatusBadge.svelte`          | ✅     | Status badges (Nightly/Weekend Closure, Delay, etc.)               |
+| `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback                               |
+| `components/dialogs/CreateAccountDialog.svelte` | ✅     | Registration + recovery codes                                      |
+| `components/dialogs/AuthRequiredDialog.svelte`  | ✅     | Auth prompt for protected features                                 |
+| `components/dialogs/HowToUseDialog.svelte`      | ✅     | User guide                                                         |
+| `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                                                 |
+| `components/layout/Header.svelte`               | ✅     | App header with auth controls                                      |
+| `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation                                                 |
+| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation + iOS PWA viewport fix (visualViewport API)      |
+| `components/ui/*`                               | ✅     | shadcn-svelte base components                                      |
+| `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                                       |
 | `stores/alerts.ts`                              | ✅     | Alerts state + realtime sync + TTC API alert preservation in dedup |
-| `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store                                 |
-| `stores/preferences.ts`                         | ✅     | User preferences state                                     |
-| `types/auth.ts`                                 | ✅     | Auth TypeScript types                                      |
-| `types/database.ts`                             | ✅     | Database types (JSONB fields)                              |
-| `supabase.ts`                                   | ✅     | Supabase client config                                     |
-| `utils.ts`                                      | ✅     | Utility functions                                          |
+| `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store                                         |
+| `stores/preferences.ts`                         | ✅     | User preferences state                                             |
+| `types/auth.ts`                                 | ✅     | Auth TypeScript types                                              |
+| `types/database.ts`                             | ✅     | Database types (JSONB fields)                                      |
+| `supabase.ts`                                   | ✅     | Supabase client config                                             |
+| `utils.ts`                                      | ✅     | Utility functions                                                  |
 
 ### Pages (`src/routes/`)
 
@@ -255,7 +257,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 | Function               | Version | Status | Purpose                                      |
 | ---------------------- | ------- | ------ | -------------------------------------------- |
-| poll-alerts            | v119    | ✅     | Main alert fetcher from TTC API + Bluesky    |
+| poll-alerts            | v138    | ✅     | Main alert fetcher from TTC API + Bluesky    |
 | verify-elevators       | v1      | ✅     | Validates elevator data against TTC API      |
 | verify-rsz             | v1      | ✅     | Validates RSZ data against TTC website       |
 | scrape-rsz             | v4      | ✅     | Alternative RSZ source from TTC website      |
