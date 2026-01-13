@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '142'; // Create separate threads for scheduled closures vs real-time incidents
+const VERSION = '143'; // Skip Bluesky RSZ alerts - TTC API is source of truth for RSZ
 
 // Helper function to check if an alert is about a future/scheduled closure
 // (not a real-time disruption) - matches frontend isScheduledFutureClosure()
@@ -1145,6 +1145,20 @@ serve(async (req) => {
       if (existingUris.has(uri)) continue;
 
       const text = post.record.text;
+      
+      // Skip RSZ-like alerts from Bluesky - TTC API is the source of truth for RSZ
+      // These alerts should only come from processRszAlerts()
+      const lowerText = text.toLowerCase();
+      const isRszText = lowerText.includes('slower than usual') ||
+                        lowerText.includes('reduced speed') ||
+                        lowerText.includes('move slower') ||
+                        lowerText.includes('running slower') ||
+                        lowerText.includes('slow zone');
+      if (isRszText) {
+        console.log(`Skipping Bluesky RSZ alert - TTC API is source of truth: ${text.substring(0, 50)}...`);
+        continue;
+      }
+      
       const { category, priority } = categorizeAlert(text);
       const routes = extractRoutes(text);
       
