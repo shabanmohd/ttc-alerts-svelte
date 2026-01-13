@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.29  
+**Version:** 3.30  
 **Date:** January 12, 2026  
-**poll-alerts Version:** 138  
+**poll-alerts Version:** 140  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
@@ -106,9 +106,27 @@ This document describes the alert categorization and threading system designed t
 - **Polling:** Edge function fetches last 50 posts per invocation
 - **Deduplication:** Uses `bluesky_uri` as unique identifier
 - **Purpose:** Provides `SERVICE_RESUMED` alerts for "Recently Resolved" section
+- **Thread Creation (v140+):** Bluesky can ONLY create threads for `SERVICE_RESUMED` alerts
+- **Other Categories:** DIVERSION, DELAY, etc. from Bluesky must match an existing TTC API thread
 - **Status:** ✅ Enabled (Recently Resolved section only)
 
 **GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear via TTC API/Bluesky)
+
+### Architectural Separation (v140+)
+
+| Alert Source | Can Create Threads | Categories | UI Section |
+|--------------|-------------------|------------|------------|
+| **TTC API** | ✅ Yes | SERVICE_DISRUPTION, DELAY, DIVERSION, SHUTTLE | Disruptions & Delays |
+| **TTC API** | ✅ Yes | RSZ | Slow Zones |
+| **TTC API** | ✅ Yes | ACCESSIBILITY | Station Alerts |
+| **Bluesky** | ✅ Only for SERVICE_RESUMED | SERVICE_RESUMED | Recently Resolved |
+| **Bluesky** | ❌ No - must match existing | DIVERSION, DELAY, etc. | Linked to TTC thread |
+
+This separation ensures:
+1. **Single source of truth** - TTC API controls what's "active"
+2. **No race conditions** - TTC API creates threads first
+3. **Bluesky provides context** - Links to existing threads for historical data
+4. **SERVICE_RESUMED works independently** - Can create threads for resolved alerts
 
 ### Frontend Data Flow
 
@@ -129,15 +147,17 @@ This document describes the alert categorization and threading system designed t
 
 ### Key Principles
 
-- **TTC API is Primary Source** - Disruptions come from TTC API, not Bluesky
-- **Bluesky for Resolved only** - Only used for "Recently Resolved" section
+- **TTC API is Source of Truth** - Active disruptions come from TTC API only
+- **Bluesky for Resolved only** - Only creates threads for "Recently Resolved" section
+- **Bluesky provides context** - Non-SERVICE_RESUMED links to existing TTC API threads
 - **RSZ alerts from TTC API** - Reduced Speed Zone alerts (category: `RSZ`)
 - **Elevator alerts from TTC API** - Accessibility alerts (category: `ACCESSIBILITY`)
 - **Effect > Cause** - "No service" matters more than "due to security incident"
 - **Non-exclusive categories** - Alert can be `SERVICE_DISRUPTION` + `SUBWAY`
-- **Simple threading** - 50% text similarity for general matching, 20% for SERVICE_RESUMED
+- **Simple threading** - 25% text similarity for general matching, 15% for SERVICE_RESUMED
 - **Latest first** - Most recent update at top of thread
 - **Exact route number matching** - Threading uses route NUMBER comparison (e.g., "46" ≠ "996")
+- **Route number first (v139+)** - TTC API alerts find threads by route number before creating new
 - **Auto-hide stale** - Threads hidden when route not in TTC API
 - **Auto-unhide** - Threads restored if route returns to TTC API
 
@@ -251,15 +271,16 @@ Routes are extracted from alert text using regex patterns (poll-alerts v138+):
 ```typescript
 function extractRoutes(text: string): string[] {
   const routes: string[] = [];
-  
+
   // Remove non-route patterns like "Bay 2", "Platform 1"
-  const nonRoutePatterns = /\b(bay|platform|track|door|gate|level|floor|exit|entrance|stop)\s+\d+/gi;
-  const cleanedText = text.replace(nonRoutePatterns, '');
+  const nonRoutePatterns =
+    /\b(bay|platform|track|door|gate|level|floor|exit|entrance|stop)\s+\d+/gi;
+  const cleanedText = text.replace(nonRoutePatterns, "");
 
   // Match subway lines: Line 1, Line 2, Line 3, Line 4
   const lineMatch = cleanedText.match(/\bLine\s+(1|2|3|4)\b/gi);
   if (lineMatch) {
-    lineMatch.forEach(m => {
+    lineMatch.forEach((m) => {
       const num = m.match(/\d/)?.[0];
       if (num) routes.push(`Line ${num}`);
     });
@@ -268,31 +289,51 @@ function extractRoutes(text: string): string[] {
   // Match route branches with name: "97B Yonge", "52F Lawrence", "79S Scarborough"
   // Supports ALL letters A-Z (TTC uses A-D commonly, plus F, G, S)
   // Stop words prevent capturing "97B Yonge Regular" as route name
-  const stopWords = ['regular', 'service', 'detour', 'diversion', 'shuttle', 
-                     'delay', 'resumed', 'closed', 'suspended'];
-  const routeBranchWithNameMatch = cleanedText.match(/\b(\d{1,3}[A-Z])\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/gi);
+  const stopWords = [
+    "regular",
+    "service",
+    "detour",
+    "diversion",
+    "shuttle",
+    "delay",
+    "resumed",
+    "closed",
+    "suspended",
+  ];
+  const routeBranchWithNameMatch = cleanedText.match(
+    /\b(\d{1,3}[A-Z])\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/gi
+  );
   if (routeBranchWithNameMatch) {
-    routeBranchWithNameMatch.forEach(m => {
+    routeBranchWithNameMatch.forEach((m) => {
       const words = m.split(/\s+/);
       let routeName = words[0]; // Always include route number (e.g., "97B")
       if (words[1] && !stopWords.includes(words[1].toLowerCase())) {
-        routeName += ' ' + words[1];
+        routeName += " " + words[1];
         if (words[2] && !stopWords.includes(words[2].toLowerCase())) {
-          routeName += ' ' + words[2];
+          routeName += " " + words[2];
         }
       }
-      routes.push(routeName.replace(/^(\d+)([a-z])/i, (_, num, letter) => `${num}${letter.toUpperCase()}`));
+      routes.push(
+        routeName.replace(
+          /^(\d+)([a-z])/i,
+          (_, num, letter) => `${num}${letter.toUpperCase()}`
+        )
+      );
     });
   }
 
   // Match numbered routes with names: "306 Carlton", "504 King"
   // (skips if already captured as branch route)
-  const routeWithNameMatch = cleanedText.match(/\b(\d{1,3})\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/g);
+  const routeWithNameMatch = cleanedText.match(
+    /\b(\d{1,3})\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/g
+  );
   // ... similar stop word filtering
 
   // Match standalone route branches: "97B", "52F", "79S"
-  const standaloneBranchMatch = cleanedText.match(/\b(\d{1,3}[A-Z])(?=\s|:|,|$)/gi);
-  
+  const standaloneBranchMatch = cleanedText.match(
+    /\b(\d{1,3}[A-Z])(?=\s|:|,|$)/gi
+  );
+
   // Match standalone route numbers
   const standaloneMatch = cleanedText.match(/\b(\d{1,3})(?=\s|:|,|$)/g);
 
@@ -302,17 +343,18 @@ function extractRoutes(text: string): string[] {
 
 **Branch Letters Supported (118 total variations):**
 
-| Letter | Count | Examples |
-|--------|-------|----------|
-| A | 47 | 97A, 100A, 504A |
-| B | 34 | 97B, 939B, 985B |
-| C | 16 | 102C, 927C, 939C |
-| D | 10 | 102D, 504D, 960D |
-| F | 2 | 52F, 123F |
-| G | 1 | 52G |
-| S | 2 | 79S, 336S |
+| Letter | Count | Examples         |
+| ------ | ----- | ---------------- |
+| A      | 47    | 97A, 100A, 504A  |
+| B      | 34    | 97B, 939B, 985B  |
+| C      | 16    | 102C, 927C, 939C |
+| D      | 10    | 102D, 504D, 960D |
+| F      | 2     | 52F, 123F        |
+| G      | 1     | 52G              |
+| S      | 2     | 79S, 336S        |
 
 **Stop Words (prevent false route names):**
+
 - `regular`, `service`, `detour`, `diversion`, `shuttle`
 - `delay`, `resumed`, `closed`, `suspended`
 
@@ -340,10 +382,45 @@ Incident threading groups related alerts over time to:
 
 ### Threading Algorithm
 
-**Implemented in:** `supabase/functions/poll-alerts/index.ts`
+**Implemented in:** `supabase/functions/poll-alerts/index.ts` (v140)
+
+**Architectural Rule (v140+):** TTC API is the source of truth for active disruptions. Bluesky alerts can only CREATE threads for `SERVICE_RESUMED` (Recently Resolved tab). All other Bluesky alerts must match an existing TTC API-created thread.
+
+#### TTC API Alert Thread Matching (v139+)
 
 ```typescript
-// Thread matching logic
+// STEP 1: Find existing thread by route number match
+const routeNum = extractRouteNumber(routes[0] || '');
+let matchedThreadId: string | null = null;
+
+if (routeNum) {
+  for (const thread of existingThreads || []) {
+    const threadRoutes = thread.affected_routes || [];
+    // Skip RSZ/ACCESSIBILITY threads
+    if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) continue;
+    
+    // Check if route numbers match (exact match, not substring)
+    const hasRouteMatch = threadRoutes.some(tr => extractRouteNumber(tr) === routeNum);
+    if (hasRouteMatch) {
+      matchedThreadId = thread.thread_id;
+      break;
+    }
+  }
+}
+
+// STEP 2: If no match found, create deterministic thread ID
+const threadId = matchedThreadId || `thread-ttc-${routeKey}-${category.toLowerCase()}`;
+```
+
+This approach:
+1. First searches for existing threads with matching route NUMBER (handles UUID-format threads created by Bluesky)
+2. Falls back to deterministic `thread-ttc-*` format if no match found
+3. Prevents race conditions where Bluesky creates thread before TTC API
+
+#### Bluesky Alert Thread Matching
+
+```typescript
+// Thread matching logic for Bluesky alerts
 let matchedThread = null;
 
 for (const thread of unresolvedThreads || []) {
@@ -360,28 +437,42 @@ for (const thread of unresolvedThreads || []) {
     const threadTitle = thread.title || "";
     const similarity = jaccardSimilarity(text, threadTitle);
 
-    // Medium similarity (50%) for general matching
-    if (similarity >= 0.5) {
+    // Low threshold (25%) when routes match
+    if (similarity >= 0.25) {
       matchedThread = thread;
       break;
     }
+    
+    // Very low threshold (15%) for SERVICE_RESUMED
+    if (category === "SERVICE_RESUMED" && similarity >= 0.15) {
+      matchedThread = thread;
+      break;
+    }
+  }
+}
 
-    // Lower threshold (20%) for SERVICE_RESUMED with route overlap
-    if (category === "SERVICE_RESUMED" && similarity >= 0.2) {
-      matchedThread = thread;
-      break;
-    }
+// If no match found, only SERVICE_RESUMED can create new threads
+if (!matchedThread) {
+  if (category === 'SERVICE_RESUMED') {
+    // Create thread for Recently Resolved tab
+    const threadResult = await supabase.rpc('find_or_create_thread', {...});
+  } else {
+    // Skip - TTC API is source of truth for active disruptions
+    console.log(`Skipping Bluesky ${category} alert - no matching TTC API thread`);
+    continue;
   }
 }
 ```
 
 ### Threading Rules
 
-1. **Exact route number match required** - Route NUMBERS must match (e.g., "46" = "46 Martin Grove", but "46" ≠ "996")
-2. **Medium similarity (≥50%)** - For general alert matching
-3. **Low similarity (≥20%)** - For SERVICE_RESUMED (different vocabulary)
-4. **6-hour window** - Only match unresolved threads updated within 6 hours
-5. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
+1. **TTC API is source of truth** - All active disruptions must have TTC API thread first
+2. **Bluesky only creates SERVICE_RESUMED threads** - For "Recently Resolved" tab
+3. **Exact route number match required** - Route NUMBERS must match (e.g., "46" = "46 Martin Grove", but "46" ≠ "996")
+4. **Low similarity (≥25%)** - For general alert matching when routes match
+5. **Very low similarity (≥15%)** - For SERVICE_RESUMED (different vocabulary)
+6. **6-hour window** - Only match unresolved threads updated within 6 hours
+7. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
 
 ### Text Similarity Calculation
 

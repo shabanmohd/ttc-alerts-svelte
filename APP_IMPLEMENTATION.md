@@ -20,6 +20,8 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                            | Change                                                                   | Status       |
 | ------------------------------------ | ------------------------------------------------------------------------ | ------------ |
+| **poll-alerts v140**                 | Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth | ✅ Deployed  |
+| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new          | ✅ Deployed  |
 | **poll-alerts v138**                 | Support all TTC branch letters (A-Z) not just A-E - includes F, G, S     | ✅ Deployed  |
 | **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)        | ✅ Deployed  |
 | **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates with Bluesky         | ✅ Committed |
@@ -257,7 +259,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 | Function               | Version | Status | Purpose                                      |
 | ---------------------- | ------- | ------ | -------------------------------------------- |
-| poll-alerts            | v138    | ✅     | Main alert fetcher from TTC API + Bluesky    |
+| poll-alerts            | v140    | ✅     | Main alert fetcher from TTC API + Bluesky    |
 | verify-elevators       | v1      | ✅     | Validates elevator data against TTC API      |
 | verify-rsz             | v1      | ✅     | Validates RSZ data against TTC website       |
 | scrape-rsz             | v4      | ✅     | Alternative RSZ source from TTC website      |
