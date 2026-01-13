@@ -242,12 +242,13 @@
 
   .status-type-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.375rem;
   }
 
   .status-type-item :global(svg) {
     flex-shrink: 0;
+    margin-top: 0.0625rem;
   }
 
   /* Dark mode */
