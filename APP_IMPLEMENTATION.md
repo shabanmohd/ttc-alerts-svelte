@@ -20,6 +20,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                            | Change                                                                       | Status       |
 | ------------------------------------ | ---------------------------------------------------------------------------- | ------------ |
+| **poll-alerts v146**                 | Replace "planned" with "nightly early closures" pattern                      | ✅ Deployed  |
 | **poll-alerts v145**                 | Remove overly broad tunnel/track pattern from scheduled closure detection    | ✅ Deployed  |
 | **poll-alerts v144**                 | Add "full weekend closure" and "planned" detection patterns                  | ✅ Deployed  |
 | **AlertCard.svelte**                 | Show SCHEDULED CLOSURE badge for scheduled maintenance alerts                | ✅ Deployed  |
@@ -282,7 +283,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 | Function               | Version | Status | Purpose                                      |
 | ---------------------- | ------- | ------ | -------------------------------------------- |
-| poll-alerts            | v140    | ✅     | Main alert fetcher from TTC API + Bluesky    |
+| poll-alerts            | v146    | ✅     | Main alert fetcher from TTC API + Bluesky    |
 | verify-elevators       | v1      | ✅     | Validates elevator data against TTC API      |
 | verify-rsz             | v1      | ✅     | Validates RSZ data against TTC website       |
 | scrape-rsz             | v4      | ✅     | Alternative RSZ source from TTC website      |
