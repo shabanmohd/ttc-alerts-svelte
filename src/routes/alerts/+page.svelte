@@ -309,8 +309,16 @@
           const startDateOnly = new Date(item.start_date + "T00:00:00");
           const endDateOnly = new Date(item.end_date + "T00:00:00");
 
+          // Use end_time if available (from planned_maintenance table)
+          // Otherwise default to 4 AM (TTC API childAlerts typically show 3:30 AM end times)
+          let endHour = 4; // Default: 4 AM
+          if (item.end_time) {
+            const [endTimeHour] = item.end_time.split(":").map(Number);
+            endHour = endTimeHour;
+          }
+
           // Active periods for nightly closure:
-          // - Each night from start_time (e.g., 11 PM) until ~6 AM next morning
+          // - Each night from start_time (e.g., 11 PM) until end_time (e.g., 3:30 AM)
           // - During the date range (start_date to end_date)
 
           // Check if we're after start_time today (and within date range)
@@ -318,8 +326,8 @@
             return today >= startDateOnly && today <= endDateOnly;
           }
 
-          // Check if we're before 6 AM and closure started last night
-          if (nowHour < 6) {
+          // Check if we're before end_time and closure started last night
+          if (nowHour < endHour) {
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
             return yesterday >= startDateOnly && yesterday <= endDateOnly;
@@ -385,12 +393,13 @@
   // Helper: Check if a thread contains a TTC API disruption alert (NOT Bluesky)
   // Only ttc-alert-* IDs are from TTC Live Alerts API for disruptions
   // Returns the TTC API alert if found, so it can be used for display
-  // Check if a scheduled closure is currently in its active period (11 PM - 6 AM)
+  // Check if a scheduled closure is currently in its active period (11 PM - 4 AM)
+  // TTC API childAlerts typically show 3:30 AM end times for nightly closures
   function isScheduledClosureActive(): boolean {
     const now = new Date();
     const hour = now.getHours();
-    // Active period: 11 PM (23:00) to 6 AM (06:00)
-    return hour >= 23 || hour < 6;
+    // Active period: 11 PM (23:00) to 4 AM (04:00)
+    return hour >= 23 || hour < 4;
   }
 
   function getTTCApiDisruptionAlert(

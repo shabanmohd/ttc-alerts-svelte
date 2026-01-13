@@ -503,6 +503,7 @@ The `AlertCard` component uses `thread_id` as the primary indicator for schedule
 
 **SubwayStatusBar Scheduled Closure Display (v147+):**
 The subway status cards on the alerts page now use consistent orange styling for scheduled closures:
+
 - **Background**: `rgba(249, 115, 22, 0.12)` (light) / `rgba(251, 146, 60, 0.15)` (dark)
 - **Icon/Text color**: `hsl(25 95% 45%)` (light) / `hsl(25 95% 60%)` (dark)
 - **Text**: "Scheduled Closure" (full text, wraps to next line if needed)
@@ -514,8 +515,15 @@ This ensures visual consistency between the SCHEDULED CLOSURE badge on alert car
 When processing TTC API alerts, the function now checks if an existing alert's thread is hidden and unhides it automatically. This handles nightly scheduled closures that:
 
 1. Create a thread at 11 PM (closure starts)
-2. Thread gets hidden at 6 AM (closure ends)
+2. Thread gets hidden when closure ends (typically ~3:30 AM based on TTC API `childAlerts.endTime`)
 3. Same alert ID reappears at 11 PM the next night
+
+**Frontend Scheduled Closure Time Windows (v148):**
+The frontend uses 4 AM as the end time for nightly closures (previously 6 AM). This is based on TTC API `childAlerts` data which typically shows `endTime` around 3:30 AM for nightly early closures. The 4 AM cutoff provides a small buffer.
+
+- **Active period**: 11 PM (23:00) to 4 AM (04:00)
+- **Inactive period**: 4 AM to 11 PM (subway status shows "Normal Service")
+- **If `end_time` available**: Uses actual time from `planned_maintenance` table
 
 Previously, the code skipped alerts that already existed, leaving the thread hidden. Now:
 
