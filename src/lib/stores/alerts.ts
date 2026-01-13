@@ -35,8 +35,8 @@ let realtimeChannel: RealtimeChannel | null = null;
 
 /**
  * Determine severity category based on alert categories, effect, and text
- * MAJOR: Significant service disruptions (NO_SERVICE, DETOUR) - NOT slow zones
- * MINOR: RSZ/slow zones, minor delays
+ * MAJOR: Significant service disruptions (NO_SERVICE, DETOUR, DELAY) - NOT slow zones
+ * MINOR: RSZ/slow zones, service resumed
  * ACCESSIBILITY: Elevator/escalator issues
  */
 export function getSeverityCategory(
@@ -90,13 +90,14 @@ export function getSeverityCategory(
   }
   
   // Check categories for major disruptions
-  const majorCategories = ['SERVICE_DISRUPTION', 'DIVERSION', 'DETOUR', 'NO_SERVICE'];
+  // DELAY is included here so subway status cards show delays (RSZ already excluded above)
+  const majorCategories = ['SERVICE_DISRUPTION', 'DIVERSION', 'DETOUR', 'NO_SERVICE', 'DELAY'];
   if (majorCategories.some(cat => categories.includes(cat))) {
     return 'MAJOR';
   }
   
-  // Check categories for minor issues
-  const minorCategories = ['DELAY', 'SERVICE_RESUMED', 'REGULAR_SERVICE'];
+  // Check categories for minor issues (resolved alerts, etc.)
+  const minorCategories = ['SERVICE_RESUMED', 'REGULAR_SERVICE'];
   if (minorCategories.some(cat => categories.includes(cat))) {
     return 'MINOR';
   }
