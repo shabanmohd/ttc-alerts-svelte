@@ -511,6 +511,14 @@ The subway status cards on the alerts page now use consistent orange styling for
 
 This ensures visual consistency between the SCHEDULED CLOSURE badge on alert cards and the subway status cards.
 
+**Thread-Based Scheduled Closure Status (v148):**
+The subway status cards now use **thread visibility** (`is_hidden` flag) to determine if a scheduled closure is active, rather than time-based checks. This ensures:
+
+1. When the TTC API scheduled closure thread is **visible** (not hidden) → Shows "Scheduled Closure"
+2. When the thread is **hidden** (closure ended based on `childAlerts.endTime`) → Shows "Normal Service"
+
+The `hasActiveScheduledClosureThread(lineId)` function checks for active threads with `scheduled_closure` in their `thread_id`. This approach respects the TTC API's actual time windows via the poll-alerts Edge Function which hides threads when closures end.
+
 **Thread Unhiding for Recurring Closures (v147):**
 When processing TTC API alerts, the function now checks if an existing alert's thread is hidden and unhides it automatically. This handles nightly scheduled closures that:
 
@@ -518,11 +526,11 @@ When processing TTC API alerts, the function now checks if an existing alert's t
 2. Thread gets hidden when closure ends (typically ~3:30 AM based on TTC API `childAlerts.endTime`)
 3. Same alert ID reappears at 11 PM the next night
 
-**Frontend Scheduled Closure Time Windows (v148):**
-The frontend uses 4 AM as the end time for nightly closures (previously 6 AM). This is based on TTC API `childAlerts` data which typically shows `endTime` around 3:30 AM for nightly early closures. The 4 AM cutoff provides a small buffer.
+**Frontend Time-Based Fallback (v148):**
+For daytime maintenance items from the `planned_maintenance` table (scraped data), the frontend still uses time-based checks via `getActiveMaintenanceForLine()`. The 4 AM cutoff is used for nightly closures as a fallback.
 
 - **Active period**: 11 PM (23:00) to 4 AM (04:00)
-- **Inactive period**: 4 AM to 11 PM (subway status shows "Normal Service")
+- **Inactive period**: 4 AM to 11 PM
 - **If `end_time` available**: Uses actual time from `planned_maintenance` table
 
 Previously, the code skipped alerts that already existed, leaving the thread hidden. Now:

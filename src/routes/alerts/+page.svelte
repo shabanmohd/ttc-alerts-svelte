@@ -342,6 +342,28 @@
     });
   }
 
+  // Check if there's an active scheduled_closure thread for a specific line
+  // This uses the TTC API thread visibility (is_hidden flag) which is updated
+  // based on the childAlerts time windows from TTC API
+  function hasActiveScheduledClosureThread(lineId: string): boolean {
+    const lineNum = lineId.match(/\d+/)?.[0];
+    return $threadsWithAlerts.some((thread) => {
+      // Must be a scheduled_closure thread
+      if (!thread.thread_id?.includes("scheduled_closure")) return false;
+
+      // Must not be hidden or resolved
+      if (thread.is_hidden || thread.is_resolved) return false;
+
+      // Check if it affects this line
+      const routes = thread.affected_routes || [];
+      return routes.some((r) => {
+        if (r === lineId) return true;
+        const routeNum = r.match(/(\d+)/)?.[1];
+        return routeNum === lineNum;
+      });
+    });
+  }
+
   // Map our new categories to severity categories
   function mapCategoryToSeverity(
     cat: typeof selectedCategory
@@ -612,7 +634,11 @@
   let subwayStatuses = $derived.by(() => {
     return SUBWAY_LINES.map((line) => {
       const allAlerts = getAllAlertsForLine(line.id);
-      const hasMaintenance = getActiveMaintenanceForLine(line.id);
+      // Use thread-based check for scheduled closures (respects TTC API is_hidden flag)
+      // This ensures subway status updates when the scheduled closure thread is hidden/unhidden
+      const hasScheduledClosure = hasActiveScheduledClosureThread(line.id);
+      // Fall back to planned_maintenance for daytime scheduled work (not nightly closures)
+      const hasDaytimeMaintenance = getActiveMaintenanceForLine(line.id);
 
       // Filter out slowzone alerts from subway status cards
       // (slow zones are shown separately in the Slow Zones filter tab)
@@ -620,8 +646,9 @@
         (alert) => getAlertStatusType(alert) !== "slowzone"
       );
 
-      // Count total issues: non-slowzone alerts + active maintenance
-      const alertCount = nonSlowzoneAlerts.length + (hasMaintenance ? 1 : 0);
+      // Count total issues: non-slowzone alerts + scheduled closure
+      const alertCount =
+        nonSlowzoneAlerts.length + (hasScheduledClosure ? 1 : 0);
 
       // Get unique alert types for display (e.g., ["disruption", "delay"])
       // Exclude slowzone from subway status cards
@@ -632,8 +659,9 @@
           alertTypes.add(type as "delay" | "disruption" | "scheduled");
         }
       }
-      // Add scheduled if there's active maintenance
-      if (hasMaintenance) {
+      // Add scheduled if there's an active scheduled_closure thread (from TTC API)
+      // or if there's daytime maintenance (from planned_maintenance table)
+      if (hasScheduledClosure || hasDaytimeMaintenance) {
         alertTypes.add("scheduled");
       }
 
