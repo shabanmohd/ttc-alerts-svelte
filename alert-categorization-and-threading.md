@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.31  
+**Version:** 3.32  
 **Date:** January 12, 2026  
-**poll-alerts Version:** 141  
+**poll-alerts Version:** 142  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
@@ -383,11 +383,11 @@ Incident threading groups related alerts over time to:
 
 ### Threading Algorithm
 
-**Implemented in:** `supabase/functions/poll-alerts/index.ts` (v141)
+**Implemented in:** `supabase/functions/poll-alerts/index.ts` (v142)
 
 **Architectural Rule (v140+):** TTC API is the source of truth for active disruptions. Bluesky alerts can only CREATE threads for `SERVICE_RESUMED` (Recently Resolved tab). All other Bluesky alerts must match an existing TTC API-created thread.
 
-#### TTC API Alert Thread Matching (v141)
+#### TTC API Alert Thread Matching (v142)
 
 ```typescript
 // STEP 1: Find existing thread by route number match + similarity check
@@ -424,8 +424,27 @@ if (routeNum) {
 }
 
 // STEP 2: If no match found, create deterministic thread ID
-const threadId =
-  matchedThreadId || `thread-ttc-${routeKey}-${category.toLowerCase()}`;
+// IMPORTANT (v142): Scheduled closures get their own thread ID to avoid mixing with real-time incidents
+const isScheduled = isScheduledClosure(headerText);
+const threadType = isScheduled ? 'scheduled_closure' : category.toLowerCase();
+const threadId = matchedThreadId || `thread-ttc-${routeKey}-${threadType}`;
+```
+
+**v142 Change:** Scheduled closures now create threads with `scheduled_closure` in the ID (e.g., `thread-ttc-line1-scheduled_closure`) instead of mixing with real-time incidents in threads like `thread-ttc-line1-service_disruption`.
+
+**Scheduled Closure Detection (v142):**
+```typescript
+function isScheduledClosure(headerText: string): boolean {
+  const lowerText = (headerText || '').toLowerCase();
+  const scheduledPatterns = [
+    /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
+    /nightly.*from\s+\d+/i,
+    /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
+    /there will be no.*service.*starting/i,
+    /no\s+(subway\s+)?service.*starting\s+\d+/i,
+  ];
+  return scheduledPatterns.some((pattern) => pattern.test(lowerText));
+}
 ```
 
 **v141 Change:** Added 25% similarity check when matching by route number to prevent grouping unrelated incidents on the same route (e.g., separate "Cedarvale security incident" from "Finch-Eglinton scheduled closure" even though both affect Line 1).

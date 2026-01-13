@@ -20,6 +20,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                            | Change                                                                          | Status       |
 | ------------------------------------ | ------------------------------------------------------------------------------- | ------------ |
+| **poll-alerts v142**                 | Create separate threads for scheduled closures vs real-time incidents           | ✅ Deployed  |
 | **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading      | ✅ Deployed  |
 | **poll-alerts v140**                 | Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth    | ✅ Deployed  |
 | **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new                 | ✅ Deployed  |
