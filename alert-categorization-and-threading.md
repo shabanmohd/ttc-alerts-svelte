@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.37  
+**Version:** 3.38  
 **Date:** January 13, 2026  
-**poll-alerts Version:** 146  
+**poll-alerts Version:** 147  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
@@ -500,6 +500,33 @@ function isScheduledClosure(headerText: string): boolean {
 
 **AlertCard Badge Display (v146):**
 The `AlertCard` component uses `isScheduledFutureClosure()` (same patterns) to detect scheduled closures from header text and display "SCHEDULED CLOSURE" badge instead of "DISRUPTION" badge. This ensures visual clarity when scheduled maintenance appears in the Disruptions & Delays tab during active hours (11 PM - 6 AM).
+
+**Thread Unhiding for Recurring Closures (v147):**
+When processing TTC API alerts, the function now checks if an existing alert's thread is hidden and unhides it automatically. This handles nightly scheduled closures that:
+1. Create a thread at 11 PM (closure starts)
+2. Thread gets hidden at 6 AM (closure ends)
+3. Same alert ID reappears at 11 PM the next night
+
+Previously, the code skipped alerts that already existed, leaving the thread hidden. Now:
+```typescript
+if (existing) {
+  // Alert exists - check if its thread is hidden and unhide it
+  if (existing.thread_id) {
+    const { data: existingThread } = await supabase
+      .from('incident_threads')
+      .select('is_hidden')
+      .eq('thread_id', existing.thread_id)
+      .single();
+    
+    if (existingThread?.is_hidden) {
+      await supabase
+        .from('incident_threads')
+        .update({ is_hidden: false, is_resolved: false })
+        .eq('thread_id', existing.thread_id);
+    }
+  }
+}
+```
 
 **v141 Change:** Added 25% similarity check when matching by route number to prevent grouping unrelated incidents on the same route (e.g., separate "Cedarvale security incident" from "Finch-Eglinton scheduled closure" even though both affect Line 1).
 

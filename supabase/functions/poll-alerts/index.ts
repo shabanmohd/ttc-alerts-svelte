@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '146'; // Replace "planned" with "nightly early closures" pattern
+const VERSION = '147'; // Unhide scheduled closure threads when alert already exists
 
 // Helper function to check if an alert is about a future/scheduled closure
 // (not a real-time disruption) - matches frontend isScheduledFutureClosure()
@@ -718,11 +718,33 @@ async function processDisruptionAlerts(supabase: any, disruptionAlerts: TtcApiAl
     // Check if this alert already exists
     const { data: existing } = await supabase
       .from('alert_cache')
-      .select('alert_id')
+      .select('alert_id, thread_id')
       .eq('alert_id', alertId)
       .single();
     
     if (existing) {
+      // Alert exists - but check if its thread is hidden and unhide it
+      // This handles nightly scheduled closures that reappear each night
+      if (existing.thread_id) {
+        const { data: existingThread } = await supabase
+          .from('incident_threads')
+          .select('is_hidden')
+          .eq('thread_id', existing.thread_id)
+          .single();
+        
+        if (existingThread?.is_hidden) {
+          await supabase
+            .from('incident_threads')
+            .update({ 
+              is_hidden: false, 
+              is_resolved: false,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('thread_id', existing.thread_id);
+          console.log(`TTC API: Unhid thread ${existing.thread_id} for existing alert ${alertId}`);
+          updatedThreads++;
+        }
+      }
       continue; // Already have this alert
     }
 
