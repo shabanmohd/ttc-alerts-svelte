@@ -362,9 +362,15 @@
       : latestAlert
   );
 
+  // Check if this is an accessibility/elevator alert (no threading for these)
+  const isElevatorThread = $derived(isAccessibilityAlert(thread.categories));
+
   // Earlier alerts excludes the displayAlert to avoid showing it twice
+  // For elevator/accessibility alerts, we don't show threading - each alert is standalone
   const earlierAlerts = $derived(
-    thread.alerts.filter((alert) => alert.alert_id !== displayAlert?.alert_id)
+    isElevatorThread
+      ? []
+      : thread.alerts.filter((alert) => alert.alert_id !== displayAlert?.alert_id)
   );
 
   // Get routes for badge display:

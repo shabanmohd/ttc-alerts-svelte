@@ -982,13 +982,13 @@ function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
 
 The `getSeverityCategory` function determines which alerts affect subway status cards:
 
-| Category/Pattern | Severity | Affects Status Cards? | Notes |
-|-----------------|----------|----------------------|-------|
-| RSZ text patterns ("slower than usual", "reduced speed", etc.) | MINOR | ❌ No | Detected FIRST by text matching |
-| `ACCESSIBILITY`, `ELEVATOR` | ACCESSIBILITY | ❌ No | Separate "Station Alerts" section |
-| `SERVICE_DISRUPTION`, `DIVERSION`, `DETOUR`, `NO_SERVICE` | MAJOR | ✅ Yes | Shows as disruption |
-| `DELAY` | MAJOR | ✅ Yes | Shows as delay (changed v151+) |
-| `SERVICE_RESUMED`, `REGULAR_SERVICE` | MINOR | ❌ No | Resolution alerts |
+| Category/Pattern                                               | Severity      | Affects Status Cards? | Notes                             |
+| -------------------------------------------------------------- | ------------- | --------------------- | --------------------------------- |
+| RSZ text patterns ("slower than usual", "reduced speed", etc.) | MINOR         | ❌ No                 | Detected FIRST by text matching   |
+| `ACCESSIBILITY`, `ELEVATOR`                                    | ACCESSIBILITY | ❌ No                 | Separate "Station Alerts" section |
+| `SERVICE_DISRUPTION`, `DIVERSION`, `DETOUR`, `NO_SERVICE`      | MAJOR         | ✅ Yes                | Shows as disruption               |
+| `DELAY`                                                        | MAJOR         | ✅ Yes                | Shows as delay (changed v151+)    |
+| `SERVICE_RESUMED`, `REGULAR_SERVICE`                           | MINOR         | ❌ No                 | Resolution alerts                 |
 
 **Note (v151 change):** `DELAY` was moved from MINOR to MAJOR severity so that delay alerts (e.g., "Delays at Summerhill station due to medical emergency") now affect subway status cards.
 

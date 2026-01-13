@@ -4,8 +4,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // Deno types (for IDE only - Deno runtime provides these)
 declare const Deno: { env: { get(key: string): string | undefined } };
 
-// v1 - Elevator Data Verification and Auto-Correction System
+// v2 - Elevator Data Verification and Auto-Correction System
 // Compares TTC API elevator data with database and auto-fixes discrepancies
+// v2: Added cleanup of stale "back in service" alerts when TTC API shows elevator still out
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,10 +29,12 @@ interface VerificationResult {
   missingInDb: string[];
   hiddenButActive: string[];
   staleInDb: string[];
+  staleBackInServiceAlerts: string[];
   corrections: {
     created: number;
     unhidden: number;
     hidden: number;
+    staleAlertsDeleted: number;
   };
   details: Record<string, any>;
 }
@@ -87,7 +90,8 @@ serve(async (req: Request) => {
     missingInDb: [],
     hiddenButActive: [],
     staleInDb: [],
-    corrections: { created: 0, unhidden: 0, hidden: 0 },
+    staleBackInServiceAlerts: [],
+    corrections: { created: 0, unhidden: 0, hidden: 0, staleAlertsDeleted: 0 },
     details: {}
   };
 
@@ -293,6 +297,45 @@ serve(async (req: Request) => {
       }
     }
 
+    // 4d: Clean up stale "back in service" alerts
+    // When TTC API shows elevator still out of service, but we have a "back in service" alert,
+    // delete it because the TTC API briefly showed "back in service" then reverted.
+    for (const [threadId, ttcElev] of ttcElevatorsByThreadId) {
+      // TTC API shows "out of service" - check for stale "back in service" alerts
+      const isOutOfService = ttcElev.headerText?.toLowerCase().includes('out of service');
+      if (!isOutOfService) continue;
+
+      // Find "back in service" alerts for this thread
+      const { data: backInServiceAlerts, error: fetchError } = await supabase
+        .from('alert_cache')
+        .select('alert_id, header_text')
+        .eq('thread_id', threadId)
+        .ilike('header_text', '%back in service%');
+
+      if (fetchError) {
+        console.error(`Error fetching alerts for ${threadId}:`, fetchError);
+        continue;
+      }
+
+      if (backInServiceAlerts && backInServiceAlerts.length > 0) {
+        for (const alert of backInServiceAlerts) {
+          console.log(`Deleting stale "back in service" alert: ${alert.alert_id}`);
+          result.staleBackInServiceAlerts.push(alert.alert_id);
+
+          const { error: deleteError } = await supabase
+            .from('alert_cache')
+            .delete()
+            .eq('alert_id', alert.alert_id);
+
+          if (!deleteError) {
+            result.corrections.staleAlertsDeleted++;
+          } else {
+            console.error(`Failed to delete alert ${alert.alert_id}:`, deleteError);
+          }
+        }
+      }
+    }
+
     // STEP 5: Final verification
     const { data: finalThreads } = await supabase
       .from('incident_threads')
@@ -309,7 +352,7 @@ serve(async (req: Request) => {
     console.log(`\nVerification complete:`);
     console.log(`  TTC API: ${result.ttcApiCount} elevators`);
     console.log(`  Database (after fix): ${finalCount} visible threads`);
-    console.log(`  Corrections: ${result.corrections.created} created, ${result.corrections.unhidden} unhidden, ${result.corrections.hidden} hidden`);
+    console.log(`  Corrections: ${result.corrections.created} created, ${result.corrections.unhidden} unhidden, ${result.corrections.hidden} hidden, ${result.corrections.staleAlertsDeleted} stale alerts deleted`);
     console.log(`  Match: ${result.success ? 'YES ✅' : 'NO ❌'}`);
 
     return new Response(
