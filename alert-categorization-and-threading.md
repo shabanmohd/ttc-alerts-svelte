@@ -1,13 +1,13 @@
 # Alert Categorization and Threading System
 
-**Version:** 4.0  
+**Version:** 4.1  
 **Date:** January 13, 2026  
 **poll-alerts Version:** 150  
-**Frontend Version:** 149 (fix hidden thread loading + realtime removal)  
+**Frontend Version:** 151 (Bluesky disruptions + DELAY → MAJOR severity)  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
-**verify-disruptions Version:** 2 (⚠️ May need update for new architecture)  
+**verify-disruptions Version:** 2 (⚠️ May need update - TTC API disruptions removed)  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
@@ -117,12 +117,12 @@ This document describes the alert categorization and threading system designed t
 
 ### Architectural Separation (v150 - BLUESKY-ONLY)
 
-| Alert Source | Thread Creation             | Categories                                    | UI Section           |
-| ------------ | --------------------------- | --------------------------------------------- | -------------------- |
-| **Bluesky**  | ✅ Yes (native threading)   | SERVICE_DISRUPTION, DELAY, DIVERSION, SHUTTLE | Disruptions & Delays |
-| **Bluesky**  | ✅ Yes (native threading)   | SERVICE_RESUMED                               | Recently Resolved    |
-| **TTC API**  | ✅ Yes (exclusive)          | RSZ                                           | Slow Zones           |
-| **TTC API**  | ✅ Yes (exclusive)          | ACCESSIBILITY                                 | Station Alerts       |
+| Alert Source | Thread Creation           | Categories                                    | UI Section           |
+| ------------ | ------------------------- | --------------------------------------------- | -------------------- |
+| **Bluesky**  | ✅ Yes (native threading) | SERVICE_DISRUPTION, DELAY, DIVERSION, SHUTTLE | Disruptions & Delays |
+| **Bluesky**  | ✅ Yes (native threading) | SERVICE_RESUMED                               | Recently Resolved    |
+| **TTC API**  | ✅ Yes (exclusive)        | RSZ                                           | Slow Zones           |
+| **TTC API**  | ✅ Yes (exclusive)        | ACCESSIBILITY                                 | Station Alerts       |
 
 **v150 Changes:**
 
@@ -151,25 +151,25 @@ Bluesky-only solves these because:
 
 ### Frontend Data Flow
 
-| UI Section           | Data Source    | Filter Logic                             |
-| -------------------- | -------------- | ---------------------------------------- |
-| Disruptions & Delays | Bluesky        | `alert_id.startsWith('bsky-')` + disruption categories |
-| Slow Zones           | TTC API only   | `alert_id.startsWith('ttc-rsz-')`        |
-| Station Alerts       | TTC API only   | `alert_id.startsWith('ttc-elev-')`       |
-| Recently Resolved    | Bluesky        | `categories.includes('SERVICE_RESUMED')` |
+| UI Section           | Data Source  | Filter Logic                                           |
+| -------------------- | ------------ | ------------------------------------------------------ |
+| Disruptions & Delays | Bluesky      | `alert_id.startsWith('bsky-')` + disruption categories |
+| Slow Zones           | TTC API only | `alert_id.startsWith('ttc-rsz-')`                      |
+| Station Alerts       | TTC API only | `alert_id.startsWith('ttc-elev-')`                     |
+| Recently Resolved    | Bluesky      | `categories.includes('SERVICE_RESUMED')`               |
 
 ### Complete UI Tab Data Sources (v150)
 
 This table documents the **exclusive data source** for each UI tab.
 
-| UI Tab                         | Data Source              | Thread ID Format      | Database Table        | Edge Function        |
-| ------------------------------ | ------------------------ | --------------------- | --------------------- | -------------------- |
-| **Disruptions & Delays**       | Bluesky (v150)           | `thread-bsky-{id}`    | `alert_cache`         | `poll-alerts`        |
-| **Slow Zones (RSZ)**           | TTC API exclusive        | `thread-rsz-{id}`     | `alert_cache`         | `poll-alerts`        |
-| **Station Alerts (Elevators)** | TTC API exclusive        | `thread-elev-{id}`    | `alert_cache`         | `poll-alerts`        |
-| **Scheduled Subway Closures**  | TTC website scraper      | N/A                   | `planned_maintenance` | `scrape-maintenance` |
-| **Service/Route Changes**      | TTC website scraper      | N/A                   | Runtime fetch         | N/A (client-side)    |
-| **Recently Resolved**          | Bluesky                  | `thread-bsky-{id}`    | `alert_cache`         | `poll-alerts`        |
+| UI Tab                         | Data Source         | Thread ID Format   | Database Table        | Edge Function        |
+| ------------------------------ | ------------------- | ------------------ | --------------------- | -------------------- |
+| **Disruptions & Delays**       | Bluesky (v150)      | `thread-bsky-{id}` | `alert_cache`         | `poll-alerts`        |
+| **Slow Zones (RSZ)**           | TTC API exclusive   | `thread-rsz-{id}`  | `alert_cache`         | `poll-alerts`        |
+| **Station Alerts (Elevators)** | TTC API exclusive   | `thread-elev-{id}` | `alert_cache`         | `poll-alerts`        |
+| **Scheduled Subway Closures**  | TTC website scraper | N/A                | `planned_maintenance` | `scrape-maintenance` |
+| **Service/Route Changes**      | TTC website scraper | N/A                | Runtime fetch         | N/A (client-side)    |
+| **Recently Resolved**          | Bluesky             | `thread-bsky-{id}` | `alert_cache`         | `poll-alerts`        |
 
 **Clarifications:**
 
@@ -978,6 +978,20 @@ function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
 }
 ```
 
+**Severity Categorization (v151+):**
+
+The `getSeverityCategory` function determines which alerts affect subway status cards:
+
+| Category/Pattern | Severity | Affects Status Cards? | Notes |
+|-----------------|----------|----------------------|-------|
+| RSZ text patterns ("slower than usual", "reduced speed", etc.) | MINOR | ❌ No | Detected FIRST by text matching |
+| `ACCESSIBILITY`, `ELEVATOR` | ACCESSIBILITY | ❌ No | Separate "Station Alerts" section |
+| `SERVICE_DISRUPTION`, `DIVERSION`, `DETOUR`, `NO_SERVICE` | MAJOR | ✅ Yes | Shows as disruption |
+| `DELAY` | MAJOR | ✅ Yes | Shows as delay (changed v151+) |
+| `SERVICE_RESUMED`, `REGULAR_SERVICE` | MINOR | ❌ No | Resolution alerts |
+
+**Note (v151 change):** `DELAY` was moved from MINOR to MAJOR severity so that delay alerts (e.g., "Delays at Summerhill station due to medical emergency") now affect subway status cards.
+
 **Why RSZ and ACCESSIBILITY are excluded:**
 
 1. **RSZ (Reduced Speed Zone)** - "Slower than usual" alerts are informational, not disruptions
@@ -986,7 +1000,7 @@ function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
    - Users should see these in "Slow Zones" section, not affect status cards
 
 2. **ACCESSIBILITY** - Elevator/escalator issues are separate concern
-   - Displayed in dedicated "Accessibility" section
+   - Displayed in dedicated "Station Alerts" section
    - Don't indicate service disruptions for the line
 
 **Status determination:**
@@ -994,7 +1008,7 @@ function getAllAlertsForLine(lineId: string): ThreadWithAlerts[] {
 | Condition                                   | Status       | Display             |
 | ------------------------------------------- | ------------ | ------------------- |
 | No MAJOR alerts, no active maintenance      | `ok`         | "Normal service" ✅ |
-| Has alert with DELAY effect                 | `delay`      | "Delay" 🕐          |
+| Has alert with DELAY category               | `delay`      | "Delay" 🕐          |
 | Has alert with DISRUPTION/NO_SERVICE effect | `disruption` | "Disruption" ⛔     |
 | Has active scheduled maintenance only       | `scheduled`  | "Scheduled" 📅      |
 
@@ -1024,10 +1038,10 @@ let rszAlerts = $derived.by(() => {
 
 **Why this separation is critical:**
 
-1. **DELAY alerts have MINOR severity** - `getSeverityCategory(['DELAY'], 'DISRUPTION', ...)` returns `'MINOR'`
-2. **RSZ alerts also have MINOR severity** - They're classified as informational, not disruptive
-3. **Without separation:** Regular DELAY alerts (e.g., "medical emergency at Osgoode") would appear in Slow Zones tab
-4. **With separation:** Only true RSZ alerts ("slower than usual between X and Y") appear in Slow Zones tab
+1. **DELAY alerts have MAJOR severity (v151+)** - `getSeverityCategory(['DELAY'], 'DISRUPTION', ...)` returns `'MAJOR'` (affects subway status cards)
+2. **RSZ alerts have MINOR severity** - They're classified as informational, not disruptive (detected by text patterns BEFORE category check)
+3. **Without RSZ text detection:** RSZ alerts would appear in Disruptions & Delays tab
+4. **With RSZ text detection:** Only true RSZ alerts ("slower than usual between X and Y") appear in Slow Zones tab
 
 **RSZ Detection (`isRSZAlert` helper):**
 
@@ -1904,6 +1918,8 @@ const { data } = await supabase
 
 | Version | Date       | Changes                                                                                                                                                               |
 | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| v4.1    | 2026-01-13 | Frontend v151: Bluesky disruptions display + DELAY → MAJOR severity (affects subway status cards); RSZAlertCard skips SERVICE_RESUMED alerts                          |
+| v4.0    | 2026-01-13 | poll-alerts v150: Bluesky-only architecture for disruptions; removed TTC API disruption processing, thread hiding/unhiding; native Bluesky reply threading            |
 | v3.22   | 2026-01-11 | Fix `validate_alert_thread_routes` trigger: bypass route validation for elevator/ACCESSIBILITY alerts (station names don't match route numbers)                       |
 | v3.21   | 2026-01-11 | poll-alerts v116: Fix effect recognition - ALL non-RSZ, non-ServiceResumed alerts now recognized as disruptions (fixes "Subway Closure - Early Access" not appearing) |
 | v3.20   | 2026-01-11 | Added verify-elevators v1, verify-rsz v1 verification functions; scrape-rsz v4 with pg_cron; poll-alerts v115 unhide elevator repair                                  |

@@ -33,16 +33,20 @@ Real-time Toronto Transit alerts with biometric authentication.
 | **poll-alerts v147**                 | Auto-unhide threads when recurring scheduled closure alerts reappear         | ✅ Deployed  |
 | **SubwayStatusBar scheduled**        | Orange styling for scheduled closures, text wraps, icon top-aligned          | ✅ Deployed  |
 | **AlertCard thread_id detection**    | Use thread_id to detect scheduled closures (primary) instead of text pattern | ✅ Deployed  |
+| **poll-alerts v150**                 | Bluesky-only architecture: removed TTC API disruptions, native Bluesky threading | ✅ Deployed  |
+| **alerts/+page.svelte v151**         | Frontend updated for Bluesky disruptions: `getDisruptionAlert()`, `isDisruption()` | ✅ Deployed  |
+| **alerts.ts v151**                   | DELAY category → MAJOR severity (affects subway status cards)                | ✅ Deployed  |
+| **RSZAlertCard v151**                | Skip SERVICE_RESUMED alerts when extracting RSZ entries                      | ✅ Deployed  |
 | **poll-alerts v146**                 | Scheduled closure patterns: nightly early closures, full weekend closure     | ✅ Deployed  |
-| **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading    | ✅ Deployed  |
-| **poll-alerts v140**                 | Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth | ✅ Deployed  |
-| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new              | ✅ Deployed  |
+| **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading    | ⚠️ Superseded by v150 |
+| **poll-alerts v140**                 | Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth | ⚠️ Superseded by v150 |
+| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new              | ⚠️ Superseded by v150 |
 | **poll-alerts v138**                 | Support all TTC branch letters (A-Z) not just A-E - includes F, G, S         | ✅ Deployed  |
 | **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)            | ✅ Deployed  |
 | **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates with Bluesky             | ✅ Committed |
-| **alerts/+page.svelte activeAlerts** | Disruptions tab filters thread.alerts to TTC API only (no Bluesky in UI)     | ✅ Deployed  |
+| **alerts/+page.svelte activeAlerts** | Disruptions tab filters to Bluesky alerts (bsky-*) - v151 architecture       | ✅ Deployed  |
 | **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 4 AM        | ✅ Deployed  |
-| **getTTCApiDisruptionAlert()**       | Excludes scheduled closures outside active period                            | ✅ Deployed  |
+| **getDisruptionAlert()**             | Renamed from getTTCApiDisruptionAlert - now checks bsky-* alerts             | ✅ Deployed  |
 | **MobileBottomNav.svelte**           | iOS PWA viewport fix using visualViewport API                                | ✅ Deployed  |
 | **poll-alerts v136**                 | Scheduled closure filtering - hide alerts not currently active               | ✅ Deployed  |
 | **verify-disruptions v2**            | Data integrity validation for TTC API disruptions (every 15 min)             | ✅ Deployed  |
