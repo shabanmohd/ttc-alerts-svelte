@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '120'; // TTC API as primary source for disruptions (delays, closures, shuttles)
+const VERSION = '137'; // Fix route extraction to stop at non-route words (Regular, service, etc.)
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -65,23 +65,52 @@ function extractRoutes(text: string): string[] {
   
   // Match route branches with name: "97B Yonge", "36A Finch West", etc.
   // Branch letter is A-E (TTC uses A, B, C, D, E for branches)
-  const routeBranchWithNameMatch = cleanedText.match(/\b(\d{1,3}[A-E])\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/gi);
+  // Stop before common non-route words like "Regular", "service", "Detour", etc.
+  const routeBranchWithNameMatch = cleanedText.match(/\b(\d{1,3}[A-E])\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/gi);
   if (routeBranchWithNameMatch) {
     routeBranchWithNameMatch.forEach(m => {
+      // Stop at common non-route words
+      const stopWords = ['regular', 'service', 'detour', 'diversion', 'shuttle', 'delay', 'resumed', 'closed', 'suspended'];
+      const words = m.split(/\s+/);
+      let routeName = words[0]; // Always include the route number (e.g., "97B")
+      
+      // Add the first word after route number if it's not a stop word
+      if (words[1] && !stopWords.includes(words[1].toLowerCase())) {
+        routeName += ' ' + words[1];
+        // Add second word if present and not a stop word
+        if (words[2] && !stopWords.includes(words[2].toLowerCase())) {
+          routeName += ' ' + words[2];
+        }
+      }
+      
       // Normalize branch letter to uppercase
-      const normalized = m.replace(/^(\d+)([a-e])/i, (_, num, letter) => `${num}${letter.toUpperCase()}`);
-      routes.push(normalized); // Keep "97B Yonge" format
+      const normalized = routeName.replace(/^(\d+)([a-e])/i, (_, num, letter) => `${num}${letter.toUpperCase()}`);
+      routes.push(normalized);
     });
   }
   
   // Match numbered routes with optional name: "306 Carlton", "504 King", etc.
-  const routeWithNameMatch = cleanedText.match(/\b(\d{1,3})\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g);
+  // Stop before common non-route words
+  const routeWithNameMatch = cleanedText.match(/\b(\d{1,3})\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/g);
   if (routeWithNameMatch) {
     routeWithNameMatch.forEach(m => {
       // Skip if already captured as a branch route
       const routeNum = m.match(/^\d+/)?.[0];
       if (!routes.some(r => r.match(/^\d+/)?.[0] === routeNum)) {
-        routes.push(m); // Keep "306 Carlton" format
+        // Stop at common non-route words
+        const stopWords = ['regular', 'service', 'detour', 'diversion', 'shuttle', 'delay', 'resumed', 'closed', 'suspended'];
+        const words = m.split(/\s+/);
+        let routeName = words[0]; // Route number
+        
+        // Add route name words, stopping at stop words
+        if (words[1] && !stopWords.includes(words[1].toLowerCase())) {
+          routeName += ' ' + words[1];
+          if (words[2] && !stopWords.includes(words[2].toLowerCase())) {
+            routeName += ' ' + words[2];
+          }
+        }
+        
+        routes.push(routeName);
       }
     });
   }
