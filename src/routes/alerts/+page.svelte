@@ -205,6 +205,13 @@
       return "slowzone";
     }
 
+    // Check if thread_id indicates a scheduled closure (v147 fix)
+    // This overrides effect-based detection since scheduled closures
+    // from TTC API have "NO_SERVICE" effect but are planned maintenance
+    if (thread.thread_id?.includes('scheduled_closure')) {
+      return "scheduled";
+    }
+
     const effect = thread.latestAlert.effect.toUpperCase();
 
     if (effect.includes("DELAY") || effect.includes("SIGNIFICANT_DELAYS"))
