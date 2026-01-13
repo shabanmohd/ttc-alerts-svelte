@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '138'; // Support all TTC branch letters (A-Z) not just A-E - includes F, G, S
+const VERSION = '139'; // Fix TTC API thread matching - find existing threads by route number first
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -766,51 +766,91 @@ async function processDisruptionAlerts(supabase: any, disruptionAlerts: TtcApiAl
 
     newAlerts++;
 
-    // Generate thread ID based on route and effect type
-    const routeKey = routes[0]?.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'unknown';
-    const threadId = `thread-ttc-${routeKey}-${category.toLowerCase()}`;
-
-    // Check if thread exists
-    const { data: existingThread } = await supabase
-      .from('incident_threads')
-      .select('thread_id, is_hidden')
-      .eq('thread_id', threadId)
-      .single();
+    // STEP 1: First, look for an existing unresolved thread with matching routes
+    // This handles race conditions where Bluesky created a thread first with UUID format
+    const routeNum = extractRouteNumber(routes[0] || '');
+    let matchedThreadId: string | null = null;
     
-    if (!existingThread) {
-      // Create new thread
-      const { error: threadError } = await supabase
+    if (routeNum) {
+      const { data: existingThreads } = await supabase
         .from('incident_threads')
-        .insert({
-          thread_id: threadId,
-          title: headerText.substring(0, 200),
-          affected_routes: routes,
-          categories: [category],
-          is_resolved: false,
-          is_hidden: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-
-      if (threadError) {
-        console.error('Disruption thread creation error:', threadError);
-      } else {
-        console.log(`TTC API: Created new thread ${threadId}`);
+        .select('thread_id, affected_routes, categories')
+        .eq('is_resolved', false)
+        .eq('is_hidden', false);
+      
+      for (const thread of existingThreads || []) {
+        const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
+        const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
+        
+        // Skip RSZ/ACCESSIBILITY threads
+        if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) continue;
+        
+        // Check if route numbers match
+        const hasRouteMatch = threadRoutes.some(tr => extractRouteNumber(tr) === routeNum);
+        if (hasRouteMatch) {
+          matchedThreadId = thread.thread_id;
+          console.log(`TTC API: Found existing thread ${matchedThreadId} for route ${routeNum}`);
+          break;
+        }
       }
-    } else if (existingThread.is_hidden) {
-      // Thread exists but is hidden - unhide it since alert is back
-      await supabase
+    }
+
+    // STEP 2: If no matching thread found, create one with deterministic ID
+    const routeKey = routes[0]?.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'unknown';
+    const threadId = matchedThreadId || `thread-ttc-${routeKey}-${category.toLowerCase()}`;
+
+    if (!matchedThreadId) {
+      // Check if our deterministic thread ID exists
+      const { data: existingThread } = await supabase
         .from('incident_threads')
-        .update({ 
-          is_hidden: false, 
-          is_resolved: false,
-          title: headerText.substring(0, 200),
-          updated_at: new Date().toISOString() 
-        })
-        .eq('thread_id', threadId);
-      console.log(`TTC API: Unhid existing thread ${threadId}`);
+        .select('thread_id, is_hidden')
+        .eq('thread_id', threadId)
+        .single();
+      
+      if (!existingThread) {
+        // Create new thread
+        const { error: threadError } = await supabase
+          .from('incident_threads')
+          .insert({
+            thread_id: threadId,
+            title: headerText.substring(0, 200),
+            affected_routes: routes,
+            categories: [category],
+            is_resolved: false,
+            is_hidden: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (threadError) {
+          console.error('Disruption thread creation error:', threadError);
+        } else {
+          console.log(`TTC API: Created new thread ${threadId}`);
+        }
+      } else if (existingThread.is_hidden) {
+        // Thread exists but is hidden - unhide it since alert is back
+        await supabase
+          .from('incident_threads')
+          .update({ 
+            is_hidden: false, 
+            is_resolved: false,
+            title: headerText.substring(0, 200),
+            updated_at: new Date().toISOString() 
+          })
+          .eq('thread_id', threadId);
+        console.log(`TTC API: Unhid existing thread ${threadId}`);
+      } else {
+        // Thread exists and visible - update title to latest
+        await supabase
+          .from('incident_threads')
+          .update({ 
+            title: headerText.substring(0, 200),
+            updated_at: new Date().toISOString() 
+          })
+          .eq('thread_id', threadId);
+      }
     } else {
-      // Thread exists and visible - update title to latest
+      // Update existing matched thread with latest title
       await supabase
         .from('incident_threads')
         .update({ 
