@@ -12,7 +12,7 @@ This document identifies TTC bus routes where one route number is a substring of
 
 **Total Routes Analyzed:** 158 bus routes
 **Problematic Pairs Found:** 29 pairs
-**Patterns Identified:** 3 distinct patterns
+**Patterns Identified:** 6 distinct patterns
 
 ---
 
@@ -402,35 +402,46 @@ TTC uses letter suffixes to indicate route branches (different service patterns 
 
 ### Branch Letters in Use
 
-| Letter | Count | Description | Examples |
-|--------|-------|-------------|----------|
-| **A** | 47 | Primary/default branch | 97A, 100A, 504A |
-| **B** | 34 | Secondary branch | 97B, 939B, 985B |
-| **C** | 16 | Tertiary branch | 102C, 927C, 939C |
-| **D** | 10 | Fourth branch | 102D, 504D, 960D |
-| **F** | 2 | Special variation | 52F, 123F |
-| **G** | 1 | Special variation | 52G |
-| **S** | 2 | Shuttle/special service | 79S, 336S |
+| Letter | Count | Description             | Examples         |
+| ------ | ----- | ----------------------- | ---------------- |
+| **A**  | 47    | Primary/default branch  | 97A, 100A, 504A  |
+| **B**  | 34    | Secondary branch        | 97B, 939B, 985B  |
+| **C**  | 16    | Tertiary branch         | 102C, 927C, 939C |
+| **D**  | 10    | Fourth branch           | 102D, 504D, 960D |
+| **F**  | 2     | Special variation       | 52F, 123F        |
+| **G**  | 1     | Special variation       | 52G              |
+| **S**  | 2     | Shuttle/special service | 79S, 336S        |
 
 ### Routes with Most Branches
 
-| Route | Branches | Full List |
-|-------|----------|-----------|
-| **52 Lawrence West** | 5 | 52A, 52B, 52D, 52F, 52G |
-| **97 Yonge** | 3 | 97A, 97B, 97C |
-| **102 Markham Rd** | 2 | 102C, 102D |
-| **939 Finch Express** | 2 | 939B, 939C |
-| **84 Sheppard West** | 3 | 84A, 84C, 84D |
+| Route                 | Branches | Full List               |
+| --------------------- | -------- | ----------------------- |
+| **52 Lawrence West**  | 5        | 52A, 52B, 52D, 52F, 52G |
+| **97 Yonge**          | 3        | 97A, 97B, 97C           |
+| **102 Markham Rd**    | 2        | 102C, 102D              |
+| **939 Finch Express** | 2        | 939B, 939C              |
+| **84 Sheppard West**  | 3        | 84A, 84C, 84D           |
 
 ### Extraction Regex (poll-alerts v138+)
 
 ```typescript
 // Supports ALL letters A-Z (future-proof)
-const routeBranchWithNameMatch = text.match(/\b(\d{1,3}[A-Z])\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/gi);
+const routeBranchWithNameMatch = text.match(
+  /\b(\d{1,3}[A-Z])\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/gi
+);
 
 // Stop words prevent capturing "97B Yonge Regular" as route name
-const stopWords = ['regular', 'service', 'detour', 'diversion', 'shuttle', 
-                   'delay', 'resumed', 'closed', 'suspended'];
+const stopWords = [
+  "regular",
+  "service",
+  "detour",
+  "diversion",
+  "shuttle",
+  "delay",
+  "resumed",
+  "closed",
+  "suspended",
+];
 ```
 
 ### Why Branches Are NOT Conflicts
@@ -443,10 +454,73 @@ const stopWords = ['regular', 'service', 'detour', 'diversion', 'shuttle',
 ### Auto-Update Schedule
 
 Branch data is automatically refreshed weekly:
+
 - **Schedule:** Sundays 2:00 AM UTC
 - **Workflow:** `.github/workflows/refresh-route-data.yml`
 - **Source:** NextBus API
 - **Output:** `ttc-route-branches.json`
+
+---
+
+## Pattern F: Scheduled Closures vs Real-Time Incidents (v142)
+
+**Pattern:** Same route with different incident types
+**Risk Level:** MEDIUM (now handled correctly)
+**Solution:** Separate thread IDs for scheduled closures
+
+### The Problem
+
+Before v142, all alerts for the same route and category went to the same thread:
+
+```
+Alert 1: "Line 1: No service Finch-Eglinton starting 11 PM nightly for tunnel improvements"
+         → thread-ttc-line1-service_disruption
+
+Alert 2: "Line 1: Delays southbound at Cedarvale due to security incident"
+         → thread-ttc-line1-delay (initially)
+         → BUT could match thread-ttc-line1-service_disruption if similarity ≥25%
+```
+
+This caused unrelated incidents to be grouped together.
+
+### The Solution (v142)
+
+Scheduled closures now get their own dedicated thread ID:
+
+```typescript
+function isScheduledClosure(headerText: string): boolean {
+  const lowerText = (headerText || '').toLowerCase();
+  const scheduledPatterns = [
+    /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
+    /nightly.*from\s+\d+/i,
+    /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
+    /there will be no.*service.*starting/i,
+    /no\s+(subway\s+)?service.*starting\s+\d+/i,
+  ];
+  return scheduledPatterns.some((pattern) => pattern.test(lowerText));
+}
+
+// In processDisruptionAlerts():
+const isScheduled = isScheduledClosure(headerText);
+const threadType = isScheduled ? 'scheduled_closure' : category.toLowerCase();
+const threadId = matchedThreadId || `thread-ttc-${routeKey}-${threadType}`;
+```
+
+### Resulting Thread IDs
+
+| Alert Type | Example | Thread ID |
+|-----------|---------|-----------|
+| **Scheduled closure** | "Line 1: No service Finch-Eglinton starting 11 PM nightly..." | `thread-ttc-line1-scheduled_closure` |
+| **Real-time delay** | "Line 1: Delays at Cedarvale due to security incident" | `thread-ttc-line1-delay` |
+| **Real-time disruption** | "Line 1: No service due to fire investigation" | `thread-ttc-line1-service_disruption` |
+| **Shuttle replacement** | "512 St Clair: Streetcars replaced by buses..." | `thread-ttc-512-shuttle` |
+
+### Why This Matters
+
+1. **Scheduled maintenance** is planned and announced days in advance
+2. **Real-time incidents** happen unexpectedly and need immediate attention
+3. Users shouldn't see scheduled closures mixed with actual emergencies
+4. The "Scheduled" tab shows maintenance; "Disruptions" tab shows real incidents
 
 ---
 
@@ -464,7 +538,7 @@ The Edge Function logs route comparisons when debugging is needed. Check Supabas
 
 ---
 
-**Version:** 1.4
+**Version:** 1.5
 **Created:** November 20, 2025
 **Updated:** January 12, 2026
 **Purpose:** Route conflict reference for alert threading system

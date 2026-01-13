@@ -381,6 +381,23 @@ Incident threading groups related alerts over time to:
 - Display most recent update first
 - Auto-resolve threads when SERVICE_RESUMED
 
+### Thread ID Formats (v142)
+
+Thread IDs are deterministic based on the alert source and type:
+
+| Source | Type | Thread ID Format | Example |
+|--------|------|-----------------|---------|
+| TTC API | Real-time disruption | `thread-ttc-{route}-{category}` | `thread-ttc-line1-service_disruption` |
+| TTC API | Scheduled closure | `thread-ttc-{route}-scheduled_closure` | `thread-ttc-line1-scheduled_closure` |
+| TTC API | RSZ (slow zone) | `thread-rsz-{line}-{stations}` | `thread-rsz-line1-stclairwest-cedarvale` |
+| TTC API | Elevator/Escalator | `thread-elevator-{location}` | `thread-elevator-dundas-station` |
+| Bluesky | SERVICE_RESUMED | UUID format | `6f4a2b3c-8d9e-4f1a-b2c3-d4e5f6a7b8c9` |
+
+**Why Scheduled Closures Get Separate Threads (v142):**
+- Prevents mixing scheduled maintenance with real-time incidents on the same route
+- Example: "Line 1 Finch-Eglinton nightly closure" shouldn't thread with "Line 1 Cedarvale security incident delay"
+- Each incident type gets its own dedicated thread
+
 ### Threading Algorithm
 
 **Implemented in:** `supabase/functions/poll-alerts/index.ts` (v142)
@@ -399,7 +416,7 @@ if (routeNum) {
     const threadRoutes = thread.affected_routes || [];
     const threadTitle = thread.title || "";
     const threadCategories = thread.categories || [];
-    
+
     // Skip RSZ/ACCESSIBILITY threads
     if (
       threadCategories.includes("RSZ") ||
@@ -416,7 +433,11 @@ if (routeNum) {
       const similarity = jaccardSimilarity(headerText, threadTitle);
       if (similarity >= 0.25) {
         matchedThreadId = thread.thread_id;
-        console.log(`TTC API: Found existing thread ${matchedThreadId} for route ${routeNum} with ${(similarity * 100).toFixed(0)}% similarity`);
+        console.log(
+          `TTC API: Found existing thread ${matchedThreadId} for route ${routeNum} with ${(
+            similarity * 100
+          ).toFixed(0)}% similarity`
+        );
         break;
       }
     }
@@ -426,16 +447,17 @@ if (routeNum) {
 // STEP 2: If no match found, create deterministic thread ID
 // IMPORTANT (v142): Scheduled closures get their own thread ID to avoid mixing with real-time incidents
 const isScheduled = isScheduledClosure(headerText);
-const threadType = isScheduled ? 'scheduled_closure' : category.toLowerCase();
+const threadType = isScheduled ? "scheduled_closure" : category.toLowerCase();
 const threadId = matchedThreadId || `thread-ttc-${routeKey}-${threadType}`;
 ```
 
 **v142 Change:** Scheduled closures now create threads with `scheduled_closure` in the ID (e.g., `thread-ttc-line1-scheduled_closure`) instead of mixing with real-time incidents in threads like `thread-ttc-line1-service_disruption`.
 
 **Scheduled Closure Detection (v142):**
+
 ```typescript
 function isScheduledClosure(headerText: string): boolean {
-  const lowerText = (headerText || '').toLowerCase();
+  const lowerText = (headerText || "").toLowerCase();
   const scheduledPatterns = [
     /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
     /nightly.*from\s+\d+/i,
@@ -513,6 +535,7 @@ if (!matchedThread) {
 5. **Very low similarity (≥15%)** - For SERVICE_RESUMED (different vocabulary)
 6. **6-hour window** - Only match unresolved threads updated within 6 hours
 7. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
+8. **Scheduled closures get separate threads (v142)** - Scheduled maintenance uses `scheduled_closure` in thread ID to avoid mixing with real-time incidents
 
 ### Text Similarity Calculation
 
