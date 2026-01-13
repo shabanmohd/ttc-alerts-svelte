@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert Badge Styles Test</title>
+    <style>
+        :root {
+            /* Status colors - Error (Red) */
+            --status-error-bg: 0 84% 95%;
+            --status-error-text: 0 72% 40%;
+            
+            /* Status colors - Warning (Amber) */
+            --status-warning-bg: 45 93% 90%;
+            --status-warning-text: 32 95% 35%;
+            
+            /* Status colors - Info (Blue) */
+            --status-info-bg: 210 100% 95%;
+            --status-info-text: 217 91% 40%;
+            
+            /* Status colors - Teal */
+            --status-teal-bg: #d2f9f0;
+            --status-teal-text: #166a5f;
+        }
+        
+        .dark {
+            --status-error-bg: 0 40% 20%;
+            --status-error-text: 0 75% 70%;
+            
+            --status-warning-bg: 38 30% 22%;
+            --status-warning-text: 45 95% 70%;
+            
+            --status-info-bg: 217 50% 22%;
+            --status-info-text: 210 100% 80%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 24px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        
+        html.dark body {
+            background-color: #0f0f0f;
+            color: #f4f4f5;
+        }
+
+        html:not(.dark) body {
+            background-color: #ffffff;
+            color: #09090b;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 32px 0 16px;
+            color: inherit;
+        }
+
+        h3 {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 24px 0 12px;
+            opacity: 0.7;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            border: 1px solid rgba(128, 128, 128, 0.3);
+        }
+        
+        html.dark .theme-toggle {
+            background: #27272a;
+            color: #fafafa;
+        }
+        
+        html:not(.dark) .theme-toggle {
+            background: #f4f4f5;
+            color: #09090b;
+        }
+
+        /* Badge base styles */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            line-height: 1.25rem;
+            white-space: nowrap;
+        }
+
+        /* Individual badge styles */
+        .status-badge-resumed {
+            background-color: var(--status-teal-bg);
+            color: var(--status-teal-text);
+        }
+
+        .status-badge-disruption {
+            background-color: hsl(var(--status-error-bg));
+            color: hsl(var(--status-error-text));
+        }
+
+        .status-badge-delay {
+            background-color: hsl(var(--status-warning-bg));
+            color: hsl(var(--status-warning-text));
+        }
+
+        .status-badge-detour {
+            background-color: hsl(220 14% 94%);
+            color: hsl(220 9% 35%);
+        }
+        html.dark .status-badge-detour {
+            background-color: hsl(220 14% 25% / 0.5);
+            color: hsl(220 14% 80%);
+        }
+
+        .status-badge-shuttle {
+            background-color: hsl(85 70% 90%);
+            color: hsl(85 70% 25%);
+        }
+        html.dark .status-badge-shuttle {
+            background-color: hsl(85 50% 20% / 0.5);
+            color: hsl(85 70% 70%);
+        }
+
+        .status-badge-planned {
+            background-color: hsl(var(--status-info-bg));
+            color: hsl(var(--status-info-text));
+        }
+
+        .status-badge-scheduled {
+            background-color: rgba(249, 115, 22, 0.15);
+            color: hsl(25 95% 45%);
+        }
+        html.dark .status-badge-scheduled {
+            background-color: rgba(251, 146, 60, 0.15);
+            color: hsl(25 95% 60%);
+        }
+
+        .status-badge-nightly {
+            background-color: hsl(217 91% 95%);
+            color: hsl(217 91% 40%);
+        }
+        html.dark .status-badge-nightly {
+            background-color: hsl(217 50% 25% / 0.5);
+            color: hsl(217 91% 75%);
+        }
+
+        .status-badge-weekend {
+            background-color: hsl(300 60% 94%);
+            color: hsl(300 60% 35%);
+        }
+        html.dark .status-badge-weekend {
+            background-color: hsl(300 50% 28% / 0.4);
+            color: hsl(300 70% 75%);
+        }
+
+        .status-badge-route-change {
+            background-color: rgba(147, 51, 234, 0.15);
+            color: hsl(262 83% 50%);
+        }
+        html.dark .status-badge-route-change {
+            background-color: rgba(168, 85, 247, 0.15);
+            color: hsl(262 83% 68%);
+        }
+
+        /* Badge grid */
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .badge-item {
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        html.dark .badge-item {
+            background: #18181b;
+            border: 1px solid #27272a;
+        }
+        
+        html:not(.dark) .badge-item {
+            background: #fafafa;
+            border: 1px solid #e4e4e7;
+        }
+
+        .badge-item .label {
+            font-size: 11px;
+            opacity: 0.6;
+        }
+
+        .badge-item .css-class {
+            font-size: 10px;
+            font-family: monospace;
+            opacity: 0.5;
+        }
+
+        /* Subway Status Card Styles */
+        .subway-status-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .subway-line-card {
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        html.dark .subway-line-card {
+            background: #18181b;
+            border: 1px solid #27272a;
+        }
+        
+        html:not(.dark) .subway-line-card {
+            background: #fafafa;
+            border: 1px solid #e4e4e7;
+        }
+
+        .line-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .line-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .line-1 { background: #ffcc00; color: #000; }
+        .line-2 { background: #00a651; color: #fff; }
+        .line-3 { background: #0082c9; color: #fff; }
+        .line-4 { background: #9b59b6; color: #fff; }
+
+        .line-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-icons {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .status-icon {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .status-icon .icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .icon-disruption { background: hsl(0 84% 60%); color: white; }
+        .icon-delay { background: hsl(45 95% 55%); color: #000; }
+        .icon-scheduled { background: hsl(25 95% 55%); color: white; }
+        .icon-ok { background: hsl(142 76% 36%); color: white; }
+
+        /* Alert Card Preview */
+        .alert-card {
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            border-left: 4px solid;
+        }
+        
+        html.dark .alert-card {
+            background: #18181b;
+        }
+        
+        html:not(.dark) .alert-card {
+            background: #fafafa;
+        }
+
+        .alert-card.disruption { border-color: hsl(0 84% 60%); }
+        .alert-card.delay { border-color: hsl(45 95% 55%); }
+        .alert-card.scheduled { border-color: hsl(25 95% 55%); }
+        .alert-card.shuttle { border-color: hsl(85 70% 45%); }
+
+        .alert-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .alert-text {
+            font-size: 14px;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            opacity: 0.5;
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Light/Dark</button>
+    
+    <h1>Alert Badge Styles</h1>
+    <p style="opacity: 0.7; margin-bottom: 24px;">Complete reference for all badge types used in the TTC Alerts app</p>
+
+    <h2>1. All Badge Types</h2>
+    <div class="badge-grid">
+        <div class="badge-item">
+            <span class="label">Service Resumed</span>
+            <span class="status-badge status-badge-resumed">SERVICE RESUMED</span>
+            <span class="css-class">status-badge-resumed</span>
+        </div>
+        <div class="badge-item">
+            <span class="label">Disruption (No Service)</span>
+            <span class="status-badge status-badge-disruption">DISRUPTION</span>
+            <span class="css-class">status-badge-disruption</span>
+        </div>
+        <div class="badge-item">
+            <span class="label">Delay</span>
+            <span class="status-badge status-badge-delay">DELAY</span>
+            <span class="css-class">status-badge-delay</span>
+        </div>
+        <div class="badge-item">
+            <span class="label">Detour / Diversion</span>
+            <span class="status-badge status-badge-detour">DETOUR</span>
+            <span class="css-class">status-badge-detour</span>
+        </div>
+        <div class="badge-item">
+            <span class="label">Shuttle Bus</span>
+            <span class="status-badge status-badge-shuttle">SHUTTLE</span>
+            <span class="css-class">status-badge-shuttle</span>
+        </div>
+        <div class="badge-item">
+            <span class="label">Planned Disruption</span>
+            <span class="status-badge status-badge-planned">PLANNED</span>
+            <span class="css-class">status-badge-planned</span>
+        </div>
+        <div class="badge-item">
+            <span class="label">Scheduled Closure</span>
+            <span class="status-badge status-badge-scheduled">SCHEDULED CLOSURE</span>
+            <span class="css-class">status-badge-scheduled</span>
+        </div>
+        <div class="badge-item">
+            <span class="label">Nightly Closure</span>
+            <span class="status-badge status-badge-nightly">NIGHTLY CLOSURE</span>
+            <span class="css-class">status-badge-nightly</span>
+        </div>
+        <div class="badge-item">
+            <span class="label">Weekend Closure</span>
+            <span class="status-badge status-badge-weekend">WEEKEND CLOSURE</span>
+            <span class="css-class">status-badge-weekend</span>
+        </div>
+        <div class="badge-item">
+            <span class="label">Route Change</span>
+            <span class="status-badge status-badge-route-change">ROUTE CHANGE</span>
+            <span class="css-class">status-badge-route-change</span>
+        </div>
+    </div>
+
+    <h2>2. Subway Status Bar (Homepage)</h2>
+    <p style="opacity: 0.7; margin-bottom: 16px; font-size: 14px;">Shows combined status icons when multiple alert types affect a line</p>
+    
+    <div class="subway-status-bar">
+        <div class="subway-line-card">
+            <div class="line-header">
+                <div class="line-number line-1">1</div>
+                <span class="line-name">Line 1</span>
+            </div>
+            <div class="status-icons">
+                <div class="status-icon">
+                    <span class="icon icon-scheduled">📅</span>
+                    <span>Scheduled</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="subway-line-card">
+            <div class="line-header">
+                <div class="line-number line-2">2</div>
+                <span class="line-name">Line 2</span>
+            </div>
+            <div class="status-icons">
+                <div class="status-icon">
+                    <span class="icon icon-delay">⏱</span>
+                    <span>Delay</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="subway-line-card">
+            <div class="line-header">
+                <div class="line-number line-3">3</div>
+                <span class="line-name">Line 3</span>
+            </div>
+            <div class="status-icons">
+                <div class="status-icon">
+                    <span class="icon icon-ok">✓</span>
+                    <span>Good Service</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="subway-line-card">
+            <div class="line-header">
+                <div class="line-number line-4">4</div>
+                <span class="line-name">Line 4</span>
+            </div>
+            <div class="status-icons">
+                <div class="status-icon">
+                    <span class="icon icon-disruption">⚠</span>
+                    <span>Disruption</span>
+                </div>
+                <div class="status-icon">
+                    <span class="icon icon-delay">⏱</span>
+                    <span>Delay</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2>3. Alert Cards with Badges</h2>
+    
+    <h3>Scheduled Closure (Active)</h3>
+    <div class="alert-card scheduled">
+        <div class="alert-header">
+            <div class="line-number line-1" style="width: 40px; height: 40px;">1</div>
+            <span class="status-badge status-badge-scheduled">SCHEDULED CLOSURE</span>
+            <span class="alert-time">47 min ago</span>
+        </div>
+        <p class="alert-text">Line 1 Yonge-University: There is no subway service between Finch and Eglinton stations for tunnel improvements. Shuttle buses are running.</p>
+    </div>
+
+    <h3>Real-time Disruption</h3>
+    <div class="alert-card disruption">
+        <div class="alert-header">
+            <div class="line-number line-2" style="width: 40px; height: 40px;">2</div>
+            <span class="status-badge status-badge-disruption">DISRUPTION</span>
+            <span class="alert-time">5 min ago</span>
+        </div>
+        <p class="alert-text">Line 2 Bloor-Danforth: No subway service between Kennedy and Warden stations due to a track-level injury.</p>
+    </div>
+
+    <h3>Delay</h3>
+    <div class="alert-card delay">
+        <div class="alert-header">
+            <div class="line-number line-1" style="width: 40px; height: 40px;">1</div>
+            <span class="status-badge status-badge-delay">DELAY</span>
+            <span class="alert-time">12 min ago</span>
+        </div>
+        <p class="alert-text">Line 1 Yonge-University: Delays of up to 15 minutes between Union and St Andrew stations while we respond to a medical emergency.</p>
+    </div>
+
+    <h3>Shuttle Bus Replacement</h3>
+    <div class="alert-card shuttle">
+        <div class="alert-header">
+            <div class="line-number line-3" style="width: 40px; height: 40px;">3</div>
+            <span class="status-badge status-badge-shuttle">SHUTTLE</span>
+            <span class="alert-time">2 hrs ago</span>
+        </div>
+        <p class="alert-text">Line 3 Scarborough: Shuttle buses are replacing subway service for the entire line while we repair a signal issue.</p>
+    </div>
+
+    <h3>Service Resumed</h3>
+    <div class="alert-card" style="border-color: #10b981;">
+        <div class="alert-header">
+            <div class="line-number line-2" style="width: 40px; height: 40px;">2</div>
+            <span class="status-badge status-badge-resumed">SERVICE RESUMED</span>
+            <span class="alert-time">Just now</span>
+        </div>
+        <p class="alert-text">Line 2 Bloor-Danforth: Regular service has resumed between Kennedy and Warden stations.</p>
+    </div>
+
+    <h2>4. Color Reference Table</h2>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 1px solid rgba(128,128,128,0.3);">
+                <th style="padding: 8px;">Badge</th>
+                <th style="padding: 8px;">CSS Class</th>
+                <th style="padding: 8px;">Light BG</th>
+                <th style="padding: 8px;">Light Text</th>
+                <th style="padding: 8px;">Dark BG</th>
+                <th style="padding: 8px;">Dark Text</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding: 8px;">Service Resumed</td>
+                <td style="padding: 8px; font-family: monospace; font-size: 11px;">status-badge-resumed</td>
+                <td style="padding: 8px;">#d2f9f0</td>
+                <td style="padding: 8px;">#166a5f</td>
+                <td style="padding: 8px;">#d2f9f0</td>
+                <td style="padding: 8px;">#166a5f</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px;">Disruption</td>
+                <td style="padding: 8px; font-family: monospace; font-size: 11px;">status-badge-disruption</td>
+                <td style="padding: 8px;">hsl(0 84% 95%)</td>
+                <td style="padding: 8px;">hsl(0 72% 40%)</td>
+                <td style="padding: 8px;">hsl(0 40% 20%)</td>
+                <td style="padding: 8px;">hsl(0 75% 70%)</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px;">Delay</td>
+                <td style="padding: 8px; font-family: monospace; font-size: 11px;">status-badge-delay</td>
+                <td style="padding: 8px;">hsl(45 93% 90%)</td>
+                <td style="padding: 8px;">hsl(32 95% 35%)</td>
+                <td style="padding: 8px;">hsl(38 30% 22%)</td>
+                <td style="padding: 8px;">hsl(45 95% 70%)</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px;">Scheduled Closure</td>
+                <td style="padding: 8px; font-family: monospace; font-size: 11px;">status-badge-scheduled</td>
+                <td style="padding: 8px;">rgba(249, 115, 22, 0.15)</td>
+                <td style="padding: 8px;">hsl(25 95% 45%)</td>
+                <td style="padding: 8px;">rgba(251, 146, 60, 0.15)</td>
+                <td style="padding: 8px;">hsl(25 95% 60%)</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px;">Nightly Closure</td>
+                <td style="padding: 8px; font-family: monospace; font-size: 11px;">status-badge-nightly</td>
+                <td style="padding: 8px;">hsl(217 91% 95%)</td>
+                <td style="padding: 8px;">hsl(217 91% 40%)</td>
+                <td style="padding: 8px;">hsl(217 50% 25% / 0.5)</td>
+                <td style="padding: 8px;">hsl(217 91% 75%)</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px;">Weekend Closure</td>
+                <td style="padding: 8px; font-family: monospace; font-size: 11px;">status-badge-weekend</td>
+                <td style="padding: 8px;">hsl(300 60% 94%)</td>
+                <td style="padding: 8px;">hsl(300 60% 35%)</td>
+                <td style="padding: 8px;">hsl(300 50% 28% / 0.4)</td>
+                <td style="padding: 8px;">hsl(300 70% 75%)</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px;">Shuttle</td>
+                <td style="padding: 8px; font-family: monospace; font-size: 11px;">status-badge-shuttle</td>
+                <td style="padding: 8px;">hsl(85 70% 90%)</td>
+                <td style="padding: 8px;">hsl(85 70% 25%)</td>
+                <td style="padding: 8px;">hsl(85 50% 20% / 0.5)</td>
+                <td style="padding: 8px;">hsl(85 70% 70%)</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px;">Detour</td>
+                <td style="padding: 8px; font-family: monospace; font-size: 11px;">status-badge-detour</td>
+                <td style="padding: 8px;">hsl(220 14% 94%)</td>
+                <td style="padding: 8px;">hsl(220 9% 35%)</td>
+                <td style="padding: 8px;">hsl(220 14% 25% / 0.5)</td>
+                <td style="padding: 8px;">hsl(220 14% 80%)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
+    </script>
+</body>
+</html>

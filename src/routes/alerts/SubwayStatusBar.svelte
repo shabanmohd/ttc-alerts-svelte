@@ -209,26 +209,26 @@
     color: hsl(0 72% 30%);
   }
 
-  /* Scheduled status */
+  /* Scheduled status - uses orange to match SCHEDULED CLOSURE badge */
   .subway-status-card.status-scheduled {
-    background-color: hsl(213 94% 96%);
+    background-color: rgba(249, 115, 22, 0.12);
   }
 
   :global(.dark) .subway-status-card.status-scheduled {
-    background-color: hsl(213 94% 50% / 0.15);
+    background-color: rgba(251, 146, 60, 0.15);
   }
 
   :global(.status-scheduled-icon) {
-    color: hsl(213 94% 35%) !important;
+    color: hsl(25 95% 45%) !important;
   }
 
   .status-scheduled-text {
-    color: hsl(213 94% 35%);
+    color: hsl(25 95% 45%);
   }
 
   :global(.dark .status-scheduled-icon),
   :global(.dark) .status-scheduled-text {
-    color: hsl(213 94% 70%) !important;
+    color: hsl(25 95% 60%) !important;
   }
 
   /* Multi-status container for compound statuses */
