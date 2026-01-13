@@ -86,14 +86,16 @@
   function getMainCategory(
     categories: unknown,
     routes: string[] = [],
-    headerText?: string
+    headerText?: string,
+    threadId?: string
   ): string {
     const cats = parseJsonArray(categories);
     const isSubway = isSubwayRoute(routes);
 
-    // Check if this is a scheduled closure based on header text patterns
-    // This overrides SERVICE_DISRUPTION category for scheduled maintenance
-    if (headerText && isScheduledFutureClosure(headerText)) {
+    // Check if this is a scheduled closure based on:
+    // 1. Thread ID containing "scheduled_closure" (most reliable)
+    // 2. Header text patterns (fallback for edge cases)
+    if (threadId?.includes('scheduled_closure') || (headerText && isScheduledFutureClosure(headerText))) {
       return "SCHEDULED_CLOSURE";
     }
 
@@ -502,11 +504,11 @@
               categories().includes("SERVICE_RESUMED") &&
               serviceResumedAlert()
                 ? "SERVICE_RESUMED"
-                : getMainCategory(categories(), rawRoutes, displayAlert?.header_text)}
+                : getMainCategory(categories(), rawRoutes, displayAlert?.header_text, thread.thread_id)}
             />
           {/if}
           <!-- Hide timestamp for accessibility alerts and closures -->
-          {#if !isAccessibility && !["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes, displayAlert?.header_text))}
+          {#if !isAccessibility && !["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes, displayAlert?.header_text, thread.thread_id))}
             <time
               class="alert-card-timestamp"
               datetime={displayAlert?.created_at || ""}
@@ -516,7 +518,7 @@
           {/if}
         </div>
 
-        {#if ["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes, displayAlert?.header_text))}
+        {#if ["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes, displayAlert?.header_text, thread.thread_id))}
           <!-- Scheduled Closure types: Visual hierarchy with header + description -->
           <p class="text-sm font-medium leading-snug" id="{cardId}-title">
             {displayAlert?.header_text || ""}
@@ -581,7 +583,7 @@
           >
             <div class="flex justify-between items-start mb-1.5">
               <StatusBadge
-                category={getMainCategory(alert.categories, rawRoutes, alert.header_text)}
+                category={getMainCategory(alert.categories, rawRoutes, alert.header_text, thread.thread_id)}
               />
               <time
                 class="text-xs text-muted-foreground"
