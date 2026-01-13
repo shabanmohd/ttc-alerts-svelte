@@ -18,50 +18,55 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## 🆕 Recent Updates (Jan 13, 2026)
 
-| Component                            | Change                                                                       | Status       |
-| ------------------------------------ | ---------------------------------------------------------------------------- | ------------ |
-| **SubwayStatusBar v148**             | Use thread visibility (is_hidden) instead of time-based checks for closures  | ✅ Committed |
-| **hasActiveScheduledClosureThread**  | New function to check active scheduled_closure threads by line               | ✅ Committed |
-| **isScheduledClosureActive()**       | Updated to use 4 AM cutoff (was 6 AM) based on TTC API childAlerts           | ✅ Committed |
-| **poll-alerts v147**                 | Unhide scheduled closure threads when alert already exists in DB             | ✅ Deployed  |
-| **poll-alerts v146**                 | Replace "planned" with "nightly early closures" pattern                      | ✅ Deployed  |
-| **poll-alerts v145**                 | Remove overly broad tunnel/track pattern from scheduled closure detection    | ✅ Deployed  |
-| **poll-alerts v144**                 | Add "full weekend closure" and "planned" detection patterns                  | ✅ Deployed  |
-| **AlertCard.svelte**                 | Show SCHEDULED CLOSURE badge for scheduled maintenance alerts                | ✅ Deployed  |
-| **poll-alerts v143**                 | Skip Bluesky RSZ alerts - TTC API is exclusive source for Slow Zones         | ✅ Deployed  |
-| **poll-alerts v142**                 | Create separate threads for scheduled closures vs real-time incidents        | ✅ Deployed  |
-| **poll-alerts v147**                 | Auto-unhide threads when recurring scheduled closure alerts reappear         | ✅ Deployed  |
-| **SubwayStatusBar scheduled**        | Orange styling for scheduled closures, text wraps, icon top-aligned          | ✅ Deployed  |
-| **AlertCard thread_id detection**    | Use thread_id to detect scheduled closures (primary) instead of text pattern | ✅ Deployed  |
-| **poll-alerts v150**                 | Bluesky-only architecture: removed TTC API disruptions, native Bluesky threading | ✅ Deployed  |
-| **alerts/+page.svelte v151**         | Frontend updated for Bluesky disruptions: `getDisruptionAlert()`, `isDisruption()` | ✅ Deployed  |
-| **alerts.ts v151**                   | DELAY category → MAJOR severity (affects subway status cards)                | ✅ Deployed  |
-| **RSZAlertCard v151**                | Skip SERVICE_RESUMED alerts when extracting RSZ entries                      | ✅ Deployed  |
-| **poll-alerts v146**                 | Scheduled closure patterns: nightly early closures, full weekend closure     | ✅ Deployed  |
-| **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading    | ⚠️ Superseded by v150 |
-| **poll-alerts v140**                 | Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth | ⚠️ Superseded by v150 |
-| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new              | ⚠️ Superseded by v150 |
-| **poll-alerts v138**                 | Support all TTC branch letters (A-Z) not just A-E - includes F, G, S         | ✅ Deployed  |
-| **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)            | ✅ Deployed  |
-| **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates with Bluesky             | ✅ Committed |
-| **alerts/+page.svelte activeAlerts** | Disruptions tab filters to Bluesky alerts (bsky-*) - v151 architecture       | ✅ Deployed  |
-| **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 4 AM        | ✅ Deployed  |
-| **getDisruptionAlert()**             | Renamed from getTTCApiDisruptionAlert - now checks bsky-* alerts             | ✅ Deployed  |
-| **MobileBottomNav.svelte**           | iOS PWA viewport fix using visualViewport API                                | ✅ Deployed  |
-| **poll-alerts v136**                 | Scheduled closure filtering - hide alerts not currently active               | ✅ Deployed  |
-| **verify-disruptions v2**            | Data integrity validation for TTC API disruptions (every 15 min)             | ✅ Deployed  |
-| **i18n: RSZAlertCard**               | Translate direction badges (NORTHBOUND→DIRECTION NORD, etc.)                 | ✅ Deployed  |
-| **i18n: ETACard**                    | Translate direction labels, "to" connector                                   | ✅ Deployed  |
-| **i18n: ETADirectionSlide**          | Translate directions, "towards", "via" keywords                              | ✅ Deployed  |
-| **i18n: StopSearch**                 | Translate direction badges in search results                                 | ✅ Deployed  |
-| **i18n: RouteDirectionTabs**         | Translate direction tabs and labels                                          | ✅ Deployed  |
-| **i18n: RouteStopItem**              | Translate "Scheduled" label                                                  | ✅ Deployed  |
-| **i18n: routes/+page**               | Translate "Back to Home" button                                              | ✅ Deployed  |
-| **i18n: routes/[route]**             | Translate stop counts, direction labels                                      | ✅ Deployed  |
-| **SEO: app.html**                    | Updated meta title/description for Google                                    | ✅ Deployed  |
-| **route-changes.ts**                 | Fix filtering to include end time (was only checking date)                   | ✅ Deployed  |
-| **Timezone Docs**                    | Added comprehensive timezone policy (EST/America/Toronto)                    | ✅ Committed |
-| **DATA_POLLING_FREQUENCIES.md**      | Updated with EST equivalents for all cron jobs                               | ✅ Committed |
+| Component                            | Change                                                                             | Status                |
+| ------------------------------------ | ---------------------------------------------------------------------------------- | --------------------- |
+| **Cron Job Auth Fix**                | All invoke functions now use vault-based auth (was failing with anon/hardcoded)    | ✅ Deployed           |
+| **invoke_scrape_maintenance()**      | New wrapper function - scrape-maintenance cron was failing with 401 since deploy   | ✅ Deployed           |
+| **invoke_verify_disruptions()**      | Fixed: was using hardcoded anon key → now uses vault                               | ✅ Deployed           |
+| **invoke_verify_elevators()**        | Fixed: was using current_setting (unreliable) → now uses vault                     | ✅ Deployed           |
+| **invoke_verify_rsz()**              | Fixed: was using current_setting (unreliable) → now uses vault                     | ✅ Deployed           |
+| **SubwayStatusBar v148**             | Use thread visibility (is_hidden) instead of time-based checks for closures        | ✅ Committed          |
+| **hasActiveScheduledClosureThread**  | New function to check active scheduled_closure threads by line                     | ✅ Committed          |
+| **isScheduledClosureActive()**       | Updated to use 4 AM cutoff (was 6 AM) based on TTC API childAlerts                 | ✅ Committed          |
+| **poll-alerts v147**                 | Unhide scheduled closure threads when alert already exists in DB                   | ✅ Deployed           |
+| **poll-alerts v146**                 | Replace "planned" with "nightly early closures" pattern                            | ✅ Deployed           |
+| **poll-alerts v145**                 | Remove overly broad tunnel/track pattern from scheduled closure detection          | ✅ Deployed           |
+| **poll-alerts v144**                 | Add "full weekend closure" and "planned" detection patterns                        | ✅ Deployed           |
+| **AlertCard.svelte**                 | Show SCHEDULED CLOSURE badge for scheduled maintenance alerts                      | ✅ Deployed           |
+| **poll-alerts v143**                 | Skip Bluesky RSZ alerts - TTC API is exclusive source for Slow Zones               | ✅ Deployed           |
+| **poll-alerts v142**                 | Create separate threads for scheduled closures vs real-time incidents              | ✅ Deployed           |
+| **poll-alerts v147**                 | Auto-unhide threads when recurring scheduled closure alerts reappear               | ✅ Deployed           |
+| **SubwayStatusBar scheduled**        | Orange styling for scheduled closures, text wraps, icon top-aligned                | ✅ Deployed           |
+| **AlertCard thread_id detection**    | Use thread_id to detect scheduled closures (primary) instead of text pattern       | ✅ Deployed           |
+| **poll-alerts v150**                 | Bluesky-only architecture: removed TTC API disruptions, native Bluesky threading   | ✅ Deployed           |
+| **alerts/+page.svelte v151**         | Frontend updated for Bluesky disruptions: `getDisruptionAlert()`, `isDisruption()` | ✅ Deployed           |
+| **alerts.ts v151**                   | DELAY category → MAJOR severity (affects subway status cards)                      | ✅ Deployed           |
+| **RSZAlertCard v151**                | Skip SERVICE_RESUMED alerts when extracting RSZ entries                            | ✅ Deployed           |
+| **poll-alerts v146**                 | Scheduled closure patterns: nightly early closures, full weekend closure           | ✅ Deployed           |
+| **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading          | ⚠️ Superseded by v150 |
+| **poll-alerts v140**                 | Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth       | ⚠️ Superseded by v150 |
+| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new                    | ⚠️ Superseded by v150 |
+| **poll-alerts v138**                 | Support all TTC branch letters (A-Z) not just A-E - includes F, G, S               | ✅ Deployed           |
+| **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)                  | ✅ Deployed           |
+| **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates with Bluesky                   | ✅ Committed          |
+| **alerts/+page.svelte activeAlerts** | Disruptions tab filters to Bluesky alerts (bsky-\*) - v151 architecture            | ✅ Deployed           |
+| **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 4 AM              | ✅ Deployed           |
+| **getDisruptionAlert()**             | Renamed from getTTCApiDisruptionAlert - now checks bsky-\* alerts                  | ✅ Deployed           |
+| **MobileBottomNav.svelte**           | iOS PWA viewport fix using visualViewport API                                      | ✅ Deployed           |
+| **poll-alerts v136**                 | Scheduled closure filtering - hide alerts not currently active                     | ✅ Deployed           |
+| **verify-disruptions v2**            | Data integrity validation for TTC API disruptions (every 15 min)                   | ✅ Deployed           |
+| **i18n: RSZAlertCard**               | Translate direction badges (NORTHBOUND→DIRECTION NORD, etc.)                       | ✅ Deployed           |
+| **i18n: ETACard**                    | Translate direction labels, "to" connector                                         | ✅ Deployed           |
+| **i18n: ETADirectionSlide**          | Translate directions, "towards", "via" keywords                                    | ✅ Deployed           |
+| **i18n: StopSearch**                 | Translate direction badges in search results                                       | ✅ Deployed           |
+| **i18n: RouteDirectionTabs**         | Translate direction tabs and labels                                                | ✅ Deployed           |
+| **i18n: RouteStopItem**              | Translate "Scheduled" label                                                        | ✅ Deployed           |
+| **i18n: routes/+page**               | Translate "Back to Home" button                                                    | ✅ Deployed           |
+| **i18n: routes/[route]**             | Translate stop counts, direction labels                                            | ✅ Deployed           |
+| **SEO: app.html**                    | Updated meta title/description for Google                                          | ✅ Deployed           |
+| **route-changes.ts**                 | Fix filtering to include end time (was only checking date)                         | ✅ Deployed           |
+| **Timezone Docs**                    | Added comprehensive timezone policy (EST/America/Toronto)                          | ✅ Committed          |
+| **DATA_POLLING_FREQUENCIES.md**      | Updated with EST equivalents for all cron jobs                                     | ✅ Committed          |
 
 ### Previous Updates (Jan 11, 2026)
 

@@ -269,6 +269,7 @@ These Edge Functions run periodically to ensure data consistency:
 | **Version**          | v3                                                    |
 | **Data Type**        | Planned subway closures (nightly, weekend, scheduled) |
 | **Output**           | Supabase `planned_maintenance` table                  |
+| **Cron Invocation**  | `invoke_scrape_maintenance()` (vault-based auth)      |
 
 **What's included:**
 
@@ -282,6 +283,26 @@ These Edge Functions run periodically to ensure data consistency:
 
 - Single-day closure support (sa-effective-date fallback)
 - Better error logging with HTML snippets
+
+### Cron Job Authentication (Jan 2026)
+
+All Edge Function cron jobs use **vault-based authentication** via wrapper functions. This ensures the service role key is securely retrieved at runtime rather than hardcoded.
+
+| Wrapper Function             | Edge Function        | Auth Method |
+| ---------------------------- | -------------------- | ----------- |
+| `invoke_poll_alerts()`       | poll-alerts          | ✅ Vault    |
+| `invoke_scrape_rsz()`        | scrape-rsz           | ✅ Vault    |
+| `invoke_scrape_maintenance()`| scrape-maintenance   | ✅ Vault    |
+| `invoke_verify_disruptions()`| verify-disruptions   | ✅ Vault    |
+| `invoke_verify_elevators()`  | verify-elevators     | ✅ Vault    |
+| `invoke_verify_rsz()`        | verify-rsz           | ✅ Vault    |
+
+**Why vault-based auth?**
+
+- Service role key is retrieved securely from `vault.decrypted_secrets`
+- No hardcoded keys in cron job definitions
+- Keys can be rotated without updating cron jobs
+- Consistent pattern across all invoke functions
 
 ### Workflow Triggers
 
