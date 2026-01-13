@@ -489,7 +489,7 @@ Scheduled closures now get their own dedicated thread ID:
 
 ```typescript
 function isScheduledClosure(headerText: string): boolean {
-  const lowerText = (headerText || '').toLowerCase();
+  const lowerText = (headerText || "").toLowerCase();
   const scheduledPatterns = [
     /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
     /nightly.*from\s+\d+/i,
@@ -502,18 +502,18 @@ function isScheduledClosure(headerText: string): boolean {
 
 // In processDisruptionAlerts():
 const isScheduled = isScheduledClosure(headerText);
-const threadType = isScheduled ? 'scheduled_closure' : category.toLowerCase();
+const threadType = isScheduled ? "scheduled_closure" : category.toLowerCase();
 const threadId = matchedThreadId || `thread-ttc-${routeKey}-${threadType}`;
 ```
 
 ### Resulting Thread IDs
 
-| Alert Type | Example | Thread ID |
-|-----------|---------|-----------|
-| **Scheduled closure** | "Line 1: No service Finch-Eglinton starting 11 PM nightly..." | `thread-ttc-line1-scheduled_closure` |
-| **Real-time delay** | "Line 1: Delays at Cedarvale due to security incident" | `thread-ttc-line1-delay` |
-| **Real-time disruption** | "Line 1: No service due to fire investigation" | `thread-ttc-line1-service_disruption` |
-| **Shuttle replacement** | "512 St Clair: Streetcars replaced by buses..." | `thread-ttc-512-shuttle` |
+| Alert Type               | Example                                                       | Thread ID                             |
+| ------------------------ | ------------------------------------------------------------- | ------------------------------------- |
+| **Scheduled closure**    | "Line 1: No service Finch-Eglinton starting 11 PM nightly..." | `thread-ttc-line1-scheduled_closure`  |
+| **Real-time delay**      | "Line 1: Delays at Cedarvale due to security incident"        | `thread-ttc-line1-delay`              |
+| **Real-time disruption** | "Line 1: No service due to fire investigation"                | `thread-ttc-line1-service_disruption` |
+| **Shuttle replacement**  | "512 St Clair: Streetcars replaced by buses..."               | `thread-ttc-512-shuttle`              |
 
 ### Why This Matters
 

@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '144'; // Add scheduled closure detection patterns
+const VERSION = '145'; // Remove tunnel/track/signal pattern from scheduled closure detection
 
 // Helper function to check if an alert is about a future/scheduled closure
 // (not a real-time disruption) - matches frontend isScheduledFutureClosure()
@@ -22,7 +22,6 @@ function isScheduledClosure(headerText: string): boolean {
   const scheduledPatterns = [
     /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
     /nightly.*from\s+\d+/i,
-    /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
     /there will be no.*service.*starting/i,
     /no\s+(subway\s+)?service.*starting\s+\d+/i,
     /full\s+weekend\s+closure/i,

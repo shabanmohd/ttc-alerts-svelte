@@ -624,7 +624,10 @@ header.sticky {
   padding-top: 0.5rem;
   /* Safe area padding with JS-calculated fallback for iOS PWA */
   /* First check JS-calculated fallback, then env(), then 0 */
-  padding-bottom: calc(0.5rem + var(--safe-area-inset-bottom-fallback, env(safe-area-inset-bottom, 0px)));
+  padding-bottom: calc(
+    0.5rem +
+      var(--safe-area-inset-bottom-fallback, env(safe-area-inset-bottom, 0px))
+  );
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -638,7 +641,7 @@ header.sticky {
 
 /* iOS PWA: Extend nav background below to cover any viewport gap */
 html.ios-pwa .mobile-bottom-nav::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 100%; /* Start right below the nav */
   left: 0;
@@ -651,7 +654,10 @@ html.ios-pwa .mobile-bottom-nav::after {
 /* Compact mode: reduce padding only, keep solid background */
 .mobile-bottom-nav.compact {
   padding-top: 0.25rem;
-  padding-bottom: calc(0.25rem + var(--safe-area-inset-bottom-fallback, env(safe-area-inset-bottom, 0px)));
+  padding-bottom: calc(
+    0.25rem +
+      var(--safe-area-inset-bottom-fallback, env(safe-area-inset-bottom, 0px))
+  );
 }
 
 @media (min-width: 1024px) {

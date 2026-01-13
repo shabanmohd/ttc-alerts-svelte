@@ -69,26 +69,30 @@
     const setViewportHeight = () => {
       // Use visualViewport if available (more accurate on mobile)
       const vh = window.visualViewport?.height ?? window.innerHeight;
-      document.documentElement.style.setProperty('--vh', `${vh * 0.01}px`);
-      document.documentElement.style.setProperty('--viewport-height', `${vh}px`);
+      document.documentElement.style.setProperty("--vh", `${vh * 0.01}px`);
+      document.documentElement.style.setProperty(
+        "--viewport-height",
+        `${vh}px`
+      );
     };
 
     // iOS PWA fix: Calculate safe area inset on mount
     // env(safe-area-inset-bottom) isn't always available immediately in PWA
     const setSafeAreaInset = () => {
       // Create a test element to measure the computed safe area inset
-      const testEl = document.createElement('div');
-      testEl.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;';
+      const testEl = document.createElement("div");
+      testEl.style.cssText =
+        "position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;";
       document.body.appendChild(testEl);
-      
+
       // Get computed height
       const safeAreaHeight = testEl.offsetHeight;
       document.body.removeChild(testEl);
-      
+
       // Set as CSS variable (fallback for when env() isn't ready)
       if (safeAreaHeight > 0) {
         document.documentElement.style.setProperty(
-          '--safe-area-inset-bottom-fallback',
+          "--safe-area-inset-bottom-fallback",
           `${safeAreaHeight}px`
         );
         console.log(`[iOS Safe Area] Measured: ${safeAreaHeight}px`);
@@ -97,16 +101,16 @@
 
     // Detect if we're in iOS PWA standalone mode
     const isIOSPWA = (window.navigator as any).standalone === true;
-    
+
     // iOS PWA specific fix: Force viewport recalculation
     // The viewport can be incorrect on first launch, so we force multiple updates
     if (isIOSPWA) {
-      document.documentElement.classList.add('ios-pwa');
-      
+      document.documentElement.classList.add("ios-pwa");
+
       // Immediate set
       setViewportHeight();
       setSafeAreaInset();
-      
+
       // Force a micro-scroll to trigger viewport recalculation
       // This is a known workaround for iOS PWA viewport bugs
       requestAnimationFrame(() => {
@@ -117,15 +121,24 @@
           setSafeAreaInset();
         });
       });
-      
+
       // Additional delayed checks for iOS timing issues
-      setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 50);
-      setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 150);
-      setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 300);
-      
+      setTimeout(() => {
+        setViewportHeight();
+        setSafeAreaInset();
+      }, 50);
+      setTimeout(() => {
+        setViewportHeight();
+        setSafeAreaInset();
+      }, 150);
+      setTimeout(() => {
+        setViewportHeight();
+        setSafeAreaInset();
+      }, 300);
+
       // Listen to visualViewport resize for accurate updates
       if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
+        window.visualViewport.addEventListener("resize", () => {
           setViewportHeight();
           setSafeAreaInset();
         });
@@ -133,12 +146,12 @@
     } else {
       setViewportHeight();
       setSafeAreaInset();
-      
+
       // Re-check safe area after a delay (iOS sometimes needs time)
       setTimeout(setSafeAreaInset, 100);
       setTimeout(setSafeAreaInset, 500);
     }
-    
+
     window.addEventListener("resize", setViewportHeight);
     window.addEventListener("resize", setSafeAreaInset);
 

@@ -296,11 +296,13 @@ Implemented in commit: `703ae8f` (Dec 11, 2025)
 When the PWA is first launched on iOS (iPhone with Face ID), there is a visible dark gap between the bottom navigation bar and the actual bottom of the screen. **This gap disappears after refreshing the page.**
 
 ### Environment
+
 - Device: iPhone with Face ID (safe area: 34px)
 - Mode: PWA standalone (added to home screen)
 - Behavior: First launch only - works correctly after refresh
 
 ### Visual Description
+
 - Bottom nav appears positioned higher than expected
 - Dark gap visible below the nav bar
 - Gap is approximately the same size as safe area (~34px)
@@ -319,32 +321,45 @@ This is likely a WebKit timing bug where the PWA viewport isn't finalized before
 ### Approaches Attempted (All Failed - Jan 12, 2026)
 
 #### Attempt 1: JS-based Safe Area Fallback
+
 **Approach**: Measure safe area with a test element and set CSS variable
+
 ```javascript
 function setSafeAreaInset() {
-  const test = document.createElement('div');
-  test.style.cssText = 'position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom)';
+  const test = document.createElement("div");
+  test.style.cssText =
+    "position:fixed;bottom:0;padding-bottom:env(safe-area-inset-bottom)";
   document.body.appendChild(test);
   const value = parseInt(getComputedStyle(test).paddingBottom) || 0;
   document.body.removeChild(test);
-  document.documentElement.style.setProperty('--safe-area-inset-bottom-computed', `${value}px`);
+  document.documentElement.style.setProperty(
+    "--safe-area-inset-bottom-computed",
+    `${value}px`
+  );
 }
 ```
+
 **Result**: Safe area measured correctly (34px) but gap still appeared
 
 #### Attempt 2: Multiple setTimeout Checks
+
 **Approach**: Re-measure safe area at 50ms, 100ms, 300ms, 500ms intervals
 **Result**: Same - measurements correct, gap persists
 
 #### Attempt 3: Minimum Safe Area with max()
+
 **Approach**: Force minimum 34px padding
+
 ```css
 padding-bottom: calc(0.5rem + max(34px, env(safe-area-inset-bottom)));
 ```
+
 **Result**: Padding applied but viewport issue persists
 
 #### Attempt 4: html.ios-pwa position: fixed
+
 **Approach**: Fix the html element to prevent viewport miscalculation
+
 ```css
 html.ios-pwa {
   position: fixed;
@@ -353,13 +368,16 @@ html.ios-pwa {
   width: 100%;
 }
 ```
+
 **Result**: Did not resolve gap issue
 
 #### Attempt 5: html::after Pseudo-element
+
 **Approach**: Add background pseudo-element below nav to cover gap
+
 ```css
 html.ios-pwa::after {
-  content: '';
+  content: "";
   position: fixed;
   bottom: 0;
   left: 0;
@@ -369,13 +387,16 @@ html.ios-pwa::after {
   z-index: 40;
 }
 ```
+
 **Result**: Pseudo-element rendered but didn't cover the gap (viewport extends beyond it too)
 
 #### Attempt 6: nav::after Extension
+
 **Approach**: Extend nav's own pseudo-element 100px below
+
 ```css
 .mobile-bottom-nav::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -100px;
   left: 0;
@@ -384,10 +405,13 @@ html.ios-pwa::after {
   background-color: inherit;
 }
 ```
+
 **Result**: Same issue - the extension goes into the incorrect viewport area
 
 #### Attempt 7: max-height: 100dvh Constraint
+
 **Approach**: Constrain viewport to dynamic viewport height
+
 ```css
 html.ios-pwa {
   height: 100dvh;
@@ -395,6 +419,7 @@ html.ios-pwa {
   overflow: hidden;
 }
 ```
+
 **Result**: Did not resolve issue
 
 ### ✅ SOLUTION: Attempt 8 - visualViewport API + Micro-scroll Workaround (WORKING)
@@ -404,16 +429,18 @@ html.ios-pwa {
 The fix combines multiple approaches based on CSS-Tricks research and MDN documentation:
 
 #### 1. visualViewport API for Accurate Height
+
 ```javascript
 const setViewportHeight = () => {
   // Use visualViewport if available (more accurate on mobile)
   const vh = window.visualViewport?.height ?? window.innerHeight;
-  document.documentElement.style.setProperty('--vh', `${vh * 0.01}px`);
-  document.documentElement.style.setProperty('--viewport-height', `${vh}px`);
+  document.documentElement.style.setProperty("--vh", `${vh * 0.01}px`);
+  document.documentElement.style.setProperty("--viewport-height", `${vh}px`);
 };
 ```
 
 #### 2. Micro-scroll Workaround to Force Viewport Recalculation
+
 ```javascript
 // Force a micro-scroll to trigger viewport recalculation
 // This is a known workaround for iOS PWA viewport bugs
@@ -428,6 +455,7 @@ requestAnimationFrame(() => {
 ```
 
 #### 3. iOS PWA Class for CSS Targeting
+
 ```javascript
 const isIOSPWA = (window.navigator as any).standalone === true;
 if (isIOSPWA) {
@@ -436,6 +464,7 @@ if (isIOSPWA) {
 ```
 
 #### 4. CSS: Use JS-calculated Viewport Height
+
 ```css
 html.ios-pwa {
   height: calc(var(--vh, 1vh) * 100);
@@ -453,10 +482,11 @@ html.ios-pwa body {
 ```
 
 #### 5. Nav Extension Pseudo-element (Belt and Suspenders)
+
 ```css
 /* iOS PWA: Extend nav background below to cover any viewport gap */
 html.ios-pwa .mobile-bottom-nav::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 100%; /* Start right below the nav */
   left: 0;
@@ -468,9 +498,10 @@ html.ios-pwa .mobile-bottom-nav::after {
 ```
 
 #### 6. visualViewport Resize Listener
+
 ```javascript
 if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', () => {
+  window.visualViewport.addEventListener("resize", () => {
     setViewportHeight();
     setSafeAreaInset();
   });
@@ -478,11 +509,21 @@ if (window.visualViewport) {
 ```
 
 #### 7. Multiple Delayed Checks
+
 ```javascript
 // Additional delayed checks for iOS timing issues
-setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 50);
-setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 150);
-setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 300);
+setTimeout(() => {
+  setViewportHeight();
+  setSafeAreaInset();
+}, 50);
+setTimeout(() => {
+  setViewportHeight();
+  setSafeAreaInset();
+}, 150);
+setTimeout(() => {
+  setViewportHeight();
+  setSafeAreaInset();
+}, 300);
 ```
 
 ### Why This Works
@@ -493,10 +534,12 @@ setTimeout(() => { setViewportHeight(); setSafeAreaInset(); }, 300);
 4. **Nav extension** - Ensures the background color extends beyond the nav even if there's a brief moment of incorrect viewport
 
 ### Files Modified
+
 - `src/lib/components/layout/MobileBottomNav.svelte` - Added iOS PWA detection, visualViewport API, micro-scroll workaround
 - `src/routes/layout.css` - Added `html.ios-pwa` styles and nav extension pseudo-element
 
 ### References
+
 - [CSS-Tricks: The trick to viewport units on mobile](https://css-tricks.com/the-trick-to-viewport-units-on-mobile/)
 - [MDN: VisualViewport API](https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport)
 - [WebKit: Designing Websites for iPhone X](https://webkit.org/blog/7929/designing-websites-for-iphone-x/)

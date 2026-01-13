@@ -224,7 +224,6 @@
     const scheduledPatterns = [
       /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
       /nightly.*from\s+\d+/i,
-      /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
       /there will be no.*service.*starting/i,
       /no\s+(subway\s+)?service.*starting\s+\d+/i,
       /full\s+weekend\s+closure/i,

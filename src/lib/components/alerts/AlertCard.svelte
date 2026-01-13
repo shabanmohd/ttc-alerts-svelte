@@ -121,11 +121,9 @@
    * Check if alert header text indicates a scheduled/future closure
    * (not a real-time disruption). Matches patterns like:
    * - "starting 11 p.m., nightly"
-   * - "for tunnel improvements"
-   * - "for track work"
    * - "There will be no service starting..."
    * - "Full weekend closure"
-   * - "planned" (any mention of planned)
+   * - "planned"
    */
   function isScheduledFutureClosure(headerText: string): boolean {
     const lowerText = headerText?.toLowerCase() || "";
@@ -133,7 +131,6 @@
     const scheduledPatterns = [
       /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
       /nightly.*from\s+\d+/i,
-      /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
       /there will be no.*service.*starting/i,
       /no\s+(subway\s+)?service.*starting\s+\d+/i,
       /full\s+weekend\s+closure/i,
