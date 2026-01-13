@@ -653,7 +653,11 @@
     "codesCopied": "Tous les codes de recouvrement ont été copiés !",
     "copyFailed": "Échec de la copie des codes",
     "confirmSaveCodes": "Veuillez confirmer que vous avez enregistré vos codes de récupération",
-    "canAddBackAnytime": "Vous pouvez l'ajouter à tout moment."
+    "canAddBackAnytime": "Vous pouvez l'ajouter à tout moment.",
+    "newAlert": "Nouvelle alerte",
+    "newDisruption": "Nouvelle perturbation",
+    "newSlowzone": "Nouvelle zone de ralentissement",
+    "newElevatorAlert": "Mise à jour ascenseur"
   },
   "feedback": {
     "reportIssue": "Signaler un problème",

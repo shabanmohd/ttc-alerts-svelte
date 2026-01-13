@@ -30,6 +30,16 @@ export const maintenanceItems = writable<PlannedMaintenance[]>([]);
 // Track recently added thread IDs for "new" animation
 export const recentlyAddedThreadIds = writable<Set<string>>(new Set());
 
+// New alert notification event - stores alert info for toast display
+// Set to null when toast is dismissed or after timeout
+export interface NewAlertEvent {
+  alertId: string;
+  headerText: string;
+  severity: SeverityCategory;
+  timestamp: Date;
+}
+export const newAlertEvent = writable<NewAlertEvent | null>(null);
+
 // Track active Realtime channel
 let realtimeChannel: RealtimeChannel | null = null;
 
@@ -353,6 +363,24 @@ function handleAlertInsert(newAlert: Alert): void {
   // If alert has a thread_id, ensure we have the thread
   if (newAlert.thread_id) {
     fetchThreadForAlert(newAlert.thread_id);
+  }
+  
+  // Trigger new alert notification for toast
+  // Only notify for significant alerts (not resolved/service-resumed)
+  const headerText = newAlert.header_text || '';
+  const categories = Array.isArray(newAlert.categories) ? newAlert.categories : [];
+  const isResumed = categories.includes('SERVICE_RESUMED') || 
+                    headerText.toLowerCase().includes('resumed') ||
+                    headerText.toLowerCase().includes('regular service');
+  
+  if (!isResumed) {
+    const severity = getSeverityCategory(categories, newAlert.effect, headerText);
+    newAlertEvent.set({
+      alertId: newAlert.alert_id,
+      headerText: headerText,
+      severity: severity,
+      timestamp: new Date()
+    });
   }
 }
 

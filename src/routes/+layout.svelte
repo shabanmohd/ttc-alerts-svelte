@@ -16,6 +16,7 @@
     subscribeToAlerts,
     fetchAlerts,
     refreshAlerts,
+    newAlertEvent,
   } from "$lib/stores/alerts";
   import { etaStore } from "$lib/stores/eta";
   import { initializeStorage } from "$lib/services/storage";
@@ -29,6 +30,7 @@
   import { toast } from "svelte-sonner";
   import { _, isLoading } from "svelte-i18n";
   import { get } from "svelte/store";
+  import { goto } from "$app/navigation";
 
   // Initialize i18n translations
   initI18n();
@@ -40,6 +42,7 @@
 
   let unsubscribeAlerts: (() => void) | null = null;
   let cleanupNetworkListeners: (() => void) | undefined;
+  let unsubscribeNewAlert: (() => void) | undefined;
   let updateToastShown = false; // Prevent duplicate update toasts
 
   // Pull-to-refresh handler
@@ -124,11 +127,45 @@
 
     // Subscribe to realtime alert updates
     unsubscribeAlerts = subscribeToAlerts();
+    
+    // Subscribe to new alert events for toast notifications
+    unsubscribeNewAlert = newAlertEvent.subscribe((event) => {
+      if (!event) return;
+      
+      // Show toast for new alerts
+      const severityLabel = {
+        MAJOR: $_("toasts.newDisruption") || "New disruption",
+        MINOR: $_("toasts.newSlowzone") || "New slow zone",
+        ACCESSIBILITY: $_("toasts.newElevatorAlert") || "Elevator update",
+        ALL: $_("toasts.newAlert") || "New alert"
+      }[event.severity] || $_("toasts.newAlert") || "New alert";
+      
+      // Truncate header text for toast
+      const shortHeader = event.headerText.length > 80 
+        ? event.headerText.substring(0, 77) + "..."
+        : event.headerText;
+      
+      toast.info(severityLabel, {
+        id: `new-alert-${event.alertId}`, // Prevent duplicate toasts for same alert
+        description: shortHeader,
+        duration: 5000, // Auto-dismiss after 5 seconds
+        action: {
+          label: $_("common.view") || "View",
+          onClick: () => {
+            goto("/alerts");
+          }
+        }
+      });
+      
+      // Clear the event after showing toast
+      newAlertEvent.set(null);
+    });
   });
 
   onDestroy(() => {
     // Cleanup subscriptions
     if (unsubscribeAlerts) unsubscribeAlerts();
+    if (unsubscribeNewAlert) unsubscribeNewAlert();
     if (cleanupNetworkListeners) cleanupNetworkListeners();
     window.removeEventListener("sw-update-available", handleAppUpdate);
   });
