@@ -95,7 +95,10 @@
     // Check if this is a scheduled closure based on:
     // 1. Thread ID containing "scheduled_closure" (most reliable)
     // 2. Header text patterns (fallback for edge cases)
-    if (threadId?.includes('scheduled_closure') || (headerText && isScheduledFutureClosure(headerText))) {
+    if (
+      threadId?.includes("scheduled_closure") ||
+      (headerText && isScheduledFutureClosure(headerText))
+    ) {
       return "SCHEDULED_CLOSURE";
     }
 
@@ -504,7 +507,12 @@
               categories().includes("SERVICE_RESUMED") &&
               serviceResumedAlert()
                 ? "SERVICE_RESUMED"
-                : getMainCategory(categories(), rawRoutes, displayAlert?.header_text, thread.thread_id)}
+                : getMainCategory(
+                    categories(),
+                    rawRoutes,
+                    displayAlert?.header_text,
+                    thread.thread_id
+                  )}
             />
           {/if}
           <!-- Hide timestamp for accessibility alerts and closures -->
@@ -583,7 +591,12 @@
           >
             <div class="flex justify-between items-start mb-1.5">
               <StatusBadge
-                category={getMainCategory(alert.categories, rawRoutes, alert.header_text, thread.thread_id)}
+                category={getMainCategory(
+                  alert.categories,
+                  rawRoutes,
+                  alert.header_text,
+                  thread.thread_id
+                )}
               />
               <time
                 class="text-xs text-muted-foreground"

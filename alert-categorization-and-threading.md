@@ -503,26 +503,28 @@ The `AlertCard` component uses `isScheduledFutureClosure()` (same patterns) to d
 
 **Thread Unhiding for Recurring Closures (v147):**
 When processing TTC API alerts, the function now checks if an existing alert's thread is hidden and unhides it automatically. This handles nightly scheduled closures that:
+
 1. Create a thread at 11 PM (closure starts)
 2. Thread gets hidden at 6 AM (closure ends)
 3. Same alert ID reappears at 11 PM the next night
 
 Previously, the code skipped alerts that already existed, leaving the thread hidden. Now:
+
 ```typescript
 if (existing) {
   // Alert exists - check if its thread is hidden and unhide it
   if (existing.thread_id) {
     const { data: existingThread } = await supabase
-      .from('incident_threads')
-      .select('is_hidden')
-      .eq('thread_id', existing.thread_id)
+      .from("incident_threads")
+      .select("is_hidden")
+      .eq("thread_id", existing.thread_id)
       .single();
-    
+
     if (existingThread?.is_hidden) {
       await supabase
-        .from('incident_threads')
+        .from("incident_threads")
         .update({ is_hidden: false, is_resolved: false })
-        .eq('thread_id', existing.thread_id);
+        .eq("thread_id", existing.thread_id);
     }
   }
 }

@@ -208,7 +208,7 @@
     // Check if thread_id indicates a scheduled closure (v147 fix)
     // This overrides effect-based detection since scheduled closures
     // from TTC API have "NO_SERVICE" effect but are planned maintenance
-    if (thread.thread_id?.includes('scheduled_closure')) {
+    if (thread.thread_id?.includes("scheduled_closure")) {
       return "scheduled";
     }
 
