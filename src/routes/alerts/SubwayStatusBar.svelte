@@ -180,7 +180,9 @@
   .status-text {
     font-size: 0.75rem;
     font-weight: 500;
-    white-space: nowrap;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.3;
   }
 
   /* Status icon colors */
