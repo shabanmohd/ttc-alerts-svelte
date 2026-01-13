@@ -412,9 +412,8 @@
     return isBlueskyRSZ;
   }
 
-  // Helper: Check if a thread contains a TTC API disruption alert (NOT Bluesky)
-  // Only ttc-alert-* IDs are from TTC Live Alerts API for disruptions
-  // Returns the TTC API alert if found, so it can be used for display
+  // Helper: Check if a thread contains a disruption alert (Bluesky-sourced since v150)
+  // Returns the disruption alert if found, so it can be used for display
   // Check if a scheduled closure is currently in its active period (11 PM - 4 AM)
   // TTC API childAlerts typically show 3:30 AM end times for nightly closures
   function isScheduledClosureActive(): boolean {
@@ -424,7 +423,7 @@
     return hour >= 23 || hour < 4;
   }
 
-  function getTTCApiDisruptionAlert(
+  function getDisruptionAlert(
     thread: ThreadWithAlerts
   ): typeof thread.latestAlert | null {
     if (!thread.alerts || thread.alerts.length === 0) return null;
@@ -438,10 +437,11 @@
       // PLANNED_CLOSURE is included but filtered by active period below
     ];
 
-    // Find any TTC API disruption alert in the thread (prefer the most recent)
+    // Find any disruption alert in the thread (prefer the most recent)
     for (const alert of thread.alerts) {
-      // Must be from TTC Live Alerts API
-      if (!alert.alert_id?.toLowerCase().startsWith("ttc-alert-")) {
+      // v150: Disruptions now come from Bluesky (bsky-*) not TTC API
+      // Skip non-Bluesky alerts for disruptions
+      if (!alert.alert_id?.toLowerCase().startsWith("bsky-")) {
         continue;
       }
 
@@ -455,6 +455,11 @@
 
       // Exclude SERVICE_RESUMED (these are resolved alerts)
       const isResumed = categories.includes("SERVICE_RESUMED");
+
+      // Exclude RSZ alerts (handled by RSZAlertCard)
+      if (isRSZAlert(thread)) {
+        continue;
+      }
 
       // For scheduled closures: only show during active period (11 PM - 6 AM)
       // Outside active period, they belong in the Scheduled tab only
@@ -471,9 +476,9 @@
     return null;
   }
 
-  // Helper: Check if a thread is a TTC API disruption (convenience wrapper)
-  function isTTCApiDisruption(thread: ThreadWithAlerts): boolean {
-    return getTTCApiDisruptionAlert(thread) !== null;
+  // Helper: Check if a thread is a disruption (convenience wrapper)
+  function isDisruption(thread: ThreadWithAlerts): boolean {
+    return getDisruptionAlert(thread) !== null;
   }
 
   // Filter threads by category
@@ -500,33 +505,33 @@
       return [];
     }
 
-    // For disruptions tab: ONLY show TTC API alerts (no Bluesky)
-    // This ensures data integrity - TTC API is the source of truth for active disruptions
+    // For disruptions tab: Show Bluesky disruption alerts (v150 architecture)
+    // Bluesky is now the source of truth for active disruptions
     if (selectedCategory === "disruptions") {
-      const ttcApiDisruptions = $threadsWithAlerts
-        .filter((t) => !t.is_resolved && !t.is_hidden && isTTCApiDisruption(t))
+      const disruptions = $threadsWithAlerts
+        .filter((t) => !t.is_resolved && !t.is_hidden && isDisruption(t))
         .map((thread) => {
-          // Filter thread.alerts to ONLY include TTC API alerts
-          // This prevents Bluesky alerts from showing in "earlier updates"
-          const ttcApiAlertsOnly = thread.alerts.filter((a) =>
-            a.alert_id?.startsWith("ttc-alert-")
+          // Filter thread.alerts to ONLY include Bluesky alerts
+          // This prevents RSZ/Elevator alerts from showing in "earlier updates"
+          const blueskyAlertsOnly = thread.alerts.filter((a) =>
+            a.alert_id?.startsWith("bsky-")
           );
 
-          // Use the TTC API alert as the display alert
-          const ttcAlert = getTTCApiDisruptionAlert(thread);
+          // Use the disruption alert as the display alert
+          const disruptionAlert = getDisruptionAlert(thread);
 
           return {
             ...thread,
-            alerts: ttcApiAlertsOnly,
-            latestAlert: ttcAlert || thread.latestAlert,
+            alerts: blueskyAlertsOnly,
+            latestAlert: disruptionAlert || thread.latestAlert,
           };
         });
       console.log(
-        "=== DEBUG: activeAlerts (disruptions - TTC API only) ===",
-        ttcApiDisruptions.length,
-        ttcApiDisruptions.map((t) => t.latestAlert?.alert_id)
+        "=== DEBUG: activeAlerts (disruptions - Bluesky) ===",
+        disruptions.length,
+        disruptions.map((t) => t.latestAlert?.alert_id)
       );
-      return ttcApiDisruptions;
+      return disruptions;
     }
 
     // For other tabs (station-alerts): use severity-based filtering
@@ -606,9 +611,9 @@
     });
 
     return {
-      // Disruptions: ONLY count TTC API disruption alerts (ttc-alert-*)
-      // This excludes Bluesky alerts, RSZ, elevators, and service resumed
-      disruptions: active.filter((t) => isTTCApiDisruption(t)).length,
+      // Disruptions: Count Bluesky disruption alerts (bsky-*) - v150 architecture
+      // This excludes RSZ, elevators, and service resumed
+      disruptions: active.filter((t) => isDisruption(t)).length,
       // For Slow Zones tab: count ONLY RSZ alerts (not regular DELAY alerts)
       delays: active
         .filter((t) => isRSZAlert(t))
