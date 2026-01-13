@@ -12,7 +12,22 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '141'; // Fix thread matching - use similarity (25%) to avoid grouping unrelated incidents on same route
+const VERSION = '142'; // Create separate threads for scheduled closures vs real-time incidents
+
+// Helper function to check if an alert is about a future/scheduled closure
+// (not a real-time disruption) - matches frontend isScheduledFutureClosure()
+function isScheduledClosure(headerText: string): boolean {
+  const lowerText = (headerText || '').toLowerCase();
+  // Patterns indicating a future/scheduled event, not a real-time issue
+  const scheduledPatterns = [
+    /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
+    /nightly.*from\s+\d+/i,
+    /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
+    /there will be no.*service.*starting/i,
+    /no\s+(subway\s+)?service.*starting\s+\d+/i,
+  ];
+  return scheduledPatterns.some((pattern) => pattern.test(lowerText));
+}
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -802,8 +817,18 @@ async function processDisruptionAlerts(supabase: any, disruptionAlerts: TtcApiAl
     }
 
     // STEP 2: If no matching thread found, create one with deterministic ID
+    // IMPORTANT: Scheduled closures get their own thread ID to avoid mixing with real-time incidents
     const routeKey = routes[0]?.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'unknown';
-    const threadId = matchedThreadId || `thread-ttc-${routeKey}-${category.toLowerCase()}`;
+    const isScheduled = isScheduledClosure(headerText);
+    
+    // For scheduled closures: use "scheduled_closure" in thread ID
+    // For real-time incidents: use the category
+    const threadType = isScheduled ? 'scheduled_closure' : category.toLowerCase();
+    const threadId = matchedThreadId || `thread-ttc-${routeKey}-${threadType}`;
+    
+    if (isScheduled) {
+      console.log(`TTC API: Scheduled closure detected for ${routes[0] || 'unknown'}, using thread ${threadId}`);
+    }
 
     if (!matchedThreadId) {
       // Check if our deterministic thread ID exists
