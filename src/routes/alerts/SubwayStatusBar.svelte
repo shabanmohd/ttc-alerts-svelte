@@ -75,9 +75,7 @@
                     >{$_("status.delay")}</span
                   >
                 {:else if type === "scheduled"}
-                  <Calendar
-                    class="w-4 h-4 status-scheduled-icon shrink-0"
-                  />
+                  <Calendar class="w-4 h-4 status-scheduled-icon shrink-0" />
                   <span class="status-text status-scheduled-text"
                     >{$_("status.scheduledClosure")}</span
                   >

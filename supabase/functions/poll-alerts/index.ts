@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '147'; // Unhide scheduled closure threads when alert already exists
+const VERSION = '148'; // Create new thread instead of reusing stale resolved threads
 
 // Helper function to check if an alert is about a future/scheduled closure
 // (not a real-time disruption) - matches frontend isScheduledFutureClosure()
@@ -857,7 +857,7 @@ async function processDisruptionAlerts(supabase: any, disruptionAlerts: TtcApiAl
       // Check if our deterministic thread ID exists
       const { data: existingThread } = await supabase
         .from('incident_threads')
-        .select('thread_id, is_hidden')
+        .select('thread_id, is_hidden, is_resolved, resolved_at, updated_at')
         .eq('thread_id', threadId)
         .single();
       
@@ -882,17 +882,66 @@ async function processDisruptionAlerts(supabase: any, disruptionAlerts: TtcApiAl
           console.log(`TTC API: Created new thread ${threadId}`);
         }
       } else if (existingThread.is_hidden) {
-        // Thread exists but is hidden - unhide it since alert is back
-        await supabase
-          .from('incident_threads')
-          .update({ 
-            is_hidden: false, 
-            is_resolved: false,
-            title: headerText.substring(0, 200),
-            updated_at: new Date().toISOString() 
-          })
-          .eq('thread_id', threadId);
-        console.log(`TTC API: Unhid existing thread ${threadId}`);
+        // Thread exists but is hidden
+        // Check if this is a stale thread (hidden for > 1 hour OR resolved > 1 hour ago)
+        // If so, create a NEW thread instead of reusing the old one
+        const oneHourAgo = Date.now() - 60 * 60 * 1000;
+        const lastUpdate = existingThread.updated_at ? new Date(existingThread.updated_at).getTime() : 0;
+        const resolvedTime = existingThread.resolved_at ? new Date(existingThread.resolved_at).getTime() : 0;
+        const isStaleThread = lastUpdate < oneHourAgo || resolvedTime < oneHourAgo;
+        
+        if (isStaleThread && existingThread.is_resolved) {
+          // Create a new thread with timestamp suffix to avoid linking to old incident
+          const timestamp = Date.now();
+          const newThreadId = `thread-ttc-${routeKey}-${threadType}-${timestamp}`;
+          const { error: newThreadError } = await supabase
+            .from('incident_threads')
+            .insert({
+              thread_id: newThreadId,
+              title: headerText.substring(0, 200),
+              affected_routes: routes,
+              categories: [category],
+              is_resolved: false,
+              is_hidden: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          
+          if (newThreadError) {
+            console.error('New thread creation error:', newThreadError);
+            // Fall back to reusing old thread
+            await supabase
+              .from('incident_threads')
+              .update({ 
+                is_hidden: false, 
+                is_resolved: false,
+                title: headerText.substring(0, 200),
+                updated_at: new Date().toISOString() 
+              })
+              .eq('thread_id', threadId);
+          } else {
+            // Use new thread ID for linking alert
+            console.log(`TTC API: Created new thread ${newThreadId} (old thread ${threadId} was stale/resolved)`);
+            // Update threadId variable for alert linking below
+            await supabase
+              .from('alert_cache')
+              .update({ thread_id: newThreadId })
+              .eq('alert_id', alertId);
+            continue; // Skip the normal thread linking below since we already linked
+          }
+        } else {
+          // Thread is hidden but not stale - unhide it
+          await supabase
+            .from('incident_threads')
+            .update({ 
+              is_hidden: false, 
+              is_resolved: false,
+              title: headerText.substring(0, 200),
+              updated_at: new Date().toISOString() 
+            })
+            .eq('thread_id', threadId);
+          console.log(`TTC API: Unhid existing thread ${threadId}`);
+        }
       } else {
         // Thread exists and visible - update title to latest
         await supabase

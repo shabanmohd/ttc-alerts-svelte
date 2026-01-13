@@ -291,12 +291,14 @@ export async function fetchAlerts(): Promise<void> {
     const additionalThreadIds = recentThreadIds.filter(id => !activeThreadIds.has(id));
     
     // Fetch additional threads (resolved threads that had recent alerts)
+    // IMPORTANT: Must filter out hidden threads to prevent showing stale/hidden data
     let additionalThreads: Thread[] = [];
     if (additionalThreadIds.length > 0) {
       const { data, error: addlError } = await supabase
         .from('incident_threads')
         .select('thread_id, title, categories, affected_routes, is_resolved, is_hidden, resolved_at, created_at, updated_at')
-        .in('thread_id', additionalThreadIds);
+        .in('thread_id', additionalThreadIds)
+        .eq('is_hidden', false); // Don't load hidden threads
       
       if (addlError) throw addlError;
       additionalThreads = data || [];
@@ -379,6 +381,15 @@ function handleThreadInsert(newThread: Thread): void {
 }
 
 function handleThreadUpdate(updatedThread: Thread): void {
+  // If thread is now hidden, remove it from the store entirely
+  if (updatedThread.is_hidden) {
+    threads.update(current => 
+      current.filter(t => t.thread_id !== updatedThread.thread_id)
+    );
+    console.log(`🙈 Thread hidden, removed from store: ${updatedThread.thread_id}`);
+    return;
+  }
+  
   threads.update(current => 
     current.map(t => t.thread_id === updatedThread.thread_id ? updatedThread : t)
   );
