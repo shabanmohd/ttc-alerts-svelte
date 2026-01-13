@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '148'; // Create new thread instead of reusing stale resolved threads
+const VERSION = '149'; // SERVICE_RESUMED can now match hidden threads for proper resolution
 
 // Helper function to check if an alert is about a future/scheduled closure
 // (not a real-time disruption) - matches frontend isScheduledFutureClosure()
@@ -1202,12 +1202,14 @@ serve(async (req) => {
     const existingUris = new Set(existingAlerts?.map(a => a.bluesky_uri) || []);
     console.log(`Found ${existingUris.size} existing Bluesky URIs in last 24h`);
 
-    // Get unresolved threads for matching
+    // Get threads for matching - include BOTH unresolved AND recently hidden threads
+    // SERVICE_RESUMED needs to find hidden threads to resolve them properly
+    // (threads get hidden when TTC API removes the alert, but Bluesky may still send SERVICE_RESUMED)
     const { data: unresolvedThreads } = await supabase
       .from('incident_threads')
       .select('*')
-      .eq('is_resolved', false)
-      .gte('updated_at', new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString());
+      .or('is_resolved.eq.false,is_hidden.eq.true')
+      .gte('updated_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()); // Extended to 12 hours
 
     for (const item of posts) {
       const post = item.post;
@@ -1297,15 +1299,18 @@ serve(async (req) => {
           const threadTitle = thread.title || '';
           const similarity = jaccardSimilarity(text, threadTitle);
           
-          // If routes match AND thread isn't hidden, use lower threshold
-          // This ensures follow-up alerts get added to existing threads
-          if (!thread.is_hidden) {
+          // SERVICE_RESUMED can match hidden threads (to properly resolve them)
+          // Other categories should only match visible threads
+          if (category === 'SERVICE_RESUMED') {
             // Very low threshold (15%) for SERVICE_RESUMED - just needs route match really
-            if (category === 'SERVICE_RESUMED' && similarity >= 0.15) {
+            // Can match hidden threads since it's meant to resolve incidents
+            if (similarity >= 0.15) {
               matchedThread = thread;
+              console.log(`SERVICE_RESUMED matched thread ${thread.thread_id} (hidden: ${thread.is_hidden}) with ${(similarity * 100).toFixed(0)}% similarity`);
               break;
             }
-            
+          } else if (!thread.is_hidden) {
+            // Other categories only match visible (non-hidden) threads
             // Low threshold (25%) for general matching when routes match
             if (similarity >= 0.25) {
               matchedThread = thread;
@@ -1343,10 +1348,13 @@ serve(async (req) => {
         if (category === 'SERVICE_RESUMED' && !isProtectedThread) {
           updates.is_resolved = true;
           updates.resolved_at = new Date().toISOString();
+          // Keep hidden threads hidden but resolved (they'll show in Recently Resolved)
+          // If thread was visible, it should remain visible in Recently Resolved
           // Add SERVICE_RESUMED to thread categories if not already present
           if (!matchedCategories.includes('SERVICE_RESUMED')) {
             updates.categories = [...matchedCategories, 'SERVICE_RESUMED'];
           }
+          console.log(`SERVICE_RESUMED resolving thread ${matchedThread.thread_id} (was hidden: ${matchedThread.is_hidden})`);
         }
 
         await supabase

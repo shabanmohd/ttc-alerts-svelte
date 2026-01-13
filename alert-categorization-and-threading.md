@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.40  
+**Version:** 3.41  
 **Date:** January 13, 2026  
-**poll-alerts Version:** 148  
+**poll-alerts Version:** 149  
 **Frontend Version:** 149 (fix hidden thread loading + realtime removal)  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
