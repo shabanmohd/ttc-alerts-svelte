@@ -99,6 +99,23 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ---
 
+## UI Tab Data Sources (v143)
+
+Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevators, Service Changes, or Scheduled Closures.
+
+| UI Tab | Data Source | Bluesky? | Edge Function | Notes |
+|--------|-------------|----------|---------------|-------|
+| **Disruptions & Delays** | TTC API + Bluesky context | ⚠️ Context only | `poll-alerts` | Bluesky links to existing TTC threads, cannot create new |
+| **Slow Zones (RSZ)** | TTC API exclusive | ❌ No | `poll-alerts` | v143: Bluesky RSZ skipped entirely |
+| **Station Alerts (Elevators)** | TTC API exclusive | ❌ No | `poll-alerts` | `accessibility` array from TTC API |
+| **Scheduled Subway Closures** | TTC website scraper | ❌ No | `scrape-maintenance` | Stored in `planned_maintenance` table |
+| **Service/Route Changes** | TTC Sitecore API | ❌ No | N/A (client-side) | Runtime fetch, not stored |
+| **Recently Resolved** | Bluesky exclusive | ✅ Yes | `poll-alerts` | `SERVICE_RESUMED` creates threads here |
+
+> **See [`alert-categorization-and-threading.md`](alert-categorization-and-threading.md) for complete data flow documentation.**
+
+---
+
 ## File Structure
 
 ### Frontend (`src/lib/`)
@@ -157,7 +174,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Table                    | Rows | Purpose                                                  |
 | ------------------------ | ---- | -------------------------------------------------------- |
-| `alert_cache`            | 600+ | Alerts from Bluesky (header_text, categories, is_latest) |
+| `alert_cache`            | 600+ | Alerts from TTC API + Bluesky (header_text, categories, is_latest) |
 | `incident_threads`       | 255K | Grouped alert threads (title, is_resolved)               |
 | `planned_maintenance`    | 9    | Scheduled maintenance                                    |
 | `alert_accuracy_logs`    | -    | Alert accuracy checks (every 5min)                       |

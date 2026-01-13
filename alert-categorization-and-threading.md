@@ -1,6 +1,6 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.33  
+**Version:** 3.34  
 **Date:** January 12, 2026  
 **poll-alerts Version:** 143  
 **scrape-maintenance Version:** 3  
@@ -141,6 +141,28 @@ This separation ensures:
 | Station Alerts       | TTC API only | `alert_id.startsWith('ttc-elev-')`       |
 | Recently Resolved    | Bluesky      | `categories.includes('SERVICE_RESUMED')` |
 
+### Complete UI Tab Data Sources (v143)
+
+This table documents the **exclusive data source** for each UI tab. Bluesky is **NOT** used for Elevators, Service Changes, or Scheduled Closures.
+
+| UI Tab | Data Source | Bluesky Used? | Database Table | Edge Function |
+|--------|-------------|---------------|----------------|---------------|
+| **Disruptions & Delays** | TTC API + Bluesky context | ⚠️ Context only | `alert_cache` | `poll-alerts` |
+| **Slow Zones (RSZ)** | TTC API exclusive (v143) | ❌ No | `alert_cache` | `poll-alerts` |
+| **Station Alerts (Elevators)** | TTC API exclusive | ❌ No | `alert_cache` | `poll-alerts` |
+| **Scheduled Subway Closures** | TTC website scraper | ❌ No | `planned_maintenance` | `scrape-maintenance` |
+| **Service/Route Changes** | TTC website scraper | ❌ No | Runtime fetch | N/A (client-side) |
+| **Recently Resolved** | Bluesky exclusive | ✅ Yes | `alert_cache` | `poll-alerts` |
+
+**Clarifications:**
+
+1. **Disruptions & Delays**: TTC API creates threads; Bluesky adds historical context to *existing* threads only (cannot create new disruption threads since v140)
+2. **Slow Zones**: TTC API is the **exclusive** source since v143 - Bluesky RSZ-like alerts are skipped entirely
+3. **Station Alerts (Elevators)**: Always TTC API only - uses `accessibility` array from live-alerts endpoint
+4. **Scheduled Subway Closures**: Scraped from TTC website by `scrape-maintenance` edge function, stored in `planned_maintenance` table
+5. **Service/Route Changes**: Fetched at runtime from TTC website Sitecore API (not stored in database)
+6. **Recently Resolved**: Bluesky `SERVICE_RESUMED` alerts can create threads for the "Recently Resolved" section
+
 ### Data Integrity Verification
 
 **verify-disruptions Edge Function (runs every 15 minutes):**
@@ -154,8 +176,10 @@ This separation ensures:
 - **TTC API is Source of Truth** - Active disruptions come from TTC API only
 - **Bluesky for Resolved only** - Only creates threads for "Recently Resolved" section
 - **Bluesky provides context** - Non-SERVICE_RESUMED links to existing TTC API threads
-- **RSZ alerts from TTC API** - Reduced Speed Zone alerts (category: `RSZ`)
-- **Elevator alerts from TTC API** - Accessibility alerts (category: `ACCESSIBILITY`)
+- **RSZ alerts from TTC API only (v143)** - Reduced Speed Zone alerts exclusively from TTC API
+- **Elevator alerts from TTC API only** - Accessibility alerts exclusively from TTC API (`accessibility` array)
+- **Scheduled Closures from scraper** - `planned_maintenance` table populated by `scrape-maintenance`
+- **Service Changes at runtime** - Fetched from TTC Sitecore API (not stored in database)
 - **Effect > Cause** - "No service" matters more than "due to security incident"
 - **Non-exclusive categories** - Alert can be `SERVICE_DISRUPTION` + `SUBWAY`
 - **Simple threading** - 25% text similarity for general matching, 15% for SERVICE_RESUMED
