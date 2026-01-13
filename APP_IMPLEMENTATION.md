@@ -20,6 +20,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                            | Change                                                                       | Status       |
 | ------------------------------------ | ---------------------------------------------------------------------------- | ------------ |
+| **poll-alerts v145**                 | Remove overly broad tunnel/track pattern from scheduled closure detection    | ✅ Deployed  |
 | **poll-alerts v144**                 | Add "full weekend closure" and "planned" detection patterns                  | ✅ Deployed  |
 | **AlertCard.svelte**                 | Show SCHEDULED CLOSURE badge for scheduled maintenance alerts                | ✅ Deployed  |
 | **poll-alerts v143**                 | Skip Bluesky RSZ alerts - TTC API is exclusive source for Slow Zones         | ✅ Deployed  |

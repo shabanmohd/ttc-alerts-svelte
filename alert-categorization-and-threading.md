@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.35  
+**Version:** 3.36  
 **Date:** January 13, 2026  
-**poll-alerts Version:** 144  
+**poll-alerts Version:** 145  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
@@ -481,7 +481,7 @@ const threadId = matchedThreadId || `thread-ttc-${routeKey}-${threadType}`;
 
 **v142 Change:** Scheduled closures now create threads with `scheduled_closure` in the ID (e.g., `thread-ttc-line1-scheduled_closure`) instead of mixing with real-time incidents in threads like `thread-ttc-line1-service_disruption`.
 
-**Scheduled Closure Detection (v144):**
+**Scheduled Closure Detection (v145):**
 
 ```typescript
 function isScheduledClosure(headerText: string): boolean {
@@ -489,7 +489,6 @@ function isScheduledClosure(headerText: string): boolean {
   const scheduledPatterns = [
     /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
     /nightly.*from\s+\d+/i,
-    /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
     /there will be no.*service.*starting/i,
     /no\s+(subway\s+)?service.*starting\s+\d+/i,
     /full\s+weekend\s+closure/i,
@@ -499,7 +498,7 @@ function isScheduledClosure(headerText: string): boolean {
 }
 ```
 
-**AlertCard Badge Display (v144):**
+**AlertCard Badge Display (v145):**
 The `AlertCard` component uses `isScheduledFutureClosure()` (same patterns) to detect scheduled closures from header text and display "SCHEDULED CLOSURE" badge instead of "DISRUPTION" badge. This ensures visual clarity when scheduled maintenance appears in the Disruptions & Delays tab during active hours (11 PM - 6 AM).
 
 **v141 Change:** Added 25% similarity check when matching by route number to prevent grouping unrelated incidents on the same route (e.g., separate "Cedarvale security incident" from "Finch-Eglinton scheduled closure" even though both affect Line 1).
