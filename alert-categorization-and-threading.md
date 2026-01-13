@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.30  
+**Version:** 3.31  
 **Date:** January 12, 2026  
-**poll-alerts Version:** 140  
+**poll-alerts Version:** 141  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
@@ -114,15 +114,16 @@ This document describes the alert categorization and threading system designed t
 
 ### Architectural Separation (v140+)
 
-| Alert Source | Can Create Threads | Categories | UI Section |
-|--------------|-------------------|------------|------------|
-| **TTC API** | ✅ Yes | SERVICE_DISRUPTION, DELAY, DIVERSION, SHUTTLE | Disruptions & Delays |
-| **TTC API** | ✅ Yes | RSZ | Slow Zones |
-| **TTC API** | ✅ Yes | ACCESSIBILITY | Station Alerts |
-| **Bluesky** | ✅ Only for SERVICE_RESUMED | SERVICE_RESUMED | Recently Resolved |
-| **Bluesky** | ❌ No - must match existing | DIVERSION, DELAY, etc. | Linked to TTC thread |
+| Alert Source | Can Create Threads          | Categories                                    | UI Section           |
+| ------------ | --------------------------- | --------------------------------------------- | -------------------- |
+| **TTC API**  | ✅ Yes                      | SERVICE_DISRUPTION, DELAY, DIVERSION, SHUTTLE | Disruptions & Delays |
+| **TTC API**  | ✅ Yes                      | RSZ                                           | Slow Zones           |
+| **TTC API**  | ✅ Yes                      | ACCESSIBILITY                                 | Station Alerts       |
+| **Bluesky**  | ✅ Only for SERVICE_RESUMED | SERVICE_RESUMED                               | Recently Resolved    |
+| **Bluesky**  | ❌ No - must match existing | DIVERSION, DELAY, etc.                        | Linked to TTC thread |
 
 This separation ensures:
+
 1. **Single source of truth** - TTC API controls what's "active"
 2. **No race conditions** - TTC API creates threads first
 3. **Bluesky provides context** - Links to existing threads for historical data
@@ -382,40 +383,60 @@ Incident threading groups related alerts over time to:
 
 ### Threading Algorithm
 
-**Implemented in:** `supabase/functions/poll-alerts/index.ts` (v140)
+**Implemented in:** `supabase/functions/poll-alerts/index.ts` (v141)
 
 **Architectural Rule (v140+):** TTC API is the source of truth for active disruptions. Bluesky alerts can only CREATE threads for `SERVICE_RESUMED` (Recently Resolved tab). All other Bluesky alerts must match an existing TTC API-created thread.
 
-#### TTC API Alert Thread Matching (v139+)
+#### TTC API Alert Thread Matching (v141)
 
 ```typescript
-// STEP 1: Find existing thread by route number match
-const routeNum = extractRouteNumber(routes[0] || '');
+// STEP 1: Find existing thread by route number match + similarity check
+const routeNum = extractRouteNumber(routes[0] || "");
 let matchedThreadId: string | null = null;
 
 if (routeNum) {
   for (const thread of existingThreads || []) {
     const threadRoutes = thread.affected_routes || [];
-    // Skip RSZ/ACCESSIBILITY threads
-    if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) continue;
+    const threadTitle = thread.title || "";
+    const threadCategories = thread.categories || [];
     
-    // Check if route numbers match (exact match, not substring)
-    const hasRouteMatch = threadRoutes.some(tr => extractRouteNumber(tr) === routeNum);
+    // Skip RSZ/ACCESSIBILITY threads
+    if (
+      threadCategories.includes("RSZ") ||
+      threadCategories.includes("ACCESSIBILITY")
+    )
+      continue;
+
+    // Check if route numbers match
+    const hasRouteMatch = threadRoutes.some(
+      (tr) => extractRouteNumber(tr) === routeNum
+    );
     if (hasRouteMatch) {
-      matchedThreadId = thread.thread_id;
-      break;
+      // Also check text similarity to avoid grouping unrelated incidents on same route
+      const similarity = jaccardSimilarity(headerText, threadTitle);
+      if (similarity >= 0.25) {
+        matchedThreadId = thread.thread_id;
+        console.log(`TTC API: Found existing thread ${matchedThreadId} for route ${routeNum} with ${(similarity * 100).toFixed(0)}% similarity`);
+        break;
+      }
     }
   }
 }
 
 // STEP 2: If no match found, create deterministic thread ID
-const threadId = matchedThreadId || `thread-ttc-${routeKey}-${category.toLowerCase()}`;
+const threadId =
+  matchedThreadId || `thread-ttc-${routeKey}-${category.toLowerCase()}`;
 ```
 
+**v141 Change:** Added 25% similarity check when matching by route number to prevent grouping unrelated incidents on the same route (e.g., separate "Cedarvale security incident" from "Finch-Eglinton scheduled closure" even though both affect Line 1).
+
 This approach:
+
 1. First searches for existing threads with matching route NUMBER (handles UUID-format threads created by Bluesky)
-2. Falls back to deterministic `thread-ttc-*` format if no match found
-3. Prevents race conditions where Bluesky creates thread before TTC API
+2. Validates similarity (≥25%) to ensure alerts describe the same incident
+3. Falls back to deterministic `thread-ttc-*` format if no match found
+4. Prevents race conditions where Bluesky creates thread before TTC API
+5. Prevents grouping unrelated incidents on the same route
 
 #### Bluesky Alert Thread Matching
 
@@ -442,7 +463,7 @@ for (const thread of unresolvedThreads || []) {
       matchedThread = thread;
       break;
     }
-    
+
     // Very low threshold (15%) for SERVICE_RESUMED
     if (category === "SERVICE_RESUMED" && similarity >= 0.15) {
       matchedThread = thread;

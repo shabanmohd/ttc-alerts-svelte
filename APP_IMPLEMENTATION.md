@@ -18,31 +18,32 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## 🆕 Recent Updates (Jan 12, 2026)
 
-| Component                            | Change                                                                   | Status       |
-| ------------------------------------ | ------------------------------------------------------------------------ | ------------ |
-| **poll-alerts v140**                 | Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth | ✅ Deployed  |
-| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new          | ✅ Deployed  |
-| **poll-alerts v138**                 | Support all TTC branch letters (A-Z) not just A-E - includes F, G, S     | ✅ Deployed  |
-| **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)        | ✅ Deployed  |
-| **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates with Bluesky         | ✅ Committed |
-| **alerts/+page.svelte activeAlerts** | Disruptions tab filters thread.alerts to TTC API only (no Bluesky in UI) | ✅ Deployed  |
-| **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 6 AM    | ✅ Deployed  |
-| **getTTCApiDisruptionAlert()**       | Excludes scheduled closures outside active period                        | ✅ Deployed  |
-| **MobileBottomNav.svelte**           | iOS PWA viewport fix using visualViewport API                            | ✅ Deployed  |
-| **poll-alerts v136**                 | Scheduled closure filtering - hide alerts not currently active           | ✅ Deployed  |
-| **verify-disruptions v2**            | Data integrity validation for TTC API disruptions (every 15 min)         | ✅ Deployed  |
-| **i18n: RSZAlertCard**               | Translate direction badges (NORTHBOUND→DIRECTION NORD, etc.)             | ✅ Deployed  |
-| **i18n: ETACard**                    | Translate direction labels, "to" connector                               | ✅ Deployed  |
-| **i18n: ETADirectionSlide**          | Translate directions, "towards", "via" keywords                          | ✅ Deployed  |
-| **i18n: StopSearch**                 | Translate direction badges in search results                             | ✅ Deployed  |
-| **i18n: RouteDirectionTabs**         | Translate direction tabs and labels                                      | ✅ Deployed  |
-| **i18n: RouteStopItem**              | Translate "Scheduled" label                                              | ✅ Deployed  |
-| **i18n: routes/+page**               | Translate "Back to Home" button                                          | ✅ Deployed  |
-| **i18n: routes/[route]**             | Translate stop counts, direction labels                                  | ✅ Deployed  |
-| **SEO: app.html**                    | Updated meta title/description for Google                                | ✅ Deployed  |
-| **route-changes.ts**                 | Fix filtering to include end time (was only checking date)               | ✅ Deployed  |
-| **Timezone Docs**                    | Added comprehensive timezone policy (EST/America/Toronto)                | ✅ Committed |
-| **DATA_POLLING_FREQUENCIES.md**      | Updated with EST equivalents for all cron jobs                           | ✅ Committed |
+| Component                            | Change                                                                          | Status       |
+| ------------------------------------ | ------------------------------------------------------------------------------- | ------------ |
+| **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading      | ✅ Deployed  |
+| **poll-alerts v140**                 | Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth    | ✅ Deployed  |
+| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new                 | ✅ Deployed  |
+| **poll-alerts v138**                 | Support all TTC branch letters (A-Z) not just A-E - includes F, G, S            | ✅ Deployed  |
+| **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)               | ✅ Deployed  |
+| **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates with Bluesky                | ✅ Committed |
+| **alerts/+page.svelte activeAlerts** | Disruptions tab filters thread.alerts to TTC API only (no Bluesky in UI)        | ✅ Deployed  |
+| **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 6 AM           | ✅ Deployed  |
+| **getTTCApiDisruptionAlert()**       | Excludes scheduled closures outside active period                               | ✅ Deployed  |
+| **MobileBottomNav.svelte**           | iOS PWA viewport fix using visualViewport API                                   | ✅ Deployed  |
+| **poll-alerts v136**                 | Scheduled closure filtering - hide alerts not currently active                  | ✅ Deployed  |
+| **verify-disruptions v2**            | Data integrity validation for TTC API disruptions (every 15 min)                | ✅ Deployed  |
+| **i18n: RSZAlertCard**               | Translate direction badges (NORTHBOUND→DIRECTION NORD, etc.)                    | ✅ Deployed  |
+| **i18n: ETACard**                    | Translate direction labels, "to" connector                                      | ✅ Deployed  |
+| **i18n: ETADirectionSlide**          | Translate directions, "towards", "via" keywords                                 | ✅ Deployed  |
+| **i18n: StopSearch**                 | Translate direction badges in search results                                    | ✅ Deployed  |
+| **i18n: RouteDirectionTabs**         | Translate direction tabs and labels                                             | ✅ Deployed  |
+| **i18n: RouteStopItem**              | Translate "Scheduled" label                                                     | ✅ Deployed  |
+| **i18n: routes/+page**               | Translate "Back to Home" button                                                 | ✅ Deployed  |
+| **i18n: routes/[route]**             | Translate stop counts, direction labels                                         | ✅ Deployed  |
+| **SEO: app.html**                    | Updated meta title/description for Google                                       | ✅ Deployed  |
+| **route-changes.ts**                 | Fix filtering to include end time (was only checking date)                      | ✅ Deployed  |
+| **Timezone Docs**                    | Added comprehensive timezone policy (EST/America/Toronto)                       | ✅ Committed |
+| **DATA_POLLING_FREQUENCIES.md**      | Updated with EST equivalents for all cron jobs                                  | ✅ Committed |
 
 ### Previous Updates (Jan 11, 2026)
 
