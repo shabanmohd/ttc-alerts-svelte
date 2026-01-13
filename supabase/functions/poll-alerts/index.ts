@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '137'; // Fix route extraction to stop at non-route words (Regular, service, etc.)
+const VERSION = '138'; // Support all TTC branch letters (A-Z) not just A-E - includes F, G, S
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -63,10 +63,10 @@ function extractRoutes(text: string): string[] {
     });
   }
   
-  // Match route branches with name: "97B Yonge", "36A Finch West", etc.
-  // Branch letter is A-E (TTC uses A, B, C, D, E for branches)
+  // Match route branches with name: "97B Yonge", "36A Finch West", "52F Lawrence", etc.
+  // Branch letters include A-D (most common), F, G (52 route), S (79S, 336S)
   // Stop before common non-route words like "Regular", "service", "Detour", etc.
-  const routeBranchWithNameMatch = cleanedText.match(/\b(\d{1,3}[A-E])\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/gi);
+  const routeBranchWithNameMatch = cleanedText.match(/\b(\d{1,3}[A-Z])\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/gi);
   if (routeBranchWithNameMatch) {
     routeBranchWithNameMatch.forEach(m => {
       // Stop at common non-route words
@@ -84,7 +84,7 @@ function extractRoutes(text: string): string[] {
       }
       
       // Normalize branch letter to uppercase
-      const normalized = routeName.replace(/^(\d+)([a-e])/i, (_, num, letter) => `${num}${letter.toUpperCase()}`);
+      const normalized = routeName.replace(/^(\d+)([a-z])/i, (_, num, letter) => `${num}${letter.toUpperCase()}`);
       routes.push(normalized);
     });
   }
@@ -115,8 +115,8 @@ function extractRoutes(text: string): string[] {
     });
   }
   
-  // Match standalone route branches: "97B", "36A", etc.
-  const standaloneBranchMatch = cleanedText.match(/\b(\d{1,3}[A-E])(?=\s|:|,|$)/gi);
+  // Match standalone route branches: "97B", "36A", "52F", "79S", etc.
+  const standaloneBranchMatch = cleanedText.match(/\b(\d{1,3}[A-Z])(?=\s|:|,|$)/gi);
   if (standaloneBranchMatch) {
     standaloneBranchMatch.forEach(route => {
       const num = parseInt(route);
@@ -731,7 +731,8 @@ async function processDisruptionAlerts(supabase: any, disruptionAlerts: TtcApiAl
       routes = [`Line ${route}`];
     } else if (route) {
       // Bus/Streetcar: extract route with name from headerText or use route number
-      const routeNameMatch = headerText.match(new RegExp(`^(${route}[A-E]?\\s+[A-Z][a-z]+):`));
+      // Branch letters include A-D (most common), F, G (52 route), S (79S, 336S)
+      const routeNameMatch = headerText.match(new RegExp(`^(${route}[A-Z]?\\s+[A-Z][a-z]+):`));
       if (routeNameMatch) {
         routes = [routeNameMatch[1]];
       } else {
