@@ -519,8 +519,8 @@
         </div>
 
         {#if ["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes, displayAlert?.header_text, thread.thread_id))}
-          <!-- Scheduled Closure types: Visual hierarchy with header + description -->
-          <p class="text-sm font-medium leading-snug" id="{cardId}-title">
+          <!-- Scheduled Closure types -->
+          <p class="text-sm leading-relaxed" id="{cardId}-title">
             {displayAlert?.header_text || ""}
           </p>
           {#if displayAlert?.description_text && displayAlert.description_text !== displayAlert.header_text}
