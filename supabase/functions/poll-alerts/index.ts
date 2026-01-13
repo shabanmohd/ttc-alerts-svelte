@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '140'; // Architectural fix: Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth
+const VERSION = '141'; // Fix thread matching - use similarity (25%) to avoid grouping unrelated incidents on same route
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -766,21 +766,23 @@ async function processDisruptionAlerts(supabase: any, disruptionAlerts: TtcApiAl
 
     newAlerts++;
 
-    // STEP 1: First, look for an existing unresolved thread with matching routes
+    // STEP 1: First, look for an existing unresolved thread with matching routes AND similar text
     // This handles race conditions where Bluesky created a thread first with UUID format
+    // IMPORTANT: Use similarity matching to avoid grouping unrelated incidents on the same route
     const routeNum = extractRouteNumber(routes[0] || '');
     let matchedThreadId: string | null = null;
     
     if (routeNum) {
       const { data: existingThreads } = await supabase
         .from('incident_threads')
-        .select('thread_id, affected_routes, categories')
+        .select('thread_id, affected_routes, categories, title')
         .eq('is_resolved', false)
         .eq('is_hidden', false);
       
       for (const thread of existingThreads || []) {
         const threadRoutes = Array.isArray(thread.affected_routes) ? thread.affected_routes : [];
         const threadCategories = Array.isArray(thread.categories) ? thread.categories : [];
+        const threadTitle = thread.title || '';
         
         // Skip RSZ/ACCESSIBILITY threads
         if (threadCategories.includes('RSZ') || threadCategories.includes('ACCESSIBILITY')) continue;
@@ -788,9 +790,13 @@ async function processDisruptionAlerts(supabase: any, disruptionAlerts: TtcApiAl
         // Check if route numbers match
         const hasRouteMatch = threadRoutes.some(tr => extractRouteNumber(tr) === routeNum);
         if (hasRouteMatch) {
-          matchedThreadId = thread.thread_id;
-          console.log(`TTC API: Found existing thread ${matchedThreadId} for route ${routeNum}`);
-          break;
+          // Also check text similarity to avoid grouping unrelated incidents on same route
+          const similarity = jaccardSimilarity(headerText, threadTitle);
+          if (similarity >= 0.25) {
+            matchedThreadId = thread.thread_id;
+            console.log(`TTC API: Found existing thread ${matchedThreadId} for route ${routeNum} with ${(similarity * 100).toFixed(0)}% similarity`);
+            break;
+          }
         }
       }
     }
