@@ -523,7 +523,7 @@
           <p class="text-sm font-medium leading-snug" id="{cardId}-title">
             {displayAlert?.header_text || ""}
           </p>
-          {#if displayAlert?.description_text}
+          {#if displayAlert?.description_text && displayAlert.description_text !== displayAlert.header_text}
             <p class="text-sm text-muted-foreground leading-relaxed mt-1">
               {displayAlert.description_text}
             </p>
