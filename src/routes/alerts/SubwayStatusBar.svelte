@@ -25,7 +25,7 @@
       case "disruption":
         return $_("status.disruption");
       case "scheduled":
-        return $_("status.scheduled");
+        return $_("status.scheduledClosure");
     }
   }
 </script>
@@ -79,7 +79,7 @@
                     class="w-4 h-4 status-scheduled-icon shrink-0"
                   />
                   <span class="status-text status-scheduled-text"
-                    >{$_("status.scheduled")}</span
+                    >{$_("status.scheduledClosure")}</span
                   >
                 {/if}
               </div>
