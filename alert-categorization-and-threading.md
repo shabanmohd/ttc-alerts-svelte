@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 3.32  
+**Version:** 3.33  
 **Date:** January 12, 2026  
-**poll-alerts Version:** 142  
+**poll-alerts Version:** 143  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 1  
 **verify-rsz Version:** 1  
@@ -108,19 +108,21 @@ This document describes the alert categorization and threading system designed t
 - **Purpose:** Provides `SERVICE_RESUMED` alerts for "Recently Resolved" section
 - **Thread Creation (v140+):** Bluesky can ONLY create threads for `SERVICE_RESUMED` alerts
 - **Other Categories:** DIVERSION, DELAY, etc. from Bluesky must match an existing TTC API thread
+- **RSZ Filtering (v143+):** Bluesky RSZ-like alerts are skipped entirely - TTC API is source of truth
 - **Status:** ✅ Enabled (Recently Resolved section only)
 
 **GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear via TTC API/Bluesky)
 
-### Architectural Separation (v140+)
+### Architectural Separation (v143)
 
 | Alert Source | Can Create Threads          | Categories                                    | UI Section           |
 | ------------ | --------------------------- | --------------------------------------------- | -------------------- |
 | **TTC API**  | ✅ Yes                      | SERVICE_DISRUPTION, DELAY, DIVERSION, SHUTTLE | Disruptions & Delays |
-| **TTC API**  | ✅ Yes                      | RSZ                                           | Slow Zones           |
+| **TTC API**  | ✅ Yes (exclusive)          | RSZ                                           | Slow Zones           |
 | **TTC API**  | ✅ Yes                      | ACCESSIBILITY                                 | Station Alerts       |
 | **Bluesky**  | ✅ Only for SERVICE_RESUMED | SERVICE_RESUMED                               | Recently Resolved    |
 | **Bluesky**  | ❌ No - must match existing | DIVERSION, DELAY, etc.                        | Linked to TTC thread |
+| **Bluesky**  | ❌ Skipped entirely (v143)  | RSZ-like text patterns                        | N/A - TTC API only   |
 
 This separation ensures:
 
@@ -128,6 +130,7 @@ This separation ensures:
 2. **No race conditions** - TTC API creates threads first
 3. **Bluesky provides context** - Links to existing threads for historical data
 4. **SERVICE_RESUMED works independently** - Can create threads for resolved alerts
+5. **RSZ data integrity (v143)** - Only TTC API RSZ alerts appear in Slow Zones
 
 ### Frontend Data Flow
 
@@ -385,15 +388,16 @@ Incident threading groups related alerts over time to:
 
 Thread IDs are deterministic based on the alert source and type:
 
-| Source | Type | Thread ID Format | Example |
-|--------|------|-----------------|---------|
-| TTC API | Real-time disruption | `thread-ttc-{route}-{category}` | `thread-ttc-line1-service_disruption` |
-| TTC API | Scheduled closure | `thread-ttc-{route}-scheduled_closure` | `thread-ttc-line1-scheduled_closure` |
-| TTC API | RSZ (slow zone) | `thread-rsz-{line}-{stations}` | `thread-rsz-line1-stclairwest-cedarvale` |
-| TTC API | Elevator/Escalator | `thread-elevator-{location}` | `thread-elevator-dundas-station` |
-| Bluesky | SERVICE_RESUMED | UUID format | `6f4a2b3c-8d9e-4f1a-b2c3-d4e5f6a7b8c9` |
+| Source  | Type                 | Thread ID Format                       | Example                                  |
+| ------- | -------------------- | -------------------------------------- | ---------------------------------------- |
+| TTC API | Real-time disruption | `thread-ttc-{route}-{category}`        | `thread-ttc-line1-service_disruption`    |
+| TTC API | Scheduled closure    | `thread-ttc-{route}-scheduled_closure` | `thread-ttc-line1-scheduled_closure`     |
+| TTC API | RSZ (slow zone)      | `thread-rsz-{line}-{stations}`         | `thread-rsz-line1-stclairwest-cedarvale` |
+| TTC API | Elevator/Escalator   | `thread-elevator-{location}`           | `thread-elevator-dundas-station`         |
+| Bluesky | SERVICE_RESUMED      | UUID format                            | `6f4a2b3c-8d9e-4f1a-b2c3-d4e5f6a7b8c9`   |
 
 **Why Scheduled Closures Get Separate Threads (v142):**
+
 - Prevents mixing scheduled maintenance with real-time incidents on the same route
 - Example: "Line 1 Finch-Eglinton nightly closure" shouldn't thread with "Line 1 Cedarvale security incident delay"
 - Each incident type gets its own dedicated thread
