@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '143'; // Skip Bluesky RSZ alerts - TTC API is source of truth for RSZ
+const VERSION = '144'; // Add scheduled closure detection patterns
 
 // Helper function to check if an alert is about a future/scheduled closure
 // (not a real-time disruption) - matches frontend isScheduledFutureClosure()
@@ -25,6 +25,8 @@ function isScheduledClosure(headerText: string): boolean {
     /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
     /there will be no.*service.*starting/i,
     /no\s+(subway\s+)?service.*starting\s+\d+/i,
+    /full\s+weekend\s+closure/i,
+    /\bplanned\b/i,
   ];
   return scheduledPatterns.some((pattern) => pattern.test(lowerText));
 }

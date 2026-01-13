@@ -124,6 +124,8 @@
    * - "for tunnel improvements"
    * - "for track work"
    * - "There will be no service starting..."
+   * - "Full weekend closure"
+   * - "planned" (any mention of planned)
    */
   function isScheduledFutureClosure(headerText: string): boolean {
     const lowerText = headerText?.toLowerCase() || "";
@@ -134,6 +136,8 @@
       /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
       /there will be no.*service.*starting/i,
       /no\s+(subway\s+)?service.*starting\s+\d+/i,
+      /full\s+weekend\s+closure/i,
+      /\bplanned\b/i,
     ];
     return scheduledPatterns.some((pattern) => pattern.test(lowerText));
   }
