@@ -12,7 +12,7 @@ const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 const TTC_ALERTS_DID = 'did:plc:ttcalerts'; // Replace with actual DID
 
 // Version for debugging
-const VERSION = '139'; // Fix TTC API thread matching - find existing threads by route number first
+const VERSION = '140'; // Architectural fix: Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -1239,13 +1239,22 @@ serve(async (req) => {
 
         updatedThreads++;
       } else {
-        // Create new thread using the database function that properly generates thread_id
+        // No matching thread found
+        // ARCHITECTURAL RULE: Bluesky only creates threads for SERVICE_RESUMED (Recently Resolved)
+        // All other categories (DIVERSION, DELAY, etc.) must come from TTC API
+        // Skip Bluesky alerts that don't match existing threads (unless SERVICE_RESUMED)
+        if (category !== 'SERVICE_RESUMED') {
+          console.log(`Skipping Bluesky alert "${text.substring(0, 50)}..." - no matching thread and not SERVICE_RESUMED`);
+          continue;
+        }
+        
+        // Create new thread ONLY for SERVICE_RESUMED (Recently Resolved)
         const { data: threadResult, error: threadError } = await supabase
           .rpc('find_or_create_thread', {
             p_title: text.split('\n')[0].substring(0, 200),
             p_routes: routes,
             p_categories: [category],
-            p_is_resolved: category === 'SERVICE_RESUMED'
+            p_is_resolved: true // SERVICE_RESUMED threads are always resolved
           });
 
         if (threadError) {
@@ -1258,7 +1267,7 @@ serve(async (req) => {
             .update({ thread_id: newThreadId })
             .eq('alert_id', newAlert.alert_id);
           
-          console.log(`Created/found thread ${newThreadId} for alert ${newAlert.alert_id}`);
+          console.log(`Created SERVICE_RESUMED thread ${newThreadId} for alert ${newAlert.alert_id}`);
         }
       }
     }
