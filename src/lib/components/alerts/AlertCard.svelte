@@ -81,10 +81,21 @@
   /**
    * Get the main category from categories array for display priority.
    * For subway routes, DETOUR is never applicable (subways don't detour).
+   * Also detects scheduled closures from header text and returns SCHEDULED_CLOSURE.
    */
-  function getMainCategory(categories: unknown, routes: string[] = []): string {
+  function getMainCategory(
+    categories: unknown,
+    routes: string[] = [],
+    headerText?: string
+  ): string {
     const cats = parseJsonArray(categories);
     const isSubway = isSubwayRoute(routes);
+
+    // Check if this is a scheduled closure based on header text patterns
+    // This overrides SERVICE_DISRUPTION category for scheduled maintenance
+    if (headerText && isScheduledFutureClosure(headerText)) {
+      return "SCHEDULED_CLOSURE";
+    }
 
     // Priority order for display
     const priority = [
@@ -104,6 +115,27 @@
       if (cats.includes(cat)) return cat;
     }
     return cats[0] || "OTHER";
+  }
+
+  /**
+   * Check if alert header text indicates a scheduled/future closure
+   * (not a real-time disruption). Matches patterns like:
+   * - "starting 11 p.m., nightly"
+   * - "for tunnel improvements"
+   * - "for track work"
+   * - "There will be no service starting..."
+   */
+  function isScheduledFutureClosure(headerText: string): boolean {
+    const lowerText = headerText?.toLowerCase() || "";
+    // Patterns indicating a future/scheduled event, not a real-time issue
+    const scheduledPatterns = [
+      /starting\s+\d+\s*(p\.?m\.?|a\.?m\.?),?\s*nightly/i,
+      /nightly.*from\s+\d+/i,
+      /for\s+(tunnel|track|signal|maintenance|construction)\s+(improvements?|work|repairs?)/i,
+      /there will be no.*service.*starting/i,
+      /no\s+(subway\s+)?service.*starting\s+\d+/i,
+    ];
+    return scheduledPatterns.some((pattern) => pattern.test(lowerText));
   }
 
   /**
@@ -469,11 +501,11 @@
               categories().includes("SERVICE_RESUMED") &&
               serviceResumedAlert()
                 ? "SERVICE_RESUMED"
-                : getMainCategory(categories(), rawRoutes)}
+                : getMainCategory(categories(), rawRoutes, displayAlert?.header_text)}
             />
           {/if}
           <!-- Hide timestamp for accessibility alerts and closures -->
-          {#if !isAccessibility && !["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes))}
+          {#if !isAccessibility && !["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes, displayAlert?.header_text))}
             <time
               class="alert-card-timestamp"
               datetime={displayAlert?.created_at || ""}
@@ -483,7 +515,7 @@
           {/if}
         </div>
 
-        {#if ["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes))}
+        {#if ["SCHEDULED_CLOSURE", "NIGHTLY_CLOSURE", "WEEKEND_CLOSURE"].includes(getMainCategory(categories(), rawRoutes, displayAlert?.header_text))}
           <!-- Scheduled Closure types: Visual hierarchy with header + description -->
           <p class="text-sm font-medium leading-snug" id="{cardId}-title">
             {displayAlert?.header_text || ""}
@@ -548,7 +580,7 @@
           >
             <div class="flex justify-between items-start mb-1.5">
               <StatusBadge
-                category={getMainCategory(alert.categories, rawRoutes)}
+                category={getMainCategory(alert.categories, rawRoutes, alert.header_text)}
               />
               <time
                 class="text-xs text-muted-foreground"
