@@ -16,7 +16,15 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ---
 
-## 🆕 Recent Updates (Jan 13, 2026)
+## 🆕 Recent Updates (Jan 14, 2026)
+
+| Component                       | Change                                                                            | Status       |
+| ------------------------------- | --------------------------------------------------------------------------------- | ------------ |
+| **verify-elevators v2**         | Auto-cleanup stale "back in service" alerts when TTC API shows still out          | ✅ Deployed  |
+| **AlertCard.svelte**            | Threading disabled for elevator/accessibility alerts (no "earlier updates" link)  | ✅ Committed |
+| **Toast notifications removed** | Removed new alert toast feature (Realtime auto-updates UI without toasts)         | ✅ Committed |
+
+### Previous Updates (Jan 13, 2026)
 
 | Component                            | Change                                                                             | Status                |
 | ------------------------------------ | ---------------------------------------------------------------------------------- | --------------------- |
