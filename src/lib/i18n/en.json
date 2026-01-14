@@ -671,11 +671,7 @@
     "codesCopied": "All recovery codes copied!",
     "copyFailed": "Failed to copy codes",
     "confirmSaveCodes": "Please confirm you have saved your recovery codes",
-    "canAddBackAnytime": "You can add it back anytime.",
-    "newAlert": "New alert",
-    "newDisruption": "New disruption",
-    "newSlowzone": "New slow zone",
-    "newElevatorAlert": "Elevator update"
+    "canAddBackAnytime": "You can add it back anytime."
   },
   "feedback": {
     "reportIssue": "Report Issue",

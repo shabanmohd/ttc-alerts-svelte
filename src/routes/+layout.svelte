@@ -16,7 +16,6 @@
     subscribeToAlerts,
     fetchAlerts,
     refreshAlerts,
-    newAlertEvent,
   } from "$lib/stores/alerts";
   import { etaStore } from "$lib/stores/eta";
   import { initializeStorage } from "$lib/services/storage";
@@ -41,7 +40,6 @@
 
   let unsubscribeAlerts: (() => void) | null = null;
   let cleanupNetworkListeners: (() => void) | undefined;
-  let unsubscribeNewAlert: (() => void) | undefined;
   let updateToastShown = false; // Prevent duplicate update toasts
 
   // Pull-to-refresh handler
@@ -126,41 +124,11 @@
 
     // Subscribe to realtime alert updates
     unsubscribeAlerts = subscribeToAlerts();
-    
-    // Subscribe to new alert events for toast notifications
-    // Only shows for MAJOR disruptions/delays (not RSZ, elevators, or resolved)
-    unsubscribeNewAlert = newAlertEvent.subscribe((event) => {
-      if (!event) return;
-      
-      // Show toast for new disruption/delay alerts
-      const toastTitle = $_("toasts.newDisruption") || "New disruption";
-      
-      // Truncate header text for toast
-      const shortHeader = event.headerText.length > 80 
-        ? event.headerText.substring(0, 77) + "..."
-        : event.headerText;
-      
-      toast.info(toastTitle, {
-        id: `new-alert-${event.alertId}`, // Prevent duplicate toasts for same alert
-        description: shortHeader,
-        duration: 5000, // Auto-dismiss after 5 seconds
-        action: {
-          label: $_("common.refresh") || "Refresh",
-          onClick: async () => {
-            await refreshAlerts();
-          }
-        }
-      });
-      
-      // Clear the event after showing toast
-      newAlertEvent.set(null);
-    });
   });
 
   onDestroy(() => {
     // Cleanup subscriptions
     if (unsubscribeAlerts) unsubscribeAlerts();
-    if (unsubscribeNewAlert) unsubscribeNewAlert();
     if (cleanupNetworkListeners) cleanupNetworkListeners();
     window.removeEventListener("sw-update-available", handleAppUpdate);
   });

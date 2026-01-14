@@ -30,16 +30,6 @@ export const maintenanceItems = writable<PlannedMaintenance[]>([]);
 // Track recently added thread IDs for "new" animation
 export const recentlyAddedThreadIds = writable<Set<string>>(new Set());
 
-// New alert notification event - stores alert info for toast display
-// Set to null when toast is dismissed or after timeout
-export interface NewAlertEvent {
-  alertId: string;
-  headerText: string;
-  severity: SeverityCategory;
-  timestamp: Date;
-}
-export const newAlertEvent = writable<NewAlertEvent | null>(null);
-
 // Track active Realtime channel
 let realtimeChannel: RealtimeChannel | null = null;
 
@@ -363,34 +353,6 @@ function handleAlertInsert(newAlert: Alert): void {
   // If alert has a thread_id, ensure we have the thread
   if (newAlert.thread_id) {
     fetchThreadForAlert(newAlert.thread_id);
-  }
-  
-  // Trigger new alert notification for toast
-  // Only notify for MAJOR alerts (disruptions/delays) - NOT RSZ, elevators, or resolved alerts
-  const headerText = newAlert.header_text || '';
-  const categories = Array.isArray(newAlert.categories) ? newAlert.categories : [];
-  const alertId = newAlert.alert_id || '';
-  
-  // Skip: SERVICE_RESUMED, RSZ (slow zones), elevator/accessibility alerts
-  const isResumed = categories.includes('SERVICE_RESUMED') || 
-                    headerText.toLowerCase().includes('resumed') ||
-                    headerText.toLowerCase().includes('regular service');
-  const isRSZ = alertId.startsWith('ttc-rsz-') || categories.includes('RSZ');
-  const isAccessibility = categories.includes('ACCESSIBILITY') || 
-                          categories.includes('ACCESSIBILITY_ISSUE') ||
-                          alertId.startsWith('ttc-elev-');
-  
-  // Only show toast for MAJOR disruptions/delays (not RSZ, elevators, or resolved)
-  if (!isResumed && !isRSZ && !isAccessibility) {
-    const severity = getSeverityCategory(categories, newAlert.effect, headerText);
-    if (severity === 'MAJOR') {
-      newAlertEvent.set({
-        alertId: newAlert.alert_id,
-        headerText: headerText,
-        severity: severity,
-        timestamp: new Date()
-      });
-    }
   }
 }
 
