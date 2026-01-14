@@ -96,8 +96,16 @@
       <p class="text-sm text-muted-foreground">
         {$_("about.projectDescription")}
       </p>
-      <p class="text-sm text-muted-foreground">
-        {$_("about.projectFeatures")}
+      <p class="text-sm text-muted-foreground font-medium">Key features include:</p>
+      <ul class="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-1">
+        <li>{$_("about.projectFeature1")}</li>
+        <li>{$_("about.projectFeature2")}</li>
+        <li>{$_("about.projectFeature3")}</li>
+        <li>{$_("about.projectFeature4")}</li>
+        <li>{$_("about.projectFeature5")}</li>
+      </ul>
+      <p class="text-sm text-muted-foreground font-medium">
+        {$_("about.projectFreeForever")}
       </p>
     </Card.Content>
   </Card.Root>
@@ -301,6 +309,9 @@
     <Card.Content class="space-y-4">
       <p class="text-sm text-muted-foreground">
         {$_("about.supportDescription")}
+      </p>
+      <p class="text-sm text-muted-foreground">
+        {$_("about.supportDescription2")}
       </p>
       <Button
         variant="default"
