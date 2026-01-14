@@ -100294,6 +100294,20 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ## 7. Layout
 
+### Logo Sizes
+
+| Location              | Height Class | Pixels | Notes                               |
+| --------------------- | ------------ | ------ | ----------------------------------- |
+| Mobile header         | `h-6`        | 24px   | Main nav bar logo on mobile         |
+| Hamburger dropdown    | `h-6`        | 24px   | Inline SVG for instant render       |
+| Desktop sidebar       | `h-7`        | 28px   | Via CSS `.sidebar-logo`             |
+| About page icon       | `h-14`       | 56px   | rideTO_logo.svg (icon only, square) |
+
+**Logo Files:**
+- `/LOGO.svg` - Full logo with "rideTO" text (886x213)
+- `/rideTO_logo.svg` - Icon only, square format
+- `/rideTO_logo_name.svg` - Icon + text (used for nav headers)
+
 ### App Structure
 
 ```

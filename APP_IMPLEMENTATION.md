@@ -20,6 +20,9 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                       | Change                                                                           | Status       |
 | ------------------------------- | -------------------------------------------------------------------------------- | ------------ |
+| **Logo sizes standardized**     | Mobile header h-6 (24px), Desktop sidebar h-7 (28px), hamburger dropdown h-6     | ✅ Committed |
+| **Inline SVG logos**            | Hamburger dropdown and menu icons now inline SVG for instant render              | ✅ Committed |
+| **About page logo**             | Updated to use rideTO_logo.svg for app icon                                      | ✅ Committed |
 | **verify-elevators v2**         | Auto-cleanup stale "back in service" alerts when TTC API shows still out         | ✅ Deployed  |
 | **AlertCard.svelte**            | Threading disabled for elevator/accessibility alerts (no "earlier updates" link) | ✅ Committed |
 | **Toast notifications removed** | Removed new alert toast feature (Realtime auto-updates UI without toasts)        | ✅ Committed |
