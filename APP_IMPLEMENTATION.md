@@ -20,6 +20,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                       | Change                                                                           | Status       |
 | ------------------------------- | -------------------------------------------------------------------------------- | ------------ |
+| **Sitemap updated**             | Added `<lastmod>` dates to all pages, added missing `/settings` page             | ✅ Committed |
 | **Logo sizes standardized**     | Mobile header h-6 (24px), Desktop sidebar h-7 (28px), hamburger dropdown h-6     | ✅ Committed |
 | **Inline SVG logos**            | Hamburger dropdown and menu icons now inline SVG for instant render              | ✅ Committed |
 | **About page logo**             | Updated to use rideTO_logo.svg for app icon                                      | ✅ Committed |
@@ -156,29 +157,54 @@ Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevat
 
 | File                                            | Status | Purpose                                                            |
 | ----------------------------------------------- | ------ | ------------------------------------------------------------------ |
-| `components/alerts/AlertCard.svelte`            | ✅     | Alert cards w/ route extraction from header_text                   |
-| `components/alerts/ClosuresView.svelte`         | ✅     | Scheduled closures display (detects nightly/weekend types)         |
-| `components/alerts/FilterChips.svelte`          | ✅     | Category filter buttons                                            |
-| `components/alerts/MaintenanceWidget.svelte`    | ✅     | Scheduled maintenance display                                      |
-| `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)                      |
-| `components/alerts/StatusBadge.svelte`          | ✅     | Status badges (Nightly/Weekend Closure, Delay, etc.)               |
-| `components/dialogs/SignInDialog.svelte`        | ✅     | WebAuthn sign-in + recovery fallback                               |
-| `components/dialogs/CreateAccountDialog.svelte` | ✅     | Registration + recovery codes                                      |
-| `components/dialogs/AuthRequiredDialog.svelte`  | ✅     | Auth prompt for protected features                                 |
-| `components/dialogs/HowToUseDialog.svelte`      | ✅     | User guide                                                         |
-| `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                                                 |
-| `components/layout/Header.svelte`               | ✅     | App header with auth controls                                      |
-| `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation                                                 |
-| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation + iOS PWA viewport fix (visualViewport API)      |
-| `components/ui/*`                               | ✅     | shadcn-svelte base components                                      |
-| `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                                       |
-| `stores/alerts.ts`                              | ✅     | Alerts state + realtime sync + TTC API alert preservation in dedup |
-| `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store                                         |
-| `stores/preferences.ts`                         | ✅     | User preferences state                                             |
+| `components/alerts/AlertCard.svelte`            | ✅     | Alert cards w/ route extraction, elevator threading disabled   |
+| `components/alerts/ClosuresView.svelte`         | ✅     | Scheduled closures display (detects nightly/weekend types)     |
+| `components/alerts/FilterChips.svelte`          | ✅     | Category filter buttons                                        |
+| `components/alerts/CategoryFilter.svelte`       | ✅     | Category filter tabs with counts                               |
+| `components/alerts/RSZAlertCard.svelte`         | ✅     | Reduced Speed Zone alert cards                                 |
+| `components/alerts/RouteBadge.svelte`           | ✅     | TTC-branded route badges (full names, colors)                  |
+| `components/alerts/StatusBadge.svelte`          | ✅     | Status badges (Nightly/Weekend Closure, Delay, etc.)           |
+| `components/alerts/RouteChangesView.svelte`     | ✅     | TTC Sitecore route changes display                             |
+| `components/alerts/AccessibilityBadge.svelte`   | ✅     | Elevator/escalator status badges                               |
+| `components/alerts/MyRouteAlerts.svelte`        | ✅     | User's saved route alerts                                      |
+| `components/alerts/RouteSearch.svelte`          | ✅     | Route search component                                         |
+| `components/alerts/BookmarkRouteButton.svelte`  | ✅     | Bookmark route toggle button                                   |
+| `components/dialogs/HowToUseDialog.svelte`      | ✅     | User guide                                                     |
+| `components/dialogs/InstallPWADialog.svelte`    | ✅     | PWA install prompt                                             |
+| `components/dialogs/ReportIssueDialog.svelte`   | ✅     | Issue reporting dialog                                         |
+| `components/dialogs/FeatureRequestDialog.svelte`| ✅     | Feature request dialog                                         |
+| `components/layout/Header.svelte`               | ✅     | App header with inline SVG logo in hamburger menu              |
+| `components/layout/Sidebar.svelte`              | ✅     | Desktop navigation with h-6 logo                               |
+| `components/layout/MobileBottomNav.svelte`      | ✅     | Mobile navigation + iOS PWA viewport fix (visualViewport API)  |
+| `components/layout/HolidayBanner.svelte`        | ✅     | Holiday service notice banner                                  |
+| `components/layout/HomeSubTabs.svelte`          | ✅     | Homepage sub-navigation tabs                                   |
+| `components/layout/PullToRefresh.svelte`        | ✅     | Pull-to-refresh interaction                                    |
+| `components/layout/StatusBanner.svelte`         | ✅     | Status notification banner                                     |
+| `components/ui/*`                               | ✅     | shadcn-svelte base components                                  |
+| `services/webauthn.ts`                          | ✅     | WebAuthn browser API wrapper                                   |
+| `services/nextbus.ts`                           | ✅     | NextBus API service                                            |
+| `services/route-changes.ts`                     | ✅     | Route changes API service                                      |
+| `services/schedule-lookup.ts`                   | ✅     | Schedule lookup service                                        |
+| `services/storage.ts`                           | ✅     | Local storage service                                          |
+| `services/subway-eta.ts`                        | ✅     | Subway ETA service                                             |
+| `stores/alerts.ts`                              | ✅     | Alerts state + realtime sync + deduplication                   |
+| `stores/auth.ts`                                | ✅     | Custom WebAuthn auth store                                     |
+| `stores/preferences.ts`                         | ✅     | User preferences state                                         |
+| `stores/accessibility.ts`                       | ✅     | Accessibility settings store                                   |
+| `stores/dialogs.ts`                             | ✅     | Dialog state management                                        |
+| `stores/eta.ts`                                 | ✅     | ETA data store                                                 |
+| `stores/language.ts`                            | ✅     | i18n language store                                            |
+| `stores/localPreferences.ts`                    | ✅     | Local-only preferences                                         |
+| `stores/networkStatus.ts`                       | ✅     | Network connectivity store                                     |
+| `stores/route-changes.ts`                       | ✅     | Route changes store                                            |
+| `stores/savedRoutes.ts`                         | ✅     | Saved routes store                                             |
+| `stores/savedStops.ts`                          | ✅     | Saved stops store                                              |
+| `stores/visibility.ts`                          | ✅     | Page visibility store                                          |
 | `types/auth.ts`                                 | ✅     | Auth TypeScript types                                              |
 | `types/database.ts`                             | ✅     | Database types (JSONB fields)                                      |
-| `supabase.ts`                                   | ✅     | Supabase client config                                             |
-| `utils.ts`                                      | ✅     | Utility functions                                                  |
+| `supabase.ts`                                   | ✅     | Supabase client config                                         |
+| `utils.ts`                                      | ✅     | Utility functions                                              |
+| `SEO.svelte`                                    | ✅     | SEO meta component                                             |
 
 ### Pages (`src/routes/`)
 
@@ -206,10 +232,16 @@ Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevat
 | `functions/auth-verify/index.ts`            | ✅     | Verify biometrics, create session                                          |
 | `functions/auth-session/index.ts`           | ✅     | Validate existing session                                                  |
 | `functions/auth-recover/index.ts`           | ✅     | Sign in with recovery code                                                 |
-| `functions/poll-alerts/index.ts`            | ✅     | Fetch/parse/thread alerts (v107: self-healing RSZ/elevator protection)     |
+| `functions/poll-alerts/index.ts`            | ✅     | Fetch/parse/thread alerts (v150: Bluesky-only architecture)                |
 | `functions/verify-elevators/index.ts`       | ✅     | Validate elevator alerts vs TTC API (v2: auto-cleanup stale alerts)        |
-| `functions/monitor-alert-accuracy/index.ts` | ✅     | Compare TTC API vs Supabase (scheduled every 5min)                         |
-| `functions/scrape-maintenance/index.ts`     | ✅     | Scrape subway closures from TTC (v3: single-day closure support, Sitecore) |
+| `functions/verify-rsz/index.ts`             | ✅     | Validates RSZ data against TTC website                                     |
+| `functions/verify-disruptions/index.ts`     | ✅     | Validates disruption alerts (⚠️ May need update for Bluesky-only)          |
+| `functions/scrape-rsz/index.ts`             | ✅     | Alternative RSZ source from TTC website                                    |
+| `functions/scrape-maintenance/index.ts`     | ✅     | Fetches planned maintenance from TTC (v3: single-day closures, Sitecore)   |
+| `functions/db-cleanup/index.ts`             | ✅     | Database cleanup job                                                       |
+| `functions/get-eta/index.ts`                | ✅     | ETA predictions from NextBus API                                           |
+| `functions/submit-feedback/index.ts`        | ✅     | User feedback submission                                                   |
+| `functions/monitor-alert-accuracy/index.ts` | ❌     | Compares TTC API vs Supabase (DISABLED)                                    |
 
 ### Database (EXISTING in Supabase)
 
@@ -319,27 +351,32 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 ### Alert Processing Functions
 
-| Function               | Version | Status | Purpose                                      |
-| ---------------------- | ------- | ------ | -------------------------------------------- |
-| poll-alerts            | v147    | ✅     | Main alert fetcher from TTC API + Bluesky    |
-| verify-elevators       | v1      | ✅     | Validates elevator data against TTC API      |
-| verify-rsz             | v1      | ✅     | Validates RSZ data against TTC website       |
-| scrape-rsz             | v4      | ✅     | Alternative RSZ source from TTC website      |
-| scrape-maintenance     | v3      | ✅     | Fetches planned maintenance from TTC website |
-| monitor-alert-accuracy | v5      | ❌     | Compares TTC API vs database (DISABLED)      |
+| Function               | Version | Status | Purpose                                                 |
+| ---------------------- | ------- | ------ | ------------------------------------------------------- |
+| poll-alerts            | v150    | ✅     | Main alert fetcher (Bluesky-only architecture)          |
+| verify-elevators       | v2      | ✅     | Validates elevator data, auto-cleanup stale alerts      |
+| verify-rsz             | v1      | ✅     | Validates RSZ data against TTC website                  |
+| verify-disruptions     | v2      | ⚠️     | Validates disruptions (may need Bluesky-only update)    |
+| scrape-rsz             | v4      | ✅     | Alternative RSZ source from TTC website                 |
+| scrape-maintenance     | v3      | ✅     | Fetches planned maintenance from TTC website (Sitecore) |
+| db-cleanup             | v1      | ✅     | Database cleanup job (4 AM Toronto time)                |
+| get-eta                | -       | ✅     | ETA predictions from NextBus API                        |
+| submit-feedback        | -       | ✅     | User feedback submission                                |
+| monitor-alert-accuracy | v5      | ❌     | Compares TTC API vs database (DISABLED)                 |
 
 ### Cron Jobs (pg_cron)
 
-| Job Name               | Schedule           | Function               | Status      |
-| ---------------------- | ------------------ | ---------------------- | ----------- |
-| poll-alerts-2min       | `*/2 * * * *`      | poll-alerts            | ✅ Active   |
-| verify-elevators-15min | `*/15 * * * *`     | verify-elevators       | ✅ Active   |
-| verify-rsz-15min       | `7,22,37,52 * * *` | verify-rsz             | ✅ Active   |
-| scrape-rsz-30min       | `*/30 * * * *`     | scrape-rsz             | ✅ Active   |
-| scrape-maintenance-6hr | `0 */6 * * *`      | scrape-maintenance     | ✅ Active   |
-| cleanup-alerts-8am-utc | `0 8 * * *`        | cleanup_old_alerts     | ✅ Active   |
-| cleanup-alerts-9am-utc | `0 9 * * *`        | cleanup_old_alerts     | ✅ Active   |
-| monitor-accuracy-5min  | `*/5 * * * *`      | monitor-alert-accuracy | ❌ Disabled |
+| Job Name                  | Schedule           | EST Equivalent            | Function           | Status      |
+| ------------------------- | ------------------ | ------------------------- | ------------------ | ----------- |
+| poll-alerts-2min          | `*/2 * * * *`      | Every 2 min               | poll-alerts        | ✅ Active   |
+| verify-elevators-15min    | `*/15 * * * *`     | Every 15 min              | verify-elevators   | ✅ Active   |
+| verify-rsz-15min          | `7,22,37,52 * * *` | Every 15 min (offset)     | verify-rsz         | ✅ Active   |
+| verify-disruptions-15min  | `*/15 * * * *`     | Every 15 min              | verify-disruptions | ✅ Active   |
+| scrape-rsz-30min          | `*/30 * * * *`     | Every 30 min              | scrape-rsz         | ✅ Active   |
+| scrape-maintenance-6hr    | `0 */6 * * *`      | Every 6 hours             | scrape-maintenance | ✅ Active   |
+| cleanup-alerts-8am-utc    | `0 8 * * *`        | 3 AM EST / 4 AM EDT       | cleanup_old_alerts | ✅ Active   |
+| cleanup-alerts-9am-utc    | `0 9 * * *`        | 4 AM EST / 5 AM EDT       | cleanup_old_alerts | ✅ Active   |
+| monitor-accuracy-5min     | `*/5 * * * *`      | Every 5 min               | monitor-accuracy   | ❌ Disabled |
 
 ### GitHub Actions Workflows
 
