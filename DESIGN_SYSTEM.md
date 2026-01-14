@@ -189,6 +189,27 @@ font-family: "Lexend", system-ui, -apple-system, sans-serif;
 
 **Lexend** is a dyslexic-friendly variable font optimized for reading.
 
+### Text Selection (Highlight)
+
+Custom purple brand color for text selection, with WCAG AA compliant contrast:
+
+| Mode  | Background                           | Text Color              |
+| ----- | ------------------------------------ | ----------------------- |
+| Light | `rgba(155, 68, 199, 0.3)` (purple)   | `hsl(240 10% 3.9%)` (dark) |
+| Dark  | `rgba(192, 132, 224, 0.4)` (lighter) | `hsl(0 0% 98%)` (light)    |
+
+```css
+::selection {
+  background-color: rgba(155, 68, 199, 0.3);
+  color: hsl(240 10% 3.9%);
+}
+
+.dark ::selection {
+  background-color: rgba(192, 132, 224, 0.4);
+  color: hsl(0 0% 98%);
+}
+```
+
 ### Weight Hierarchy
 
 | Weight       | Value | Usage                                          |

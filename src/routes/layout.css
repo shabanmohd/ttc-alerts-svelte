@@ -110,6 +110,33 @@
 }
 
 /* ============================================
+   TEXT SELECTION STYLING (WCAG 2.2 AA Compliant)
+   Purple brand color with adequate contrast
+   ============================================ */
+
+/* Light mode selection - purple at 30% opacity for readability */
+::selection {
+  background-color: rgba(155, 68, 199, 0.3);
+  color: hsl(240 10% 3.9%); /* --foreground */
+}
+
+::-moz-selection {
+  background-color: rgba(155, 68, 199, 0.3);
+  color: hsl(240 10% 3.9%);
+}
+
+/* Dark mode selection - brighter purple for visibility on dark bg */
+.dark ::selection {
+  background-color: rgba(192, 132, 224, 0.4);
+  color: hsl(0 0% 98%); /* light text */
+}
+
+.dark ::-moz-selection {
+  background-color: rgba(192, 132, 224, 0.4);
+  color: hsl(0 0% 98%);
+}
+
+/* ============================================
    MOTION & TRANSITION TOKENS (WCAG 2.2 Compliant)
    Standardized durations for consistent motion design
    ============================================ */
