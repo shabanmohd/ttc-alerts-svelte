@@ -1697,7 +1697,7 @@ function getClosureType(maintenance: PlannedMaintenance): string {
    - **Unhide hidden:** If elevator in TTC API but thread is `is_hidden = true`
    - **Hide stale:** If thread in database but elevator no longer in TTC API
 4. **v2 Addition:** Clean up stale "back in service" alerts
-   - Find alerts with `header_text` containing "back in service" 
+   - Find alerts with `header_text` containing "back in service"
    - Check if TTC API shows elevator still "out of service"
    - Delete stale "back in service" alerts if TTC API contradicts them
 
@@ -1925,7 +1925,7 @@ const { data } = await supabase
 
 | Version | Date       | Changes                                                                                                                                                               |
 | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| v4.2    | 2026-01-14 | verify-elevators v2: Auto-cleanup stale "back in service" alerts; Frontend v152: Threading disabled for elevator/accessibility alerts (no "earlier updates" link)    |
+| v4.2    | 2026-01-14 | verify-elevators v2: Auto-cleanup stale "back in service" alerts; Frontend v152: Threading disabled for elevator/accessibility alerts (no "earlier updates" link)     |
 | v4.1    | 2026-01-13 | Frontend v151: Bluesky disruptions display + DELAY → MAJOR severity (affects subway status cards); RSZAlertCard skips SERVICE_RESUMED alerts                          |
 | v4.0    | 2026-01-13 | poll-alerts v150: Bluesky-only architecture for disruptions; removed TTC API disruption processing, thread hiding/unhiding; native Bluesky reply threading            |
 | v3.22   | 2026-01-11 | Fix `validate_alert_thread_routes` trigger: bypass route validation for elevator/ACCESSIBILITY alerts (station names don't match route numbers)                       |

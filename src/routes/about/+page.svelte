@@ -17,6 +17,7 @@
     Navigation,
     HardDrive,
     Clock,
+    Sparkles,
   } from "lucide-svelte";
   import SEO from "$lib/components/SEO.svelte";
   import { getVersionString } from "$lib/build-info";
@@ -80,10 +81,31 @@
     </Card.Content>
   </Card.Root>
 
-  <!-- About Me -->
+  <!-- About the Project -->
   <Card.Root
     class="mb-6 gap-4 animate-fade-in-up"
     style="animation-delay: 100ms"
+  >
+    <Card.Header>
+      <Card.Title class="text-lg flex items-center gap-2">
+        <Sparkles class="h-5 w-5 text-amber-500" />
+        {$_("about.aboutProject")}
+      </Card.Title>
+    </Card.Header>
+    <Card.Content class="space-y-4">
+      <p class="text-sm text-muted-foreground">
+        {$_("about.projectDescription")}
+      </p>
+      <p class="text-sm text-muted-foreground">
+        {$_("about.projectFeatures")}
+      </p>
+    </Card.Content>
+  </Card.Root>
+
+  <!-- About Me -->
+  <Card.Root
+    class="mb-6 gap-4 animate-fade-in-up"
+    style="animation-delay: 150ms"
   >
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
@@ -111,7 +133,7 @@
   </Card.Root>
 
   <!-- Data Sources -->
-  <Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 150ms">
+  <Card.Root class="mb-6 animate-fade-in-up" style="animation-delay: 200ms">
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
         <Database class="h-5 w-5 text-blue-500" />
@@ -197,7 +219,7 @@
   <!-- Privacy & Location -->
   <Card.Root
     class="mb-6 border-blue-500/50 animate-fade-in-up"
-    style="animation-delay: 200ms"
+    style="animation-delay: 250ms"
   >
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
@@ -245,7 +267,7 @@
   <!-- Disclaimer -->
   <Card.Root
     class="mb-6 gap-4 border-amber-500/50 animate-fade-in-up"
-    style="animation-delay: 250ms"
+    style="animation-delay: 300ms"
   >
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
@@ -268,7 +290,7 @@
   <!-- Support -->
   <Card.Root
     class="mb-6 gap-4 border-rose-500/50 bg-gradient-to-br from-rose-500/5 to-amber-500/5 animate-fade-in-up"
-    style="animation-delay: 300ms"
+    style="animation-delay: 350ms"
   >
     <Card.Header>
       <Card.Title class="text-lg flex items-center gap-2">
@@ -296,7 +318,7 @@
   <!-- Footer -->
   <div
     class="text-center text-sm text-muted-foreground space-y-1 animate-fade-in-up"
-    style="animation-delay: 350ms"
+    style="animation-delay: 400ms"
   >
     <p class="inline-flex items-center gap-1">
       {$_("about.madeWith")}

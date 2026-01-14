@@ -288,14 +288,14 @@ These Edge Functions run periodically to ensure data consistency:
 
 All Edge Function cron jobs use **vault-based authentication** via wrapper functions. This ensures the service role key is securely retrieved at runtime rather than hardcoded.
 
-| Wrapper Function             | Edge Function        | Auth Method |
-| ---------------------------- | -------------------- | ----------- |
-| `invoke_poll_alerts()`       | poll-alerts          | ✅ Vault    |
-| `invoke_scrape_rsz()`        | scrape-rsz           | ✅ Vault    |
-| `invoke_scrape_maintenance()`| scrape-maintenance   | ✅ Vault    |
-| `invoke_verify_disruptions()`| verify-disruptions   | ✅ Vault    |
-| `invoke_verify_elevators()`  | verify-elevators     | ✅ Vault    |
-| `invoke_verify_rsz()`        | verify-rsz           | ✅ Vault    |
+| Wrapper Function              | Edge Function      | Auth Method |
+| ----------------------------- | ------------------ | ----------- |
+| `invoke_poll_alerts()`        | poll-alerts        | ✅ Vault    |
+| `invoke_scrape_rsz()`         | scrape-rsz         | ✅ Vault    |
+| `invoke_scrape_maintenance()` | scrape-maintenance | ✅ Vault    |
+| `invoke_verify_disruptions()` | verify-disruptions | ✅ Vault    |
+| `invoke_verify_elevators()`   | verify-elevators   | ✅ Vault    |
+| `invoke_verify_rsz()`         | verify-rsz         | ✅ Vault    |
 
 **Why vault-based auth?**
 

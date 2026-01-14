@@ -370,7 +370,9 @@
   const earlierAlerts = $derived(
     isElevatorThread
       ? []
-      : thread.alerts.filter((alert) => alert.alert_id !== displayAlert?.alert_id)
+      : thread.alerts.filter(
+          (alert) => alert.alert_id !== displayAlert?.alert_id
+        )
   );
 
   // Get routes for badge display:
