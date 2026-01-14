@@ -30,7 +30,6 @@
   import { toast } from "svelte-sonner";
   import { _, isLoading } from "svelte-i18n";
   import { get } from "svelte/store";
-  import { goto } from "$app/navigation";
 
   // Initialize i18n translations
   initI18n();
@@ -129,30 +128,26 @@
     unsubscribeAlerts = subscribeToAlerts();
     
     // Subscribe to new alert events for toast notifications
+    // Only shows for MAJOR disruptions/delays (not RSZ, elevators, or resolved)
     unsubscribeNewAlert = newAlertEvent.subscribe((event) => {
       if (!event) return;
       
-      // Show toast for new alerts
-      const severityLabel = {
-        MAJOR: $_("toasts.newDisruption") || "New disruption",
-        MINOR: $_("toasts.newSlowzone") || "New slow zone",
-        ACCESSIBILITY: $_("toasts.newElevatorAlert") || "Elevator update",
-        ALL: $_("toasts.newAlert") || "New alert"
-      }[event.severity] || $_("toasts.newAlert") || "New alert";
+      // Show toast for new disruption/delay alerts
+      const toastTitle = $_("toasts.newDisruption") || "New disruption";
       
       // Truncate header text for toast
       const shortHeader = event.headerText.length > 80 
         ? event.headerText.substring(0, 77) + "..."
         : event.headerText;
       
-      toast.info(severityLabel, {
+      toast.info(toastTitle, {
         id: `new-alert-${event.alertId}`, // Prevent duplicate toasts for same alert
         description: shortHeader,
         duration: 5000, // Auto-dismiss after 5 seconds
         action: {
-          label: $_("common.view") || "View",
-          onClick: () => {
-            goto("/alerts");
+          label: $_("common.refresh") || "Refresh",
+          onClick: async () => {
+            await refreshAlerts();
           }
         }
       });
