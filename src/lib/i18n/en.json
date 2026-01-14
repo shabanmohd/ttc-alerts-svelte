@@ -790,7 +790,7 @@
     "tagline": "Real-time Toronto Transit Commission (TTC) alerts",
     "aboutProject": "About the Project",
     "projectDescription": "rideTO started as a simple solution to a daily frustration: checking multiple sources just to know if the subway was delayed. Now it's grown into a comprehensive transit companion that aggregates alerts from the TTC's official feeds and social media, provides real-time arrival predictions, and helps you save your frequently used stops and routes.",
-    "projectFeatures": "Key features include real-time service alerts with smart categorization, live arrival times via NextBus, route schedules from TTC GTFS data, and a clean offline-capable design. Everything is built with accessibility in mind - from high-contrast colors to screen reader support.",
+    "projectFeatures": "Key features include real-time service alerts with smart categorization, live arrival times via NextBus, and route schedules from TTC GTFS data. The layout and UI are optimized for scannability and readability, featuring a dyslexic-friendly typeface (Lexend). Built with accessibility in mind - from high-contrast colors to screen reader support - and the app will be free forever.",
     "aboutDeveloper": "About the Developer",
     "developerBio": "rideTO is a passion project built by a Toronto transit rider who is an engineer turned UX designer. The goal is to build an app which is free to use and continuously improved based on user feedback.",
     "moreAboutMe": "More about me",
