@@ -56,11 +56,11 @@
     <Card.Content>
       <div class="flex items-center gap-4">
         <img
-          src="/icons/icon-about.png?v=9"
+          src="/rideTO_logo.svg"
           alt="rideTO logo"
           width="56"
           height="56"
-          class="h-14 w-14 rounded-xl"
+          class="h-14 w-14"
         />
         <div>
           <img

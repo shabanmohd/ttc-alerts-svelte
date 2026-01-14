@@ -56,13 +56,13 @@
 </script>
 
 <aside class="sidebar">
-  <a href="/" class="sidebar-header py-3">
+  <a href="/" class="sidebar-header py-4">
     <img
       src="/LOGO.svg"
       alt="rideTO"
-      width="106"
-      height="40"
-      class="sidebar-logo"
+      width="72"
+      height="24"
+      class="sidebar-logo h-6"
     />
   </a>
 

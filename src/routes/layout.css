@@ -543,7 +543,7 @@ header.sticky {
 }
 
 .sidebar-logo {
-  height: 2.5rem;
+  height: 1.75rem; /* h-7 = 28px */
   width: auto;
 }
 
