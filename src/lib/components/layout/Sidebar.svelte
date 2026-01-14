@@ -56,7 +56,7 @@
 </script>
 
 <aside class="sidebar">
-  <a href="/" class="sidebar-header">
+  <a href="/" class="sidebar-header py-3">
     <img
       src="/LOGO.svg"
       alt="rideTO"

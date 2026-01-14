@@ -148,7 +148,7 @@
 >
   <div class="header-container">
     <!-- Logo (mobile only) -->
-    <a href="/" class="header-left">
+    <a href="/" class="header-left py-2">
       <img
         src="/LOGO.svg"
         alt="rideTO"
@@ -344,9 +344,9 @@
   <!-- Header bar with close button - accounts for iOS safe area -->
   <div
     class="sm:hidden fixed left-0 right-0 top-0 z-[1003] flex items-center justify-between px-4 border-b animate-fade-in"
-    style="background-color: hsl(var(--background)); border-color: hsl(var(--border)); padding-top: env(safe-area-inset-top, 0px); height: calc(57px + env(safe-area-inset-top, 0px));"
+    style="background-color: hsl(var(--background)); border-color: hsl(var(--border)); padding-top: env(safe-area-inset-top, 0px); height: calc(64px + env(safe-area-inset-top, 0px));"
   >
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 py-2">
       <img
         src="/LOGO.svg"
         alt="rideTO"
