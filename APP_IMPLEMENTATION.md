@@ -18,11 +18,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## 🆕 Recent Updates (Jan 14, 2026)
 
-| Component                       | Change                                                                           | Status       |
-| ------------------------------- | -------------------------------------------------------------------------------- | ------------ |
-| **verify-elevators v2**         | Auto-cleanup stale "back in service" alerts when TTC API shows still out         | ✅ Deployed  |
-| **AlertCard.svelte**            | Threading disabled for elevator/accessibility alerts (no "earlier updates" link) | ✅ Committed |
-| **Toast notifications removed** | Removed new alert toast feature (Realtime auto-updates UI without toasts)        | ✅ Committed |
+| Component                       | Change                                                                            | Status       |
+| ------------------------------- | --------------------------------------------------------------------------------- | ------------ |
+| **verify-elevators v2**         | Auto-cleanup stale "back in service" alerts when TTC API shows still out          | ✅ Deployed  |
+| **AlertCard.svelte**            | Threading disabled for elevator/accessibility alerts (no "earlier updates" link)  | ✅ Committed |
+| **Toast notifications removed** | Removed new alert toast feature (Realtime auto-updates UI without toasts)         | ✅ Committed |
+| **About page redesign**         | New "About the Project" section, bullet points, updated developer bio             | ✅ Committed |
+| **Text selection colors**       | Purple brand color for text highlight (light: 30% opacity, dark: 40%)             | ✅ Committed |
 
 ### Previous Updates (Jan 13, 2026)
 
@@ -177,13 +179,19 @@ Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevat
 
 ### Pages (`src/routes/`)
 
-| File                          | Status | Purpose                        |
-| ----------------------------- | ------ | ------------------------------ |
-| `+layout.svelte`              | ✅     | App layout, auth init, dialogs |
-| `+page.svelte`                | ✅     | Homepage with alert tabs       |
-| `preferences/+page.svelte`    | ✅     | Route/mode preferences         |
-| `auth/callback/+page.svelte`  | ✅     | Auth callback handler          |
-| `admin/accuracy/+page.svelte` | ✅     | Alert accuracy monitoring      |
+| File                          | Status | Purpose                                                        |
+| ----------------------------- | ------ | -------------------------------------------------------------- |
+| `+layout.svelte`              | ✅     | App layout, auth init, dialogs                                 |
+| `+layout.css`                 | ✅     | Global styles, Tailwind config, text selection colors          |
+| `+page.svelte`                | ✅     | Homepage with alert tabs                                       |
+| `alerts/+page.svelte`         | ✅     | Service alerts page with filtering                             |
+| `routes/+page.svelte`         | ✅     | Browse all TTC routes                                          |
+| `about/+page.svelte`          | ✅     | About the Project + Developer sections                         |
+| `help/+page.svelte`           | ✅     | How to use the app                                             |
+| `settings/+page.svelte`       | ✅     | User settings (noindex)                                        |
+| `preferences/+page.svelte`    | ✅     | Route/mode preferences                                         |
+| `auth/callback/+page.svelte`  | ✅     | Auth callback handler                                          |
+| `admin/accuracy/+page.svelte` | ✅     | Alert accuracy monitoring                                      |
 
 ### Backend (`supabase/`)
 
@@ -196,6 +204,7 @@ Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevat
 | `functions/auth-session/index.ts`           | ✅     | Validate existing session                                                  |
 | `functions/auth-recover/index.ts`           | ✅     | Sign in with recovery code                                                 |
 | `functions/poll-alerts/index.ts`            | ✅     | Fetch/parse/thread alerts (v107: self-healing RSZ/elevator protection)     |
+| `functions/verify-elevators/index.ts`       | ✅     | Validate elevator alerts vs TTC API (v2: auto-cleanup stale alerts)        |
 | `functions/monitor-alert-accuracy/index.ts` | ✅     | Compare TTC API vs Supabase (scheduled every 5min)                         |
 | `functions/scrape-maintenance/index.ts`     | ✅     | Scrape subway closures from TTC (v3: single-day closure support, Sitecore) |
 

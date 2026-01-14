@@ -96,8 +96,12 @@
       <p class="text-sm text-muted-foreground">
         {$_("about.projectDescription")}
       </p>
-      <p class="text-sm text-muted-foreground font-medium">Key features include:</p>
-      <ul class="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-1">
+      <p class="text-sm text-muted-foreground font-medium">
+        Key features include:
+      </p>
+      <ul
+        class="text-sm text-muted-foreground list-disc list-inside space-y-1 ml-1"
+      >
         <li>{$_("about.projectFeature1")}</li>
         <li>{$_("about.projectFeature2")}</li>
         <li>{$_("about.projectFeature3")}</li>

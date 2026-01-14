@@ -233,14 +233,18 @@ IF toronto_hour = 4 THEN ...
 
 These Edge Functions run periodically to ensure data consistency:
 
-#### verify-elevators (v1)
+#### verify-elevators (v2)
 
-| Property             | Value                                                        |
-| -------------------- | ------------------------------------------------------------ |
-| **Source**           | TTC API `accessibility` array                                |
-| **Update Frequency** | Every 15 minutes (pg_cron: :00, :15, :30, :45)               |
-| **Data Type**        | Elevator outages                                             |
-| **Auto-Corrections** | Create missing, unhide hidden-but-active, hide stale threads |
+| Property             | Value                                                                         |
+| -------------------- | ----------------------------------------------------------------------------- |
+| **Source**           | TTC API `accessibility` array                                                 |
+| **Update Frequency** | Every 15 minutes (pg_cron: :00, :15, :30, :45)                                |
+| **Data Type**        | Elevator outages                                                              |
+| **Auto-Corrections** | Create missing, unhide hidden-but-active, hide stale threads                  |
+| **v2 Enhancement**   | Auto-cleanup stale "back in service" alerts when TTC API shows still out      |
+
+**v2 Stale Alert Cleanup:**
+When an elevator alert shows "back in service" but the TTC API still shows the elevator as out of service, the stale alert is automatically deleted. This handles edge cases where the TTC API briefly reports an elevator as back in service, then reverts.
 
 #### verify-rsz (v1)
 
