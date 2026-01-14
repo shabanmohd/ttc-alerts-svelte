@@ -25,7 +25,7 @@
 
 <SEO
   title={$_("about.pageTitle")}
-  description="About rideTO - A free, community-driven app for real-time TTC service alerts in Toronto. Learn about our data sources, privacy policy, and how we keep you informed."
+  description="Learn about rideTO, a free transit companion built for Toronto commuters. Discover our data sources, accessibility commitment, and privacy practices."
 />
 <Header />
 

@@ -887,7 +887,7 @@
 
   // Dynamic SEO description based on route
   let seoDescription = $derived(
-    `Service alerts, stop schedules, and real-time updates for TTC ${routeId} ${routeName || ""}. Track delays and disruptions on this Toronto transit route.`.trim()
+    `Real-time service alerts, stop schedules, and live updates for TTC ${routeId} ${routeName || ""}. Stay informed about delays and disruptions on your route.`.trim()
   );
 </script>
 

@@ -173,7 +173,7 @@
 
 <SEO
   title={$_("pages.routes.title")}
-  description="Browse all TTC routes - subway lines, streetcar routes, express buses, regular bus service, and Blue Night routes. Save your favorites for quick access."
+  description="Browse all TTC routes including subway lines, streetcars, express buses, and Blue Night service. Save your favorites for quick, easy access."
 />
 
 <Header />

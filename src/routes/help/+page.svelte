@@ -30,7 +30,7 @@
 
 <SEO
   title={$_("help.pageTitle")}
-  description="Learn how to use rideTO - save favorite stops, track TTC routes, understand alert types, and get help with the app. FAQ and user guide for Toronto transit riders."
+  description="Get started with rideTO. Learn how to save favorite stops, track routes, understand alert types, and make the most of your Toronto transit experience."
 />
 
 <Header />

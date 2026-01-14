@@ -712,7 +712,7 @@
 
 <SEO
   title={$_("pages.alerts.title")}
-  description="Live TTC service alerts - subway delays, bus detours, streetcar disruptions, and elevator outages. Real-time updates for Toronto transit riders."
+  description="Live TTC service alerts for subway delays, bus detours, streetcar disruptions, and elevator outages. Real-time updates to keep Toronto commuters informed."
 />
 
 <Header />
