@@ -165,7 +165,7 @@ IF toronto_hour = 4 THEN ...
 - Route browser stop lists
 - Stop sequencing in UI
 - Branch selection
-- Alert route extraction (poll-alerts v138+ supports A-Z)
+- Alert route extraction (supports A-Z branch suffixes)
 
 ### 6. Route List (Dynamic)
 
