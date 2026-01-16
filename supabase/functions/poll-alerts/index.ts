@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { crypto } from 'https://deno.land/std@0.168.0/crypto/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,11 +8,22 @@ const corsHeaders = {
 };
 
 // API endpoints
-const BLUESKY_API = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed';
 const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 
 // Version for debugging
-const VERSION = '150'; // BLUESKY-ONLY ARCHITECTURE: TTC API removed for disruptions, using Bluesky reply threading
+const VERSION = '208'; // Duplicate service resumed for multiple threads on same route
+
+// Helper: Generate MD5 hash for thread_hash
+async function generateMd5Hash(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('MD5', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Grace period: number of polls to wait for service resumed before hiding
+const MAX_MISSED_POLLS = 2;
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -35,8 +47,8 @@ const ALERT_CATEGORIES = {
     keywords: ['shuttle', 'buses replacing'],
     priority: 4
   },
-  PLANNED_CLOSURE: {
-    keywords: ['planned', 'scheduled', 'maintenance', 'this weekend'],
+  SCHEDULED_CLOSURE: {
+    keywords: ['planned', 'scheduled', 'maintenance', 'this weekend', 'nightly', 'early closure'],
     priority: 5
   }
 };
@@ -51,57 +63,44 @@ function extractRoutes(text: string): string[] {
   const cleanedText = text.replace(nonRoutePatterns, '');
   
   // Match subway lines - must be "Line X" where X is 1, 2, 3, or 4 (TTC only has these)
-  // Also matches official names like "Line 1 Yonge-University", "Line 2 Bloor-Danforth"
-  // Requires word boundary before "Line" to avoid false matches
   const lineMatch = cleanedText.match(/\bLine\s+(1|2|3|4)\b/gi);
   if (lineMatch) {
     lineMatch.forEach(m => {
-      // Normalize to "Line X" format
       const num = m.match(/\d/)?.[0];
       if (num) routes.push(`Line ${num}`);
     });
   }
   
-  // Match route branches with name: "97B Yonge", "36A Finch West", "52F Lawrence", etc.
-  // Branch letters include A-D (most common), F, G (52 route), S (79S, 336S)
-  // Stop before common non-route words like "Regular", "service", "Detour", etc.
+  // Match route branches with name: "97B Yonge", "36A Finch West", etc.
   const routeBranchWithNameMatch = cleanedText.match(/\b(\d{1,3}[A-Z])\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/gi);
   if (routeBranchWithNameMatch) {
     routeBranchWithNameMatch.forEach(m => {
-      // Stop at common non-route words
       const stopWords = ['regular', 'service', 'detour', 'diversion', 'shuttle', 'delay', 'resumed', 'closed', 'suspended'];
       const words = m.split(/\s+/);
-      let routeName = words[0]; // Always include the route number (e.g., "97B")
+      let routeName = words[0];
       
-      // Add the first word after route number if it's not a stop word
       if (words[1] && !stopWords.includes(words[1].toLowerCase())) {
         routeName += ' ' + words[1];
-        // Add second word if present and not a stop word
         if (words[2] && !stopWords.includes(words[2].toLowerCase())) {
           routeName += ' ' + words[2];
         }
       }
       
-      // Normalize branch letter to uppercase
       const normalized = routeName.replace(/^(\d+)([a-z])/i, (_, num, letter) => `${num}${letter.toUpperCase()}`);
       routes.push(normalized);
     });
   }
   
   // Match numbered routes with optional name: "306 Carlton", "504 King", etc.
-  // Stop before common non-route words
   const routeWithNameMatch = cleanedText.match(/\b(\d{1,3})\s+([A-Z][a-z]+)(?:\s+([A-Z][a-z]+))?/g);
   if (routeWithNameMatch) {
     routeWithNameMatch.forEach(m => {
-      // Skip if already captured as a branch route
       const routeNum = m.match(/^\d+/)?.[0];
       if (!routes.some(r => r.match(/^\d+/)?.[0] === routeNum)) {
-        // Stop at common non-route words
         const stopWords = ['regular', 'service', 'detour', 'diversion', 'shuttle', 'delay', 'resumed', 'closed', 'suspended'];
         const words = m.split(/\s+/);
-        let routeName = words[0]; // Route number
+        let routeName = words[0];
         
-        // Add route name words, stopping at stop words
         if (words[1] && !stopWords.includes(words[1].toLowerCase())) {
           routeName += ' ' + words[1];
           if (words[2] && !stopWords.includes(words[2].toLowerCase())) {
@@ -142,7 +141,6 @@ function extractRoutes(text: string): string[] {
 function categorizeAlert(text: string): { category: string; priority: number } {
   const lowerText = text.toLowerCase();
   
-  // Sort entries by priority to ensure consistent matching order
   const sortedCategories = Object.entries(ALERT_CATEGORIES)
     .sort(([, a], [, b]) => a.priority - b.priority);
   
@@ -155,8 +153,68 @@ function categorizeAlert(text: string): { category: string; priority: number } {
   return { category: 'OTHER', priority: 10 };
 }
 
+// Check if alert text indicates service resumed
+function isServiceResumed(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  return ALERT_CATEGORIES.SERVICE_RESUMED.keywords.some(kw => lowerText.includes(kw));
+}
+
+// Check if alert is RSZ (Reduced Speed Zone)
+function isRszAlert(alert: TtcApiAlert): boolean {
+  const effectDesc = alert.effectDesc || '';
+  const headerText = (alert.headerText || '').toLowerCase();
+  
+  return effectDesc === 'Reduced Speed Zone' || 
+         headerText.includes('slower than usual') ||
+         headerText.includes('reduced speed') ||
+         headerText.includes('move slower') ||
+         headerText.includes('running slower');
+}
+
+// Check if alert is a scheduled maintenance/closure
+function isScheduledClosure(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  const scheduledPatterns = [
+    'planned', 'scheduled', 'maintenance', 'this weekend',
+    'nightly', 'early closure', 'weekend closure',
+    'starting tonight', 'will be closed'
+  ];
+  return scheduledPatterns.some(p => lowerText.includes(p));
+}
+
+// Check if alert is a site-wide banner (not route-specific)
+function isSiteWideBanner(alert: TtcApiAlert): boolean {
+  const route = alert.route || '';
+  const id = alert.id || '';
+  return route === '' || route === 'SiteWide' || id.includes('sitewide');
+}
+
+// Get base route number for matching (37A -> 37, Line 1 -> Line 1)
+function getBaseRoute(route: string): string {
+  // Handle subway lines
+  if (route.toLowerCase().startsWith('line')) {
+    return route;
+  }
+  // Extract base number from route branch (37A -> 37)
+  const match = route.match(/^(\d+)/);
+  return match ? match[1] : route;
+}
+
+// Check if two alerts match by route for threading
+function alertsMatch(alert1Routes: string[], alert2Routes: string[]): boolean {
+  const baseRoutes1 = new Set(alert1Routes.map(getBaseRoute));
+  const baseRoutes2 = new Set(alert2Routes.map(getBaseRoute));
+  
+  for (const route of baseRoutes1) {
+    if (baseRoutes2.has(route)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // ============================================================================
-// ELEVATOR THREAD ID GENERATION - SINGLE SOURCE OF TRUTH
+// ELEVATOR THREAD ID GENERATION
 // ============================================================================
 interface ElevatorInfo {
   elevatorCode: string | null | undefined;
@@ -223,6 +281,7 @@ interface TtcApiAlert {
   effect: string;
   effectDesc: string;
   severity: string;
+  lastUpdated?: string;
   elevatorCode?: string;
   stopStart?: string;
   stopEnd?: string;
@@ -230,18 +289,23 @@ interface TtcApiAlert {
   targetRemoval?: string;
 }
 
-// Type for TTC alert data - RSZ and Elevators ONLY (disruptions now Bluesky-only)
+// Type for TTC alert data
 interface TtcAlertData {
+  disruptionAlerts: TtcApiAlert[];
+  serviceResumedAlerts: TtcApiAlert[];
   rszAlerts: TtcApiAlert[];
   elevatorAlerts: TtcApiAlert[];
+  scheduledAlerts: TtcApiAlert[];
 }
 
-// Fetch RSZ and Elevator alerts from TTC API
-// REMOVED: disruption alerts - now Bluesky-only architecture
+// Fetch and categorize all alerts from TTC API
 async function fetchTtcData(): Promise<TtcAlertData> {
   const result: TtcAlertData = {
+    disruptionAlerts: [],
+    serviceResumedAlerts: [],
     rszAlerts: [],
-    elevatorAlerts: []
+    elevatorAlerts: [],
+    scheduledAlerts: []
   };
   
   try {
@@ -258,20 +322,35 @@ async function fetchTtcData(): Promise<TtcAlertData> {
     const routes = data.routes || [];
     const accessibility = data.accessibility || [];
     
-    // Process route alerts - ONLY RSZ
+    // Process route alerts
     for (const routeAlert of routes) {
-      const headerText = routeAlert.headerText?.toLowerCase() || '';
-      const effectDesc = routeAlert.effectDesc || '';
-      
-      // Check if it's an RSZ alert
-      const isRsz = effectDesc === 'Reduced Speed Zone' || 
-                    headerText.includes('slower than usual') ||
-                    headerText.includes('reduced speed');
-      
-      if (isRsz) {
-        result.rszAlerts.push(routeAlert);
+      // Skip site-wide banners
+      if (isSiteWideBanner(routeAlert)) {
+        continue;
       }
-      // REMOVED: All other route alerts - disruptions now come from Bluesky only
+      
+      const headerText = routeAlert.headerText || '';
+      
+      // Check if RSZ
+      if (isRszAlert(routeAlert)) {
+        result.rszAlerts.push(routeAlert);
+        continue;
+      }
+      
+      // Check if service resumed
+      if (isServiceResumed(headerText)) {
+        result.serviceResumedAlerts.push(routeAlert);
+        continue;
+      }
+      
+      // Check if scheduled closure/maintenance
+      if (isScheduledClosure(headerText)) {
+        result.scheduledAlerts.push(routeAlert);
+        continue;
+      }
+      
+      // Everything else is a disruption
+      result.disruptionAlerts.push(routeAlert);
     }
     
     // Process accessibility (elevator/escalator) alerts
@@ -279,7 +358,7 @@ async function fetchTtcData(): Promise<TtcAlertData> {
       result.elevatorAlerts.push(accessAlert);
     }
     
-    console.log(`TTC API: ${result.rszAlerts.length} RSZ, ${result.elevatorAlerts.length} elevators (disruptions now Bluesky-only)`);
+    console.log(`TTC API: ${result.disruptionAlerts.length} disruptions, ${result.serviceResumedAlerts.length} service resumed, ${result.scheduledAlerts.length} scheduled, ${result.rszAlerts.length} RSZ, ${result.elevatorAlerts.length} elevators`);
   } catch (error) {
     console.error('Failed to fetch TTC API:', error);
   }
@@ -287,7 +366,7 @@ async function fetchTtcData(): Promise<TtcAlertData> {
   return result;
 }
 
-// Generate a unique alert ID for TTC API alerts (RSZ/Elevator)
+// Generate a unique alert ID for TTC API alerts
 function generateTtcAlertId(type: string, route: string, text: string, stopStart?: string, stopEnd?: string): string {
   let idBase = `ttc-${type}-${route}`;
   
@@ -303,6 +382,555 @@ function generateTtcAlertId(type: string, route: string, text: string, stopStart
   return idBase.substring(0, 100);
 }
 
+// Generate thread ID for disruption/scheduled alerts
+function generateDisruptionThreadId(alertId: string): string {
+  // Alert IDs are like "ttc-alert-40-detour..." or "ttc-scheduled-2-weekend..."
+  // Thread IDs should be "thread-alert-40-detour..." (strip the ttc- prefix from alertId)
+  const cleanAlertId = alertId.replace(/^ttc-/, '');
+  return `thread-${cleanAlertId}`;
+}
+
+// Map TTC API effect to our effect types
+function mapTtcEffect(effect: string, effectDesc: string, headerText: string): string {
+  const lowerEffect = (effect || '').toUpperCase();
+  const lowerEffectDesc = (effectDesc || '').toLowerCase();
+  const lowerHeader = (headerText || '').toLowerCase();
+  
+  // Service resumed
+  if (isServiceResumed(headerText)) {
+    return 'SERVICE_RESUMED';
+  }
+  
+  // Scheduled closure
+  if (isScheduledClosure(headerText)) {
+    return 'SCHEDULED_CLOSURE';
+  }
+  
+  // Map TTC API effects to our categories
+  if (lowerEffect === 'NO_SERVICE' || lowerEffectDesc.includes('no service')) {
+    return 'NO_SERVICE';
+  }
+  if (lowerEffect === 'DETOUR' || lowerEffectDesc.includes('detour')) {
+    return 'DETOUR';
+  }
+  if (lowerEffect === 'SIGNIFICANT_DELAYS' || lowerEffectDesc.includes('delay')) {
+    return 'SIGNIFICANT_DELAYS';
+  }
+  if (lowerEffect === 'REDUCED_SERVICE' || lowerEffectDesc.includes('reduced')) {
+    return 'REDUCED_SERVICE';
+  }
+  if (lowerHeader.includes('shuttle') || lowerHeader.includes('buses replacing')) {
+    return 'SHUTTLE';
+  }
+  if (lowerHeader.includes('divert') || lowerHeader.includes('detour')) {
+    return 'DETOUR';
+  }
+  
+  return 'DISRUPTION';
+}
+
+// Process disruption alerts from TTC API
+async function processDisruptionAlerts(
+  supabase: any, 
+  disruptionAlerts: TtcApiAlert[],
+  serviceResumedAlerts: TtcApiAlert[]
+): Promise<{ newAlerts: number; updatedThreads: number; resolvedThreads: number; hiddenThreads: number }> {
+  let newAlerts = 0;
+  let updatedThreads = 0;
+  let resolvedThreads = 0;
+  let hiddenThreads = 0;
+
+  // Track current disruption alert IDs
+  const currentAlertIds = new Set<string>();
+  
+  // STEP 1: Process current disruption alerts
+  for (const alert of disruptionAlerts) {
+    const headerText = alert.headerText || '';
+    const route = alert.route || '';
+    const alertId = generateTtcAlertId('alert', route, headerText);
+    currentAlertIds.add(alertId);
+    
+    console.log(`Processing disruption: route=${route}, alertId=${alertId}`);
+    
+    // Check if this alert already exists (use maybeSingle to avoid error on no rows)
+    const { data: existing, error: existingError } = await supabase
+      .from('alert_cache')
+      .select('alert_id')
+      .eq('alert_id', alertId)
+      .maybeSingle();
+    
+    if (existingError) {
+      console.error('Error checking existing disruption alert:', existingError);
+      continue;
+    }
+    
+    if (existing) {
+      console.log(`Disruption alert ${alertId} already exists, skipping`);
+      continue;
+    }
+    
+    console.log(`Inserting new disruption alert: ${alertId}`);
+
+    // Extract routes
+    let routes: string[];
+    if (route && /^[1-4]$/.test(route)) {
+      routes = [`Line ${route}`];
+    } else if (route) {
+      routes = [route];
+    } else {
+      routes = extractRoutes(headerText);
+    }
+    
+    const { category } = categorizeAlert(headerText);
+    const effect = mapTtcEffect(alert.effect, alert.effectDesc, headerText);
+    const threadId = generateDisruptionThreadId(alertId);
+
+    // Insert alert WITHOUT thread_id first (to avoid FK constraint)
+    const alertRecord = {
+      alert_id: alertId,
+      header_text: headerText.substring(0, 500),
+      description_text: headerText,
+      categories: [category],
+      affected_routes: routes,
+      created_at: alert.lastUpdated || new Date().toISOString(),
+      is_latest: true,
+      effect: effect
+    };
+
+    const { data: insertedAlert, error: insertError } = await supabase
+      .from('alert_cache')
+      .insert(alertRecord)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Disruption alert insert error:', insertError);
+      continue;
+    }
+
+    newAlerts++;
+    console.log(`Inserted disruption alert ${alertId}`);
+
+    // Create/update thread
+    const { data: existingThread } = await supabase
+      .from('incident_threads')
+      .select('thread_id, is_hidden, is_resolved')
+      .eq('thread_id', threadId)
+      .maybeSingle();
+    
+    if (!existingThread) {
+      // Use MD5 hash of full thread_id for guaranteed uniqueness
+      const uniqueHash = await generateMd5Hash(threadId);
+      
+      const { error: threadError } = await supabase
+        .from('incident_threads')
+        .insert({
+          thread_id: threadId,
+          thread_hash: uniqueHash,
+          title: headerText.substring(0, 200),
+          affected_routes: routes,
+          categories: [category],
+          is_resolved: false,
+          is_hidden: false,
+          missed_polls: 0,
+          created_at: alert.lastUpdated || new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (threadError) {
+        console.error('Disruption thread creation error:', threadError);
+      } else {
+        console.log(`Created new disruption thread ${threadId}`);
+        updatedThreads++;
+      }
+    } else if (existingThread.is_hidden || existingThread.is_resolved) {
+      // Unhide/unresolve if alert reappeared
+      await supabase
+        .from('incident_threads')
+        .update({ 
+          is_hidden: false, 
+          is_resolved: false,
+          missed_polls: 0,
+          pending_since: null,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('thread_id', threadId);
+      console.log(`Unhid/unresolved thread ${threadId} - alert reappeared`);
+      updatedThreads++;
+    } else {
+      // Reset missed_polls since alert is still active
+      await supabase
+        .from('incident_threads')
+        .update({ 
+          missed_polls: 0,
+          pending_since: null,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('thread_id', threadId);
+    }
+
+    // Update alert with thread_id
+    await supabase
+      .from('alert_cache')
+      .update({ thread_id: threadId })
+      .eq('alert_id', insertedAlert.alert_id);
+  }
+
+  // STEP 2: Find threads that are no longer in TTC API (disappeared)
+  const { data: activeThreads } = await supabase
+    .from('incident_threads')
+    .select('thread_id, title, affected_routes, categories, missed_polls, pending_since')
+    .like('thread_id', 'thread-alert-%')
+    .eq('is_resolved', false)
+    .eq('is_hidden', false);
+
+  for (const thread of activeThreads || []) {
+    // Extract alert ID from thread ID (thread-alert-X -> ttc-alert-X)
+    const alertId = 'ttc-' + thread.thread_id.replace('thread-', '');
+    
+    if (!currentAlertIds.has(alertId)) {
+      // Alert disappeared from TTC API
+      const missedPolls = (thread.missed_polls || 0) + 1;
+      const pendingSince = thread.pending_since || new Date().toISOString();
+      
+      console.log(`Thread ${thread.thread_id} disappeared - missed_polls: ${missedPolls}`);
+      
+      // Check for matching service resumed alert
+      let matchedResumed: TtcApiAlert | null = null;
+      const threadRoutes = thread.affected_routes || [];
+      
+      for (const resumed of serviceResumedAlerts) {
+        let resumedRoutes: string[];
+        if (resumed.route && /^[1-4]$/.test(resumed.route)) {
+          resumedRoutes = [`Line ${resumed.route}`];
+        } else if (resumed.route) {
+          resumedRoutes = [resumed.route];
+        } else {
+          resumedRoutes = extractRoutes(resumed.headerText || '');
+        }
+        
+        if (alertsMatch(threadRoutes, resumedRoutes)) {
+          matchedResumed = resumed;
+          break;
+        }
+      }
+      
+      if (matchedResumed) {
+        // Found matching service resumed - resolve thread with threading
+        console.log(`Resolving thread ${thread.thread_id} with service resumed: ${matchedResumed.headerText?.substring(0, 50)}`);
+        
+        // Insert service resumed alert - use thread-specific ID to allow duplicates for multiple threads
+        // Format: ttc-resumed-{route}-{threadSuffix} to ensure uniqueness per thread
+        const threadSuffix = thread.thread_id.replace('thread-alert-', '').substring(0, 20);
+        const resumedAlertId = `ttc-resumed-${matchedResumed.route || 'unknown'}-${threadSuffix}`;
+        
+        const { data: existingResumed } = await supabase
+          .from('alert_cache')
+          .select('alert_id')
+          .eq('alert_id', resumedAlertId)
+          .maybeSingle();
+        
+        if (!existingResumed) {
+          await supabase
+            .from('alert_cache')
+            .insert({
+              alert_id: resumedAlertId,
+              thread_id: thread.thread_id,
+              header_text: (matchedResumed.headerText || '').substring(0, 500),
+              description_text: matchedResumed.headerText || '',
+              categories: ['SERVICE_RESUMED'],
+              affected_routes: threadRoutes,
+              created_at: matchedResumed.lastUpdated || new Date().toISOString(),
+              is_latest: true,
+              effect: 'SERVICE_RESUMED'
+            });
+          
+          // Mark old alerts as not latest
+          await supabase
+            .from('alert_cache')
+            .update({ is_latest: false })
+            .eq('thread_id', thread.thread_id)
+            .neq('alert_id', resumedAlertId);
+        }
+        
+        // Update thread - resolve with SERVICE_RESUMED category
+        const existingCategories = (thread.categories as string[]) || [];
+        const newCategories = existingCategories.includes('SERVICE_RESUMED') 
+          ? existingCategories 
+          : [...existingCategories, 'SERVICE_RESUMED'];
+        
+        await supabase
+          .from('incident_threads')
+          .update({
+            is_resolved: true,
+            is_hidden: false, // Keep visible in Recently Resolved
+            resolved_at: new Date().toISOString(),
+            categories: newCategories,
+            missed_polls: 0,
+            pending_since: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('thread_id', thread.thread_id);
+        
+        resolvedThreads++;
+      } else if (missedPolls >= MAX_MISSED_POLLS) {
+        // No service resumed found after grace period - hide thread
+        console.log(`Hiding thread ${thread.thread_id} after ${missedPolls} missed polls without service resumed`);
+        
+        await supabase
+          .from('incident_threads')
+          .update({
+            is_hidden: true,
+            missed_polls: missedPolls,
+            updated_at: new Date().toISOString()
+          })
+          .eq('thread_id', thread.thread_id);
+        
+        hiddenThreads++;
+      } else {
+        // Still within grace period - update missed_polls
+        await supabase
+          .from('incident_threads')
+          .update({
+            missed_polls: missedPolls,
+            pending_since: pendingSince,
+            updated_at: new Date().toISOString()
+          })
+          .eq('thread_id', thread.thread_id);
+      }
+    }
+  }
+
+  // STEP 3: Check if any current service resumed alerts match recently resolved threads that don't have a resumed alert
+  for (const resumed of serviceResumedAlerts) {
+    let resumedRoutes: string[];
+    if (resumed.route && /^[1-4]$/.test(resumed.route)) {
+      resumedRoutes = [`Line ${resumed.route}`];
+    } else if (resumed.route) {
+      resumedRoutes = [resumed.route];
+    } else {
+      resumedRoutes = extractRoutes(resumed.headerText || '');
+    }
+    
+    // Find resolved threads for this route that don't have a service resumed alert
+    const { data: resolvedThreadsWithoutResumed } = await supabase
+      .from('incident_threads')
+      .select('thread_id, title, affected_routes')
+      .like('thread_id', 'thread-alert-%')
+      .eq('is_resolved', true)
+      .eq('is_hidden', false)
+      .gte('resolved_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Last 24 hours
+    
+    for (const thread of resolvedThreadsWithoutResumed || []) {
+      const threadRoutes = thread.affected_routes || [];
+      
+      if (!alertsMatch(threadRoutes, resumedRoutes)) continue;
+      
+      // Check if this thread already has a service resumed alert
+      const { data: existingResumed } = await supabase
+        .from('alert_cache')
+        .select('alert_id')
+        .eq('thread_id', thread.thread_id)
+        .eq('effect', 'SERVICE_RESUMED')
+        .maybeSingle();
+      
+      if (existingResumed) continue;
+      
+      // Insert service resumed alert for this thread - use thread-specific ID
+      const threadSuffix = thread.thread_id.replace('thread-alert-', '').substring(0, 20);
+      const resumedAlertId = `ttc-resumed-${resumed.route || 'unknown'}-${threadSuffix}`;
+      
+      // Check if this specific resumed alert already exists
+      const { data: existingAlert } = await supabase
+        .from('alert_cache')
+        .select('alert_id')
+        .eq('alert_id', resumedAlertId)
+        .maybeSingle();
+      
+      if (!existingAlert) {
+        console.log(`Adding service resumed to resolved thread ${thread.thread_id}: ${resumed.headerText?.substring(0, 50)}`);
+        
+        await supabase
+          .from('alert_cache')
+          .insert({
+            alert_id: resumedAlertId,
+            thread_id: thread.thread_id,
+            header_text: (resumed.headerText || '').substring(0, 500),
+            description_text: resumed.headerText || '',
+            categories: ['SERVICE_RESUMED'],
+            affected_routes: threadRoutes,
+            created_at: resumed.lastUpdated || new Date().toISOString(),
+            is_latest: true,
+            effect: 'SERVICE_RESUMED'
+          });
+        
+        // Mark old alerts in this thread as not latest
+        await supabase
+          .from('alert_cache')
+          .update({ is_latest: false })
+          .eq('thread_id', thread.thread_id)
+          .neq('alert_id', resumedAlertId);
+      }
+    }
+  }
+
+  console.log(`Disruption processing: ${newAlerts} new, ${updatedThreads} updated, ${resolvedThreads} resolved, ${hiddenThreads} hidden`);
+  return { newAlerts, updatedThreads, resolvedThreads, hiddenThreads };
+}
+
+// Process scheduled closure alerts from TTC API
+async function processScheduledAlerts(supabase: any, scheduledAlerts: TtcApiAlert[]): Promise<{ newAlerts: number; updatedThreads: number; hiddenThreads: number }> {
+  let newAlerts = 0;
+  let updatedThreads = 0;
+  let hiddenThreads = 0;
+
+  // Track current scheduled alert IDs
+  const currentAlertIds = new Set<string>();
+  
+  for (const alert of scheduledAlerts) {
+    const headerText = alert.headerText || '';
+    const route = alert.route || '';
+    const alertId = generateTtcAlertId('scheduled', route, headerText);
+    currentAlertIds.add(alertId);
+    
+    // Check if this alert already exists (use maybeSingle to avoid error on no rows)
+    const { data: existing, error: existingError } = await supabase
+      .from('alert_cache')
+      .select('alert_id')
+      .eq('alert_id', alertId)
+      .maybeSingle();
+    
+    if (existingError) {
+      console.error('Error checking existing scheduled alert:', existingError);
+      continue;
+    }
+    
+    if (existing) {
+      continue;
+    }
+
+    // Extract routes
+    let routes: string[];
+    if (route && /^[1-4]$/.test(route)) {
+      routes = [`Line ${route}`];
+    } else if (route) {
+      routes = [route];
+    } else {
+      routes = extractRoutes(headerText);
+    }
+    
+    // Use consistent thread ID format (strip ttc- prefix from alertId)
+    const threadId = generateDisruptionThreadId(alertId);
+
+    // Insert alert WITHOUT thread_id first (to avoid FK constraint)
+    const alertRecord = {
+      alert_id: alertId,
+      header_text: headerText.substring(0, 500),
+      description_text: headerText,
+      categories: ['SCHEDULED_CLOSURE'],
+      affected_routes: routes,
+      created_at: alert.lastUpdated || new Date().toISOString(),
+      is_latest: true,
+      effect: 'SCHEDULED_CLOSURE'
+    };
+
+    const { data: insertedAlert, error: insertError } = await supabase
+      .from('alert_cache')
+      .insert(alertRecord)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Scheduled alert insert error:', insertError);
+      continue;
+    }
+
+    newAlerts++;
+    console.log(`Inserted scheduled alert ${alertId}`);
+
+    // Create/update thread
+    const { data: existingThread } = await supabase
+      .from('incident_threads')
+      .select('thread_id, is_hidden')
+      .eq('thread_id', threadId)
+      .maybeSingle();
+    
+    if (!existingThread) {
+      // Use MD5 hash of thread_id for unique thread_hash
+      const uniqueHash = await generateMd5Hash(threadId);
+      
+      const { error: threadError } = await supabase
+        .from('incident_threads')
+        .insert({
+          thread_id: threadId,
+          thread_hash: uniqueHash,
+          title: headerText.substring(0, 200),
+          affected_routes: routes,
+          categories: ['SCHEDULED_CLOSURE'],
+          is_resolved: false,
+          is_hidden: false,
+          missed_polls: 0,
+          created_at: alert.lastUpdated || new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (threadError) {
+        console.error('Scheduled thread creation error:', threadError);
+      } else {
+        console.log(`Created new scheduled thread ${threadId}`);
+        updatedThreads++;
+      }
+    } else if (existingThread.is_hidden) {
+      // Unhide if alert reappeared
+      await supabase
+        .from('incident_threads')
+        .update({ 
+          is_hidden: false, 
+          missed_polls: 0,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('thread_id', threadId);
+      console.log(`Unhid scheduled thread ${threadId}`);
+      updatedThreads++;
+    }
+
+    // Update alert with thread_id
+    await supabase
+      .from('alert_cache')
+      .update({ thread_id: threadId })
+      .eq('alert_id', insertedAlert.alert_id);
+  }
+
+  // Hide scheduled threads that are no longer in TTC API (immediately, no grace period)
+  const { data: activeScheduledThreads } = await supabase
+    .from('incident_threads')
+    .select('thread_id')
+    .like('thread_id', 'thread-scheduled-%')
+    .eq('is_hidden', false);
+
+  for (const thread of activeScheduledThreads || []) {
+    // Extract alert ID from thread ID (thread-scheduled-X -> ttc-scheduled-X)
+    const alertId = 'ttc-' + thread.thread_id.replace('thread-', '');
+    
+    if (!currentAlertIds.has(alertId)) {
+      console.log(`Hiding scheduled thread ${thread.thread_id} - no longer in TTC API`);
+      
+      await supabase
+        .from('incident_threads')
+        .update({
+          is_hidden: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('thread_id', thread.thread_id);
+      
+      hiddenThreads++;
+    }
+  }
+
+  console.log(`Scheduled processing: ${newAlerts} new, ${updatedThreads} updated, ${hiddenThreads} hidden`);
+  return { newAlerts, updatedThreads, hiddenThreads };
+}
+
 // Process RSZ alerts from TTC API
 async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promise<{ newAlerts: number; updatedThreads: number }> {
   let newAlerts = 0;
@@ -315,18 +943,21 @@ async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promis
     const stopEnd = rsz.stopEnd || '';
     const alertId = generateTtcAlertId('rsz', route, headerText, stopStart, stopEnd);
     
-    // Check if this alert already exists
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from('alert_cache')
       .select('alert_id')
       .eq('alert_id', alertId)
-      .single();
+      .maybeSingle();
+    
+    if (existingError) {
+      console.error('Error checking existing RSZ alert:', existingError);
+      continue;
+    }
     
     if (existing) {
       continue;
     }
 
-    // Extract route info
     let routes: string[];
     if (route && /^[1-4]$/.test(route)) {
       routes = [`Line ${route}`];
@@ -336,7 +967,6 @@ async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promis
       routes = extractRoutes(headerText);
     }
     
-    // Build description
     let description = headerText;
     if (rsz.rszLength) {
       description += `\n\nReduced Speed Zone Length: ${rsz.rszLength}`;
@@ -381,10 +1011,14 @@ async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promis
       .single();
     
     if (!existingThread) {
+      // Use MD5 hash of thread_id for unique thread_hash
+      const uniqueHash = await generateMd5Hash(threadId);
+      
       const { error: threadError } = await supabase
         .from('incident_threads')
         .insert({
           thread_id: threadId,
+          thread_hash: uniqueHash,
           title: headerText.substring(0, 200),
           affected_routes: routes,
           categories: ['RSZ'],
@@ -412,7 +1046,6 @@ async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promis
       .update({ thread_id: threadId })
       .eq('alert_id', newAlert.alert_id);
     
-    console.log(`RSZ alert ${alertId} linked to thread ${threadId}`);
     updatedThreads++;
   }
 
@@ -430,11 +1063,16 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
     const elevatorCode = elevator.elevatorCode || '';
     const alertId = generateTtcAlertId('elev', elevatorCode || 'unknown', headerText);
     
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from('alert_cache')
       .select('alert_id')
       .eq('alert_id', alertId)
-      .single();
+      .maybeSingle();
+    
+    if (existingError) {
+      console.error('Error checking existing elevator alert:', existingError);
+      continue;
+    }
     
     if (existing) {
       continue;
@@ -444,12 +1082,11 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
     const station = stationMatch ? stationMatch[1].trim() : 'Unknown Station';
     
     const cleanedHeaderText = headerText.replace(/-TTC\s*$/i, '').trim();
-    const description = cleanedHeaderText;
 
     const alert = {
       alert_id: alertId,
       header_text: cleanedHeaderText.substring(0, 200),
-      description_text: description,
+      description_text: cleanedHeaderText,
       categories: ['ACCESSIBILITY'],
       affected_routes: [station],
       created_at: new Date().toISOString(),
@@ -488,13 +1125,16 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
         .update({ thread_id: threadId })
         .eq('alert_id', newAlert.alert_id);
       
-      console.log(`Elevator alert ${alertId} linked to existing thread ${threadId}`);
       updatedThreads++;
     } else {
+      // Use MD5 hash of thread_id for unique thread_hash
+      const uniqueHash = await generateMd5Hash(threadId);
+      
       const { error: threadError } = await supabase
         .from('incident_threads')
         .insert({
           thread_id: threadId,
+          thread_hash: uniqueHash,
           title: headerText.substring(0, 200),
           affected_routes: [station],
           categories: ['ACCESSIBILITY'],
@@ -511,7 +1151,6 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
           .update({ thread_id: threadId })
           .eq('alert_id', newAlert.alert_id);
         
-        console.log(`Elevator alert ${alertId} created new thread ${threadId}`);
         updatedThreads++;
       }
     }
@@ -521,23 +1160,191 @@ async function processElevatorAlerts(supabase: any, elevatorAlerts: TtcApiAlert[
   return { newAlerts, updatedThreads };
 }
 
-// ============================================================================
-// BLUESKY THREAD ID EXTRACTION - Use native reply threading
-// ============================================================================
-// Bluesky posts that are replies include `record.reply.root.uri` which points
-// to the original post in the thread. Use this as the thread_id for grouping.
-function extractBlueskyThreadId(post: any): string {
-  // If this post is a reply, use the root post's URI as thread ID
-  const replyRoot = post?.record?.reply?.root?.uri;
-  if (replyRoot) {
-    // Convert AT URI to thread ID: at://did:plc:xxx/app.bsky.feed.post/abc123 -> thread-bsky-abc123
-    const rootPostId = replyRoot.split('/').pop() || '';
-    return `thread-bsky-${rootPostId}`;
+// Resolve elevator and RSZ threads that are no longer in TTC API
+async function resolveStaleThreads(
+  supabase: any, 
+  ttcData: TtcAlertData
+): Promise<{ resolvedElevators: number; resolvedRszThreads: number }> {
+  let resolvedElevators = 0;
+  let resolvedRszThreads = 0;
+
+  // ELEVATORS
+  const activeElevatorSuffixes = new Set<string>();
+  for (const e of ttcData.elevatorAlerts) {
+    const { suffix } = generateElevatorThreadId({
+      elevatorCode: e.elevatorCode,
+      headerText: e.headerText || ''
+    });
+    activeElevatorSuffixes.add(suffix);
   }
   
-  // If not a reply, this post IS the thread root - use its own URI
-  const postId = post.uri.split('/').pop() || '';
-  return `thread-bsky-${postId}`;
+  const { data: accessibilityThreads } = await supabase
+    .from('incident_threads')
+    .select('thread_id, title, affected_routes')
+    .filter('categories', 'cs', '["ACCESSIBILITY"]')
+    .eq('is_resolved', false)
+    .eq('is_hidden', false);
+  
+  for (const thread of accessibilityThreads || []) {
+    const suffixMatch = thread.thread_id?.match(/^thread-elev-(.+)$/);
+    const threadSuffix = suffixMatch ? suffixMatch[1] : null;
+    
+    if (!threadSuffix) {
+      const stationName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
+      const stationHasActiveElevator = ttcData.elevatorAlerts.some(e => {
+        const match = e.headerText?.match(/^([^:]+):/);
+        return match && match[1].trim() === stationName;
+      });
+      
+      if (stationName && !stationHasActiveElevator) {
+        await supabase
+          .from('incident_threads')
+          .update({ 
+            is_resolved: true,
+            is_hidden: true,
+            resolved_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('thread_id', thread.thread_id);
+        
+        resolvedElevators++;
+      }
+      continue;
+    }
+    
+    if (!activeElevatorSuffixes.has(threadSuffix)) {
+      console.log(`Resolving elevator thread: "${thread.title}" - no longer in TTC API`);
+      
+      await supabase
+        .from('incident_threads')
+        .update({ 
+          is_resolved: true,
+          is_hidden: true,
+          resolved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('thread_id', thread.thread_id);
+      
+      resolvedElevators++;
+    }
+  }
+
+  // RSZ
+  const activeRszThreadIds = new Set<string>();
+  for (const rsz of ttcData.rszAlerts) {
+    const route = rsz.route || '';
+    const stopStart = rsz.stopStart || '';
+    const stopEnd = rsz.stopEnd || '';
+    const headerText = rsz.headerText || '';
+    
+    const alertId = generateTtcAlertId('rsz', route, headerText, stopStart, stopEnd);
+    const { threadId } = generateRszThreadId(alertId);
+    activeRszThreadIds.add(threadId);
+  }
+  
+  const { data: rszThreads } = await supabase
+    .from('incident_threads')
+    .select('thread_id, title')
+    .filter('categories', 'cs', '["RSZ"]')
+    .eq('is_resolved', false)
+    .eq('is_hidden', false);
+  
+  for (const thread of rszThreads || []) {
+    if (thread.thread_id?.includes('legacy')) continue;
+    
+    if (!activeRszThreadIds.has(thread.thread_id)) {
+      console.log(`Resolving RSZ thread: "${thread.title}" - no longer in TTC API`);
+      
+      await supabase
+        .from('incident_threads')
+        .update({ 
+          is_resolved: true,
+          is_hidden: true,
+          resolved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('thread_id', thread.thread_id);
+      
+      resolvedRszThreads++;
+    }
+  }
+
+  return { resolvedElevators, resolvedRszThreads };
+}
+
+// ============================================================================
+// ORPHAN ALERT FIXER - Ensures all alerts have proper threads
+// ============================================================================
+async function fixOrphanAlerts(supabase: any): Promise<{ fixed: number }> {
+  let fixed = 0;
+  
+  // Find alerts without thread_id that start with 'ttc-'
+  const { data: orphans, error } = await supabase
+    .from('alert_cache')
+    .select('alert_id, header_text, affected_routes, categories, created_at')
+    .is('thread_id', null)
+    .or('alert_id.like.ttc-alert-%,alert_id.like.ttc-scheduled-%');
+  
+  if (error) {
+    console.error('Error finding orphan alerts:', error);
+    return { fixed: 0 };
+  }
+  
+  for (const orphan of orphans || []) {
+    console.log(`Fixing orphan alert: ${orphan.alert_id}`);
+    
+    // Generate thread ID from alert ID (ttc-alert-X -> thread-alert-X)
+    const threadId = 'thread-' + orphan.alert_id.replace('ttc-', '');
+    
+    // Check if thread already exists
+    const { data: existingThread } = await supabase
+      .from('incident_threads')
+      .select('thread_id')
+      .eq('thread_id', threadId)
+      .maybeSingle();
+    
+    if (!existingThread) {
+      // Create thread with MD5 hash
+      const uniqueHash = await generateMd5Hash(threadId);
+      
+      const { error: threadError } = await supabase
+        .from('incident_threads')
+        .insert({
+          thread_id: threadId,
+          thread_hash: uniqueHash,
+          title: (orphan.header_text || 'Unknown alert').substring(0, 200),
+          affected_routes: orphan.affected_routes || [],
+          categories: orphan.categories || ['Disruption'],
+          is_resolved: false,
+          is_hidden: false,
+          missed_polls: 0,
+          created_at: orphan.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      
+      if (threadError) {
+        console.error(`Failed to create thread for orphan ${orphan.alert_id}:`, threadError);
+        continue;
+      }
+      console.log(`Created thread ${threadId} for orphan alert`);
+    }
+    
+    // Link alert to thread
+    const { error: updateError } = await supabase
+      .from('alert_cache')
+      .update({ thread_id: threadId })
+      .eq('alert_id', orphan.alert_id);
+    
+    if (updateError) {
+      console.error(`Failed to link orphan ${orphan.alert_id} to thread:`, updateError);
+      continue;
+    }
+    
+    console.log(`Linked orphan alert ${orphan.alert_id} to thread ${threadId}`);
+    fixed++;
+  }
+  
+  return { fixed };
 }
 
 // ============================================================================
@@ -553,304 +1360,59 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // STEP 1: Fetch TTC API data (RSZ and Elevators ONLY - disruptions are Bluesky-only)
+    // STEP 1: Fetch all TTC API data
     const ttcData = await fetchTtcData();
 
-    // STEP 2: Fetch Bluesky posts (PRIMARY source for disruptions and SERVICE_RESUMED)
-    const response = await fetch(
-      `${BLUESKY_API}?actor=ttcalerts.bsky.social&limit=50`,
-      {
-        headers: { 'Accept': 'application/json' }
-      }
+    // STEP 2: Process disruption alerts (with service resumed threading)
+    const disruptionResult = await processDisruptionAlerts(
+      supabase, 
+      ttcData.disruptionAlerts,
+      ttcData.serviceResumedAlerts
     );
 
-    if (!response.ok) {
-      throw new Error(`Bluesky API error: ${response.status}`);
-    }
+    // STEP 3: Process scheduled closure alerts
+    const scheduledResult = await processScheduledAlerts(supabase, ttcData.scheduledAlerts);
 
-    const data = await response.json();
-    const posts = data.feed || [];
-    
-    let newAlerts = 0;
-    let updatedThreads = 0;
-
-    // Get existing Bluesky alerts from last 24 hours
-    const { data: existingAlerts } = await supabase
-      .from('alert_cache')
-      .select('bluesky_uri, header_text')
-      .not('bluesky_uri', 'is', null)
-      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-    const existingUris = new Set(existingAlerts?.map(a => a.bluesky_uri) || []);
-    console.log(`Found ${existingUris.size} existing Bluesky URIs in last 24h`);
-
-    // STEP 3: Process Bluesky posts for disruptions
-    for (const item of posts) {
-      const post = item.post;
-      if (!post?.record?.text) continue;
-      
-      const uri = post.uri;
-      if (existingUris.has(uri)) continue;
-
-      const text = post.record.text;
-      
-      // Skip RSZ-like alerts from Bluesky - TTC API is the source of truth for RSZ
-      const lowerText = text.toLowerCase();
-      const isRszText = lowerText.includes('slower than usual') ||
-                        lowerText.includes('reduced speed') ||
-                        lowerText.includes('move slower') ||
-                        lowerText.includes('running slower') ||
-                        lowerText.includes('slow zone');
-      if (isRszText) {
-        console.log(`Skipping Bluesky RSZ alert - TTC API is source of truth: ${text.substring(0, 50)}...`);
-        continue;
-      }
-      
-      const { category, priority } = categorizeAlert(text);
-      const routes = extractRoutes(text);
-      
-      // Extract post ID from URI
-      const postId = uri.split('/').pop() || uri;
-      
-      // Get thread ID using Bluesky's native reply threading
-      const threadId = extractBlueskyThreadId(post);
-      
-      // Create alert record
-      const alert = {
-        alert_id: `bsky-${postId}`,
-        bluesky_uri: uri,
-        header_text: text.split('\n')[0].substring(0, 200),
-        description_text: text,
-        categories: [category],
-        affected_routes: routes,
-        created_at: post.record.createdAt,
-        is_latest: true,
-        effect: category === 'SERVICE_RESUMED' ? 'RESUMED' : 'DISRUPTION'
-      };
-
-      // Insert alert
-      const { data: newAlert, error: insertError } = await supabase
-        .from('alert_cache')
-        .insert(alert)
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error('Insert error:', insertError);
-        continue;
-      }
-
-      newAlerts++;
-
-      // Check if thread exists
-      const { data: existingThread } = await supabase
-        .from('incident_threads')
-        .select('thread_id, title, is_resolved, categories')
-        .eq('thread_id', threadId)
-        .single();
-      
-      if (existingThread) {
-        // Thread exists - update it
-        // Mark old alerts as not latest
-        await supabase
-          .from('alert_cache')
-          .update({ is_latest: false })
-          .eq('thread_id', threadId)
-          .neq('alert_id', newAlert.alert_id);
-
-        // Link alert to thread
-        await supabase
-          .from('alert_cache')
-          .update({ thread_id: threadId })
-          .eq('alert_id', newAlert.alert_id);
-
-        // Update thread
-        const updates: any = {
-          title: text.split('\n')[0].substring(0, 200),
-          updated_at: new Date().toISOString()
-        };
-
-        // Resolve thread if SERVICE_RESUMED
-        if (category === 'SERVICE_RESUMED') {
-          updates.is_resolved = true;
-          updates.resolved_at = new Date().toISOString();
-          const existingCategories = (existingThread.categories as string[]) || [];
-          if (!existingCategories.includes('SERVICE_RESUMED')) {
-            updates.categories = [...existingCategories, 'SERVICE_RESUMED'];
-          }
-          console.log(`SERVICE_RESUMED resolving thread ${threadId}`);
-        }
-
-        await supabase
-          .from('incident_threads')
-          .update(updates)
-          .eq('thread_id', threadId);
-
-        updatedThreads++;
-        console.log(`Updated thread ${threadId} with alert ${newAlert.alert_id}`);
-      } else {
-        // Thread doesn't exist - create it
-        const { error: threadError } = await supabase
-          .from('incident_threads')
-          .insert({
-            thread_id: threadId,
-            title: text.split('\n')[0].substring(0, 200),
-            affected_routes: routes,
-            categories: [category],
-            is_resolved: category === 'SERVICE_RESUMED', // SERVICE_RESUMED threads start resolved
-            is_hidden: false,
-            created_at: post.record.createdAt,
-            updated_at: new Date().toISOString()
-          });
-
-        if (threadError) {
-          console.error('Thread creation error:', threadError);
-        } else {
-          // Link alert to new thread
-          await supabase
-            .from('alert_cache')
-            .update({ thread_id: threadId })
-            .eq('alert_id', newAlert.alert_id);
-          
-          console.log(`Created thread ${threadId} for alert ${newAlert.alert_id}`);
-          updatedThreads++;
-        }
-      }
-    }
-
-    // STEP 4: Process RSZ alerts from TTC API
+    // STEP 4: Process RSZ alerts
     const rszResult = await processRszAlerts(supabase, ttcData.rszAlerts);
-    newAlerts += rszResult.newAlerts;
-    updatedThreads += rszResult.updatedThreads;
 
-    // STEP 5: Process Elevator alerts from TTC API
+    // STEP 5: Process Elevator alerts
     const elevatorResult = await processElevatorAlerts(supabase, ttcData.elevatorAlerts);
-    newAlerts += elevatorResult.newAlerts;
-    updatedThreads += elevatorResult.updatedThreads;
 
-    // STEP 6: Resolve ACCESSIBILITY threads that are no longer in TTC API
-    let resolvedElevators = 0;
-    
-    const activeElevatorSuffixes = new Set<string>();
-    for (const e of ttcData.elevatorAlerts) {
-      const { suffix } = generateElevatorThreadId({
-        elevatorCode: e.elevatorCode,
-        headerText: e.headerText || ''
-      });
-      activeElevatorSuffixes.add(suffix);
-    }
-    
-    const { data: accessibilityThreads, error: accError } = await supabase
-      .from('incident_threads')
-      .select('thread_id, title, affected_routes')
-      .filter('categories', 'cs', '["ACCESSIBILITY"]')
-      .eq('is_resolved', false)
-      .eq('is_hidden', false);
-    
-    if (accError) {
-      console.error('Failed to fetch accessibility threads:', accError);
-    }
-    
-    for (const thread of accessibilityThreads || []) {
-      const suffixMatch = thread.thread_id?.match(/^thread-elev-(.+)$/);
-      const threadSuffix = suffixMatch ? suffixMatch[1] : null;
-      
-      if (!threadSuffix) {
-        // Legacy thread - check by station
-        const stationName = Array.isArray(thread.affected_routes) ? thread.affected_routes[0] : '';
-        const stationHasActiveElevator = ttcData.elevatorAlerts.some(e => {
-          const match = e.headerText?.match(/^([^:]+):/);
-          return match && match[1].trim() === stationName;
-        });
-        
-        if (stationName && !stationHasActiveElevator) {
-          console.log(`Resolving legacy elevator thread: "${thread.title}"`);
-          
-          await supabase
-            .from('incident_threads')
-            .update({ 
-              is_resolved: true,
-              is_hidden: true,
-              resolved_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .eq('thread_id', thread.thread_id);
-          
-          resolvedElevators++;
-        }
-        continue;
-      }
-      
-      if (!activeElevatorSuffixes.has(threadSuffix)) {
-        console.log(`Resolving elevator thread: "${thread.title}" - no longer in TTC API`);
-        
-        await supabase
-          .from('incident_threads')
-          .update({ 
-            is_resolved: true,
-            is_hidden: true,
-            resolved_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('thread_id', thread.thread_id);
-        
-        resolvedElevators++;
-      }
+    // STEP 6: Resolve stale elevator and RSZ threads
+    const { resolvedElevators, resolvedRszThreads } = await resolveStaleThreads(supabase, ttcData);
+
+    // STEP 7: Fix any orphan alerts (alerts without threads) - SAFETY NET
+    const orphanResult = await fixOrphanAlerts(supabase);
+    if (orphanResult.fixed > 0) {
+      console.log(`Fixed ${orphanResult.fixed} orphan alerts`);
     }
 
-    // STEP 7: Resolve RSZ threads that are no longer in TTC API
-    let resolvedRszThreads = 0;
-    
-    const activeRszThreadIds = new Set<string>();
-    for (const rsz of ttcData.rszAlerts) {
-      const route = rsz.route || '';
-      const stopStart = rsz.stopStart || '';
-      const stopEnd = rsz.stopEnd || '';
-      const headerText = rsz.headerText || '';
-      
-      const alertId = generateTtcAlertId('rsz', route, headerText, stopStart, stopEnd);
-      const { threadId } = generateRszThreadId(alertId);
-      activeRszThreadIds.add(threadId);
-    }
-    
-    const { data: rszThreads } = await supabase
-      .from('incident_threads')
-      .select('thread_id, title')
-      .filter('categories', 'cs', '["RSZ"]')
-      .eq('is_resolved', false)
-      .eq('is_hidden', false);
-    
-    for (const thread of rszThreads || []) {
-      if (thread.thread_id?.includes('legacy')) continue;
-      
-      if (!activeRszThreadIds.has(thread.thread_id)) {
-        console.log(`Resolving RSZ thread: "${thread.title}" - no longer in TTC API`);
-        
-        await supabase
-          .from('incident_threads')
-          .update({ 
-            is_resolved: true,
-            is_hidden: true,
-            resolved_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('thread_id', thread.thread_id);
-        
-        resolvedRszThreads++;
-      }
-    }
+    // Calculate totals
+    const totalNewAlerts = disruptionResult.newAlerts + scheduledResult.newAlerts + rszResult.newAlerts + elevatorResult.newAlerts;
+    const totalUpdatedThreads = disruptionResult.updatedThreads + scheduledResult.updatedThreads + rszResult.updatedThreads + elevatorResult.updatedThreads;
 
     return new Response(
       JSON.stringify({ 
         success: true,
         version: VERSION,
-        architecture: 'BLUESKY_ONLY_FOR_DISRUPTIONS',
-        rszAlerts: ttcData.rszAlerts.length,
-        elevatorAlerts: ttcData.elevatorAlerts.length,
-        resolvedElevators,
-        resolvedRszThreads,
-        newAlerts, 
-        updatedThreads,
+        architecture: 'TTC_API_ONLY',
+        ttcApi: {
+          disruptions: ttcData.disruptionAlerts.length,
+          serviceResumed: ttcData.serviceResumedAlerts.length,
+          scheduled: ttcData.scheduledAlerts.length,
+          rsz: ttcData.rszAlerts.length,
+          elevators: ttcData.elevatorAlerts.length
+        },
+        results: {
+          newAlerts: totalNewAlerts,
+          updatedThreads: totalUpdatedThreads,
+          resolvedThreads: disruptionResult.resolvedThreads,
+          hiddenThreads: disruptionResult.hiddenThreads + scheduledResult.hiddenThreads,
+          resolvedElevators,
+          resolvedRszThreads,
+          orphansFixed: orphanResult.fixed
+        },
         timestamp: new Date().toISOString()
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
