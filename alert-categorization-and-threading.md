@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 4.2  
-**Date:** January 14, 2026  
-**poll-alerts Version:** 150  
+**Version:** 5.0  
+**Date:** January 16, 2026  
+**poll-alerts Version:** 212  
 **Frontend Version:** 152 (Elevator threading disabled in UI)  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 2 (Auto-cleanup stale "back in service" alerts)  
@@ -20,11 +20,12 @@
 3. [Alert Sources](#alert-sources)
 4. [Multi-Category System](#multi-category-system)
 5. [Incident Threading](#incident-threading)
-6. [Frontend Filtering](#frontend-filtering)
-7. [Database Schema](#database-schema)
-8. [Edge Functions](#edge-functions)
-9. [Testing Strategy](#testing-strategy)
-10. [Monitoring and Tuning](#monitoring-and-tuning)
+6. [Service Resumed Grace Period](#service-resumed-grace-period)
+7. [Frontend Filtering](#frontend-filtering)
+8. [Database Schema](#database-schema)
+9. [Edge Functions](#edge-functions)
+10. [Testing Strategy](#testing-strategy)
+11. [Monitoring and Tuning](#monitoring-and-tuning)
 
 ---
 
@@ -867,6 +868,93 @@ let recentlyResolved = $derived.by(() => {
     return true;
   });
 });
+```
+
+---
+
+## Service Resumed Grace Period
+
+### Overview (v209-v212)
+
+When a disruption alert disappears from the TTC API, the system waits for a **grace period** before hiding the thread, allowing time for a corresponding SERVICE_RESUMED alert to appear.
+
+**Problem Solved:**
+
+- Disruption alerts and service resumed alerts often appear in different API calls
+- Without grace period, threads would be hidden immediately when disruptions disappear, preventing service resumed from being attached
+- Users wouldn't see "service resumed" updates in Recently Resolved tab
+
+### Grace Period Configuration
+
+| Setting            | Default | Description                                                      |
+| ------------------ | ------- | ---------------------------------------------------------------- |
+| `MAX_MISSED_POLLS` | 2       | Number of polls to wait for service resumed before hiding thread |
+| Poll Interval      | ~30s    | poll-alerts cron runs every 30 seconds                           |
+| Max Wait Time      | ~1 min  | 2 polls × 30s = ~1 minute grace period                           |
+
+**Code Location:** `supabase/functions/poll-alerts/index.ts`
+
+```typescript
+// Grace period: number of polls to wait for service resumed before hiding
+const MAX_MISSED_POLLS = 2;
+```
+
+### Service Resumed ID Generation (v209)
+
+**Problem:** Route threads with similar names (e.g., "927 - Northbound" and "927 - Southbound") could generate the same resumed alert ID due to 20-character truncation.
+
+**Solution:** Use MD5 hash of full thread_id for unique IDs.
+
+```typescript
+// Generate unique hash for service resumed alerts
+async function generateMd5Hash(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest("MD5", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Create unique resumed alert ID
+const threadHash = (await generateMd5Hash(thread.thread_id)).substring(0, 12);
+const resumedAlertId = `resumed-${threadHash}`;
+```
+
+### Monitoring (v211-v212)
+
+A monitoring system tracks when service resumed alerts appear relative to disruption removal:
+
+**Table:** `service_resumed_monitoring`
+
+| Column                  | Type        | Description                                      |
+| ----------------------- | ----------- | ------------------------------------------------ |
+| `id`                    | SERIAL      | Primary key                                      |
+| `thread_id`             | TEXT        | Thread being monitored                           |
+| `route`                 | TEXT        | Route identifier                                 |
+| `disruption_removed_at` | TIMESTAMPTZ | When disruption disappeared from API             |
+| `service_resumed_at`    | TIMESTAMPTZ | When service resumed alert found (null if never) |
+| `polls_since_removal`   | INT         | How many polls since disruption removed          |
+| `service_resumed_text`  | TEXT        | The service resumed alert text                   |
+| `created_at`            | TIMESTAMPTZ | Row creation time                                |
+
+**Monitoring Dashboard:** `test-service-resumed-monitoring.html`
+
+- Shows poll distribution (how many polls until service resumed arrives)
+- Highlights "late" alerts (>2 polls) that would be missed with default grace period
+- Shows alerts that never received service resumed
+
+### Empty HeaderText Validation (v210)
+
+Alerts with empty `headerText` are skipped to prevent malformed threads:
+
+```typescript
+// Skip alerts with empty headerText (can create malformed threads)
+if (!headerText || headerText.trim() === "") {
+  console.log(
+    `Skipping alert with empty headerText (category: ${alertCategory})`
+  );
+  continue;
+}
 ```
 
 ---

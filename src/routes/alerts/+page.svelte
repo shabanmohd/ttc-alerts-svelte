@@ -434,14 +434,17 @@
       "SHUTTLE",
       "DIVERSION",
       "DELAY",
-      // PLANNED_CLOSURE is included but filtered by active period below
+      "SCHEDULED_CLOSURE", // v200: Show scheduled closures from TTC API in disruptions
     ];
 
     // Find any disruption alert in the thread (prefer the most recent)
     for (const alert of thread.alerts) {
-      // v150: Disruptions now come from Bluesky (bsky-*) not TTC API
-      // Skip non-Bluesky alerts for disruptions
-      if (!alert.alert_id?.toLowerCase().startsWith("bsky-")) {
+      // v200: Disruptions now come from TTC API (ttc-alert-* or ttc-scheduled-*)
+      // Skip non-TTC API alerts for disruptions
+      if (
+        !alert.alert_id?.toLowerCase().startsWith("ttc-alert-") &&
+        !alert.alert_id?.toLowerCase().startsWith("ttc-scheduled-")
+      ) {
         continue;
       }
 
@@ -459,13 +462,6 @@
       // Exclude RSZ alerts (handled by RSZAlertCard)
       if (isRSZAlert(thread)) {
         continue;
-      }
-
-      // For scheduled closures: only show during active period (11 PM - 6 AM)
-      // Outside active period, they belong in the Scheduled tab only
-      const isScheduled = isScheduledFutureClosure(headerText);
-      if (isScheduled && !isScheduledClosureActive()) {
-        continue; // Skip scheduled closures outside active period
       }
 
       if (hasDisruptionCategory && !isResumed) {
@@ -496,7 +492,7 @@
   }
 
   // Get active alerts (not resolved, not hidden)
-  // For disruptions tab: ONLY show TTC API disruptions (ttc-alert-*)
+  // For disruptions tab: Show TTC API disruptions (ttc-alert-* and ttc-scheduled-*)
   // For delays/slowzones tab: return empty - RSZ alerts shown via RSZAlertCard only
   // Regular DELAY alerts should NOT appear in Slow Zones tab
   let activeAlerts = $derived.by(() => {
@@ -505,16 +501,18 @@
       return [];
     }
 
-    // For disruptions tab: Show Bluesky disruption alerts (v150 architecture)
-    // Bluesky is now the source of truth for active disruptions
+    // For disruptions tab: Show TTC API disruption alerts (v200 architecture)
+    // TTC API is now the source of truth for active disruptions
     if (selectedCategory === "disruptions") {
       const disruptions = $threadsWithAlerts
         .filter((t) => !t.is_resolved && !t.is_hidden && isDisruption(t))
         .map((thread) => {
-          // Filter thread.alerts to ONLY include Bluesky alerts
+          // Filter thread.alerts to ONLY include TTC API alerts
           // This prevents RSZ/Elevator alerts from showing in "earlier updates"
-          const blueskyAlertsOnly = thread.alerts.filter((a) =>
-            a.alert_id?.startsWith("bsky-")
+          const ttcAlertsOnly = thread.alerts.filter(
+            (a) =>
+              a.alert_id?.startsWith("ttc-alert-") ||
+              a.alert_id?.startsWith("ttc-scheduled-")
           );
 
           // Use the disruption alert as the display alert
@@ -522,12 +520,12 @@
 
           return {
             ...thread,
-            alerts: blueskyAlertsOnly,
+            alerts: ttcAlertsOnly,
             latestAlert: disruptionAlert || thread.latestAlert,
           };
         });
       console.log(
-        "=== DEBUG: activeAlerts (disruptions - Bluesky) ===",
+        "=== DEBUG: activeAlerts (disruptions - TTC API) ===",
         disruptions.length,
         disruptions.map((t) => t.latestAlert?.alert_id)
       );
@@ -555,8 +553,8 @@
     return rsz;
   });
 
-  // Get recently resolved alerts (last 6 hours) - only show under Disruptions tab
-  // Show all alerts that have SERVICE_RESUMED category (confirmed by Bluesky)
+  // Get recently resolved alerts (last 12 hours) - only show under Disruptions tab
+  // Show all alerts that have SERVICE_RESUMED category (threaded by TTC API)
   // Exclude hidden, accessibility and RSZ alerts
   let recentlyResolved = $derived.by(() => {
     // Only show resolved section in disruptions tab
@@ -576,16 +574,14 @@
 
       if (latestAlertTime < twelveHoursAgo) return false;
 
-      // MUST have SERVICE_RESUMED category (confirmed by Bluesky)
+      // MUST have SERVICE_RESUMED category (threaded by TTC API matching)
       const categories = (t.categories as string[]) || [];
       if (!categories.includes("SERVICE_RESUMED")) return false;
 
       // Exclude RSZ alerts
       if (isRSZAlert(t)) return false;
 
-      // Note: We now show all SERVICE_RESUMED threads, including standalone ones
-      // since Bluesky posts them when service genuinely resumes
-
+      // v200: Show all SERVICE_RESUMED threads from TTC API threading
       return true;
     });
   });
