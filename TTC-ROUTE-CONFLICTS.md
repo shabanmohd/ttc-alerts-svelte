@@ -524,6 +524,29 @@ const threadId = matchedThreadId || `thread-ttc-${routeKey}-${threadType}`;
 
 ---
 
+## Thread ID Collision Issues
+
+### Service Resumed ID Truncation (Fixed v209)
+
+**Issue:** When a route has multiple direction threads (e.g., "927 - Northbound" and "927 - Southbound"), the old 20-character truncation for service resumed alert IDs could cause collisions.
+
+**Example:**
+
+- Thread A: `thread-alert-2-927highway27expressservicenorthboundresumed`
+- Thread B: `thread-alert-2-927highway27expressservicesouthboundresumed`
+- Both truncated to same first 20 chars of thread_id
+
+**Solution (v209):** Use MD5 hash of full thread_id for unique resumed alert IDs:
+
+```typescript
+const threadHash = (await generateMd5Hash(thread.thread_id)).substring(0, 12);
+const resumedAlertId = `resumed-${threadHash}`;
+```
+
+This ensures each thread gets a unique service resumed alert ID regardless of thread name similarity.
+
+---
+
 ## Monitoring
 
 The Edge Function logs route comparisons when debugging is needed. Check Supabase Edge Function logs for threading decisions.
@@ -538,7 +561,7 @@ The Edge Function logs route comparisons when debugging is needed. Check Supabas
 
 ---
 
-**Version:** 1.5
+**Version:** 1.6
 **Created:** November 20, 2025
-**Updated:** January 12, 2026
+**Updated:** January 16, 2026
 **Purpose:** Route conflict reference for alert threading system

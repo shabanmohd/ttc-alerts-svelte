@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTC API-Only Alerts - Live Disruptions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .route-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            font-size: 0.75rem;
+            min-width: 2.5rem;
+        }
+        .route-line-1 { background-color: #FFCC00; color: #000; }
+        .route-line-2 { background-color: #00A859; color: #fff; }
+        .route-line-3 { background-color: #0072CE; color: #fff; }
+        .route-line-4 { background-color: #A020F0; color: #fff; }
+        .route-line-5 { background-color: #D95319; color: #fff; }
+        .route-line-6 { background-color: #636569; color: #fff; }
+        .route-streetcar { background-color: #DA291C; color: #fff; }
+        .route-bus { background-color: #0072CE; color: #fff; }
+        .route-night { background-color: #1F2937; color: #fff; }
+        .route-express { background-color: #059669; color: #fff; }
+        
+        .category-NO_SERVICE { background-color: #EF4444; color: #fff; }
+        .category-SIGNIFICANT_DELAYS { background-color: #F59E0B; color: #000; }
+        .category-DETOUR { background-color: #8B5CF6; color: #fff; }
+        .category-SERVICE_RESUMED { background-color: #22C55E; color: #fff; }
+        .category-REDUCED_SERVICE { background-color: #F97316; color: #fff; }
+        .category-OTHER { background-color: #374151; color: #fff; }
+        
+        .loading-spinner {
+            border: 3px solid #374151;
+            border-top: 3px solid #DA291C;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #22C55E;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        .countdown-ring {
+            stroke-dasharray: 283;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+        }
+        
+        /* Tab styles */
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        
+        #tab-disruptions, #tab-resolved, #tab-hidden {
+            border-color: transparent;
+            color: #9CA3AF;
+        }
+        #tab-disruptions.active {
+            border-color: #EF4444;
+            color: #F87171;
+        }
+        #tab-resolved.active {
+            border-color: #22C55E;
+            color: #4ADE80;
+        }
+        #tab-hidden.active {
+            border-color: #6B7280;
+            color: #9CA3AF;
+        }
+        #tab-disruptions:hover, #tab-resolved:hover, #tab-hidden:hover {
+            color: #E5E7EB;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white p-6">
+    <div class="max-w-3xl mx-auto">
+        <div class="flex items-center justify-between mb-2">
+            <h1 class="text-2xl font-bold text-red-500">🚨 TTC API Alerts (Live)</h1>
+            <div class="flex items-center gap-2">
+                <div class="pulse-dot"></div>
+                <span class="text-xs text-gray-400">Auto-refresh</span>
+            </div>
+        </div>
+        <p class="text-gray-400 text-sm mb-4">Direct from TTC API • Excludes: RSZ, Elevators, Scheduled Closures • Times in EST</p>
+        
+        <!-- Status Bar -->
+        <div class="bg-gray-800 rounded-lg p-3 mb-6 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="text-xs">
+                    <span class="text-gray-500">Last updated:</span>
+                    <span id="last-updated" class="text-gray-300 ml-1">--:--:--</span>
+                </div>
+                <div class="text-xs">
+                    <span class="text-gray-500">Next refresh:</span>
+                    <span id="countdown" class="text-blue-400 ml-1 font-mono">60s</span>
+                </div>
+            </div>
+            <button id="refresh-btn" onclick="manualRefresh()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs font-medium transition">
+                ↻ Refresh Now
+            </button>
+        </div>
+        
+        <!-- Stats -->
+        <div id="stats" class="grid grid-cols-5 gap-3 mb-6">
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+                <div id="active-count" class="text-2xl font-bold text-red-400">-</div>
+                <div class="text-xs text-gray-500">Active</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+                <div id="pending-count" class="text-2xl font-bold text-yellow-400">-</div>
+                <div class="text-xs text-gray-500">Pending</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+                <div id="resolved-count" class="text-2xl font-bold text-green-400">-</div>
+                <div class="text-xs text-gray-500">Resolved</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+                <div id="hidden-count" class="text-2xl font-bold text-gray-400">-</div>
+                <div class="text-xs text-gray-500">Hidden</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+                <div id="poll-count" class="text-2xl font-bold text-blue-400">0</div>
+                <div class="text-xs text-gray-500">Polls</div>
+            </div>
+        </div>
+        
+        <div id="loading" class="flex items-center gap-3 justify-center py-8">
+            <div class="loading-spinner"></div>
+            <span class="text-gray-400">Fetching alerts from TTC API...</span>
+        </div>
+        
+        <!-- Tabs Navigation -->
+        <div id="tabs-container" class="hidden">
+            <div class="flex border-b border-gray-700 mb-4">
+                <button id="tab-disruptions" onclick="switchTab('disruptions')" class="flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors">
+                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                    Disruptions
+                    <span id="tab-badge-disruptions" class="text-xs px-2 py-0.5 rounded-full bg-red-900 text-red-300">0</span>
+                </button>
+                <button id="tab-pending" onclick="switchTab('pending')" class="flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors">
+                    <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                    Pending
+                    <span id="tab-badge-pending" class="text-xs px-2 py-0.5 rounded-full bg-yellow-900 text-yellow-300">0</span>
+                </button>
+                <button id="tab-resolved" onclick="switchTab('resolved')" class="flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors">
+                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                    Resolved
+                    <span id="tab-badge-resolved" class="text-xs px-2 py-0.5 rounded-full bg-green-900 text-green-300">0</span>
+                </button>
+                <button id="tab-hidden" onclick="switchTab('hidden')" class="flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors">
+                    <span class="w-2 h-2 bg-gray-500 rounded-full"></span>
+                    Hidden
+                    <span id="tab-badge-hidden" class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">0</span>
+                </button>
+            </div>
+            
+            <!-- Disruptions Tab Content -->
+            <div id="panel-disruptions" class="tab-panel">
+                <div id="active-alerts" class="space-y-3"></div>
+                <div id="no-active" class="hidden bg-gray-800 rounded-lg p-6 text-center">
+                    <div class="text-4xl mb-2">✅</div>
+                    <div class="text-gray-400">No active disruptions</div>
+                    <div class="text-xs text-gray-500 mt-1">All clear on TTC routes</div>
+                </div>
+            </div>
+            
+            <!-- Pending Tab Content -->
+            <div id="panel-pending" class="tab-panel hidden">
+                <p class="text-xs text-gray-500 mb-3">Alerts that just disappeared - waiting 2-3 polls for service resumed</p>
+                <div id="pending-alerts" class="space-y-3"></div>
+                <div id="no-pending" class="hidden bg-gray-800 rounded-lg p-6 text-center">
+                    <div class="text-4xl mb-2">⏳</div>
+                    <div class="text-gray-400">No pending alerts</div>
+                    <div class="text-xs text-gray-500 mt-1">Disappeared alerts waiting for resolution appear here</div>
+                </div>
+            </div>
+            
+            <!-- Resolved Tab Content -->
+            <div id="panel-resolved" class="tab-panel hidden">
+                <div id="resolved-alerts" class="space-y-3"></div>
+                <div id="no-resolved" class="hidden bg-gray-800 rounded-lg p-6 text-center">
+                    <div class="text-4xl mb-2">🔄</div>
+                    <div class="text-gray-400">No recently resolved alerts</div>
+                    <div class="text-xs text-gray-500 mt-1">Resolved alerts appear when service is restored</div>
+                </div>
+            </div>
+            
+            <!-- Hidden Tab Content -->
+            <div id="panel-hidden" class="tab-panel hidden">
+                <p class="text-xs text-gray-500 mb-3">Alerts that disappeared from TTC API without a service resumed alert</p>
+                <div id="hidden-alerts" class="space-y-3"></div>
+                <div id="no-hidden" class="hidden bg-gray-800 rounded-lg p-6 text-center">
+                    <div class="text-4xl mb-2">👻</div>
+                    <div class="text-gray-400">No hidden alerts</div>
+                    <div class="text-xs text-gray-500 mt-1">Alerts without resolution will appear here</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Debug Panel -->
+        <details class="mt-8 bg-gray-800 rounded-lg">
+            <summary class="cursor-pointer p-4 text-blue-400 font-medium">🔧 Debug: Raw Data & Tracking</summary>
+            <div class="p-4 pt-0 space-y-4">
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-400 mb-2">Pending Resolution Queue</h4>
+                    <pre id="pending-data" class="text-xs bg-gray-900 p-3 rounded overflow-x-auto text-gray-300 max-h-48"></pre>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-400 mb-2">Resolved Threads</h4>
+                    <pre id="resolved-data" class="text-xs bg-gray-900 p-3 rounded overflow-x-auto text-gray-300 max-h-48"></pre>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-400 mb-2">Raw API Response</h4>
+                    <pre id="raw-data" class="text-xs bg-gray-900 p-3 rounded overflow-x-auto text-gray-300 max-h-96"></pre>
+                </div>
+            </div>
+        </details>
+        
+        <!-- Legend -->
+        <div class="mt-6 bg-gray-800 rounded-lg p-4">
+            <h3 class="text-sm font-semibold text-gray-400 mb-3">How It Works</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-400">
+                <div class="flex items-start gap-2">
+                    <span class="text-red-400">●</span>
+                    <div><strong class="text-gray-300">Active:</strong> Currently in TTC API response</div>
+                </div>
+                <div class="flex items-start gap-2">
+                    <span class="text-yellow-400">●</span>
+                    <div><strong class="text-gray-300">Pending:</strong> Disappeared, waiting 2-3 polls for service resumed</div>
+                </div>
+                <div class="flex items-start gap-2">
+                    <span class="text-green-400">●</span>
+                    <div><strong class="text-gray-300">Resolved:</strong> Matched with service resumed alert (threaded)</div>
+                </div>
+                <div class="flex items-start gap-2">
+                    <span class="text-gray-500">●</span>
+                    <div><strong class="text-gray-300">Hidden:</strong> No service resumed after 2-3 polls</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use CORS proxy for browser access (TTC API blocks direct browser requests)
+        const TTC_API_URL = 'https://alerts.ttc.ca/api/alerts/live-alerts';
+        const CORS_PROXIES = [
+            'https://corsproxy.io/?',
+            'https://api.allorigins.win/raw?url=',
+            'https://cors-anywhere.herokuapp.com/'
+        ];
+        let currentProxyIndex = 0;
+        
+        const POLL_INTERVAL = 60 * 1000; // 1 minute
+        const MAX_MISSED_POLLS = 2; // Hide after 2 missed polls without service resumed
+        const RESOLVED_DISPLAY_DURATION = 12 * 60 * 60 * 1000; // Show resolved for 12 hours
+        
+        // State tracking
+        let activeAlerts = new Map(); // id -> alert data
+        let pendingResolution = new Map(); // id -> { alert, missedPolls, disappearedAt }
+        let resolvedThreads = new Map(); // id -> { original, serviceResumed, resolvedAt }
+        let hiddenAlerts = new Map(); // id -> { alert, hiddenAt } - alerts that disappeared without service resumed
+        let pollCount = 0;
+        let countdownSeconds = 60;
+        let countdownInterval = null;
+        
+        // Format time in EST
+        function formatTimeEST(date) {
+            return date.toLocaleTimeString('en-US', { 
+                timeZone: 'America/Toronto',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        }
+        
+        // Service resumed detection keywords
+        const SERVICE_RESUMED_KEYWORDS = [
+            'regular service', 'resumed', 'restored', 'back to normal', 
+            'now stopping', 'service restored', 'normal service'
+        ];
+        
+        // Scheduled/planned closure keywords to exclude
+        const SCHEDULED_KEYWORDS = [
+            'scheduled', 'planned', 'weekend closure', 'nightly closure',
+            'maintenance', 'this weekend', 'tonight', 'tomorrow night'
+        ];
+        
+        // Check if alert is service resumed
+        function isServiceResumed(text) {
+            const lowerText = text.toLowerCase();
+            return SERVICE_RESUMED_KEYWORDS.some(kw => lowerText.includes(kw));
+        }
+        
+        // Check if alert is scheduled/planned closure
+        function isScheduledClosure(alert) {
+            const text = (alert.headerText || '').toLowerCase();
+            const effect = (alert.effect || '').toLowerCase();
+            
+            if (effect.includes('planned')) return true;
+            return SCHEDULED_KEYWORDS.some(kw => text.includes(kw));
+        }
+        
+        // Check if alert is RSZ (reduced speed zone)
+        function isRSZ(alert) {
+            const effectDesc = (alert.effectDesc || '').toLowerCase();
+            const headerText = (alert.headerText || '').toLowerCase();
+            return effectDesc.includes('reduced speed zone') || 
+                   headerText.includes('slower than usual') ||
+                   headerText.includes('trains moving slower');
+        }
+        
+        // Check if alert is a SiteWide banner (not a real alert)
+        function isSiteWideBanner(alert) {
+            return alert.alertType === 'SiteWide' || alert.route === '9999';
+        }
+        
+        // Fetch with CORS proxy fallback
+        async function fetchWithProxy(url) {
+            // Add cache-busting parameter
+            const cacheBustUrl = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+            
+            // Try direct fetch first
+            try {
+                const response = await fetch(cacheBustUrl, { cache: 'no-store' });
+                if (response.ok) {
+                    console.log('Direct fetch successful');
+                    return response;
+                }
+            } catch (e) {
+                console.log('Direct fetch failed, trying proxies...');
+            }
+            
+            // Try proxies with cache-busting
+            for (let i = 0; i < CORS_PROXIES.length; i++) {
+                const proxyUrl = CORS_PROXIES[(currentProxyIndex + i) % CORS_PROXIES.length] + encodeURIComponent(cacheBustUrl);
+                try {
+                    const response = await fetch(proxyUrl, { cache: 'no-store' });
+                    if (response.ok) {
+                        currentProxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
+                        console.log(`Proxy ${i} successful`);
+                        return response;
+                    }
+                } catch (e) {
+                    console.log(`Proxy ${i} failed:`, e.message);
+                }
+            }
+            
+            throw new Error('All fetch methods failed. TTC API may be blocking requests.');
+        }
+        
+        // Extract route number from alert
+        function extractRoutes(alert) {
+            const routes = [];
+            const text = alert.headerText || '';
+            
+            // Match Line X patterns
+            const lineMatch = text.match(/Line\s*(\d+)/gi);
+            if (lineMatch) lineMatch.forEach(m => routes.push(m.replace(/\s+/g, ' ')));
+            
+            // Match route with suffix (504A, 37B, etc.)
+            const suffixMatch = text.match(/\b(\d{1,3}[A-Z])\b/g);
+            if (suffixMatch) suffixMatch.forEach(m => routes.push(m));
+            
+            // Also use the route field if available
+            if (alert.route) {
+                const routeNum = alert.route.toString();
+                if (!routes.some(r => r.includes(routeNum))) {
+                    routes.push(routeNum);
+                }
+            }
+            
+            // Match standalone route numbers at start of text
+            const standaloneMatch = text.match(/^(\d{1,3})\s+/);
+            if (standaloneMatch && !routes.some(r => r.includes(standaloneMatch[1]))) {
+                routes.push(standaloneMatch[1]);
+            }
+            
+            return [...new Set(routes)];
+        }
+        
+        // Extract base route number (37A -> 37)
+        function extractBaseRoute(route) {
+            const match = route.toString().match(/^(\d+)/);
+            return match ? match[1] : route;
+        }
+        
+        // Check if routes match (37 matches 37A, 37B, etc.)
+        function routesMatch(routes1, routes2) {
+            const bases1 = routes1.map(extractBaseRoute);
+            const bases2 = routes2.map(extractBaseRoute);
+            return bases1.some(b1 => bases2.includes(b1));
+        }
+        
+        // Extract location keywords for matching
+        function extractKeywords(text) {
+            const keywords = [];
+            const lowerText = text.toLowerCase();
+            
+            // Station names
+            const stationMatch = text.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:Station|Stn)/gi);
+            if (stationMatch) keywords.push(...stationMatch.map(s => s.toLowerCase()));
+            
+            // Street names
+            const streetMatch = text.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:Ave|St|Blvd|Rd|Dr|Way)/gi);
+            if (streetMatch) keywords.push(...streetMatch.map(s => s.toLowerCase()));
+            
+            // Causes
+            const causes = ['collision', 'medical emergency', 'fire', 'police', 'construction'];
+            causes.forEach(c => { if (lowerText.includes(c)) keywords.push(c); });
+            
+            return [...new Set(keywords)];
+        }
+        
+        // Check if service resumed alert matches pending alert
+        function alertsMatch(pendingAlert, serviceResumedAlert) {
+            const pendingRoutes = extractRoutes(pendingAlert);
+            const resumedRoutes = extractRoutes(serviceResumedAlert);
+            
+            // Must have route overlap
+            if (!routesMatch(pendingRoutes, resumedRoutes)) return false;
+            
+            // Check keyword overlap for confidence
+            const pendingKeywords = extractKeywords(pendingAlert.headerText || '');
+            const resumedKeywords = extractKeywords(serviceResumedAlert.headerText || '');
+            
+            // Route match alone is sufficient for service resumed
+            return true;
+        }
+        
+        // Generate unique ID for alert
+        function getAlertId(alert) {
+            // Use TTC's alert ID if available, otherwise generate from content
+            if (alert.id) return `ttc-${alert.id}`;
+            const routes = extractRoutes(alert).join('-') || 'unknown';
+            const hash = (alert.headerText || '').slice(0, 50).replace(/\W+/g, '-');
+            return `ttc-${routes}-${hash}`;
+        }
+        
+        // Get route badge class
+        function getRouteBadgeClass(route) {
+            if (route.includes('Line 1')) return 'route-line-1';
+            if (route.includes('Line 2')) return 'route-line-2';
+            if (route.includes('Line 3')) return 'route-line-3';
+            if (route.includes('Line 4')) return 'route-line-4';
+            if (route.includes('Line 5')) return 'route-line-5';
+            if (route.includes('Line 6')) return 'route-line-6';
+            
+            const numMatch = route.match(/^(\d+)/);
+            if (numMatch) {
+                const num = parseInt(numMatch[1]);
+                if (num >= 500 && num <= 514) return 'route-streetcar';
+                if (num >= 300 && num <= 399) return 'route-night';
+                if (num >= 900) return 'route-express';
+            }
+            return 'route-bus';
+        }
+        
+        // Get category badge class
+        function getCategoryClass(effect) {
+            const effectMap = {
+                'NO_SERVICE': 'category-NO_SERVICE',
+                'SIGNIFICANT_DELAYS': 'category-SIGNIFICANT_DELAYS',
+                'DETOUR': 'category-DETOUR',
+                'REDUCED_SERVICE': 'category-REDUCED_SERVICE',
+                'SERVICE_RESUMED': 'category-SERVICE_RESUMED'
+            };
+            return effectMap[effect] || 'category-OTHER';
+        }
+        
+        // Render alert card
+        function renderAlertCard(alert, isResolved = false, serviceResumedAlert = null) {
+            // Handle case where alert is null or is a service resumed alert (standalone service resumed)
+            if (!alert && serviceResumedAlert) {
+                return renderStandaloneResumedCard(serviceResumedAlert);
+            }
+            
+            // Additional safety check: if original alert is itself a service resumed or NO_EFFECT,
+            // treat it as a standalone service resumed
+            if (alert && (isServiceResumed(alert.headerText || '') || alert.effect === 'NO_EFFECT') && serviceResumedAlert) {
+                return renderStandaloneResumedCard(serviceResumedAlert);
+            }
+            
+            const routes = extractRoutes(alert);
+            const effect = alert.effect || 'OTHER';
+            const text = alert.headerText || 'No description';
+            const timestamp = alert.lastUpdated ? formatTimeEST(new Date(alert.lastUpdated)) : '--:--';
+            
+            const badges = routes.map(r => 
+                `<span class="route-badge ${getRouteBadgeClass(r)}">${r}</span>`
+            ).join('');
+            
+            let threadHtml = '';
+            if (isResolved && serviceResumedAlert) {
+                const resumedText = serviceResumedAlert.headerText || 'Service resumed';
+                const resumedTime = serviceResumedAlert.lastUpdated ? 
+                    formatTimeEST(new Date(serviceResumedAlert.lastUpdated)) : '--:--';
+                threadHtml = `
+                    <div class="mt-3 border-l-2 border-green-500 pl-3">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs px-2 py-0.5 rounded category-SERVICE_RESUMED">SERVICE RESUMED</span>
+                            <span class="text-xs text-gray-500">${resumedTime}</span>
+                        </div>
+                        <p class="text-sm text-green-300">${resumedText}</p>
+                    </div>
+                `;
+            }
+            
+            const borderClass = isResolved ? 'border-l-4 border-green-500' : '';
+            
+            return `
+                <div class="bg-gray-800 rounded-lg p-4 ${borderClass}">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        ${badges || '<span class="text-gray-500 text-xs">No routes</span>'}
+                        <span class="text-xs px-2 py-0.5 rounded ${getCategoryClass(effect)}">${effect.replace(/_/g, ' ')}</span>
+                    </div>
+                    <p class="text-sm text-gray-300">${text}</p>
+                    <div class="mt-2 text-xs text-gray-500">
+                        Last updated: ${timestamp}
+                    </div>
+                    ${threadHtml}
+                </div>
+            `;
+        }
+        
+        // Render standalone service resumed card (no original alert)
+        function renderStandaloneResumedCard(serviceResumedAlert) {
+            const routes = extractRoutes(serviceResumedAlert);
+            const text = serviceResumedAlert.headerText || 'Service resumed';
+            const timestamp = serviceResumedAlert.lastUpdated ? 
+                formatTimeEST(new Date(serviceResumedAlert.lastUpdated)) : '--:--';
+            
+            const badges = routes.map(r => 
+                `<span class="route-badge ${getRouteBadgeClass(r)}">${r}</span>`
+            ).join('');
+            
+            return `
+                <div class="bg-gray-800 rounded-lg p-4 border-l-4 border-green-500">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        ${badges || '<span class="text-gray-500 text-xs">No routes</span>'}
+                        <span class="text-xs px-2 py-0.5 rounded category-SERVICE_RESUMED">SERVICE RESUMED</span>
+                    </div>
+                    <p class="text-sm text-green-300">${text}</p>
+                    <div class="mt-2 text-xs text-gray-500">
+                        ${timestamp}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render hidden alert card (no service resumed)
+        function renderHiddenAlertCard(alert, hiddenAt) {
+            const routes = extractRoutes(alert);
+            const effect = alert.effect || 'OTHER';
+            const text = alert.headerText || 'No description';
+            const timestamp = alert.lastUpdated ? formatTimeEST(new Date(alert.lastUpdated)) : '--:--';
+            const hiddenTime = formatTimeEST(new Date(hiddenAt));
+            
+            const badges = routes.map(r => 
+                `<span class="route-badge ${getRouteBadgeClass(r)}">${r}</span>`
+            ).join('');
+            
+            return `
+                <div class="bg-gray-800 rounded-lg p-4 border-l-4 border-gray-500 opacity-75">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        ${badges || '<span class="text-gray-500 text-xs">No routes</span>'}
+                        <span class="text-xs px-2 py-0.5 rounded ${getCategoryClass(effect)}">${effect.replace(/_/g, ' ')}</span>
+                        <span class="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300">NO RESOLUTION</span>
+                    </div>
+                    <p class="text-sm text-gray-400">${text}</p>
+                    <div class="mt-2 text-xs text-gray-500 flex justify-between">
+                        <span>Last updated: ${timestamp}</span>
+                        <span>Hidden at: ${hiddenTime}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render pending alert card (waiting for service resumed)
+        function renderPendingAlertCard(alert, missedPolls, disappearedAt) {
+            const routes = extractRoutes(alert);
+            const effect = alert.effect || 'OTHER';
+            const text = alert.headerText || 'No description';
+            const timestamp = alert.lastUpdated ? formatTimeEST(new Date(alert.lastUpdated)) : '--:--';
+            const disappearedTime = formatTimeEST(new Date(disappearedAt));
+            
+            const badges = routes.map(r => 
+                `<span class="route-badge ${getRouteBadgeClass(r)}">${r}</span>`
+            ).join('');
+            
+            const pollsRemaining = MAX_MISSED_POLLS - missedPolls;
+            
+            return `
+                <div class="bg-gray-800 rounded-lg p-4 border-l-4 border-yellow-500">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        ${badges || '<span class="text-gray-500 text-xs">No routes</span>'}
+                        <span class="text-xs px-2 py-0.5 rounded ${getCategoryClass(effect)}">${effect.replace(/_/g, ' ')}</span>
+                        <span class="text-xs px-2 py-0.5 rounded bg-yellow-900 text-yellow-300">⏳ ${pollsRemaining} poll${pollsRemaining !== 1 ? 's' : ''} left</span>
+                    </div>
+                    <p class="text-sm text-gray-300">${text}</p>
+                    <div class="mt-2 text-xs text-gray-500 flex justify-between">
+                        <span>Last updated: ${timestamp}</span>
+                        <span>Disappeared: ${disappearedTime}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Update countdown display
+        function updateCountdown() {
+            countdownSeconds--;
+            if (countdownSeconds < 0) countdownSeconds = 60;
+            document.getElementById('countdown').textContent = `${countdownSeconds}s`;
+        }
+        
+        // Tab switching
+        let currentTab = 'disruptions';
+        
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Update tab buttons
+            document.querySelectorAll('#tab-disruptions, #tab-resolved, #tab-hidden').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('tab-' + tabName).classList.add('active');
+            
+            // Update panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+                panel.classList.add('hidden');
+            });
+            const activePanel = document.getElementById('panel-' + tabName);
+            activePanel.classList.remove('hidden');
+            activePanel.classList.add('active');
+        }
+        
+        // Main fetch and process function
+        async function fetchAndProcess() {
+            const loadingEl = document.getElementById('loading');
+            const tabsContainer = document.getElementById('tabs-container');
+            
+            try {
+                pollCount++;
+                document.getElementById('poll-count').textContent = pollCount;
+                
+                const response = await fetchWithProxy(TTC_API_URL);
+                const data = await response.json();
+                
+                document.getElementById('raw-data').textContent = JSON.stringify(data, null, 2);
+                document.getElementById('last-updated').textContent = formatTimeEST(new Date());
+                
+                // Extract all route alerts (excluding RSZ, elevators, scheduled, sitewide banners)
+                const allAlerts = (data.routes || []).filter(alert => {
+                    if (isRSZ(alert)) return false;
+                    if (isScheduledClosure(alert)) return false;
+                    if (isSiteWideBanner(alert)) return false;
+                    return true;
+                });
+                
+                // Separate active disruptions and service resumed alerts
+                const disruptionAlerts = allAlerts.filter(a => !isServiceResumed(a.headerText || ''));
+                const serviceResumedAlerts = allAlerts.filter(a => isServiceResumed(a.headerText || ''));
+                
+                // Track current alert IDs for this poll
+                const currentAlertIds = new Set(disruptionAlerts.map(a => getAlertId(a)));
+                
+                // Step 1: Track current service resumed alerts for matching with disappeared alerts
+                const matchedResumedIds = new Set();
+                
+                // Step 2: Update active alerts from current poll
+                const newActiveAlerts = new Map();
+                for (const alert of disruptionAlerts) {
+                    const id = getAlertId(alert);
+                    newActiveAlerts.set(id, alert);
+                    
+                    // If was pending, remove from pending (it came back)
+                    if (pendingResolution.has(id)) {
+                        pendingResolution.delete(id);
+                    }
+                }
+                
+                // Step 3: Process disappeared alerts - check for service resumed matches
+                for (const [id, alert] of activeAlerts) {
+                    if (!currentAlertIds.has(id)) {
+                        // Skip if this was actually a service resumed alert (shouldn't happen but safeguard)
+                        if (isServiceResumed(alert.headerText || '') || alert.effect === 'NO_EFFECT') {
+                            console.log(`Skipping disappeared alert ${id} - was a service resumed or NO_EFFECT`);
+                            continue;
+                        }
+                        
+                        // Alert disappeared from API - check for matching service resumed
+                        let matched = false;
+                        
+                        for (const resumed of serviceResumedAlerts) {
+                            const resumedId = getAlertId(resumed);
+                            if (!matchedResumedIds.has(resumedId) && alertsMatch(alert, resumed)) {
+                                // Thread and move to resolved
+                                resolvedThreads.set(id, {
+                                    original: alert,
+                                    serviceResumed: resumed,
+                                    resolvedAt: Date.now()
+                                });
+                                matchedResumedIds.add(resumedId);
+                                matched = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!matched) {
+                            // No service resumed found - add to pending
+                            if (pendingResolution.has(id)) {
+                                const pending = pendingResolution.get(id);
+                                pending.missedPolls++;
+                                
+                                // Check again for service resumed
+                                for (const resumed of serviceResumedAlerts) {
+                                    const resumedId = getAlertId(resumed);
+                                    if (!matchedResumedIds.has(resumedId) && alertsMatch(pending.alert, resumed)) {
+                                        resolvedThreads.set(id, {
+                                            original: pending.alert,
+                                            serviceResumed: resumed,
+                                            resolvedAt: Date.now()
+                                        });
+                                        pendingResolution.delete(id);
+                                        matchedResumedIds.add(resumedId);
+                                        matched = true;
+                                        break;
+                                    }
+                                }
+                                
+                                // If exceeded max missed polls and no match, move to hidden
+                                if (!matched && pending.missedPolls >= MAX_MISSED_POLLS) {
+                                    console.log(`Alert ${id} hidden after ${pending.missedPolls} missed polls without service resumed`);
+                                    hiddenAlerts.set(id, {
+                                        alert: pending.alert,
+                                        hiddenAt: Date.now()
+                                    });
+                                    pendingResolution.delete(id);
+                                }
+                            } else {
+                                // First time disappearing - add to pending
+                                pendingResolution.set(id, {
+                                    alert: alert,
+                                    missedPolls: 1,
+                                    disappearedAt: Date.now()
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                // Step 4: Show standalone service resumed alerts (no matching disappeared alert)
+                for (const resumed of serviceResumedAlerts) {
+                    const resumedId = getAlertId(resumed);
+                    if (!matchedResumedIds.has(resumedId) && !resolvedThreads.has(resumedId)) {
+                        // Standalone service resumed - show in resolved section
+                        resolvedThreads.set(resumedId, {
+                            original: null, // No matching original
+                            serviceResumed: resumed,
+                            resolvedAt: Date.now()
+                        });
+                    }
+                }
+                
+                // Update active alerts to current poll's data
+                activeAlerts = newActiveAlerts;
+
+                // Step 5: Clean up old resolved threads and hidden alerts (older than 12 hours)
+                const now = Date.now();
+                for (const [id, thread] of resolvedThreads) {
+                    if (now - thread.resolvedAt > RESOLVED_DISPLAY_DURATION) {
+                        resolvedThreads.delete(id);
+                    }
+                }
+                for (const [id, hidden] of hiddenAlerts) {
+                    if (now - hidden.hiddenAt > RESOLVED_DISPLAY_DURATION) {
+                        hiddenAlerts.delete(id);
+                    }
+                }
+                
+                // Update debug displays
+                document.getElementById('pending-data').textContent = JSON.stringify(
+                    Array.from(pendingResolution.entries()).map(([id, p]) => ({
+                        id,
+                        missedPolls: p.missedPolls,
+                        routes: extractRoutes(p.alert),
+                        text: (p.alert.headerText || '').slice(0, 80) + '...'
+                    })), null, 2
+                );
+                
+                document.getElementById('resolved-data').textContent = JSON.stringify(
+                    Array.from(resolvedThreads.entries()).map(([id, t]) => ({
+                        id,
+                        routes: t.original ? extractRoutes(t.original) : extractRoutes(t.serviceResumed),
+                        resolvedAt: formatTimeEST(new Date(t.resolvedAt)),
+                        resumedText: (t.serviceResumed.headerText || '').slice(0, 60) + '...',
+                        hasOriginal: !!t.original
+                    })), null, 2
+                );
+                
+                // Render UI
+                loadingEl.classList.add('hidden');
+                tabsContainer.classList.remove('hidden');
+                
+                // Initialize tabs if first load
+                if (!document.getElementById('tab-disruptions').classList.contains('active')) {
+                    switchTab('disruptions');
+                }
+                
+                // Update stats
+                document.getElementById('active-count').textContent = activeAlerts.size;
+                document.getElementById('pending-count').textContent = pendingResolution.size;
+                document.getElementById('resolved-count').textContent = resolvedThreads.size;
+                document.getElementById('hidden-count').textContent = hiddenAlerts.size;
+                
+                // Update tab badges
+                document.getElementById('tab-badge-disruptions').textContent = activeAlerts.size;
+                document.getElementById('tab-badge-pending').textContent = pendingResolution.size;
+                document.getElementById('tab-badge-resolved').textContent = resolvedThreads.size;
+                document.getElementById('tab-badge-hidden').textContent = hiddenAlerts.size;
+                
+                // Render active alerts
+                const activeAlertsEl = document.getElementById('active-alerts');
+                const noActiveEl = document.getElementById('no-active');
+                
+                if (activeAlerts.size === 0) {
+                    activeAlertsEl.innerHTML = '';
+                    noActiveEl.classList.remove('hidden');
+                } else {
+                    noActiveEl.classList.add('hidden');
+                    activeAlertsEl.innerHTML = Array.from(activeAlerts.values())
+                        .map(alert => renderAlertCard(alert))
+                        .join('');
+                }
+                
+                // Render pending alerts
+                const pendingAlertsEl = document.getElementById('pending-alerts');
+                const noPendingEl = document.getElementById('no-pending');
+                
+                if (pendingResolution.size > 0) {
+                    noPendingEl.classList.add('hidden');
+                    pendingAlertsEl.innerHTML = Array.from(pendingResolution.values())
+                        .sort((a, b) => b.disappearedAt - a.disappearedAt)
+                        .map(item => renderPendingAlertCard(item.alert, item.missedPolls, item.disappearedAt))
+                        .join('');
+                } else {
+                    pendingAlertsEl.innerHTML = '';
+                    noPendingEl.classList.remove('hidden');
+                }
+                
+                // Render resolved alerts
+                const resolvedAlertsEl = document.getElementById('resolved-alerts');
+                const noResolvedEl = document.getElementById('no-resolved');
+                
+                if (resolvedThreads.size > 0) {
+                    noResolvedEl.classList.add('hidden');
+                    resolvedAlertsEl.innerHTML = Array.from(resolvedThreads.values())
+                        .sort((a, b) => b.resolvedAt - a.resolvedAt)
+                        .map(thread => renderAlertCard(thread.original, true, thread.serviceResumed))
+                        .join('');
+                } else {
+                    resolvedAlertsEl.innerHTML = '';
+                    noResolvedEl.classList.remove('hidden');
+                }
+                
+                // Render hidden alerts
+                const hiddenAlertsEl = document.getElementById('hidden-alerts');
+                const noHiddenEl = document.getElementById('no-hidden');
+                
+                if (hiddenAlerts.size > 0) {
+                    noHiddenEl.classList.add('hidden');
+                    hiddenAlertsEl.innerHTML = Array.from(hiddenAlerts.values())
+                        .sort((a, b) => b.hiddenAt - a.hiddenAt)
+                        .map(item => renderHiddenAlertCard(item.alert, item.hiddenAt))
+                        .join('');
+                } else {
+                    hiddenAlertsEl.innerHTML = '';
+                    noHiddenEl.classList.remove('hidden');
+                }
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                loadingEl.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-red-500 mb-2">⚠️ Error fetching alerts</div>
+                        <div class="text-xs text-gray-500">${error.message}</div>
+                        <div class="text-xs text-gray-600 mt-2">This may be a CORS issue. TTC API may block browser requests.</div>
+                        <button onclick="manualRefresh()" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm">
+                            Retry
+                        </button>
+                    </div>
+                `;
+            }
+            
+            // Reset countdown
+            countdownSeconds = 60;
+        }
+        
+        // Manual refresh
+        function manualRefresh() {
+            countdownSeconds = 60;
+            fetchAndProcess();
+        }
+        
+        // Initialize
+        function init() {
+            fetchAndProcess();
+            
+            // Start polling interval
+            setInterval(fetchAndProcess, POLL_INTERVAL);
+            
+            // Start countdown display
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+        
+        init();
+    </script>
+</body>
+</html>

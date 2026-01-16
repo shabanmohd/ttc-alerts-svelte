@@ -11,7 +11,7 @@ const corsHeaders = {
 const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 
 // Version for debugging
-const VERSION = '208'; // Duplicate service resumed for multiple threads on same route
+const VERSION = '212'; // Auto-revert to 2 polls after monitoring period
 
 // Helper: Generate MD5 hash for thread_hash
 async function generateMd5Hash(input: string): Promise<string> {
@@ -23,7 +23,11 @@ async function generateMd5Hash(input: string): Promise<string> {
 }
 
 // Grace period: number of polls to wait for service resumed before hiding
-const MAX_MISSED_POLLS = 2;
+// Monitoring started: 2025-01-10 - will auto-revert to 2 polls after 24 hours
+const MONITORING_START = new Date('2025-01-10T20:00:00Z'); // UTC time
+const MONITORING_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+const isMonitoringActive = () => Date.now() < MONITORING_START.getTime() + MONITORING_DURATION_MS;
+const MAX_MISSED_POLLS = isMonitoringActive() ? 10 : 2;
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
@@ -447,6 +451,13 @@ async function processDisruptionAlerts(
   for (const alert of disruptionAlerts) {
     const headerText = alert.headerText || '';
     const route = alert.route || '';
+    
+    // Skip alerts with empty headerText - these create malformed threads
+    if (!headerText.trim()) {
+      console.log(`Skipping disruption alert with empty headerText: route=${route}`);
+      continue;
+    }
+    
     const alertId = generateTtcAlertId('alert', route, headerText);
     currentAlertIds.add(alertId);
     
@@ -595,6 +606,20 @@ async function processDisruptionAlerts(
       
       console.log(`Thread ${thread.thread_id} disappeared - missed_polls: ${missedPolls}`);
       
+      // MONITORING: Track when disruption first disappears (missedPolls == 1)
+      if (missedPolls === 1) {
+        const route = (thread.affected_routes as string[])?.[0] || 'unknown';
+        await supabase
+          .from('service_resumed_monitoring')
+          .insert({
+            thread_id: thread.thread_id,
+            route: route,
+            disruption_removed_at: new Date().toISOString(),
+            polls_since_removal: 0
+          });
+        console.log(`MONITORING: Started tracking ${thread.thread_id} for service resumed`);
+      }
+      
       // Check for matching service resumed alert
       let matchedResumed: TtcApiAlert | null = null;
       const threadRoutes = thread.affected_routes || [];
@@ -620,9 +645,9 @@ async function processDisruptionAlerts(
         console.log(`Resolving thread ${thread.thread_id} with service resumed: ${matchedResumed.headerText?.substring(0, 50)}`);
         
         // Insert service resumed alert - use thread-specific ID to allow duplicates for multiple threads
-        // Format: ttc-resumed-{route}-{threadSuffix} to ensure uniqueness per thread
-        const threadSuffix = thread.thread_id.replace('thread-alert-', '').substring(0, 20);
-        const resumedAlertId = `ttc-resumed-${matchedResumed.route || 'unknown'}-${threadSuffix}`;
+        // Use MD5 hash of full thread_id to ensure uniqueness (truncation caused collisions)
+        const threadHash = await generateMd5Hash(thread.thread_id);
+        const resumedAlertId = `ttc-resumed-${matchedResumed.route || 'unknown'}-${threadHash.substring(0, 12)}`;
         
         const { data: existingResumed } = await supabase
           .from('alert_cache')
@@ -672,6 +697,18 @@ async function processDisruptionAlerts(
           })
           .eq('thread_id', thread.thread_id);
         
+        // MONITORING: Update when service resumed is found
+        await supabase
+          .from('service_resumed_monitoring')
+          .update({
+            service_resumed_at: new Date().toISOString(),
+            polls_since_removal: missedPolls,
+            service_resumed_text: (matchedResumed.headerText || '').substring(0, 200)
+          })
+          .eq('thread_id', thread.thread_id)
+          .is('service_resumed_at', null);
+        console.log(`MONITORING: Service resumed found for ${thread.thread_id} after ${missedPolls} polls`);
+        
         resolvedThreads++;
       } else if (missedPolls >= MAX_MISSED_POLLS) {
         // No service resumed found after grace period - hide thread
@@ -685,6 +722,16 @@ async function processDisruptionAlerts(
             updated_at: new Date().toISOString()
           })
           .eq('thread_id', thread.thread_id);
+        
+        // MONITORING: Log that thread was hidden without service resumed
+        await supabase
+          .from('service_resumed_monitoring')
+          .update({
+            polls_since_removal: missedPolls
+          })
+          .eq('thread_id', thread.thread_id)
+          .is('service_resumed_at', null);
+        console.log(`MONITORING: Thread ${thread.thread_id} hidden after ${missedPolls} polls with NO service resumed`);
         
         hiddenThreads++;
       } else {
@@ -736,9 +783,9 @@ async function processDisruptionAlerts(
       
       if (existingResumed) continue;
       
-      // Insert service resumed alert for this thread - use thread-specific ID
-      const threadSuffix = thread.thread_id.replace('thread-alert-', '').substring(0, 20);
-      const resumedAlertId = `ttc-resumed-${resumed.route || 'unknown'}-${threadSuffix}`;
+      // Insert service resumed alert for this thread - use MD5 hash for uniqueness
+      const threadHash = await generateMd5Hash(thread.thread_id);
+      const resumedAlertId = `ttc-resumed-${resumed.route || 'unknown'}-${threadHash.substring(0, 12)}`;
       
       // Check if this specific resumed alert already exists
       const { data: existingAlert } = await supabase
@@ -790,6 +837,13 @@ async function processScheduledAlerts(supabase: any, scheduledAlerts: TtcApiAler
   for (const alert of scheduledAlerts) {
     const headerText = alert.headerText || '';
     const route = alert.route || '';
+    
+    // Skip alerts with empty headerText
+    if (!headerText.trim()) {
+      console.log(`Skipping scheduled alert with empty headerText: route=${route}`);
+      continue;
+    }
+    
     const alertId = generateTtcAlertId('scheduled', route, headerText);
     currentAlertIds.add(alertId);
     

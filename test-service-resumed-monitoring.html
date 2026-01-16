@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Resumed Monitoring - TTC Alerts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              900: '#0d1117',
+              800: '#161b22',
+              700: '#21262d',
+              600: '#30363d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-dark-900 text-gray-100 min-h-screen p-8">
+  <div class="max-w-6xl mx-auto">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">Service Resumed Monitoring</h1>
+      <p class="text-gray-400">Tracking how many polls it takes for service resumed alerts to appear after disruptions are removed from TTC API</p>
+      <p class="text-sm text-yellow-400 mt-2">⚠️ Monitoring period: Grace period is temporarily set to 10 polls (normally 2)</p>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div class="bg-dark-800 rounded-lg p-4 border border-dark-600">
+        <div class="text-3xl font-bold text-blue-400" id="totalTracked">-</div>
+        <div class="text-sm text-gray-400">Total Tracked</div>
+      </div>
+      <div class="bg-dark-800 rounded-lg p-4 border border-dark-600">
+        <div class="text-3xl font-bold text-green-400" id="gotResumed">-</div>
+        <div class="text-sm text-gray-400">Got Service Resumed</div>
+      </div>
+      <div class="bg-dark-800 rounded-lg p-4 border border-orange-600/50">
+        <div class="text-3xl font-bold text-orange-400" id="lateResumed">-</div>
+        <div class="text-sm text-gray-400">Late (after 2 polls)</div>
+      </div>
+      <div class="bg-dark-800 rounded-lg p-4 border border-dark-600">
+        <div class="text-3xl font-bold text-red-400" id="noResumed">-</div>
+        <div class="text-sm text-gray-400">No Service Resumed</div>
+      </div>
+      <div class="bg-dark-800 rounded-lg p-4 border border-dark-600">
+        <div class="text-3xl font-bold text-yellow-400" id="avgPolls">-</div>
+        <div class="text-sm text-gray-400">Avg Polls to Resume</div>
+      </div>
+    </div>
+
+    <!-- Distribution Chart -->
+    <div class="bg-dark-800 rounded-lg p-6 border border-dark-600 mb-8">
+      <h2 class="text-xl font-semibold mb-4">Poll Distribution</h2>
+      <p class="text-sm text-gray-400 mb-4">Number of threads by how many polls it took to find service resumed</p>
+      <div id="distribution" class="space-y-2">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- Late Service Resumed (after 2 polls) -->
+    <div class="bg-dark-800 rounded-lg p-6 border border-orange-600/50 mb-8" id="lateResumedSection" style="display: none;">
+      <h2 class="text-xl font-semibold mb-2 text-orange-400">⚠️ Late Service Resumed (After 2 Polls)</h2>
+      <p class="text-sm text-gray-400 mb-4">These alerts would have been missed with the default 2-poll grace period</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="border-b border-dark-600">
+            <tr>
+              <th class="text-left p-2 text-gray-400">Route</th>
+              <th class="text-left p-2 text-gray-400">Removed At</th>
+              <th class="text-left p-2 text-gray-400">Resumed At</th>
+              <th class="text-center p-2 text-gray-400">Polls</th>
+              <th class="text-left p-2 text-gray-400">Minutes</th>
+              <th class="text-left p-2 text-gray-400">Alert Text</th>
+            </tr>
+          </thead>
+          <tbody id="lateResumedTable">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- No Service Resumed (after 10 polls) -->
+    <div class="bg-dark-800 rounded-lg p-6 border border-red-600/50 mb-8" id="noResumedSection" style="display: none;">
+      <h2 class="text-xl font-semibold mb-2 text-red-400">❌ No Service Resumed (After 10 Polls)</h2>
+      <p class="text-sm text-gray-400 mb-4">These disruptions were hidden without ever receiving a service resumed alert</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="border-b border-dark-600">
+            <tr>
+              <th class="text-left p-2 text-gray-400">Route</th>
+              <th class="text-left p-2 text-gray-400">Thread ID</th>
+              <th class="text-left p-2 text-gray-400">Removed At</th>
+              <th class="text-center p-2 text-gray-400">Polls Waited</th>
+            </tr>
+          </thead>
+          <tbody id="noResumedTable">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Detailed Data -->
+    <div class="bg-dark-800 rounded-lg p-6 border border-dark-600">
+      <h2 class="text-xl font-semibold mb-4">Monitoring Data</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="border-b border-dark-600">
+            <tr>
+              <th class="text-left p-2 text-gray-400">Route</th>
+              <th class="text-left p-2 text-gray-400">Removed At</th>
+              <th class="text-left p-2 text-gray-400">Resumed At</th>
+              <th class="text-center p-2 text-gray-400">Polls</th>
+              <th class="text-left p-2 text-gray-400">Minutes</th>
+              <th class="text-left p-2 text-gray-400">Status</th>
+            </tr>
+          </thead>
+          <tbody id="dataTable">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Refresh Button -->
+    <div class="mt-6 flex gap-4">
+      <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+        🔄 Refresh Data
+      </button>
+      <span class="text-gray-400 text-sm self-center">Last updated: <span id="lastUpdate">-</span></span>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://wmchvmegxcpyfjcuzqzk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtY2h2bWVneGNweWZqY3V6cXprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MTk4MzgsImV4cCI6MjA3OTQ5NTgzOH0.Jy0t3-TtKIHamd0ZIxZRZxN9Q8rNZuD-IFBta6VdwXM';
+
+    async function loadData() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/service_resumed_monitoring?order=created_at.desc`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) throw new Error('Failed to fetch');
+        
+        const data = await response.json();
+        renderData(data);
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+      } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('dataTable').innerHTML = `
+          <tr><td colspan="6" class="p-4 text-center text-red-400">Error loading data: ${error.message}</td></tr>
+        `;
+      }
+    }
+
+    function renderData(data) {
+      // Calculate stats
+      const total = data.length;
+      const gotResumed = data.filter(d => d.service_resumed_at).length;
+      const lateResumedCount = data.filter(d => d.service_resumed_at && d.polls_since_removal > 2).length;
+      const noResumed = data.filter(d => !d.service_resumed_at && d.polls_since_removal >= 10).length;
+      const pending = data.filter(d => !d.service_resumed_at && d.polls_since_removal < 10).length;
+      
+      const resumedData = data.filter(d => d.service_resumed_at);
+      const avgPolls = resumedData.length > 0 
+        ? (resumedData.reduce((sum, d) => sum + d.polls_since_removal, 0) / resumedData.length).toFixed(1)
+        : '-';
+
+      // Update summary
+      document.getElementById('totalTracked').textContent = total;
+      document.getElementById('gotResumed').textContent = gotResumed;
+      document.getElementById('lateResumed').textContent = lateResumedCount;
+      document.getElementById('noResumed').textContent = noResumed + (pending > 0 ? ` (+${pending} pending)` : '');
+      document.getElementById('avgPolls').textContent = avgPolls;
+
+      // Distribution chart
+      const distribution = {};
+      for (let i = 1; i <= 10; i++) distribution[i] = { resumed: 0, noResumed: 0 };
+      
+      data.forEach(d => {
+        const polls = d.polls_since_removal;
+        if (polls >= 1 && polls <= 10) {
+          if (d.service_resumed_at) {
+            distribution[polls].resumed++;
+          } else if (polls >= 10) {
+            distribution[polls].noResumed++;
+          }
+        }
+      });
+
+      const maxCount = Math.max(...Object.values(distribution).map(d => d.resumed + d.noResumed), 1);
+      
+      document.getElementById('distribution').innerHTML = Object.entries(distribution)
+        .map(([poll, counts]) => {
+          const total = counts.resumed + counts.noResumed;
+          const width = (total / maxCount) * 100;
+          const isLate = parseInt(poll) > 2;
+          return `
+            <div class="flex items-center gap-4">
+              <div class="w-20 text-right ${isLate ? 'text-orange-400' : 'text-gray-400'}">Poll ${poll}${isLate ? ' ⚠️' : ''}</div>
+              <div class="flex-1 h-6 bg-dark-700 rounded overflow-hidden">
+                <div class="h-full flex">
+                  <div class="${isLate ? 'bg-orange-600' : 'bg-green-600'}" style="width: ${(counts.resumed / maxCount) * 100}%"></div>
+                  <div class="bg-red-600" style="width: ${(counts.noResumed / maxCount) * 100}%"></div>
+                </div>
+              </div>
+              <div class="w-24 text-sm">
+                ${counts.resumed > 0 ? `<span class="${isLate ? 'text-orange-400' : 'text-green-400'}">${counts.resumed} ✓</span>` : ''}
+                ${counts.noResumed > 0 ? `<span class="text-red-400 ml-2">${counts.noResumed} ✗</span>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      // Late service resumed section (polls > 2)
+      const lateResumed = data.filter(d => d.service_resumed_at && d.polls_since_removal > 2);
+      const lateSection = document.getElementById('lateResumedSection');
+      const lateTable = document.getElementById('lateResumedTable');
+      
+      if (lateResumed.length > 0) {
+        lateSection.style.display = 'block';
+        lateTable.innerHTML = lateResumed.map(d => {
+          const removedAt = new Date(d.disruption_removed_at);
+          const resumedAt = new Date(d.service_resumed_at);
+          const minutes = Math.round((resumedAt - removedAt) / 60000);
+          return `
+            <tr class="border-b border-dark-700 hover:bg-dark-700">
+              <td class="p-2 font-mono text-orange-400">${d.route}</td>
+              <td class="p-2 text-gray-400">${removedAt.toLocaleString()}</td>
+              <td class="p-2 text-gray-400">${resumedAt.toLocaleString()}</td>
+              <td class="p-2 text-center font-bold text-orange-400">${d.polls_since_removal}</td>
+              <td class="p-2">${minutes} min</td>
+              <td class="p-2 text-sm text-gray-300 max-w-md truncate" title="${d.service_resumed_text || ''}">${d.service_resumed_text || '-'}</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        lateSection.style.display = 'none';
+      }
+
+      // No service resumed section (polls >= 10 without service_resumed_at)
+      const noResumedAlerts = data.filter(d => !d.service_resumed_at && d.polls_since_removal >= 10);
+      const noResumedSection = document.getElementById('noResumedSection');
+      const noResumedTable = document.getElementById('noResumedTable');
+      
+      if (noResumedAlerts.length > 0) {
+        noResumedSection.style.display = 'block';
+        noResumedTable.innerHTML = noResumedAlerts.map(d => {
+          const removedAt = new Date(d.disruption_removed_at);
+          return `
+            <tr class="border-b border-dark-700 hover:bg-dark-700">
+              <td class="p-2 font-mono text-red-400">${d.route}</td>
+              <td class="p-2 text-gray-400 text-xs">${d.thread_id}</td>
+              <td class="p-2 text-gray-400">${removedAt.toLocaleString()}</td>
+              <td class="p-2 text-center font-bold text-red-400">${d.polls_since_removal}</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        noResumedSection.style.display = 'none';
+      }
+
+      // Data table
+      if (data.length === 0) {
+        document.getElementById('dataTable').innerHTML = `
+          <tr><td colspan="6" class="p-4 text-center text-gray-400">No monitoring data yet. Data will appear when disruptions are removed from TTC API.</td></tr>
+        `;
+        return;
+      }
+
+      document.getElementById('dataTable').innerHTML = data.map(d => {
+        const removedAt = new Date(d.disruption_removed_at);
+        const resumedAt = d.service_resumed_at ? new Date(d.service_resumed_at) : null;
+        const minutes = resumedAt ? Math.round((resumedAt - removedAt) / 60000) : '-';
+        
+        let status, statusClass;
+        if (d.service_resumed_at) {
+          status = '✓ Resumed';
+          statusClass = 'text-green-400';
+        } else if (d.polls_since_removal >= 10) {
+          status = '✗ No Resume';
+          statusClass = 'text-red-400';
+        } else {
+          status = `⏳ Waiting (${d.polls_since_removal}/10)`;
+          statusClass = 'text-yellow-400';
+        }
+
+        return `
+          <tr class="border-b border-dark-700 hover:bg-dark-700">
+            <td class="p-2 font-mono">${d.route}</td>
+            <td class="p-2 text-gray-400">${removedAt.toLocaleString()}</td>
+            <td class="p-2 text-gray-400">${resumedAt ? resumedAt.toLocaleString() : '-'}</td>
+            <td class="p-2 text-center">${d.polls_since_removal}</td>
+            <td class="p-2">${minutes}${minutes !== '-' ? ' min' : ''}</td>
+            <td class="p-2 ${statusClass}">${status}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Load on page load
+    loadData();
+    
+    // Auto refresh every 30 seconds
+    setInterval(loadData, 30000);
+  </script>
+</body>
+</html>
