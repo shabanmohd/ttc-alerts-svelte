@@ -4,13 +4,14 @@
 
 Real-time Toronto Transit alerts with biometric authentication.
 
-| Stack      | Details                                                     |
-| ---------- | ----------------------------------------------------------- |
-| Frontend   | Svelte 5 + TypeScript + Tailwind + shadcn-svelte            |
-| Typography | Lexend (dyslexic-friendly) via Google Fonts                 |
-| Backend    | Supabase (DB, Edge Functions, Realtime)                     |
-| Auth       | Custom WebAuthn (displayName + biometrics + recovery codes) |
-| Hosting    | Cloudflare Pages                                            |
+| Stack      | Details                                                       |
+| ---------- | ------------------------------------------------------------- |
+| Frontend   | Svelte 5 + TypeScript + Tailwind + shadcn-svelte              |
+| Typography | Lexend (dyslexic-friendly) - self-hosted variable woff2 (68KB)|
+| Backend    | Supabase (DB, Edge Functions, Realtime)                       |
+| Auth       | Custom WebAuthn (displayName + biometrics + recovery codes)   |
+| Hosting    | Cloudflare Pages                                              |
+| Analytics  | Google Analytics 4 (G-SM5SYP463N) - deferred loading          |
 
 📐 **Design System**: See [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) for colors, typography, spacing, and component patterns.
 
@@ -20,6 +21,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                           | Change                                                                             | Status       |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | ------------ |
+| **Performance: Self-hosted font**   | Replaced Google Fonts with self-hosted Lexend woff2 (68KB), eliminates 2 requests  | ✅ Deployed  |
+| **Performance: GA deferred**        | GA4 script now loads after page load (100ms delay) to avoid render blocking        | ✅ Deployed  |
+| **Performance: Bundle analyzer**    | Added rollup-plugin-visualizer for bundle analysis (stats.html)                    | ✅ Deployed  |
+| **Performance: Font caching**       | Added 1-year immutable cache headers for /fonts/*                                  | ✅ Deployed  |
 | **Google Analytics**                | Added GA4 tag (G-SM5SYP463N) to app.html for site analytics                        | ✅ Deployed  |
 | **poll-alerts v215**                | Fix: cleanup monitoring entry when alerts reappear (prevents false "pending" data) | ✅ Deployed  |
 | **poll-alerts v214**                | Add header_text dedup to prevent alert ID collisions (Woodbine/Bay station fix)    | ✅ Deployed  |
