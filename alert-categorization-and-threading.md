@@ -839,7 +839,7 @@ let recentlyResolved = $derived.by(() => {
 
 ## Service Resumed Grace Period
 
-### Overview (v209-v215)
+### Overview (v209-v217)
 
 When a disruption alert disappears from the TTC API, the system waits for a **grace period** before hiding the thread, allowing time for a corresponding SERVICE_RESUMED alert to appear.
 
@@ -853,15 +853,17 @@ When a disruption alert disappears from the TTC API, the system waits for a **gr
 
 | Setting            | Default | Description                                                      |
 | ------------------ | ------- | ---------------------------------------------------------------- |
-| `MAX_MISSED_POLLS` | 2       | Number of polls to wait for service resumed before hiding thread |
-| Poll Interval      | ~30s    | poll-alerts cron runs every 30 seconds                           |
-| Max Wait Time      | ~1 min  | 2 polls × 30s = ~1 minute grace period                           |
+| `MAX_MISSED_POLLS` | 3       | Number of polls to wait for service resumed before hiding thread |
+| Poll Interval      | 1 min   | poll-alerts cron runs every 1 minute                             |
+| Max Wait Time      | 3 min   | 3 polls × 1 min = 3 minute grace period                          |
 
 **Code Location:** `supabase/functions/poll-alerts/index.ts`
 
 ```typescript
 // Grace period: number of polls to wait for service resumed before hiding
-const MAX_MISSED_POLLS = 2;
+// With 1-minute polling, 3 polls = 3 minutes grace period
+// Based on monitoring data: 100% of service resumed alerts arrived within 3 polls
+const MAX_MISSED_POLLS = 3;
 ```
 
 ### Alert Reappearance Handling (v215)
@@ -940,7 +942,7 @@ A monitoring system tracks when service resumed alerts appear relative to disrup
 **Monitoring Dashboard:** `test-service-resumed-monitoring.html`
 
 - Shows poll distribution (how many polls until service resumed arrives)
-- Highlights "late" alerts (>2 polls) that would be missed with default grace period
+- Highlights "late" alerts (>3 polls) that would be missed with current grace period
 - Shows alerts that never received service resumed
 
 ### Empty HeaderText Validation (v210)

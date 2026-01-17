@@ -11,7 +11,7 @@ const corsHeaders = {
 const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 
 // Version for debugging
-const VERSION = '216'; // Add auto-cleanup for cancellation alerts when TTC API removes them
+const VERSION = '217'; // Set grace period to 3 polls (3 minutes with 1-min polling)
 
 // Helper: Generate MD5 hash for thread_hash
 async function generateMd5Hash(input: string): Promise<string> {
@@ -23,11 +23,9 @@ async function generateMd5Hash(input: string): Promise<string> {
 }
 
 // Grace period: number of polls to wait for service resumed before hiding
-// Monitoring started: 2025-01-10 - will auto-revert to 2 polls after 24 hours
-const MONITORING_START = new Date('2025-01-10T20:00:00Z'); // UTC time
-const MONITORING_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
-const isMonitoringActive = () => Date.now() < MONITORING_START.getTime() + MONITORING_DURATION_MS;
-const MAX_MISSED_POLLS = isMonitoringActive() ? 10 : 2;
+// With 1-minute polling, 3 polls = 3 minutes grace period
+// Based on monitoring data: 100% of service resumed alerts arrived within 3 polls
+const MAX_MISSED_POLLS = 3;
 
 // Alert categories with keywords
 const ALERT_CATEGORIES = {
