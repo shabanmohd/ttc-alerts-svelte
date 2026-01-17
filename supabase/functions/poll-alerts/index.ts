@@ -178,12 +178,28 @@ function isRszAlert(alert: TtcApiAlert): boolean {
 // Check if alert is a scheduled maintenance/closure
 function isScheduledClosure(text: string): boolean {
   const lowerText = text.toLowerCase();
+  
+  // Don't classify cancelled closures as scheduled closures
+  if (isClosureCancelled(text)) {
+    return false;
+  }
+  
   const scheduledPatterns = [
     'planned', 'scheduled', 'maintenance', 'this weekend',
     'nightly', 'early closure', 'weekend closure',
     'starting tonight', 'will be closed'
   ];
   return scheduledPatterns.some(p => lowerText.includes(p));
+}
+
+// Check if alert is a cancellation of a scheduled closure
+function isClosureCancelled(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  // Pattern: "planned ... has been cancelled" or "scheduled ... cancelled"
+  return (
+    (lowerText.includes('planned') || lowerText.includes('scheduled')) &&
+    (lowerText.includes('cancelled') || lowerText.includes('canceled'))
+  );
 }
 
 // Check if alert is a site-wide banner (not route-specific)
@@ -300,6 +316,7 @@ interface TtcAlertData {
   rszAlerts: TtcApiAlert[];
   elevatorAlerts: TtcApiAlert[];
   scheduledAlerts: TtcApiAlert[];
+  cancellationAlerts: TtcApiAlert[];
 }
 
 // Fetch and categorize all alerts from TTC API
@@ -309,7 +326,8 @@ async function fetchTtcData(): Promise<TtcAlertData> {
     serviceResumedAlerts: [],
     rszAlerts: [],
     elevatorAlerts: [],
-    scheduledAlerts: []
+    scheduledAlerts: [],
+    cancellationAlerts: []
   };
   
   try {
@@ -347,6 +365,12 @@ async function fetchTtcData(): Promise<TtcAlertData> {
         continue;
       }
       
+      // Check if closure cancellation (must check BEFORE scheduled closure)
+      if (isClosureCancelled(headerText)) {
+        result.cancellationAlerts.push(routeAlert);
+        continue;
+      }
+      
       // Check if scheduled closure/maintenance
       if (isScheduledClosure(headerText)) {
         result.scheduledAlerts.push(routeAlert);
@@ -362,7 +386,7 @@ async function fetchTtcData(): Promise<TtcAlertData> {
       result.elevatorAlerts.push(accessAlert);
     }
     
-    console.log(`TTC API: ${result.disruptionAlerts.length} disruptions, ${result.serviceResumedAlerts.length} service resumed, ${result.scheduledAlerts.length} scheduled, ${result.rszAlerts.length} RSZ, ${result.elevatorAlerts.length} elevators`);
+    console.log(`TTC API: ${result.disruptionAlerts.length} disruptions, ${result.serviceResumedAlerts.length} service resumed, ${result.scheduledAlerts.length} scheduled, ${result.cancellationAlerts.length} cancellations, ${result.rszAlerts.length} RSZ, ${result.elevatorAlerts.length} elevators`);
   } catch (error) {
     console.error('Failed to fetch TTC API:', error);
   }
@@ -1026,6 +1050,66 @@ async function processScheduledAlerts(supabase: any, scheduledAlerts: TtcApiAler
   return { newAlerts, updatedThreads, hiddenThreads };
 }
 
+// Process closure cancellation alerts from TTC API
+// These alerts indicate that a planned closure has been cancelled
+// e.g., "Tonight's planned early subway closure between Finch and Eglinton stations has been cancelled."
+async function processCancellationAlerts(supabase: any, cancellationAlerts: TtcApiAlert[]): Promise<{ cancelledThreads: number }> {
+  let cancelledThreads = 0;
+
+  for (const alert of cancellationAlerts) {
+    const headerText = alert.headerText || '';
+    const route = alert.route || '';
+    
+    // Extract the line number from the route or text
+    let lineNum: string | null = null;
+    if (route && /^[1-4]$/.test(route)) {
+      lineNum = route;
+    } else {
+      // Try to extract from text like "Line 1 Yonge-University"
+      const lineMatch = headerText.match(/Line\s*(\d)/i);
+      if (lineMatch) {
+        lineNum = lineMatch[1];
+      }
+    }
+    
+    if (!lineNum) {
+      console.log(`Cancellation alert without identifiable line: ${headerText.substring(0, 50)}...`);
+      continue;
+    }
+    
+    console.log(`Processing cancellation for Line ${lineNum}: ${headerText.substring(0, 80)}...`);
+    
+    // Find and hide any active scheduled closure threads for this line
+    const { data: scheduledThreads } = await supabase
+      .from('incident_threads')
+      .select('thread_id')
+      .like('thread_id', `thread-scheduled-${lineNum}-%`)
+      .eq('is_hidden', false)
+      .eq('is_resolved', false);
+    
+    for (const thread of scheduledThreads || []) {
+      console.log(`Cancelling scheduled closure thread ${thread.thread_id} due to cancellation alert`);
+      
+      await supabase
+        .from('incident_threads')
+        .update({
+          is_hidden: true,
+          is_resolved: true,
+          resolved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('thread_id', thread.thread_id);
+      
+      cancelledThreads++;
+    }
+  }
+
+  if (cancelledThreads > 0) {
+    console.log(`Cancellation processing: ${cancelledThreads} scheduled closures cancelled`);
+  }
+  return { cancelledThreads };
+}
+
 // Process RSZ alerts from TTC API
 async function processRszAlerts(supabase: any, rszAlerts: TtcApiAlert[]): Promise<{ newAlerts: number; updatedThreads: number }> {
   let newAlerts = 0;
@@ -1468,6 +1552,9 @@ serve(async (req) => {
     // STEP 3: Process scheduled closure alerts
     const scheduledResult = await processScheduledAlerts(supabase, ttcData.scheduledAlerts);
 
+    // STEP 3.5: Process cancellation alerts (to resolve cancelled scheduled closures)
+    const cancellationResult = await processCancellationAlerts(supabase, ttcData.cancellationAlerts);
+
     // STEP 4: Process RSZ alerts
     const rszResult = await processRszAlerts(supabase, ttcData.rszAlerts);
 
@@ -1496,6 +1583,7 @@ serve(async (req) => {
           disruptions: ttcData.disruptionAlerts.length,
           serviceResumed: ttcData.serviceResumedAlerts.length,
           scheduled: ttcData.scheduledAlerts.length,
+          cancellations: ttcData.cancellationAlerts.length,
           rsz: ttcData.rszAlerts.length,
           elevators: ttcData.elevatorAlerts.length
         },
@@ -1504,6 +1592,7 @@ serve(async (req) => {
           updatedThreads: totalUpdatedThreads,
           resolvedThreads: disruptionResult.resolvedThreads,
           hiddenThreads: disruptionResult.hiddenThreads + scheduledResult.hiddenThreads,
+          cancelledClosures: cancellationResult.cancelledThreads,
           resolvedElevators,
           resolvedRszThreads,
           orphansFixed: orphanResult.fixed
