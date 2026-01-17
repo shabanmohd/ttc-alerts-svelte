@@ -200,19 +200,16 @@ async function main() {
   
   console.log('\n');
   
-  // Write sequence results
+  // Write sequence results to static/data (lazy-loaded at runtime)
   const outputPath = path.join(__dirname, '..', 'static', 'data', 'ttc-route-stop-orders.json');
   fs.writeFileSync(outputPath, JSON.stringify(sequenceResults, null, 2));
-  
-  // Also copy to src/lib/data
-  const srcOutputPath = path.join(__dirname, '..', 'src', 'lib', 'data', 'ttc-route-stop-orders.json');
-  fs.writeFileSync(srcOutputPath, JSON.stringify(sequenceResults, null, 2));
+  console.log(`Wrote route stop orders to ${outputPath}`);
   
   // Write direction labels
   const labelsPath = path.join(__dirname, '..', 'static', 'data', 'ttc-direction-labels.json');
   fs.writeFileSync(labelsPath, JSON.stringify(labelResults, null, 2));
   
-  // Also copy to src/lib/data
+  // Also copy direction labels to src/lib/data (still bundled, small file)
   const srcLabelsPath = path.join(__dirname, '..', 'src', 'lib', 'data', 'ttc-direction-labels.json');
   fs.writeFileSync(srcLabelsPath, JSON.stringify(labelResults, null, 2));
   

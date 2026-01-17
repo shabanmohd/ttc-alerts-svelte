@@ -448,22 +448,19 @@ async function main() {
 		fs.writeFileSync(labelsPath, JSON.stringify(directionLabels, null, 2));
 		console.log(`✅ Wrote direction labels to ${labelsPath}`);
 
-		// Copy to src/lib/data
+		// Copy direction labels to src/lib/data (still bundled, small file ~29KB)
 		const srcLabelsPath = labelsPath.replace('static/data', 'src/lib/data');
 		if (srcLabelsPath !== labelsPath) {
 			fs.writeFileSync(srcLabelsPath, JSON.stringify(directionLabels, null, 2));
 			console.log(`✅ Wrote copy to ${srcLabelsPath}`);
 		}
 
-		// Write enhanced format (new)
+		// Write enhanced format to static/data (lazy-loaded at runtime, ~500KB)
 		const enhancedPath = path.resolve(process.cwd(), 'static/data/ttc-route-branches.json');
 		fs.writeFileSync(enhancedPath, JSON.stringify(enhancedFormat, null, 2));
 		console.log(`✅ Wrote enhanced branch data to ${enhancedPath}`);
-
-		// Copy to src/lib/data
-		const srcEnhancedPath = enhancedPath.replace('static/data', 'src/lib/data');
-		fs.writeFileSync(srcEnhancedPath, JSON.stringify(enhancedFormat, null, 2));
-		console.log(`✅ Wrote copy to ${srcEnhancedPath}`);
+		
+		// Note: No longer copying to src/lib/data - data is lazy-loaded from static/data
 	}
 
 	console.log();

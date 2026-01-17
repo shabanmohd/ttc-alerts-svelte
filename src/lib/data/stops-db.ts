@@ -6,13 +6,22 @@
  * - Fast fuzzy search by name
  * - Geolocation-based nearby stop search
  * - Automatic data loading and versioning
+ *
+ * Note: Large route data (branches, stop orders) is lazy-loaded from static JSON
+ * to reduce initial bundle size (~800KB → 0KB in main bundle).
  */
 
 import Dexie, { type Table } from 'dexie';
 
-import routeStopOrders from '$lib/data/ttc-route-stop-orders.json';
+// Small JSON files still bundled (29KB total - acceptable)
 import routeDirectionLabels from '$lib/data/ttc-direction-labels.json';
-import routeBranches from '$lib/data/ttc-route-branches.json';
+
+// Lazy-loaded data service for large JSON files
+import {
+	getRouteBranchesData,
+	getRouteStopOrdersData,
+	type RouteStopOrders
+} from '$lib/services/route-data';
 
 // Type for the enhanced route branches data
 export interface RouteBranchInfo {
@@ -29,24 +38,23 @@ export interface RouteEnhancedData {
 	directions: Record<string, RouteDirectionBranches>;
 }
 
-// Cast the imported JSON to proper type
-const routeBranchesData = routeBranches as Record<string, RouteEnhancedData>;
-
 /**
- * Get branch info for a route
+ * Get branch info for a route (lazy-loaded)
  * Returns the enhanced branch data structure with directions and their branches
  */
-export function getRouteBranches(routeNumber: string): RouteEnhancedData | null {
+export async function getRouteBranches(routeNumber: string): Promise<RouteEnhancedData | null> {
+	const routeBranchesData = await getRouteBranchesData();
 	return routeBranchesData[routeNumber] || null;
 }
 
 /**
- * Get branches for a specific direction of a route
+ * Get branches for a specific direction of a route (lazy-loaded)
  */
-export function getBranchesForDirection(
+export async function getBranchesForDirection(
 	routeNumber: string,
 	direction: string
-): RouteBranchInfo[] | null {
+): Promise<RouteBranchInfo[] | null> {
+	const routeBranchesData = await getRouteBranchesData();
 	const routeData = routeBranchesData[routeNumber];
 	if (!routeData) return null;
 	
@@ -57,9 +65,10 @@ export function getBranchesForDirection(
 }
 
 /**
- * Check if a route has multiple branches in any direction
+ * Check if a route has multiple branches in any direction (lazy-loaded)
  */
-export function routeHasMultipleBranches(routeNumber: string): boolean {
+export async function routeHasMultipleBranches(routeNumber: string): Promise<boolean> {
+	const routeBranchesData = await getRouteBranchesData();
 	const routeData = routeBranchesData[routeNumber];
 	if (!routeData) return false;
 	
@@ -70,9 +79,10 @@ export function routeHasMultipleBranches(routeNumber: string): boolean {
 }
 
 /**
- * Get cardinal directions for a route (e.g., ["Northbound", "Southbound"])
+ * Get cardinal directions for a route (e.g., ["Northbound", "Southbound"]) (lazy-loaded)
  */
-export function getRouteCardinalDirections(routeNumber: string): string[] {
+export async function getRouteCardinalDirections(routeNumber: string): Promise<string[]> {
+	const routeBranchesData = await getRouteBranchesData();
 	const routeData = routeBranchesData[routeNumber];
 	if (!routeData) return [];
 	
@@ -463,8 +473,8 @@ export async function getStopsByRouteGroupedByDirection(
 		return getSubwayDirectionGroups(stops, routeNumber);
 	}
 
-	// Standard grouping by platform/stop direction for bus/streetcar
-	return getBusDirectionGroups(stops, routeNumber);
+	// Standard grouping by platform/stop direction for bus/streetcar (async due to lazy-loaded data)
+	return await getBusDirectionGroups(stops, routeNumber);
 }
 
 /**
@@ -528,9 +538,12 @@ function getSubwayDirectionGroups(stops: TTCStop[], routeNumber: string): Direct
  * Falls back to GTFS dir field and geographic sorting if no route stop orders exist
  * or if stop IDs don't match (NextBus vs GTFS ID mismatch).
  */
-function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): DirectionGroup[] {
+async function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): Promise<DirectionGroup[]> {
+	// Lazy-load route stop orders data
+	const routeStopOrders = await getRouteStopOrdersData();
+	
 	// Check if we have authoritative route stop orders from NextBus API
-	const routeOrders = (routeStopOrders as Record<string, Record<string, string[]>>)[routeNumber];
+	const routeOrders = routeStopOrders[routeNumber];
 	
 	if (routeOrders && Object.keys(routeOrders).length > 0) {
 		// Try NextBus-derived stop orders as authoritative source
@@ -539,14 +552,14 @@ function getBusDirectionGroups(stops: TTCStop[], routeNumber: string): Direction
 		// If no groups returned (stop IDs don't match), fall back to GTFS
 		if (groups.length === 0) {
 			console.log(`[stops-db] Route ${routeNumber}: NextBus stop IDs don't match GTFS, falling back to GTFS grouping`);
-			return getBusDirectionGroupsFromGTFS(stops, routeNumber);
+			return getBusDirectionGroupsFromGTFS(stops, routeNumber, routeStopOrders);
 		}
 		
 		return groups;
 	}
 	
 	// Fall back to GTFS-based grouping for routes without NextBus data
-	return getBusDirectionGroupsFromGTFS(stops, routeNumber);
+	return getBusDirectionGroupsFromGTFS(stops, routeNumber, routeStopOrders);
 }
 
 /**
@@ -676,7 +689,7 @@ function getDirectionColorByName(dirLabel: string): string {
  * Fall back to GTFS-based grouping when no NextBus route orders exist
  * Uses stop.dir field and geographic sorting
  */
-function getBusDirectionGroupsFromGTFS(stops: TTCStop[], routeNumber: string): DirectionGroup[] {
+function getBusDirectionGroupsFromGTFS(stops: TTCStop[], routeNumber: string, routeStopOrders: RouteStopOrders): DirectionGroup[] {
 	const directionMap = new Map<DirectionLabel, TTCStop[]>();
 	const sharedStops: TTCStop[] = []; // Stops without direction
 
@@ -722,7 +735,7 @@ function getBusDirectionGroupsFromGTFS(stops: TTCStop[], routeNumber: string): D
 			
 			// Combine direction-specific stops with filtered shared stops
 			const allDirStops = [...dirStops, ...filteredSharedStops];
-			const sortedStops = sortStopsByPosition(allDirStops, dir, routeNumber);
+			const sortedStops = sortStopsByPosition(allDirStops, dir, routeNumber, routeStopOrders);
 			groups.push({
 				direction: dir,
 				stops: sortedStops,
@@ -734,7 +747,7 @@ function getBusDirectionGroupsFromGTFS(stops: TTCStop[], routeNumber: string): D
 	// If no direction-specific stops found, create a single "All Stops" group
 	if (groups.length === 0 && (stops.length > 0 || sharedStops.length > 0)) {
 		const allStops = [...stops];
-		const sortedStops = sortStopsByPosition(allStops, DIRECTION_LABELS.UNKNOWN, routeNumber);
+		const sortedStops = sortStopsByPosition(allStops, DIRECTION_LABELS.UNKNOWN, routeNumber, routeStopOrders);
 		groups.push({
 			direction: DIRECTION_LABELS.UNKNOWN,
 			stops: sortedStops,
@@ -825,13 +838,13 @@ function extractDirectionFromName(name: string): DirectionLabel {
  * 
  * For bus/streetcar stops, use geographic position (latitude/longitude).
  */
-function sortStopsByPosition(stops: TTCStop[], direction: DirectionLabel, routeNumber?: string): TTCStop[] {
+function sortStopsByPosition(stops: TTCStop[], direction: DirectionLabel, routeNumber?: string, routeStopOrders?: RouteStopOrders): TTCStop[] {
 	const sorted = [...stops];
 
 	// Prefer explicit, per-route stop ordering overrides (TTC website-derived)
 	// This fixes incomplete/non-sequential GTFS-derived sequences for some bus/streetcar routes.
-	if (routeNumber && direction !== DIRECTION_LABELS.UNKNOWN) {
-		const routeOrder = (routeStopOrders as Record<string, Record<string, string[]>>)[routeNumber]?.[direction];
+	if (routeNumber && routeStopOrders && direction !== DIRECTION_LABELS.UNKNOWN) {
+		const routeOrder = routeStopOrders[routeNumber]?.[direction];
 		if (routeOrder && routeOrder.length > 0) {
 			const indexByStopId = new Map<string, number>(routeOrder.map((id, i) => [id, i]));
 			sorted.sort((a, b) => {

@@ -773,8 +773,8 @@
       // Get stops grouped by direction
       directionGroups = await getStopsByRouteGroupedByDirection(routeId);
 
-      // Load branch data for this route
-      routeBranchData = getRouteBranches(routeId);
+      // Load branch data for this route (async - lazy loaded)
+      routeBranchData = await getRouteBranches(routeId);
 
       // Set default selected direction to first valid (non-"All Stops" if available)
       if (directionGroups.length > 0) {

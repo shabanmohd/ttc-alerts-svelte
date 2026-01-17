@@ -11,7 +11,7 @@ const path = require('path');
 const NEXTBUS_API = 'https://retro.umoiq.com/service/publicJSONFeed';
 
 // Load existing branch data
-const routeBranches = require('../src/lib/data/ttc-route-branches.json');
+const routeBranches = require('../static/data/ttc-route-branches.json');
 const routes = Object.keys(routeBranches);
 
 async function fetchRouteConfig(routeNumber) {
@@ -108,15 +108,10 @@ async function fixRouteBranches() {
     
     console.log(`\n\nCompleted: ${fixed} routes fixed, ${failed} routes failed`);
     
-    // Write updated file
-    const outputPath = path.join(__dirname, '../src/lib/data/ttc-route-branches.json');
+    // Write updated file to static/data (lazy-loaded at runtime)
+    const outputPath = path.join(__dirname, '../static/data/ttc-route-branches.json');
     fs.writeFileSync(outputPath, JSON.stringify(fixedBranches, null, 2));
     console.log(`Updated ${outputPath}`);
-    
-    // Also update static copy
-    const staticPath = path.join(__dirname, '../static/data/ttc-route-branches.json');
-    fs.writeFileSync(staticPath, JSON.stringify(fixedBranches, null, 2));
-    console.log(`Updated ${staticPath}`);
 }
 
 fixRouteBranches().catch(console.error);

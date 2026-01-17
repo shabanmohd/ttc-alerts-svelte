@@ -385,7 +385,9 @@ async function main() {
 			console.log(`Wrote ${Object.keys(sortedResult).length} routes to ${outputPath}`);
 
 			// Also update src/lib/data copy if output is static/data
-			if (config.output.includes('static/data/ttc-route-stop-orders.json')) {
+			// Note: Data is now only in static/data (lazy-loaded at runtime)
+			// No longer need to copy to src/lib/data
+			if (false && config.output.includes('static/data/ttc-route-stop-orders.json')) {
 				const srcPath = path.resolve(process.cwd(), 'src/lib/data/ttc-route-stop-orders.json');
 				fs.writeFileSync(srcPath, JSON.stringify(sortedResult, null, 2));
 				console.log(`Wrote copy to ${srcPath}`);

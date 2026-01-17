@@ -18,7 +18,7 @@ const path = require('path');
 const NEXTBUS_API = 'https://retro.umoiq.com/service/publicJSONFeed';
 
 // Routes to process (all TTC bus and streetcar routes)
-const routeStopOrders = require('../src/lib/data/ttc-route-stop-orders.json');
+const routeStopOrders = require('../static/data/ttc-route-stop-orders.json');
 const routes = Object.keys(routeStopOrders);
 
 async function fetchRouteConfig(routeNumber) {
@@ -104,15 +104,10 @@ async function fixRouteStopOrders() {
     
     console.log(`\n\nCompleted: ${fixed} routes fixed, ${failed} routes failed`);
     
-    // Write updated file
-    const outputPath = path.join(__dirname, '../src/lib/data/ttc-route-stop-orders.json');
+    // Write updated file to static/data (lazy-loaded at runtime)
+    const outputPath = path.join(__dirname, '../static/data/ttc-route-stop-orders.json');
     fs.writeFileSync(outputPath, JSON.stringify(fixedOrders, null, 2));
     console.log(`Updated ${outputPath}`);
-    
-    // Also update static copy
-    const staticPath = path.join(__dirname, '../static/data/ttc-route-stop-orders.json');
-    fs.writeFileSync(staticPath, JSON.stringify(fixedOrders, null, 2));
-    console.log(`Updated ${staticPath}`);
 }
 
 fixRouteStopOrders().catch(console.error);
