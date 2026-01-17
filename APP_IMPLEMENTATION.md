@@ -21,8 +21,8 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                           | Change                                                                             | Status       |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | ------------ |
-| **Admin pages removed**             | Deleted /admin/accuracy, /admin/train-alerts, /api/admin/* for security            | ✅ Deployed  |
-| **robots.txt improvements**         | Added /test-, /_app/ disallow, trailing slashes, removed /settings from sitemap   | ✅ Deployed  |
+| **Admin pages removed**             | Deleted /admin/accuracy, /admin/train-alerts, /api/admin/\* for security           | ✅ Deployed  |
+| **robots.txt improvements**         | Added /test-, /\_app/ disallow, trailing slashes, removed /settings from sitemap   | ✅ Deployed  |
 | **Performance: Lazy-load GTFS**     | Route data (789KB) now lazy-loaded on-demand, bundle reduced from 1.4MB to 972KB   | ✅ Deployed  |
 | **route-data.ts service**           | New service for on-demand fetching of large GTFS JSON files with in-memory caching | ✅ Deployed  |
 | **stops-db.ts async**               | Functions now async to support lazy-loaded route data (getRouteBranches, etc.)     | ✅ Deployed  |
@@ -251,18 +251,18 @@ All alerts now come from **TTC API exclusively**. Bluesky integration has been r
 
 ### Pages (`src/routes/`)
 
-| File                          | Status | Purpose                                               |
-| ----------------------------- | ------ | ----------------------------------------------------- |
-| `+layout.svelte`              | ✅     | App layout, auth init, dialogs                        |
-| `+layout.css`                 | ✅     | Global styles, Tailwind config, text selection colors |
-| `+page.svelte`                | ✅     | Homepage with alert tabs                              |
-| `alerts/+page.svelte`         | ✅     | Service alerts page with filtering                    |
-| `routes/+page.svelte`         | ✅     | Browse all TTC routes                                 |
-| `about/+page.svelte`          | ✅     | About the Project + Developer sections                |
-| `help/+page.svelte`           | ✅     | How to use the app                                    |
-| `settings/+page.svelte`       | ✅     | User settings (noindex)                               |
-| `preferences/+page.svelte`    | ✅     | Route/mode preferences                                |
-| `auth/callback/+page.svelte`  | ✅     | Auth callback handler                                 |
+| File                         | Status | Purpose                                               |
+| ---------------------------- | ------ | ----------------------------------------------------- |
+| `+layout.svelte`             | ✅     | App layout, auth init, dialogs                        |
+| `+layout.css`                | ✅     | Global styles, Tailwind config, text selection colors |
+| `+page.svelte`               | ✅     | Homepage with alert tabs                              |
+| `alerts/+page.svelte`        | ✅     | Service alerts page with filtering                    |
+| `routes/+page.svelte`        | ✅     | Browse all TTC routes                                 |
+| `about/+page.svelte`         | ✅     | About the Project + Developer sections                |
+| `help/+page.svelte`          | ✅     | How to use the app                                    |
+| `settings/+page.svelte`      | ✅     | User settings (noindex)                               |
+| `preferences/+page.svelte`   | ✅     | Route/mode preferences                                |
+| `auth/callback/+page.svelte` | ✅     | Auth callback handler                                 |
 
 ### Backend (`supabase/`)
 

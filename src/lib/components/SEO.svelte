@@ -5,6 +5,7 @@
     title: string;
     description: string;
     image?: string;
+    squareImage?: string;
     type?: string;
     noindex?: boolean;
   }
@@ -13,6 +14,7 @@
     title,
     description,
     image = "/icons/og-image.jpg?v=11",
+    squareImage = "/icons/og-image-square.jpg?v=11",
     type = "website",
     noindex = false,
   }: Props = $props();
@@ -22,9 +24,12 @@
   // Reactive canonical URL
   let canonicalUrl = $derived(`${baseUrl}${$page.url.pathname}`);
 
-  // Ensure image is absolute
+  // Ensure images are absolute
   let imageUrl = $derived(
     image.startsWith("http") ? image : `${baseUrl}${image}`
+  );
+  let squareImageUrl = $derived(
+    squareImage.startsWith("http") ? squareImage : `${baseUrl}${squareImage}`
   );
 </script>
 
@@ -47,9 +52,15 @@
   <meta property="og:url" content={canonicalUrl} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
+  <!-- Primary OG image (1200x630 landscape) -->
   <meta property="og:image" content={imageUrl} />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="rideTO - Toronto Transit Alerts" />
+  <!-- Secondary OG image (1200x1200 square for WhatsApp, Telegram, etc.) -->
+  <meta property="og:image" content={squareImageUrl} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="1200" />
   <meta property="og:image:alt" content="rideTO - Toronto Transit Alerts" />
   <meta property="og:site_name" content="rideTO" />
   <meta property="og:locale" content="en_CA" />
