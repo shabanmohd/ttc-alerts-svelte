@@ -400,19 +400,19 @@
       return true;
     }
 
-    // Secondary: Bluesky-sourced RSZ alerts detected by text patterns
+    // Secondary: Text-pattern-based RSZ detection for legacy alerts
     const headerText = (alert.header_text || "").toLowerCase();
-    const isBlueskyRSZ =
+    const isTextBasedRSZ =
       headerText.includes("slower than usual") ||
       headerText.includes("reduced speed") ||
       headerText.includes("move slower") ||
       headerText.includes("running slower") ||
       headerText.includes("slow zone");
 
-    return isBlueskyRSZ;
+    return isTextBasedRSZ;
   }
 
-  // Helper: Check if a thread contains a disruption alert (Bluesky-sourced since v150)
+  // Helper: Check if a thread contains a disruption alert
   // Returns the disruption alert if found, so it can be used for display
   // Check if a scheduled closure is currently in its active period (11 PM - 4 AM)
   // TTC API childAlerts typically show 3:30 AM end times for nightly closures
@@ -607,7 +607,7 @@
     });
 
     return {
-      // Disruptions: Count Bluesky disruption alerts (bsky-*) - v150 architecture
+      // Disruptions: Count TTC API disruption alerts (ttc-alert-*, ttc-scheduled-*)
       // This excludes RSZ, elevators, and service resumed
       disruptions: active.filter((t) => isDisruption(t)).length,
       // For Slow Zones tab: count ONLY RSZ alerts (not regular DELAY alerts)

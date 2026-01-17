@@ -193,7 +193,7 @@ const safeEmail = email?.replace(
 | ------------------- | ------ | -------------------- |
 | CORS headers        | ✅     | Properly configured  |
 | Service role key    | ✅     | From env var         |
-| External API calls  | ✅     | BlueSky, TTC API     |
+| External API calls  | ✅     | TTC API              |
 | Database operations | ✅     | Uses Supabase client |
 
 **No security issues found.**

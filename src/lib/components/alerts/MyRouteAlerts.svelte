@@ -220,16 +220,16 @@
       return true;
     }
 
-    // Secondary: Bluesky-sourced RSZ alerts detected by text patterns
+    // Secondary: Text-pattern-based RSZ detection for legacy alerts
     const headerText = (alert.header_text || "").toLowerCase();
-    const isBlueskyRSZ =
+    const isTextBasedRSZ =
       headerText.includes("slower than usual") ||
       headerText.includes("reduced speed") ||
       headerText.includes("move slower") ||
       headerText.includes("running slower") ||
       headerText.includes("slow zone");
 
-    return isBlueskyRSZ;
+    return isTextBasedRSZ;
   }
 
   // Helper: Check if a thread is an elevator/escalator (accessibility) alert

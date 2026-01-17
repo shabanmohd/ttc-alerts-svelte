@@ -115,7 +115,7 @@
   let filterMode = $state<"all" | "needs-review" | "validated" | "conflicts">(
     "needs-review"
   );
-  let sourceFilter = $state<"all" | "bluesky" | "ttc-api-live" | "database">(
+  let sourceFilter = $state<"all" | "ttc-api-live" | "database">(
     "all"
   );
 
@@ -652,7 +652,6 @@
           class="h-9 rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="all">All Sources</option>
-          <option value="bluesky">Bluesky</option>
           <option value="ttc-api-live">TTC API</option>
           <option value="database">Database</option>
         </select>

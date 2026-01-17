@@ -61,25 +61,25 @@ Real-time Toronto Transit alerts with biometric authentication.
 | **poll-alerts v145**                 | Remove overly broad tunnel/track pattern from scheduled closure detection          | ✅ Deployed           |
 | **poll-alerts v144**                 | Add "full weekend closure" and "planned" detection patterns                        | ✅ Deployed           |
 | **AlertCard.svelte**                 | Show SCHEDULED CLOSURE badge for scheduled maintenance alerts                      | ✅ Deployed           |
-| **poll-alerts v143**                 | Skip Bluesky RSZ alerts - TTC API is exclusive source for Slow Zones               | ✅ Deployed           |
+| **poll-alerts v143**                 | Skip RSZ alerts from text patterns - TTC API is exclusive source for Slow Zones   | ⚠️ Superseded by v200 |
 | **poll-alerts v142**                 | Create separate threads for scheduled closures vs real-time incidents              | ✅ Deployed           |
 | **poll-alerts v147**                 | Auto-unhide threads when recurring scheduled closure alerts reappear               | ✅ Deployed           |
 | **SubwayStatusBar scheduled**        | Orange styling for scheduled closures, text wraps, icon top-aligned                | ✅ Deployed           |
 | **AlertCard thread_id detection**    | Use thread_id to detect scheduled closures (primary) instead of text pattern       | ✅ Deployed           |
-| **poll-alerts v150**                 | Bluesky-only architecture: removed TTC API disruptions, native Bluesky threading   | ✅ Deployed           |
-| **alerts/+page.svelte v151**         | Frontend updated for Bluesky disruptions: `getDisruptionAlert()`, `isDisruption()` | ✅ Deployed           |
+| **poll-alerts v200+**                | TTC-API-only architecture: all alerts from TTC API (disruptions, RSZ, elevators)   | ✅ Deployed           |
+| **alerts/+page.svelte v200**         | Frontend updated for TTC API alerts: ttc-alert-\*, ttc-scheduled-\* filtering      | ✅ Deployed           |
 | **alerts.ts v151**                   | DELAY category → MAJOR severity (affects subway status cards)                      | ✅ Deployed           |
 | **RSZAlertCard v151**                | Skip SERVICE_RESUMED alerts when extracting RSZ entries                            | ✅ Deployed           |
-| **poll-alerts v146**                 | Scheduled closure patterns: nightly early closures, full weekend closure           | ✅ Deployed           |
-| **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading          | ⚠️ Superseded by v150 |
-| **poll-alerts v140**                 | Bluesky only creates threads for SERVICE_RESUMED, TTC API is source of truth       | ⚠️ Superseded by v150 |
-| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new                    | ⚠️ Superseded by v150 |
+| **poll-alerts v146**                 | Scheduled closure patterns: nightly early closures, full weekend closure           | ⚠️ Superseded by v200 |
+| **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading          | ⚠️ Superseded by v200 |
+| **poll-alerts v140**                 | Legacy architecture: TTC API + text pattern matching                               | ⚠️ Superseded by v200 |
+| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new                    | ⚠️ Superseded by v200 |
 | **poll-alerts v138**                 | Support all TTC branch letters (A-Z) not just A-E - includes F, G, S               | ✅ Deployed           |
 | **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)                  | ✅ Deployed           |
-| **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates with Bluesky                   | ✅ Committed          |
-| **alerts/+page.svelte activeAlerts** | Disruptions tab filters to Bluesky alerts (bsky-\*) - v151 architecture            | ✅ Deployed           |
+| **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates                                | ✅ Committed          |
+| **alerts/+page.svelte activeAlerts** | Disruptions tab filters to TTC API alerts (ttc-alert-\*, ttc-scheduled-\*)         | ✅ Deployed           |
 | **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 4 AM              | ✅ Deployed           |
-| **getDisruptionAlert()**             | Renamed from getTTCApiDisruptionAlert - now checks bsky-\* alerts                  | ✅ Deployed           |
+| **getDisruptionAlert()**             | Finds TTC API disruption alerts in threads (ttc-alert-\*, ttc-scheduled-\*)        | ✅ Deployed           |
 | **MobileBottomNav.svelte**           | iOS PWA viewport fix using visualViewport API                                      | ✅ Deployed           |
 | **poll-alerts v136**                 | Scheduled closure filtering - hide alerts not currently active                     | ✅ Deployed           |
 | **verify-disruptions v2**            | Data integrity validation for TTC API disruptions (every 15 min)                   | ✅ Deployed           |
@@ -148,18 +148,18 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ---
 
-## UI Tab Data Sources (v143)
+## UI Tab Data Sources (v200+)
 
-Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevators, Service Changes, or Scheduled Closures.
+All alerts now come from **TTC API exclusively**. Bluesky integration has been removed.
 
-| UI Tab                         | Data Source               | Bluesky?        | Edge Function        | Notes                                                    |
-| ------------------------------ | ------------------------- | --------------- | -------------------- | -------------------------------------------------------- |
-| **Disruptions & Delays**       | TTC API + Bluesky context | ⚠️ Context only | `poll-alerts`        | Bluesky links to existing TTC threads, cannot create new |
-| **Slow Zones (RSZ)**           | TTC API exclusive         | ❌ No           | `poll-alerts`        | v143: Bluesky RSZ skipped entirely                       |
-| **Station Alerts (Elevators)** | TTC API exclusive         | ❌ No           | `poll-alerts`        | `accessibility` array from TTC API                       |
-| **Scheduled Subway Closures**  | TTC website scraper       | ❌ No           | `scrape-maintenance` | Stored in `planned_maintenance` table                    |
-| **Service/Route Changes**      | TTC Sitecore API          | ❌ No           | N/A (client-side)    | Runtime fetch, not stored                                |
-| **Recently Resolved**          | Bluesky exclusive         | ✅ Yes          | `poll-alerts`        | `SERVICE_RESUMED` creates threads here                   |
+| UI Tab                         | Data Source         | Edge Function        | Notes                                          |
+| ------------------------------ | ------------------- | -------------------- | ---------------------------------------------- |
+| **Disruptions & Delays**       | TTC API             | `poll-alerts`        | ttc-alert-\* and ttc-scheduled-\* IDs          |
+| **Slow Zones (RSZ)**           | TTC API             | `poll-alerts`        | ttc-rsz-\* IDs from Reduced Speed Zone alerts  |
+| **Station Alerts (Elevators)** | TTC API             | `poll-alerts`        | ttc-elev-\* IDs from accessibility array       |
+| **Scheduled Subway Closures**  | TTC website scraper | `scrape-maintenance` | Stored in `planned_maintenance` table          |
+| **Service/Route Changes**      | TTC Sitecore API    | N/A (client-side)    | Runtime fetch, not stored                      |
+| **Recently Resolved**          | TTC API             | `poll-alerts`        | Threads marked resolved when alerts disappear  |
 
 > **See [`alert-categorization-and-threading.md`](alert-categorization-and-threading.md) for complete data flow documentation.**
 
@@ -246,10 +246,10 @@ Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevat
 | `functions/auth-verify/index.ts`            | ✅     | Verify biometrics, create session                                        |
 | `functions/auth-session/index.ts`           | ✅     | Validate existing session                                                |
 | `functions/auth-recover/index.ts`           | ✅     | Sign in with recovery code                                               |
-| `functions/poll-alerts/index.ts`            | ✅     | Fetch/parse/thread alerts (v150: Bluesky-only architecture)              |
+| `functions/poll-alerts/index.ts`            | ✅     | Fetch/parse/thread alerts (v200+: TTC-API-only architecture)             |
 | `functions/verify-elevators/index.ts`       | ✅     | Validate elevator alerts vs TTC API (v2: auto-cleanup stale alerts)      |
 | `functions/verify-rsz/index.ts`             | ✅     | Validates RSZ data against TTC website                                   |
-| `functions/verify-disruptions/index.ts`     | ✅     | Validates disruption alerts (⚠️ May need update for Bluesky-only)        |
+| `functions/verify-disruptions/index.ts`     | ✅     | Validates disruption alerts (every 15 min)                               |
 | `functions/scrape-rsz/index.ts`             | ✅     | Alternative RSZ source from TTC website                                  |
 | `functions/scrape-maintenance/index.ts`     | ✅     | Fetches planned maintenance from TTC (v3: single-day closures, Sitecore) |
 | `functions/db-cleanup/index.ts`             | ✅     | Database cleanup job                                                     |
@@ -261,7 +261,7 @@ Each UI tab has an **exclusive data source**. Bluesky is **NOT** used for Elevat
 
 | Table                    | Rows | Purpose                                                            |
 | ------------------------ | ---- | ------------------------------------------------------------------ |
-| `alert_cache`            | 600+ | Alerts from TTC API + Bluesky (header_text, categories, is_latest) |
+| `alert_cache`            | 600+ | Alerts from TTC API (header_text, categories, is_latest)          |
 | `incident_threads`       | 255K | Grouped alert threads (title, is_resolved)                         |
 | `planned_maintenance`    | 9    | Scheduled maintenance                                              |
 | `alert_accuracy_logs`    | -    | Alert accuracy checks (every 5min)                                 |

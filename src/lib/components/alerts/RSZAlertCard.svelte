@@ -94,7 +94,7 @@
 
       const rawData = alert.raw_data as RSZData | null;
 
-      // First try raw_data (for Bluesky RSZ alerts)
+      // First try raw_data (for alerts with structured station data)
       if (rawData?.stopStart && rawData?.stopEnd) {
         entries.push({
           direction: rawData.direction || "Unknown",
