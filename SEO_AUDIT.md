@@ -109,7 +109,7 @@ The rideTO PWA has undergone significant SEO improvements. While SSR remains dis
 
 ### Issue M1: Open Graph Tags ✅ RESOLVED
 
-**Status:** ✅ Implemented  
+**Status:** ✅ Implemented (Updated Jan 2026 - dual image support)  
 **Location:** [src/app.html](src/app.html), [src/lib/components/SEO.svelte](src/lib/components/SEO.svelte)
 
 **Implemented Tags:**
@@ -118,11 +118,16 @@ The rideTO PWA has undergone significant SEO improvements. While SSR remains dis
 - `og:description` - Page-specific descriptions
 - `og:url` - Canonical URLs
 - `og:type` - website
-- `og:image` - Absolute URL to icon-512x512.png
-- `og:image:width`, `og:image:height` - Dimensions
+- `og:image` (primary) - 1200x630px landscape for Facebook, Twitter, LinkedIn
+- `og:image` (secondary) - 1200x1200px square for WhatsApp, Telegram, iMessage
+- `og:image:width`, `og:image:height` - Dimensions for each image
 - `og:image:alt` - Alt text
 - `og:site_name` - rideTO
 - `og:locale` - en_CA
+
+**Image Files:**
+- `/icons/og-image.jpg` - 1200x630 landscape (primary)
+- `/icons/og-image-square.jpg` - 1200x1200 square (secondary)
 
 ---
 
@@ -302,13 +307,14 @@ None! All identified issues have been resolved.
 
 ### Props
 
-| Prop          | Type    | Default                   | Description         |
-| ------------- | ------- | ------------------------- | ------------------- |
-| `title`       | string  | required                  | Page title          |
-| `description` | string  | required                  | Meta description    |
-| `image`       | string  | "/icons/icon-512x512.png" | OG image path       |
-| `type`        | string  | "website"                 | OG type             |
-| `noindex`     | boolean | false                     | Exclude from search |
+| Prop          | Type    | Default                          | Description                    |
+| ------------- | ------- | -------------------------------- | ------------------------------ |
+| `title`       | string  | required                         | Page title                     |
+| `description` | string  | required                         | Meta description               |
+| `image`       | string  | "/icons/og-image.jpg?v=11"       | OG image path (1200x630)       |
+| `squareImage` | string  | "/icons/og-image-square.jpg?v=11"| Square OG image (1200x1200)    |
+| `type`        | string  | "website"                        | OG type                        |
+| `noindex`     | boolean | false                            | Exclude from search            |
 
 ---
 
@@ -318,13 +324,13 @@ None! All identified issues have been resolved.
 
 - `static/sitemap.xml` - XML sitemap
 - `src/lib/components/SEO.svelte` - Reusable SEO component
-- `static/icons/og-image.svg` - Source SVG for OG image
-- `static/icons/og-image.png` - 1200x630px social share image
+- `static/icons/og-image.jpg` - 1200x630px social share image (landscape)
+- `static/icons/og-image-square.jpg` - 1200x1200px social share image (square)
 
 ### Modified Files
 
-- `src/app.html` - Enhanced OG tags, Twitter cards, JSON-LD
-- `static/robots.txt` - Added sitemap reference
+- `src/app.html` - Enhanced OG tags, Twitter cards, JSON-LD, dual OG images
+- `static/robots.txt` - Added sitemap reference, /test-, /_app/ disallow rules
 - `src/routes/+page.svelte` - Added SEO component
 - `src/routes/alerts/+page.svelte` - Added SEO component
 - `src/routes/routes/+page.svelte` - Added SEO component

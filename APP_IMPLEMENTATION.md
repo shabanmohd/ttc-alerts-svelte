@@ -21,6 +21,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                           | Change                                                                             | Status       |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | ------------ |
+| **Square OG image support**         | Added og-image-square.jpg (1200x1200) for WhatsApp, Telegram, iMessage             | ✅ Deployed  |
 | **Admin pages removed**             | Deleted /admin/accuracy, /admin/train-alerts, /api/admin/\* for security           | ✅ Deployed  |
 | **robots.txt improvements**         | Added /test-, /\_app/ disallow, trailing slashes, removed /settings from sitemap   | ✅ Deployed  |
 | **Performance: Lazy-load GTFS**     | Route data (789KB) now lazy-loaded on-demand, bundle reduced from 1.4MB to 972KB   | ✅ Deployed  |
