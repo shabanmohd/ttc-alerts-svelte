@@ -21,6 +21,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                           | Change                                                                             | Status       |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | ------------ |
+| **Poll frequency**                  | Changed poll-alerts cron from every 2 minutes to every 1 minute for faster updates | ✅ Deployed  |
 | **poll-alerts v216**                | Add auto-cleanup for scheduled closure cancellation alerts when TTC API removes    | ✅ Deployed  |
 | **Cancellation alerts**             | New SCHEDULED_CLOSURE_CANCELLATION category with green "Closure Cancelled" badge   | ✅ Deployed  |
 | **Cancellation detection**          | isClosureCancelled() detects "closure has been cancelled" alerts from TTC API      | ✅ Deployed  |

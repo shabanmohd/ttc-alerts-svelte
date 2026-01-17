@@ -61,7 +61,7 @@ IF toronto_hour = 4 THEN ...
 | Property                 | Value                                                                 |
 | ------------------------ | --------------------------------------------------------------------- |
 | **Source**               | Supabase Edge Function (`poll-alerts`) polling TTC Service Alerts API |
-| **Update Frequency**     | Every 30 seconds (server-side)                                        |
+| **Update Frequency**     | Every 1 minute (server-side via pg_cron)                              |
 | **Client Delivery**      | Supabase Realtime (instant push on changes)                           |
 | **Visibility Refresh**   | Auto-refresh when app becomes visible (catches missed updates)        |
 | **Reconnection Refresh** | Auto-refresh when Realtime reconnects after disconnect                |
@@ -70,7 +70,7 @@ IF toronto_hour = 4 THEN ...
 
 **How it works:**
 
-1. Edge Function polls TTC API every 30 seconds
+1. Edge Function polls TTC API every 1 minute
 2. New/changed alerts are inserted into Supabase database
 3. Supabase Realtime pushes changes to connected clients instantly
 4. Client receives updates without polling

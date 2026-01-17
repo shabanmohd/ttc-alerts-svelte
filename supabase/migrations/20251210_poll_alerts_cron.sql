@@ -1,8 +1,8 @@
 -- Migration: poll-alerts pg_cron automation
 -- Created: 2025-12-10
--- Version: 1.0
+-- Version: 1.1 (Updated 2026-01-17 - changed from 2 min to 1 min polling)
 -- 
--- This migration sets up automated polling of TTC alerts every 2 minutes
+-- This migration sets up automated polling of TTC alerts every 1 minute
 -- using pg_cron and pg_net extensions to call the poll-alerts Edge Function
 
 -- ============================================
@@ -52,10 +52,10 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION invoke_poll_alerts IS 'Invokes the poll-alerts Edge Function via HTTP POST using pg_net. Called by pg_cron every 2 minutes.';
+COMMENT ON FUNCTION invoke_poll_alerts IS 'Invokes the poll-alerts Edge Function via HTTP POST using pg_net. Called by pg_cron every 1 minute.';
 
 -- ============================================
--- STEP 4: Schedule cron job (every 2 minutes)
+-- STEP 4: Schedule cron job (every 1 minute)
 -- ============================================
 -- Note: This will error if the job already exists - that's expected
 DO $$
@@ -64,7 +64,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'poll-alerts-cron') THEN
     PERFORM cron.schedule(
       'poll-alerts-cron',           -- unique job name
-      '*/2 * * * *',                -- every 2 minutes
+      '* * * * *',                  -- every 1 minute
       'SELECT invoke_poll_alerts()' -- command to run
     );
     RAISE NOTICE 'Created poll-alerts-cron job';

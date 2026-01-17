@@ -104,6 +104,7 @@ The app uses a purple accent color for interactive/selected UI elements:
 **Base Color**: `#9B44C7` (used for deriving light/dark variants)
 
 **Usage**:
+
 - Mobile bottom navigation active state
 - Scheduled Next Bus section header and icon
 - Secondary accent elements that need distinction from TTC brand colors
@@ -112,11 +113,11 @@ The app uses a purple accent color for interactive/selected UI elements:
 
 Both mobile bottom nav and desktop sidebar use matching backgrounds for visual consistency:
 
-| Element            | Light Mode           | Dark Mode              |
-| ------------------ | -------------------- | ---------------------- |
-| Mobile bottom nav  | `bg-white`           | `bg-zinc-900`          |
-| Desktop sidebar    | `bg-white`           | `bg-zinc-900`          |
-| Border (top/right) | `border-zinc-200`    | `border-zinc-800`      |
+| Element            | Light Mode        | Dark Mode         |
+| ------------------ | ----------------- | ----------------- |
+| Mobile bottom nav  | `bg-white`        | `bg-zinc-900`     |
+| Desktop sidebar    | `bg-white`        | `bg-zinc-900`     |
+| Border (top/right) | `border-zinc-200` | `border-zinc-800` |
 
 **Note**: Both navigations use solid backgrounds (no transparency) to prevent content bleed-through issues.
 
@@ -184,7 +185,11 @@ html.reduce-motion *::after {
 ### Font Stack
 
 ```css
-font-family: "Lexend", system-ui, -apple-system, sans-serif;
+font-family:
+  "Lexend",
+  system-ui,
+  -apple-system,
+  sans-serif;
 ```
 
 **Lexend** is a dyslexic-friendly variable font optimized for reading.
@@ -193,8 +198,8 @@ font-family: "Lexend", system-ui, -apple-system, sans-serif;
 
 Custom purple brand color for text selection, with WCAG AA compliant contrast:
 
-| Mode  | Background                           | Text Color              |
-| ----- | ------------------------------------ | ----------------------- |
+| Mode  | Background                           | Text Color                 |
+| ----- | ------------------------------------ | -------------------------- |
 | Light | `rgba(155, 68, 199, 0.3)` (purple)   | `hsl(240 10% 3.9%)` (dark) |
 | Dark  | `rgba(192, 132, 224, 0.4)` (lighter) | `hsl(0 0% 98%)` (light)    |
 
@@ -310,13 +315,17 @@ This reserves space for the vertical scrollbar even when content doesn't overflo
 
 ```css
 /* Card hover */
-box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+box-shadow:
+  0 1px 3px 0 rgb(0 0 0 / 0.1),
+  0 1px 2px -1px rgb(0 0 0 / 0.1);
 
 /* Focus ring */
 box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15);
 
 /* Selection ring (route badges) */
-box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px [color];
+box-shadow:
+  0 0 0 2px hsl(var(--background)),
+  0 0 0 4px [color];
 ```
 
 ---
@@ -394,7 +403,7 @@ The Switch component has custom hover styles in its CSS:
 ```css
 .switch-track:hover {
   box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15); /* Ring glow */
-  background-color: /* slightly different shade */ ;
+  background-color: /* slightly different shade */;
 }
 .switch-track {
   cursor: pointer;
@@ -1191,37 +1200,40 @@ Pill-shaped count badges shown next to filter labels. Used in CategoryFilterV3, 
 
 **Base Styling:**
 
-| Property        | Value              |
-| --------------- | ------------------ |
-| `min-width`     | `1.125-1.25rem`    |
-| `height`        | `1.125-1.25rem`    |
-| `padding`       | `0 0.25-0.375rem`  |
-| `font-size`     | `0.625-0.6875rem`  |
-| `font-weight`   | `600`              |
-| `border-radius` | `9999px` (pill)    |
+| Property        | Value             |
+| --------------- | ----------------- |
+| `min-width`     | `1.125-1.25rem`   |
+| `height`        | `1.125-1.25rem`   |
+| `padding`       | `0 0.25-0.375rem` |
+| `font-size`     | `0.625-0.6875rem` |
+| `font-weight`   | `600`             |
+| `border-radius` | `9999px` (pill)   |
 
 **State Colors:**
 
-| State              | Light Mode                           | Dark Mode                            |
-| ------------------ | ------------------------------------ | ------------------------------------ |
-| **Inactive**       | `hsl(var(--muted-foreground) / 0.2)` | `hsl(var(--muted-foreground) / 0.25)`|
-| **Active (solid)** | Category-specific color              | Category-specific color              |
+| State              | Light Mode                           | Dark Mode                             |
+| ------------------ | ------------------------------------ | ------------------------------------- |
+| **Inactive**       | `hsl(var(--muted-foreground) / 0.2)` | `hsl(var(--muted-foreground) / 0.25)` |
+| **Active (solid)** | Category-specific color              | Category-specific color               |
 
 **Category-Specific Active Colors:**
 
-| Category     | Light Mode          | Dark Mode           |
-| ------------ | ------------------- | ------------------- |
-| Disruptions  | `hsl(0 72% 45%)`    | `hsl(0 85% 65%)`    |
-| Slow Zones   | `hsl(45 93% 35%)`   | `hsl(45 93% 57%)`   |
-| Elevators    | `hsl(217 91% 45%)`  | `hsl(217 91% 70%)`  |
-| Closures     | `hsl(25 95% 45%)`   | `hsl(25 95% 60%)`   |
-| Route Changes| `hsl(262 83% 50%)`  | `hsl(262 83% 68%)`  |
+| Category      | Light Mode         | Dark Mode          |
+| ------------- | ------------------ | ------------------ |
+| Disruptions   | `hsl(0 72% 45%)`   | `hsl(0 85% 65%)`   |
+| Slow Zones    | `hsl(45 93% 35%)`  | `hsl(45 93% 57%)`  |
+| Elevators     | `hsl(217 91% 45%)` | `hsl(217 91% 70%)` |
+| Closures      | `hsl(25 95% 45%)`  | `hsl(25 95% 60%)`  |
+| Route Changes | `hsl(262 83% 50%)` | `hsl(262 83% 68%)` |
 
 **CSS Pattern:**
 
 ```css
 /* Base count badge */
-.pill-count, .count-badge, .sub-tab-count, .tab-count {
+.pill-count,
+.count-badge,
+.sub-tab-count,
+.tab-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1346,12 +1358,12 @@ Direction badges indicate the travel direction of a stop (extracted from GTFS tr
 
 **Color Mapping (WCAG AA Compliant):**
 
-| Direction      | Background       | Light Text    | Dark Text     | Border           | French            |
-| -------------- | ---------------- | ------------- | ------------- | ---------------- | ----------------- |
-| **Eastbound**  | `sky-600/20`     | `sky-700`     | `sky-400`     | `sky-600/40`     | Direction est     |
-| **Westbound**  | `amber-600/20`   | `amber-700`   | `amber-400`   | `amber-600/40`   | Direction ouest   |
-| **Northbound** | `emerald-600/20` | `emerald-700` | `emerald-400` | `emerald-600/40` | Direction nord    |
-| **Southbound** | `rose-600/20`    | `rose-700`    | `rose-400`    | `rose-600/40`    | Direction sud     |
+| Direction      | Background       | Light Text    | Dark Text     | Border           | French          |
+| -------------- | ---------------- | ------------- | ------------- | ---------------- | --------------- |
+| **Eastbound**  | `sky-600/20`     | `sky-700`     | `sky-400`     | `sky-600/40`     | Direction est   |
+| **Westbound**  | `amber-600/20`   | `amber-700`   | `amber-400`   | `amber-600/40`   | Direction ouest |
+| **Northbound** | `emerald-600/20` | `emerald-700` | `emerald-400` | `emerald-600/40` | Direction nord  |
+| **Southbound** | `rose-600/20`    | `rose-700`    | `rose-400`    | `rose-600/40`    | Direction sud   |
 
 **Usage Locations:**
 
@@ -1826,12 +1838,12 @@ The ETA display must check `prediction.isLive` to determine the display format:
 
 When routes don't have real-time ETA data, ETACard shows their scheduled first bus times from GTFS data. This section is **visually distinct** using a purple tint to differentiate from live ETA predictions above, matching the app's accent color.
 
-| Element            | Light Mode             | Dark Mode                 |
-| ------------------ | ---------------------- | ------------------------- |
-| Section background | `bg-purple-500/10`     | `bg-purple-900/10`        |
-| Header background  | `bg-purple-500/20`     | `bg-purple-800/15`        |
-| Header text        | `text-purple-700`      | `text-[#b954ec]`          |
-| Border             | `border-purple-500/20` | `border-purple-700/10`    |
+| Element            | Light Mode             | Dark Mode              |
+| ------------------ | ---------------------- | ---------------------- |
+| Section background | `bg-purple-500/10`     | `bg-purple-900/10`     |
+| Header background  | `bg-purple-500/20`     | `bg-purple-800/15`     |
+| Header text        | `text-purple-700`      | `text-[#b954ec]`       |
+| Border             | `border-purple-500/20` | `border-purple-700/10` |
 
 **Header Format**: "Scheduled Next Bus" with Calendar icon
 
@@ -1932,12 +1944,12 @@ Scheduled closure status now uses **thread visibility** (`is_hidden` flag) from 
 
 Status priority determines card background color when multiple statuses are present:
 
-| Priority | Status         | Icon          | Background Color | Text               |
-| -------- | -------------- | ------------- | ---------------- | ------------------ |
-| 1        | **disruption** | `OctagonX`    | Red tint         | "Disruption"       |
-| 2        | **delay**      | `Clock`       | Orange tint      | "Delay"            |
-| 3        | **scheduled**  | `Calendar`    | Orange tint      | "Scheduled Closure"|
-| -        | **ok**         | `CheckCircle` | Green tint       | "Normal Service"   |
+| Priority | Status         | Icon          | Background Color | Text                |
+| -------- | -------------- | ------------- | ---------------- | ------------------- |
+| 1        | **disruption** | `OctagonX`    | Red tint         | "Disruption"        |
+| 2        | **delay**      | `Clock`       | Orange tint      | "Delay"             |
+| 3        | **scheduled**  | `Calendar`    | Orange tint      | "Scheduled Closure" |
+| -        | **ok**         | `CheckCircle` | Green tint       | "Normal Service"    |
 
 > **Note:** Slow zone status was removed from the subway status cards. Slow zones are still available as a filter category but no longer shown as a subway line status.
 
@@ -100298,14 +100310,15 @@ The Closure Type Badges indicate the type of planned maintenance closure in the 
 
 ### Logo Sizes
 
-| Location              | Height Class | Pixels | Notes                               |
-| --------------------- | ------------ | ------ | ----------------------------------- |
-| Mobile header         | `h-6`        | 24px   | Main nav bar logo on mobile         |
-| Hamburger dropdown    | `h-6`        | 24px   | Inline SVG for instant render       |
-| Desktop sidebar       | `h-7`        | 28px   | Via CSS `.sidebar-logo`             |
-| About page icon       | `h-14`       | 56px   | rideTO_logo.svg (icon only, square) |
+| Location           | Height Class | Pixels | Notes                               |
+| ------------------ | ------------ | ------ | ----------------------------------- |
+| Mobile header      | `h-6`        | 24px   | Main nav bar logo on mobile         |
+| Hamburger dropdown | `h-6`        | 24px   | Inline SVG for instant render       |
+| Desktop sidebar    | `h-7`        | 28px   | Via CSS `.sidebar-logo`             |
+| About page icon    | `h-14`       | 56px   | rideTO_logo.svg (icon only, square) |
 
 **Logo Files:**
+
 - `/LOGO.svg` - Full logo with "rideTO" text (886x213)
 - `/rideTO_logo.svg` - Icon only, square format
 - `/rideTO_logo_name.svg` - Icon + text (used for nav headers)
@@ -100404,7 +100417,9 @@ transition: all 0.2s ease;
   transition: all 0.15s ease;
 }
 .transition-colors {
-  transition: color 0.15s ease, background-color 0.15s ease,
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
     border-color 0.15s ease;
 }
 .transition-transform {
@@ -100626,7 +100641,9 @@ Triggered when clicking empty state cards to autofocus search input:
 }
 
 /* Or ring shadow for buttons */
-box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+box-shadow:
+  0 0 0 2px hsl(var(--background)),
+  0 0 0 4px hsl(var(--ring));
 ```
 
 ### Touch Targets

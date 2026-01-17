@@ -81,7 +81,7 @@ This document describes the alert categorization and threading system designed t
 
 - Official TTC live alerts API
 - **Endpoint:** `https://alerts.ttc.ca/api/alerts/live-alerts`
-- **Polling:** Every 2 minutes via pg_cron
+- **Polling:** Every 1 minute via pg_cron
 - **Data Used:**
   - `routes` array - Disruption alerts (closures, shuttles, diversions, delays)
   - `routes` array - RSZ (Reduced Speed Zone) alerts
@@ -108,14 +108,14 @@ All Bluesky code was removed from the codebase in January 2026.
 
 ### Architectural Overview (v200+ - TTC API-ONLY)
 
-| Alert Type                  | Thread Creation | Alert ID Pattern       | UI Section           |
-| --------------------------- | --------------- | ---------------------- | -------------------- |
-| **Disruptions**             | ✅ Yes          | `ttc-alert-*`          | Disruptions & Delays |
-| **Scheduled Closures**      | ✅ Yes          | `ttc-scheduled-*`      | Disruptions & Delays |
-| **Closure Cancellations**   | ✅ Yes          | `ttc-cancellation-*`   | Disruptions & Delays |
-| **RSZ**                     | ✅ Yes          | `ttc-rsz-*`            | Slow Zones           |
-| **Elevators**               | ✅ Yes          | `ttc-elev-*`           | Station Alerts       |
-| **Service Resumed**         | Uses existing   | `ttc-alert-sr-*`       | Recently Resolved    |
+| Alert Type                | Thread Creation | Alert ID Pattern     | UI Section           |
+| ------------------------- | --------------- | -------------------- | -------------------- |
+| **Disruptions**           | ✅ Yes          | `ttc-alert-*`        | Disruptions & Delays |
+| **Scheduled Closures**    | ✅ Yes          | `ttc-scheduled-*`    | Disruptions & Delays |
+| **Closure Cancellations** | ✅ Yes          | `ttc-cancellation-*` | Disruptions & Delays |
+| **RSZ**                   | ✅ Yes          | `ttc-rsz-*`          | Slow Zones           |
+| **Elevators**             | ✅ Yes          | `ttc-elev-*`         | Station Alerts       |
+| **Service Resumed**       | Uses existing   | `ttc-alert-sr-*`     | Recently Resolved    |
 
 **v216 Changes (Jan 17, 2026):**
 
@@ -1085,7 +1085,6 @@ The `getSeverityCategory` function determines which alerts affect subway status 
 **Why RSZ and ACCESSIBILITY are excluded:**
 
 1. **RSZ (Reduced Speed Zone)** - "Slower than usual" alerts are informational, not disruptions
-
    - Trains still running, just slower
    - Users should see these in "Slow Zones" section, not affect status cards
 
@@ -1296,7 +1295,7 @@ CREATE TRIGGER validate_alert_thread_routes_trigger
 
 ### `poll-alerts` (v113)
 
-**Trigger:** Cron schedule (every 2 minutes)  
+**Trigger:** Cron schedule (every 1 minute)  
 **Purpose:** Fetch, categorize, and thread alerts; manage thread lifecycle
 
 **Flow:**
@@ -1328,7 +1327,6 @@ CREATE TRIGGER validate_alert_thread_routes_trigger
    - **Thread ID Pattern:** `thread-rsz-line{line}-{start}-{end}` (e.g., `thread-rsz-line1-eglinton-davisville`)
    - **STEP 6e (v112+):** Auto-repair orphaned RSZ alerts with null `thread_id`
 7. **STEP 6:** Process elevator alerts from TTC API
-
    - Extract station name from header
    - **Each elevator gets its own thread** via centralized `generateElevatorThreadId()` function (v111+)
    - **De-duplicates by elevatorCode** - TTC API sometimes returns duplicate alerts for same elevator
@@ -1337,7 +1335,6 @@ CREATE TRIGGER validate_alert_thread_routes_trigger
    - **Text cleanup (v110+):** Strips "-TTC" suffix and technical metadata from descriptions
 
    **Thread ID Patterns (v111+):**
-
    - **Standard TTC elevators:** `thread-elev-{elevatorCode}` (e.g., `thread-elev-57P2L`)
    - **Non-TTC elevators:** `thread-elev-nonttc-{station}-{detail}` (e.g., `thread-elev-nonttc-tmu-10dundassteentrance`)
 
@@ -1357,7 +1354,6 @@ CREATE TRIGGER validate_alert_thread_routes_trigger
    ```
 
 8. **STEP 6b:** Auto-resolve elevator threads
-
    - Uses same `generateElevatorThreadId()` function to match active suffixes
    - Builds `activeElevatorSuffixes` set from current TTC API alerts
    - Resolves threads whose suffix is no longer in the active set
@@ -1650,17 +1646,14 @@ RSZ and ACCESSIBILITY threads have a **6-layer protection** system ensuring they
 **RSZ Protection (4 layers):**
 
 1. **Layer 1 - Skip during Bluesky matching (STEP 4 loop):**
-
    - When iterating Bluesky posts to find matching threads, skip RSZ/ACCESSIBILITY threads entirely
    - These threads should only be managed by TTC API, not Bluesky
 
 2. **Layer 2 - Never resolve via SERVICE_RESUMED (STEP 4 resolve):**
-
    - Even if a Bluesky SERVICE_RESUMED post matches by route, do NOT resolve RSZ/ACCESSIBILITY threads
    - Log warning and skip resolution
 
 3. **Layer 3 - Auto-repair (STEP 6c-repair):**
-
    - If RSZ threads are incorrectly resolved, check TTC API for active RSZ alerts
    - If TTC API has RSZ alerts for that line, un-resolve the thread
    - Also fixes `is_latest` flag and thread title to point to correct RSZ alert
@@ -1673,7 +1666,6 @@ RSZ and ACCESSIBILITY threads have a **6-layer protection** system ensuring they
 **Elevator Protection (2 layers):**
 
 5. **Layer 5 - Bluesky skip (same as RSZ, STEP 4):**
-
    - Skip ACCESSIBILITY threads during Bluesky matching
    - Elevators only resolve via TTC API (STEP 6b)
 
@@ -1738,12 +1730,12 @@ https://www.ttc.ca/sxa/search/results/?s={SCOPE_ID}&itemid={ITEM_ID}&sig=&v={VAR
 
 The `ClosuresView.svelte` component detects closure type based on the data:
 
-| Closure Type                       | Badge Label               | Color          | Detection Logic                   |
-| ---------------------------------- | ------------------------- | -------------- | --------------------------------- |
-| `NIGHTLY_CLOSURE`                  | "Nightly Early Closure"   | Blue           | `start_time` >= 22:00 (10 PM)     |
-| `WEEKEND_CLOSURE`                  | "Weekend Closure"         | Purple/Magenta | No `start_time` AND spans Sat-Sun |
-| `SCHEDULED_CLOSURE`                | "Scheduled Closure"       | Purple         | Default fallback                  |
-| `SCHEDULED_CLOSURE_CANCELLATION`   | "Closure Cancelled"       | Green          | Cancellation alert detected       |
+| Closure Type                     | Badge Label             | Color          | Detection Logic                   |
+| -------------------------------- | ----------------------- | -------------- | --------------------------------- |
+| `NIGHTLY_CLOSURE`                | "Nightly Early Closure" | Blue           | `start_time` >= 22:00 (10 PM)     |
+| `WEEKEND_CLOSURE`                | "Weekend Closure"       | Purple/Magenta | No `start_time` AND spans Sat-Sun |
+| `SCHEDULED_CLOSURE`              | "Scheduled Closure"     | Purple         | Default fallback                  |
+| `SCHEDULED_CLOSURE_CANCELLATION` | "Closure Cancelled"     | Green          | Cancellation alert detected       |
 
 ```typescript
 // ClosuresView.svelte - getClosureType()
@@ -1960,7 +1952,7 @@ Monthly: 150,000 messages ✅ (well under 2M limit)
 
 ### Edge Function Usage
 
-`poll-alerts` runs every 2 minutes:
+`poll-alerts` runs every 1 minute:
 
 ```
 30 days × 24 hours × 30/hour = 21,600 invocations/month
