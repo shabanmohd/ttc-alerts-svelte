@@ -11,7 +11,7 @@ const corsHeaders = {
 const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 
 // Version for debugging
-const VERSION = '215'; // Fix: cleanup monitoring entry when alert reappears
+const VERSION = '216'; // Add auto-cleanup for cancellation alerts when TTC API removes them
 
 // Helper: Generate MD5 hash for thread_hash
 async function generateMd5Hash(input: string): Promise<string> {
@@ -1053,9 +1053,13 @@ async function processScheduledAlerts(supabase: any, scheduledAlerts: TtcApiAler
 // Process closure cancellation alerts from TTC API
 // These alerts indicate that a planned closure has been cancelled
 // e.g., "Tonight's planned early subway closure between Finch and Eglinton stations has been cancelled."
-async function processCancellationAlerts(supabase: any, cancellationAlerts: TtcApiAlert[]): Promise<{ newAlerts: number; cancelledThreads: number }> {
+async function processCancellationAlerts(supabase: any, cancellationAlerts: TtcApiAlert[]): Promise<{ newAlerts: number; cancelledThreads: number; hiddenCancellations: number }> {
   let newAlerts = 0;
   let cancelledThreads = 0;
+  let hiddenCancellations = 0;
+  
+  // Track current cancellation thread IDs for cleanup
+  const currentCancellationThreadIds = new Set<string>();
 
   for (const alert of cancellationAlerts) {
     const headerText = alert.headerText || '';
@@ -1083,6 +1087,9 @@ async function processCancellationAlerts(supabase: any, cancellationAlerts: TtcA
     // Create alert ID for the cancellation
     const alertId = generateTtcAlertId('cancellation', lineNum, headerText);
     const threadId = `thread-cancellation-${lineNum}-${headerText.substring(0, 40).replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`;
+    
+    // Track this cancellation thread ID
+    currentCancellationThreadIds.add(threadId);
     
     // Check if this cancellation alert already exists
     const { data: existing } = await supabase
@@ -1169,10 +1176,65 @@ async function processCancellationAlerts(supabase: any, cancellationAlerts: TtcA
     }
   }
 
-  if (newAlerts > 0 || cancelledThreads > 0) {
-    console.log(`Cancellation processing: ${newAlerts} new alerts, ${cancelledThreads} scheduled closures cancelled`);
+  // CLEANUP: Find cancellation threads no longer in TTC API
+  const { data: activeCancellationThreads } = await supabase
+    .from('incident_threads')
+    .select('thread_id, missed_polls')
+    .like('thread_id', 'thread-cancellation-%')
+    .eq('is_resolved', false)
+    .eq('is_hidden', false);
+
+  for (const thread of activeCancellationThreads || []) {
+    if (!currentCancellationThreadIds.has(thread.thread_id)) {
+      // Cancellation alert disappeared from TTC API
+      const missedPolls = (thread.missed_polls || 0) + 1;
+      
+      console.log(`Cancellation thread ${thread.thread_id} disappeared - missed_polls: ${missedPolls}`);
+      
+      if (missedPolls >= MAX_MISSED_POLLS) {
+        // Hide cancellation thread after grace period
+        console.log(`Hiding cancellation thread ${thread.thread_id} after ${missedPolls} missed polls`);
+        
+        await supabase
+          .from('incident_threads')
+          .update({
+            is_hidden: true,
+            is_resolved: true,
+            resolved_at: new Date().toISOString(),
+            missed_polls: missedPolls,
+            updated_at: new Date().toISOString()
+          })
+          .eq('thread_id', thread.thread_id);
+        
+        hiddenCancellations++;
+      } else {
+        // Still within grace period - update missed_polls
+        await supabase
+          .from('incident_threads')
+          .update({
+            missed_polls: missedPolls,
+            updated_at: new Date().toISOString()
+          })
+          .eq('thread_id', thread.thread_id);
+      }
+    } else {
+      // Cancellation alert still in API - reset missed_polls if needed
+      if (thread.missed_polls > 0) {
+        await supabase
+          .from('incident_threads')
+          .update({
+            missed_polls: 0,
+            updated_at: new Date().toISOString()
+          })
+          .eq('thread_id', thread.thread_id);
+      }
+    }
   }
-  return { newAlerts, cancelledThreads };
+
+  if (newAlerts > 0 || cancelledThreads > 0 || hiddenCancellations > 0) {
+    console.log(`Cancellation processing: ${newAlerts} new alerts, ${cancelledThreads} scheduled closures cancelled, ${hiddenCancellations} cancellation alerts hidden`);
+  }
+  return { newAlerts, cancelledThreads, hiddenCancellations };
 }
 
 // Process RSZ alerts from TTC API
@@ -1656,7 +1718,7 @@ serve(async (req) => {
           newAlerts: totalNewAlerts,
           updatedThreads: totalUpdatedThreads,
           resolvedThreads: disruptionResult.resolvedThreads,
-          hiddenThreads: disruptionResult.hiddenThreads + scheduledResult.hiddenThreads,
+          hiddenThreads: disruptionResult.hiddenThreads + scheduledResult.hiddenThreads + cancellationResult.hiddenCancellations,
           cancelledClosures: cancellationResult.cancelledThreads,
           resolvedElevators,
           resolvedRszThreads,
