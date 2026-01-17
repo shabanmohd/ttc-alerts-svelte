@@ -1053,7 +1053,8 @@ async function processScheduledAlerts(supabase: any, scheduledAlerts: TtcApiAler
 // Process closure cancellation alerts from TTC API
 // These alerts indicate that a planned closure has been cancelled
 // e.g., "Tonight's planned early subway closure between Finch and Eglinton stations has been cancelled."
-async function processCancellationAlerts(supabase: any, cancellationAlerts: TtcApiAlert[]): Promise<{ cancelledThreads: number }> {
+async function processCancellationAlerts(supabase: any, cancellationAlerts: TtcApiAlert[]): Promise<{ newAlerts: number; cancelledThreads: number }> {
+  let newAlerts = 0;
   let cancelledThreads = 0;
 
   for (const alert of cancellationAlerts) {
@@ -1078,6 +1079,70 @@ async function processCancellationAlerts(supabase: any, cancellationAlerts: TtcA
     }
     
     console.log(`Processing cancellation for Line ${lineNum}: ${headerText.substring(0, 80)}...`);
+    
+    // Create alert ID for the cancellation
+    const alertId = generateTtcAlertId('cancellation', lineNum, headerText);
+    const threadId = `thread-cancellation-${lineNum}-${headerText.substring(0, 40).replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`;
+    
+    // Check if this cancellation alert already exists
+    const { data: existing } = await supabase
+      .from('alert_cache')
+      .select('alert_id')
+      .eq('alert_id', alertId)
+      .maybeSingle();
+    
+    if (!existing) {
+      // Create the cancellation alert (shown in disruptions)
+      const alertRecord = {
+        alert_id: alertId,
+        header_text: headerText.substring(0, 500),
+        description_text: headerText,
+        categories: ['SCHEDULED_CLOSURE_CANCELLATION'],
+        affected_routes: [`Line ${lineNum}`],
+        created_at: alert.lastUpdated || new Date().toISOString(),
+        is_latest: true,
+        effect: 'SCHEDULED_CLOSURE_CANCELLATION'
+      };
+
+      const { data: insertedAlert, error: insertError } = await supabase
+        .from('alert_cache')
+        .insert(alertRecord)
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Cancellation alert insert error:', insertError);
+      } else {
+        newAlerts++;
+        console.log(`Inserted cancellation alert ${alertId}`);
+        
+        // Create thread for the cancellation alert
+        const uniqueHash = await generateMd5Hash(threadId);
+        
+        const { error: threadError } = await supabase
+          .from('incident_threads')
+          .insert({
+            thread_id: threadId,
+            thread_hash: uniqueHash,
+            title: headerText.substring(0, 200),
+            affected_routes: [`Line ${lineNum}`],
+            categories: ['SCHEDULED_CLOSURE_CANCELLATION'],
+            is_resolved: false,
+            is_hidden: false,
+            missed_polls: 0,
+            created_at: alert.lastUpdated || new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (!threadError) {
+          // Link alert to thread
+          await supabase
+            .from('alert_cache')
+            .update({ thread_id: threadId })
+            .eq('alert_id', alertId);
+        }
+      }
+    }
     
     // Find and hide any active scheduled closure threads for this line
     const { data: scheduledThreads } = await supabase
@@ -1104,10 +1169,10 @@ async function processCancellationAlerts(supabase: any, cancellationAlerts: TtcA
     }
   }
 
-  if (cancelledThreads > 0) {
-    console.log(`Cancellation processing: ${cancelledThreads} scheduled closures cancelled`);
+  if (newAlerts > 0 || cancelledThreads > 0) {
+    console.log(`Cancellation processing: ${newAlerts} new alerts, ${cancelledThreads} scheduled closures cancelled`);
   }
-  return { cancelledThreads };
+  return { newAlerts, cancelledThreads };
 }
 
 // Process RSZ alerts from TTC API
@@ -1571,7 +1636,7 @@ serve(async (req) => {
     }
 
     // Calculate totals
-    const totalNewAlerts = disruptionResult.newAlerts + scheduledResult.newAlerts + rszResult.newAlerts + elevatorResult.newAlerts;
+    const totalNewAlerts = disruptionResult.newAlerts + scheduledResult.newAlerts + cancellationResult.newAlerts + rszResult.newAlerts + elevatorResult.newAlerts;
     const totalUpdatedThreads = disruptionResult.updatedThreads + scheduledResult.updatedThreads + rszResult.updatedThreads + elevatorResult.updatedThreads;
 
     return new Response(

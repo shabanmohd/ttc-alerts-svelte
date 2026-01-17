@@ -435,15 +435,17 @@
       "DIVERSION",
       "DELAY",
       "SCHEDULED_CLOSURE", // v200: Show scheduled closures from TTC API in disruptions
+      "SCHEDULED_CLOSURE_CANCELLATION", // Show cancelled closures at top
     ];
 
     // Find any disruption alert in the thread (prefer the most recent)
     for (const alert of thread.alerts) {
-      // v200: Disruptions now come from TTC API (ttc-alert-* or ttc-scheduled-*)
+      // v200: Disruptions now come from TTC API (ttc-alert-*, ttc-scheduled-*, ttc-cancellation-*)
       // Skip non-TTC API alerts for disruptions
       if (
         !alert.alert_id?.toLowerCase().startsWith("ttc-alert-") &&
-        !alert.alert_id?.toLowerCase().startsWith("ttc-scheduled-")
+        !alert.alert_id?.toLowerCase().startsWith("ttc-scheduled-") &&
+        !alert.alert_id?.toLowerCase().startsWith("ttc-cancellation-")
       ) {
         continue;
       }
@@ -512,7 +514,8 @@
           const ttcAlertsOnly = thread.alerts.filter(
             (a) =>
               a.alert_id?.startsWith("ttc-alert-") ||
-              a.alert_id?.startsWith("ttc-scheduled-")
+              a.alert_id?.startsWith("ttc-scheduled-") ||
+              a.alert_id?.startsWith("ttc-cancellation-")
           );
 
           // Use the disruption alert as the display alert
@@ -524,8 +527,14 @@
             latestAlert: disruptionAlert || thread.latestAlert,
           };
         })
-        // Sort: Scheduled closures first, then by recency
+        // Sort: Cancellations first, then scheduled closures, then by recency
         .sort((a, b) => {
+          const aIsCancellation =
+            a.thread_id?.includes("cancellation") ||
+            (a.categories as string[])?.includes("SCHEDULED_CLOSURE_CANCELLATION");
+          const bIsCancellation =
+            b.thread_id?.includes("cancellation") ||
+            (b.categories as string[])?.includes("SCHEDULED_CLOSURE_CANCELLATION");
           const aIsScheduled =
             a.thread_id?.includes("scheduled_closure") ||
             (a.categories as string[])?.includes("SCHEDULED_CLOSURE");
@@ -533,7 +542,11 @@
             b.thread_id?.includes("scheduled_closure") ||
             (b.categories as string[])?.includes("SCHEDULED_CLOSURE");
 
-          // Scheduled closures come first
+          // Cancellations come first (important news!)
+          if (aIsCancellation && !bIsCancellation) return -1;
+          if (!aIsCancellation && bIsCancellation) return 1;
+          
+          // Then scheduled closures
           if (aIsScheduled && !bIsScheduled) return -1;
           if (!aIsScheduled && bIsScheduled) return 1;
 

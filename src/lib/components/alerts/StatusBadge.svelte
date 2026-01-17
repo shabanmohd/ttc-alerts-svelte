@@ -32,6 +32,9 @@
         return "status-badge-planned";
       case "SCHEDULED_CLOSURE":
         return "status-badge-scheduled";
+      case "SCHEDULED_CLOSURE_CANCELLATION":
+      case "CLOSURE_CANCELLATION":
+        return "status-badge-cancellation";
       case "NIGHTLY_CLOSURE":
         return "status-badge-nightly";
       case "WEEKEND_CLOSURE":
@@ -66,6 +69,8 @@
       PLANNED: "status.planned",
       PLANNED_CLOSURE: "status.planned",
       SCHEDULED_CLOSURE: "status.scheduledClosure",
+      SCHEDULED_CLOSURE_CANCELLATION: "status.closureCancellation",
+      CLOSURE_CANCELLATION: "status.closureCancellation",
       NIGHTLY_CLOSURE: "status.nightlyClosure",
       WEEKEND_CLOSURE: "status.weekendClosure",
       TEMPORARY_ROUTE_CHANGE: "status.temporaryRouteChange",

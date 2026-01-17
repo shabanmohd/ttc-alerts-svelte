@@ -225,13 +225,14 @@ export const threadsWithAlerts = derived(
         const date = new Date(thread.latestAlert.created_at);
         if (isNaN(date.getTime())) return false;
         // Exclude planned service disruptions (handled by maintenance widget)
-        // EXCEPTION: SCHEDULED_CLOSURE from TTC API should be shown in disruptions tab
+        // EXCEPTION: SCHEDULED_CLOSURE and SCHEDULED_CLOSURE_CANCELLATION from TTC API should be shown in disruptions tab
         const categories = extractCategories(thread.categories) || 
                            extractCategories(thread.latestAlert?.categories) || [];
         const isScheduledClosure = categories.includes('SCHEDULED_CLOSURE');
+        const isCancellation = categories.includes('SCHEDULED_CLOSURE_CANCELLATION');
         
-        // Skip planned exclusions for SCHEDULED_CLOSURE - these should show in disruptions
-        if (!isScheduledClosure) {
+        // Skip planned exclusions for SCHEDULED_CLOSURE and cancellations - these should show in disruptions
+        if (!isScheduledClosure && !isCancellation) {
           if (categories.includes('PLANNED_SERVICE_DISRUPTION')) return false;
           if (categories.includes('PLANNED')) return false;
           // Also check effect field for planned alerts

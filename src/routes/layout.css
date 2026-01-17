@@ -1147,6 +1147,17 @@ html.ios-pwa .mobile-bottom-nav::after {
   color: hsl(270 70% 75%);
 }
 
+/* Scheduled Closure Cancellation - Green (good news, closure cancelled) */
+.status-badge-cancellation {
+  background-color: hsl(142 76% 92%);
+  color: hsl(142 76% 28%);
+}
+
+.dark .status-badge-cancellation {
+  background-color: hsl(142 50% 25% / 0.4);
+  color: hsl(142 70% 70%);
+}
+
 /* Nightly Early Closure - Blue (night sky/evening) */
 .status-badge-nightly {
   background-color: hsl(217 91% 95%);
