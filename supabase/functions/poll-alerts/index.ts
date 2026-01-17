@@ -11,7 +11,7 @@ const corsHeaders = {
 const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 
 // Version for debugging
-const VERSION = '217'; // Set grace period to 3 polls (3 minutes with 1-min polling)
+const VERSION = '218'; // Remove service_resumed_monitoring (grace period analysis complete)
 
 // Helper: Generate MD5 hash for thread_hash
 async function generateMd5Hash(input: string): Promise<string> {
@@ -613,17 +613,10 @@ async function processDisruptionAlerts(
         })
         .eq('thread_id', threadId);
       
-      // Cleanup monitoring entry - alert came back before it resolved
-      await supabase
-        .from('service_resumed_monitoring')
-        .delete()
-        .eq('thread_id', threadId)
-        .is('service_resumed_at', null);
-      
       console.log(`Unhid/unresolved thread ${threadId} - alert reappeared`);
       updatedThreads++;
     } else if (existingThread.missed_polls > 0) {
-      // Alert was briefly missing but came back - reset and cleanup monitoring
+      // Alert was briefly missing but came back - reset missed polls
       await supabase
         .from('incident_threads')
         .update({ 
@@ -633,14 +626,7 @@ async function processDisruptionAlerts(
         })
         .eq('thread_id', threadId);
       
-      // Cleanup monitoring entry - alert came back before it resolved
-      await supabase
-        .from('service_resumed_monitoring')
-        .delete()
-        .eq('thread_id', threadId)
-        .is('service_resumed_at', null);
-      
-      console.log(`Thread ${threadId} reappeared - cleaned up monitoring entry`);
+      console.log(`Thread ${threadId} reappeared - reset missed polls`);
     }
 
     // Update alert with thread_id
@@ -668,20 +654,6 @@ async function processDisruptionAlerts(
       const pendingSince = thread.pending_since || new Date().toISOString();
       
       console.log(`Thread ${thread.thread_id} disappeared - missed_polls: ${missedPolls}`);
-      
-      // MONITORING: Track when disruption first disappears (missedPolls == 1)
-      if (missedPolls === 1) {
-        const route = (thread.affected_routes as string[])?.[0] || 'unknown';
-        await supabase
-          .from('service_resumed_monitoring')
-          .insert({
-            thread_id: thread.thread_id,
-            route: route,
-            disruption_removed_at: new Date().toISOString(),
-            polls_since_removal: 0
-          });
-        console.log(`MONITORING: Started tracking ${thread.thread_id} for service resumed`);
-      }
       
       // Check for matching service resumed alert
       let matchedResumed: TtcApiAlert | null = null;
@@ -760,18 +732,6 @@ async function processDisruptionAlerts(
           })
           .eq('thread_id', thread.thread_id);
         
-        // MONITORING: Update when service resumed is found
-        await supabase
-          .from('service_resumed_monitoring')
-          .update({
-            service_resumed_at: new Date().toISOString(),
-            polls_since_removal: missedPolls,
-            service_resumed_text: (matchedResumed.headerText || '').substring(0, 200)
-          })
-          .eq('thread_id', thread.thread_id)
-          .is('service_resumed_at', null);
-        console.log(`MONITORING: Service resumed found for ${thread.thread_id} after ${missedPolls} polls`);
-        
         resolvedThreads++;
       } else if (missedPolls >= MAX_MISSED_POLLS) {
         // No service resumed found after grace period - hide thread
@@ -785,16 +745,6 @@ async function processDisruptionAlerts(
             updated_at: new Date().toISOString()
           })
           .eq('thread_id', thread.thread_id);
-        
-        // MONITORING: Log that thread was hidden without service resumed
-        await supabase
-          .from('service_resumed_monitoring')
-          .update({
-            polls_since_removal: missedPolls
-          })
-          .eq('thread_id', thread.thread_id)
-          .is('service_resumed_at', null);
-        console.log(`MONITORING: Thread ${thread.thread_id} hidden after ${missedPolls} polls with NO service resumed`);
         
         hiddenThreads++;
       } else {

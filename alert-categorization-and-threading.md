@@ -922,29 +922,6 @@ const threadHash = (await generateMd5Hash(thread.thread_id)).substring(0, 12);
 const resumedAlertId = `resumed-${threadHash}`;
 ```
 
-### Monitoring (v211-v212)
-
-A monitoring system tracks when service resumed alerts appear relative to disruption removal:
-
-**Table:** `service_resumed_monitoring`
-
-| Column                  | Type        | Description                                      |
-| ----------------------- | ----------- | ------------------------------------------------ |
-| `id`                    | SERIAL      | Primary key                                      |
-| `thread_id`             | TEXT        | Thread being monitored                           |
-| `route`                 | TEXT        | Route identifier                                 |
-| `disruption_removed_at` | TIMESTAMPTZ | When disruption disappeared from API             |
-| `service_resumed_at`    | TIMESTAMPTZ | When service resumed alert found (null if never) |
-| `polls_since_removal`   | INT         | How many polls since disruption removed          |
-| `service_resumed_text`  | TEXT        | The service resumed alert text                   |
-| `created_at`            | TIMESTAMPTZ | Row creation time                                |
-
-**Monitoring Dashboard:** `test-service-resumed-monitoring.html`
-
-- Shows poll distribution (how many polls until service resumed arrives)
-- Highlights "late" alerts (>3 polls) that would be missed with current grace period
-- Shows alerts that never received service resumed
-
 ### Empty HeaderText Validation (v210)
 
 Alerts with empty `headerText` are skipped to prevent malformed threads:

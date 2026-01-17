@@ -55,6 +55,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                                | Change                                                                                 | Status       |
 | ---------------------------------------- | -------------------------------------------------------------------------------------- | ------------ |
+| **poll-alerts v218**                     | Removed service_resumed_monitoring table and all logging code (analysis complete)      | ✅ Deployed  |
 | **poll-alerts v217**                     | Set grace period to 3 polls (3 minutes with 1-min polling) based on monitoring data    | ✅ Deployed  |
 | **poll-alerts v216**                     | Auto-cleanup for cancellation alerts when TTC API removes them                         | ✅ Deployed  |
 | **poll-alerts v215**                     | Scheduled closure cancellation alerts with green badge                                 | ✅ Deployed  |
