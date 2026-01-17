@@ -11,7 +11,7 @@ const corsHeaders = {
 const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 
 // Version for debugging
-const VERSION = '214'; // Revert ID generation, add header_text dedup
+const VERSION = '215'; // Fix: cleanup monitoring entry when alert reappears
 
 // Helper: Generate MD5 hash for thread_hash
 async function generateMd5Hash(input: string): Promise<string> {
@@ -590,10 +590,18 @@ async function processDisruptionAlerts(
           updated_at: new Date().toISOString() 
         })
         .eq('thread_id', threadId);
+      
+      // Cleanup monitoring entry - alert came back before it resolved
+      await supabase
+        .from('service_resumed_monitoring')
+        .delete()
+        .eq('thread_id', threadId)
+        .is('service_resumed_at', null);
+      
       console.log(`Unhid/unresolved thread ${threadId} - alert reappeared`);
       updatedThreads++;
-    } else {
-      // Reset missed_polls since alert is still active
+    } else if (existingThread.missed_polls > 0) {
+      // Alert was briefly missing but came back - reset and cleanup monitoring
       await supabase
         .from('incident_threads')
         .update({ 
@@ -602,6 +610,15 @@ async function processDisruptionAlerts(
           updated_at: new Date().toISOString() 
         })
         .eq('thread_id', threadId);
+      
+      // Cleanup monitoring entry - alert came back before it resolved
+      await supabase
+        .from('service_resumed_monitoring')
+        .delete()
+        .eq('thread_id', threadId)
+        .is('service_resumed_at', null);
+      
+      console.log(`Thread ${threadId} reappeared - cleaned up monitoring entry`);
     }
 
     // Update alert with thread_id
