@@ -219,36 +219,36 @@ IF toronto_hour = 4 THEN ...
 
 ## Automated Workflows Summary
 
-| Workflow                   | Schedule                             | EST Equivalent          | Output                                |
-| -------------------------- | ------------------------------------ | ----------------------- | ------------------------------------- |
-| **Alert Polling**          | Every 1 min (pg_cron)                | Every 1 min             | Supabase `alert_cache` table          |
-| **Subway Closures Scrape** | Every 6 hours (pg_cron)              | Every 6 hours           | Supabase `planned_maintenance` table  |
-| **Elevator Verification**  | Every 15 min (pg_cron)               | Every 15 min            | Supabase `incident_threads` table     |
-| **RSZ Verification**       | Every 15 min (pg_cron, +7min offset) | Every 15 min            | Supabase `incident_threads` table     |
-| **RSZ Scrape**             | Every 30 min (pg_cron)               | Every 30 min            | Supabase `incident_threads` table     |
-| **Database Cleanup**       | Every hour + 4 AM Toronto (pg_cron)  | Hourly + DST-aware      | Deletes old data (see retention)      |
-| **Schedule Refresh**       | Sun 4:00 AM UTC (GitHub)             | Sat 11:00 PM EST        | `ttc-schedules.json`                  |
-| **Route Data Refresh**     | Sun 2:00 AM UTC (GitHub)             | Sat 9:00 PM EST         | `ttc-routes.json`, `ttc-route-*.json` |
+| Workflow                   | Schedule                             | EST Equivalent     | Output                                |
+| -------------------------- | ------------------------------------ | ------------------ | ------------------------------------- |
+| **Alert Polling**          | Every 1 min (pg_cron)                | Every 1 min        | Supabase `alert_cache` table          |
+| **Subway Closures Scrape** | Every 6 hours (pg_cron)              | Every 6 hours      | Supabase `planned_maintenance` table  |
+| **Elevator Verification**  | Every 15 min (pg_cron)               | Every 15 min       | Supabase `incident_threads` table     |
+| **RSZ Verification**       | Every 15 min (pg_cron, +7min offset) | Every 15 min       | Supabase `incident_threads` table     |
+| **RSZ Scrape**             | Every 30 min (pg_cron)               | Every 30 min       | Supabase `incident_threads` table     |
+| **Database Cleanup**       | Every hour + 4 AM Toronto (pg_cron)  | Hourly + DST-aware | Deletes old data (see retention)      |
+| **Schedule Refresh**       | Sun 4:00 AM UTC (GitHub)             | Sat 11:00 PM EST   | `ttc-schedules.json`                  |
+| **Route Data Refresh**     | Sun 2:00 AM UTC (GitHub)             | Sat 9:00 PM EST    | `ttc-routes.json`, `ttc-route-*.json` |
 
 ### Database Cleanup & Retention Policy
 
 Two cleanup jobs run to prevent database bloat:
 
-| Job                    | Schedule      | Function                    |
-| ---------------------- | ------------- | --------------------------- |
-| `cleanup-old-data`     | Every hour    | `cleanup_old_data()`        |
-| `cleanup-alerts-*-utc` | 8 & 9 AM UTC  | `cleanup_old_alerts_toronto()` (4 AM Toronto) |
+| Job                    | Schedule     | Function                                      |
+| ---------------------- | ------------ | --------------------------------------------- |
+| `cleanup-old-data`     | Every hour   | `cleanup_old_data()`                          |
+| `cleanup-alerts-*-utc` | 8 & 9 AM UTC | `cleanup_old_alerts_toronto()` (4 AM Toronto) |
 
 **Retention Policies (cleanup_old_data):**
 
-| Table                    | Retention Period | Notes                           |
-| ------------------------ | ---------------- | ------------------------------- |
+| Table                    | Retention Period | Notes                             |
+| ------------------------ | ---------------- | --------------------------------- |
 | `alert_cache`            | 48 hours         | Keeps recent alerts for threading |
-| `incident_threads`       | 12-24 hours      | Resolved: 24h, Stale: 12h       |
-| `notification_history`   | 7 days           | Push notification logs          |
-| `alert_accuracy_logs`    | 30 days          | Monitoring logs (disabled)      |
-| `alert_accuracy_reports` | 30 days          | Monitoring reports (disabled)   |
-| `planned_maintenance`    | 7 days after end | Deletes past maintenance events |
+| `incident_threads`       | 12-24 hours      | Resolved: 24h, Stale: 12h         |
+| `notification_history`   | 7 days           | Push notification logs            |
+| `alert_accuracy_logs`    | 30 days          | Monitoring logs (disabled)        |
+| `alert_accuracy_reports` | 30 days          | Monitoring reports (disabled)     |
+| `planned_maintenance`    | 7 days after end | Deletes past maintenance events   |
 
 ### Data Integrity Verification Functions
 

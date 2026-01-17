@@ -47,15 +47,33 @@ See [alert-categorization-and-threading.md](alert-categorization-and-threading.m
 
 ### Current Table Sizes (January 17, 2026)
 
-| Table                  | Total Size  | Rows | Notes              |
-| ---------------------- | ----------- | ---- | ------------------ |
-| `alert_cache`          | 3.5 MB      | 196  | Main alerts        |
-| `incident_threads`     | 816 kB      | 63   | Threading          |
-| `planned_maintenance`  | 96 kB       | 13   | Scheduled closures |
-| `gtfs_routes`          | 80 kB       | 20   | Route data         |
-| `notification_history` | 72 kB       | 0    | Push notifications |
-| `gtfs_stations`        | 16 kB       | 0    | Station data       |
-| **Total App Tables**   | **~4.5 MB** |      |                    |
+| Table                    | Total Size | Rows | Notes                    | Retention  |
+| ------------------------ | ---------- | ---- | ------------------------ | ---------- |
+| `alert_cache`            | 2.1 MB     | 228  | Main alerts              | 48 hours   |
+| `alert_accuracy_logs`    | 672 KB     | 1166 | Monitoring logs          | 30 days    |
+| `incident_threads`       | 592 KB     | 90   | Threading                | 12-24 hrs  |
+| `alert_training_data`    | 440 KB     | 238  | Training data (inactive) | No cleanup |
+| `planned_maintenance`    | 120 KB     | 11   | Scheduled closures       | 7d after end |
+| `alert_accuracy_reports` | 96 KB      | 5    | Monitoring reports       | 30 days    |
+| `gtfs_routes`            | 80 KB      | 20   | Route data               | Manual     |
+| `notification_history`   | 72 KB      | 0    | Push notifications       | 7 days     |
+| `gtfs_stations`          | 16 KB      | 0    | Station data             | Manual     |
+| **Total App Tables**     | **~4.2 MB**|      |                          |            |
+
+### Retention Policy (cleanup_old_data function)
+
+The `cleanup_old_data()` function runs every hour via pg_cron:
+
+```sql
+-- Retention policies enforced hourly
+DELETE FROM alert_cache WHERE created_at < NOW() - INTERVAL '48 hours';
+DELETE FROM incident_threads WHERE (is_resolved AND updated_at < NOW() - INTERVAL '24 hours')
+                                OR (updated_at < NOW() - INTERVAL '12 hours');
+DELETE FROM notification_history WHERE sent_at < NOW() - INTERVAL '7 days';
+DELETE FROM alert_accuracy_logs WHERE checked_at < NOW() - INTERVAL '30 days';
+DELETE FROM alert_accuracy_reports WHERE created_at < NOW() - INTERVAL '30 days';
+DELETE FROM planned_maintenance WHERE end_date < CURRENT_DATE - INTERVAL '7 days';
+```
 
 ### Current Index Usage (All Active)
 

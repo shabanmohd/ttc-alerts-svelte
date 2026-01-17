@@ -53,13 +53,14 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Previous Updates (Jan 17, 2026)
 
-| Component            | Change                                                                              | Status      |
-| -------------------- | ----------------------------------------------------------------------------------- | ----------- |
-| **poll-alerts v218** | Removed service_resumed_monitoring table and all logging code (analysis complete)   | ✅ Deployed |
-| **poll-alerts v217** | Set grace period to 3 polls (3 minutes with 1-min polling) based on monitoring data | ✅ Deployed |
-| **poll-alerts v216** | Auto-cleanup for cancellation alerts when TTC API removes them                      | ✅ Deployed |
-| **poll-alerts v215** | Scheduled closure cancellation alerts with green badge                              | ✅ Deployed |
-| **poll-alerts v214** | Changed polling frequency from 2 min to 1 min                                       | ✅ Deployed |
+| Component                    | Change                                                                              | Status      |
+| ---------------------------- | ----------------------------------------------------------------------------------- | ----------- |
+| **Database cleanup**         | Added retention policies for accuracy logs (30d), maintenance (7d after end)        | ✅ Deployed |
+| **poll-alerts v218**         | Removed service_resumed_monitoring table and all logging code (analysis complete)   | ✅ Deployed |
+| **poll-alerts v217**         | Set grace period to 3 polls (3 minutes with 1-min polling) based on monitoring data | ✅ Deployed |
+| **poll-alerts v216**         | Auto-cleanup for cancellation alerts when TTC API removes them                      | ✅ Deployed |
+| **poll-alerts v215**         | Scheduled closure cancellation alerts with green badge                              | ✅ Deployed |
+| **poll-alerts v214**         | Changed polling frequency from 2 min to 1 min                                       | ✅ Deployed |
 
 ### Previous Updates (Jan 16, 2026)
 
