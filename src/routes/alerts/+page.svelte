@@ -523,6 +523,21 @@
             alerts: ttcAlertsOnly,
             latestAlert: disruptionAlert || thread.latestAlert,
           };
+        })
+        // Sort: Scheduled closures first, then by recency
+        .sort((a, b) => {
+          const aIsScheduled = a.thread_id?.includes("scheduled_closure") || 
+            (a.categories as string[])?.includes("SCHEDULED_CLOSURE");
+          const bIsScheduled = b.thread_id?.includes("scheduled_closure") || 
+            (b.categories as string[])?.includes("SCHEDULED_CLOSURE");
+          
+          // Scheduled closures come first
+          if (aIsScheduled && !bIsScheduled) return -1;
+          if (!aIsScheduled && bIsScheduled) return 1;
+          
+          // Within same type, sort by most recent
+          return new Date(b.latestAlert?.created_at || 0).getTime() - 
+                 new Date(a.latestAlert?.created_at || 0).getTime();
         });
       return disruptions;
     }
