@@ -134,13 +134,13 @@ IF toronto_hour = 4 THEN ...
 
 ### 5. Route Stop Orders & Branches
 
-| Property                  | Value                                                   |
-| ------------------------- | ------------------------------------------------------- |
-| **Source**                | NextBus API                                             |
-| **Our Refresh Frequency** | Weekly (Sundays, 2:00 AM UTC / Sat 9 PM EST)            |
-| **Workflow**              | `.github/workflows/refresh-route-data.yml`              |
+| Property                  | Value                                                                                           |
+| ------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Source**                | NextBus API                                                                                     |
+| **Our Refresh Frequency** | Weekly (Sundays, 2:00 AM UTC / Sat 9 PM EST)                                                    |
+| **Workflow**              | `.github/workflows/refresh-route-data.yml`                                                      |
 | **Output Files**          | `static/data/ttc-route-stop-orders.json` (277KB), `static/data/ttc-route-branches.json` (512KB) |
-| **Loading Strategy**      | Lazy-loaded on-demand via `route-data.ts` service       |
+| **Loading Strategy**      | Lazy-loaded on-demand via `route-data.ts` service                                               |
 
 **What's included:**
 

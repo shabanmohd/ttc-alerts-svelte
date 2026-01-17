@@ -4,14 +4,14 @@
 
 Real-time Toronto Transit alerts with biometric authentication.
 
-| Stack      | Details                                                       |
-| ---------- | ------------------------------------------------------------- |
-| Frontend   | Svelte 5 + TypeScript + Tailwind + shadcn-svelte              |
-| Typography | Lexend (dyslexic-friendly) - self-hosted variable woff2 (68KB)|
-| Backend    | Supabase (DB, Edge Functions, Realtime)                       |
-| Auth       | Custom WebAuthn (displayName + biometrics + recovery codes)   |
-| Hosting    | Cloudflare Pages                                              |
-| Analytics  | Google Analytics 4 (G-SM5SYP463N) - deferred loading          |
+| Stack      | Details                                                        |
+| ---------- | -------------------------------------------------------------- |
+| Frontend   | Svelte 5 + TypeScript + Tailwind + shadcn-svelte               |
+| Typography | Lexend (dyslexic-friendly) - self-hosted variable woff2 (68KB) |
+| Backend    | Supabase (DB, Edge Functions, Realtime)                        |
+| Auth       | Custom WebAuthn (displayName + biometrics + recovery codes)    |
+| Hosting    | Cloudflare Pages                                               |
+| Analytics  | Google Analytics 4 (G-SM5SYP463N) - deferred loading           |
 
 📐 **Design System**: See [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) for colors, typography, spacing, and component patterns.
 
@@ -21,6 +21,8 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                           | Change                                                                             | Status       |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | ------------ |
+| **Admin pages removed**             | Deleted /admin/accuracy, /admin/train-alerts, /api/admin/* for security            | ✅ Deployed  |
+| **robots.txt improvements**         | Added /test-, /_app/ disallow, trailing slashes, removed /settings from sitemap   | ✅ Deployed  |
 | **Performance: Lazy-load GTFS**     | Route data (789KB) now lazy-loaded on-demand, bundle reduced from 1.4MB to 972KB   | ✅ Deployed  |
 | **route-data.ts service**           | New service for on-demand fetching of large GTFS JSON files with in-memory caching | ✅ Deployed  |
 | **stops-db.ts async**               | Functions now async to support lazy-loaded route data (getRouteBranches, etc.)     | ✅ Deployed  |
@@ -28,7 +30,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 | **Performance: Self-hosted font**   | Replaced Google Fonts with self-hosted Lexend woff2 (68KB), eliminates 2 requests  | ✅ Deployed  |
 | **Performance: GA deferred**        | GA4 script now loads after page load (100ms delay) to avoid render blocking        | ✅ Deployed  |
 | **Performance: Bundle analyzer**    | Added rollup-plugin-visualizer for bundle analysis (stats.html)                    | ✅ Deployed  |
-| **Performance: Font caching**       | Added 1-year immutable cache headers for /fonts/*                                  | ✅ Deployed  |
+| **Performance: Font caching**       | Added 1-year immutable cache headers for /fonts/\*                                 | ✅ Deployed  |
 | **Google Analytics**                | Added GA4 tag (G-SM5SYP463N) to app.html for site analytics                        | ✅ Deployed  |
 | **poll-alerts v215**                | Fix: cleanup monitoring entry when alerts reappear (prevents false "pending" data) | ✅ Deployed  |
 | **poll-alerts v214**                | Add header_text dedup to prevent alert ID collisions (Woodbine/Bay station fix)    | ✅ Deployed  |
@@ -261,7 +263,6 @@ All alerts now come from **TTC API exclusively**. Bluesky integration has been r
 | `settings/+page.svelte`       | ✅     | User settings (noindex)                               |
 | `preferences/+page.svelte`    | ✅     | Route/mode preferences                                |
 | `auth/callback/+page.svelte`  | ✅     | Auth callback handler                                 |
-| `admin/accuracy/+page.svelte` | ✅     | Alert accuracy monitoring                             |
 
 ### Backend (`supabase/`)
 
@@ -300,15 +301,15 @@ All alerts now come from **TTC API exclusively**. Bluesky integration has been r
 
 ### Static (`static/`)
 
-| File                             | Status | Purpose                                                    |
-| -------------------------------- | ------ | ---------------------------------------------------------- |
-| `manifest.json`                  | ✅     | PWA manifest                                               |
-| `sw.js`                          | ✅     | Service worker                                             |
-| `icons/*`                        | ✅     | All PWA icons (72-512px)                                   |
-| `fonts/Lexend.woff2`             | ✅     | Self-hosted Lexend variable font (68KB)                    |
-| `data/ttc-route-branches.json`   | ✅     | Route branch/stop data (512KB, lazy-loaded)                |
-| `data/ttc-route-stop-orders.json`| ✅     | Stop sequence data (277KB, lazy-loaded)                    |
-| `test-badge-styles.html`         | ✅     | Reference page for all alert badge styles/colors           |
+| File                              | Status | Purpose                                          |
+| --------------------------------- | ------ | ------------------------------------------------ |
+| `manifest.json`                   | ✅     | PWA manifest                                     |
+| `sw.js`                           | ✅     | Service worker                                   |
+| `icons/*`                         | ✅     | All PWA icons (72-512px)                         |
+| `fonts/Lexend.woff2`              | ✅     | Self-hosted Lexend variable font (68KB)          |
+| `data/ttc-route-branches.json`    | ✅     | Route branch/stop data (512KB, lazy-loaded)      |
+| `data/ttc-route-stop-orders.json` | ✅     | Stop sequence data (277KB, lazy-loaded)          |
+| `test-badge-styles.html`          | ✅     | Reference page for all alert badge styles/colors |
 
 ### Configuration (`src/`)
 
@@ -470,11 +471,7 @@ SERVICE_RESUMED alerts from Bluesky weren't properly showing in "Recently Resolv
 - ✅ `monitor-alert-accuracy` Edge Function compares TTC API vs Supabase data
 - ✅ pg_cron scheduler runs every 5 minutes
 - ✅ Database tables: `alert_accuracy_logs`, `alert_accuracy_reports`
-- ✅ Admin dashboard at `/admin/accuracy` with:
-  - Live accuracy metrics (completeness, precision)
-  - 24-hour trend chart
-  - Recent checks table
-  - Missing/extra alerts breakdown
+- ❌ Admin dashboard at `/admin/accuracy` (removed Jan 2026 for security)
 - ✅ Jaccard similarity algorithm for fuzzy alert matching
 
 ### Dec 4, 2025 - Lexend Font + Typography Hierarchy

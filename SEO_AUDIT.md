@@ -184,7 +184,7 @@ The rideTO PWA has undergone significant SEO improvements. While SSR remains dis
 
 ### Issue M5: robots.txt Sitemap Reference ✅ RESOLVED
 
-**Status:** ✅ Implemented  
+**Status:** ✅ Implemented (Updated Jan 2026)  
 **Location:** [static/robots.txt](static/robots.txt)
 
 **Current Content:**
@@ -194,11 +194,18 @@ The rideTO PWA has undergone significant SEO improvements. While SSR remains dis
 User-agent: *
 Allow: /
 
+# Admin pages - do not index (internal tools only)
+Disallow: /admin/
+
 # Testing pages - do not index
-Disallow: /alerts-v3
+Disallow: /alerts-v3/
+Disallow: /test-
 
 # User-specific pages - do not index
-Disallow: /settings
+Disallow: /settings/
+
+# Build artifacts - do not index
+Disallow: /_app/
 
 # Sitemap
 Sitemap: https://rideto.ca/sitemap.xml
