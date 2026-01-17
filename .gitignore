@@ -26,3 +26,6 @@ vite.config.ts.timestamp-*
 
 # GTFS raw data (processed to JSON)
 scripts/gtfs/
+
+# Bundle analyzer output
+stats.html

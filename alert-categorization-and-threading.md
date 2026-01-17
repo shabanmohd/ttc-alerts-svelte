@@ -835,10 +835,12 @@ const MAX_MISSED_POLLS = 2;
 ### Alert Reappearance Handling (v215)
 
 **Problem (discovered Jan 17, 2026):** When alerts temporarily disappear from the TTC API then reappear:
+
 - The `service_resumed_monitoring` entry was NOT cleaned up
 - This caused false "pending" counts in the monitoring dashboard
 
 **Solution:** When an alert reappears in the TTC API:
+
 1. Reset `missed_polls` and `pending_since` in `incident_threads` (existing behavior)
 2. **DELETE the pending monitoring entry** from `service_resumed_monitoring` (v215 fix)
 
@@ -847,20 +849,20 @@ const MAX_MISSED_POLLS = 2;
   // Alert was briefly missing but came back - reset and cleanup monitoring
   await supabase
     .from('incident_threads')
-    .update({ 
+    .update({
       missed_polls: 0,
       pending_since: null,
-      updated_at: new Date().toISOString() 
+      updated_at: new Date().toISOString()
     })
     .eq('thread_id', threadId);
-  
+
   // Cleanup monitoring entry - alert came back before it resolved
   await supabase
     .from('service_resumed_monitoring')
     .delete()
     .eq('thread_id', threadId)
     .is('service_resumed_at', null);
-  
+
   console.log(`Thread ${threadId} reappeared - cleaned up monitoring entry`);
 }
 ```

@@ -4,13 +4,25 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SM5SYP463N"></script>
+    <!-- Google tag (gtag.js) - deferred loading to avoid render blocking -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      // Pre-initialize gtag before script loads
       gtag('js', new Date());
       gtag('config', 'G-SM5SYP463N');
+      
+      // Load GA script after page load to avoid render blocking
+      if (typeof window !== 'undefined') {
+        window.addEventListener('load', function() {
+          setTimeout(function() {
+            var script = document.createElement('script');
+            script.src = 'https://www.googletagmanager.com/gtag/js?id=G-SM5SYP463N';
+            script.async = true;
+            document.head.appendChild(script);
+          }, 100); // Small delay to ensure page is fully rendered
+        });
+      }
     </script>
     
     <!-- DNS Prefetch for faster resource loading -->
@@ -39,12 +51,9 @@
     <!-- Preload logo -->
     <link rel="preload" href="/LOGO.svg" as="image" type="image/svg+xml" />
     
-    <!-- Google Fonts - Lexend (dyslexic-friendly) - optimized loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300..700&display=swap">
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300..700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300..700&display=swap" rel="stylesheet"></noscript>
+    <!-- Self-hosted Lexend font (dyslexic-friendly) - eliminates Google Fonts requests -->
+    <link rel="preload" href="/fonts/lexend-variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/fonts/fonts.css">
     
     <!-- Blocking language script to set lang from saved preference -->
     <script>
