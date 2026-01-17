@@ -4,7 +4,7 @@
 **PostgreSQL Version:** 17.6  
 **Plan:** Supabase Free Tier (500 MB limit)  
 **Analysis Tool:** Supabase CLI v2.67.1  
-**Last Updated:** January 16, 2026 - **Added service_resumed_monitoring table**
+**Last Updated:** January 17, 2026 - **Removed service_resumed_monitoring table (analysis complete)**
 
 ---
 
@@ -45,39 +45,17 @@ Fixed database functions with empty `search_path` that caused alerts not to link
 
 See [alert-categorization-and-threading.md](alert-categorization-and-threading.md) Troubleshooting section for details.
 
-### Current Table Sizes (January 16, 2026)
+### Current Table Sizes (January 17, 2026)
 
-| Table                        | Total Size  | Rows | Notes                  |
-| ---------------------------- | ----------- | ---- | ---------------------- |
-| `alert_cache`                | 3.5 MB      | 196  | Main alerts            |
-| `incident_threads`           | 816 kB      | 63   | Threading              |
-| `service_resumed_monitoring` | ~16 kB      | -    | Monitoring (temporary) |
-| `planned_maintenance`        | 96 kB       | 13   | Scheduled closures     |
-| `gtfs_routes`                | 80 kB       | 20   | Route data             |
-| `notification_history`       | 72 kB       | 0    | Push notifications     |
-| `gtfs_stations`              | 16 kB       | 0    | Station data           |
-| **Total App Tables**         | **~4.6 MB** |      |                        |
-
-### New Table: service_resumed_monitoring (January 16, 2026)
-
-Temporary monitoring table to track when service resumed alerts appear:
-
-```sql
-CREATE TABLE service_resumed_monitoring (
-  id SERIAL PRIMARY KEY,
-  thread_id TEXT NOT NULL,
-  route TEXT,
-  disruption_removed_at TIMESTAMPTZ NOT NULL,
-  service_resumed_at TIMESTAMPTZ,
-  polls_since_removal INT DEFAULT 0,
-  service_resumed_text TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
-**Purpose:** Analyze optimal grace period for waiting for service resumed alerts. Data helps determine if 2 polls is sufficient or if more time is needed.
-
-**Dashboard:** `test-service-resumed-monitoring.html`
+| Table                   | Total Size  | Rows | Notes              |
+| ----------------------- | ----------- | ---- | ------------------ |
+| `alert_cache`           | 3.5 MB      | 196  | Main alerts        |
+| `incident_threads`      | 816 kB      | 63   | Threading          |
+| `planned_maintenance`   | 96 kB       | 13   | Scheduled closures |
+| `gtfs_routes`           | 80 kB       | 20   | Route data         |
+| `notification_history`  | 72 kB       | 0    | Push notifications |
+| `gtfs_stations`         | 16 kB       | 0    | Station data       |
+| **Total App Tables**    | **~4.5 MB** |      |                    |
 
 ### Current Index Usage (All Active)
 

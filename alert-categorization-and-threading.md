@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 6.2  
+**Version:** 6.3  
 **Date:** January 17, 2026  
-**poll-alerts Version:** 216  
+**poll-alerts Version:** 218  
 **Frontend Version:** 152 (Elevator threading disabled in UI)  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 2 (Auto-cleanup stale "back in service" alerts)  
@@ -839,7 +839,7 @@ let recentlyResolved = $derived.by(() => {
 
 ## Service Resumed Grace Period
 
-### Overview (v209-v217)
+### Overview (v209-v218)
 
 When a disruption alert disappears from the TTC API, the system waits for a **grace period** before hiding the thread, allowing time for a corresponding SERVICE_RESUMED alert to appear.
 

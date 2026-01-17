@@ -39,7 +39,7 @@ Real-time Toronto Transit Commission service alerts progressive web app.
 | Typography   | Lexend (dyslexic-friendly)                           |
 | Backend      | Supabase (PostgreSQL + Edge Functions + Realtime)    |
 | Hosting      | Cloudflare Pages                                     |
-| Data Sources | Bluesky @ttcalerts, TTC Live API, TTC NTAS           |
+| Data Sources | TTC Live Alerts API, TTC GTFS                        |
 
 ---
 

@@ -53,13 +53,13 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Previous Updates (Jan 17, 2026)
 
-| Component                                | Change                                                                                 | Status       |
-| ---------------------------------------- | -------------------------------------------------------------------------------------- | ------------ |
-| **poll-alerts v218**                     | Removed service_resumed_monitoring table and all logging code (analysis complete)      | ✅ Deployed  |
-| **poll-alerts v217**                     | Set grace period to 3 polls (3 minutes with 1-min polling) based on monitoring data    | ✅ Deployed  |
-| **poll-alerts v216**                     | Auto-cleanup for cancellation alerts when TTC API removes them                         | ✅ Deployed  |
-| **poll-alerts v215**                     | Scheduled closure cancellation alerts with green badge                                 | ✅ Deployed  |
-| **poll-alerts v214**                     | Changed polling frequency from 2 min to 1 min                                          | ✅ Deployed  |
+| Component            | Change                                                                              | Status      |
+| -------------------- | ----------------------------------------------------------------------------------- | ----------- |
+| **poll-alerts v218** | Removed service_resumed_monitoring table and all logging code (analysis complete)   | ✅ Deployed |
+| **poll-alerts v217** | Set grace period to 3 polls (3 minutes with 1-min polling) based on monitoring data | ✅ Deployed |
+| **poll-alerts v216** | Auto-cleanup for cancellation alerts when TTC API removes them                      | ✅ Deployed |
+| **poll-alerts v215** | Scheduled closure cancellation alerts with green badge                              | ✅ Deployed |
+| **poll-alerts v214** | Changed polling frequency from 2 min to 1 min                                       | ✅ Deployed |
 
 ### Previous Updates (Jan 16, 2026)
 
@@ -415,10 +415,10 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 | Function               | Version | Status | Purpose                                                 |
 | ---------------------- | ------- | ------ | ------------------------------------------------------- |
-| poll-alerts            | v150    | ✅     | Main alert fetcher (Bluesky-only architecture)          |
+| poll-alerts            | v218    | ✅     | Main alert fetcher (TTC-API-only architecture)          |
 | verify-elevators       | v2      | ✅     | Validates elevator data, auto-cleanup stale alerts      |
 | verify-rsz             | v1      | ✅     | Validates RSZ data against TTC website                  |
-| verify-disruptions     | v2      | ⚠️     | Validates disruptions (may need Bluesky-only update)    |
+| verify-disruptions     | v2      | ✅     | Validates disruptions against TTC API                   |
 | scrape-rsz             | v4      | ✅     | Alternative RSZ source from TTC website                 |
 | scrape-maintenance     | v3      | ✅     | Fetches planned maintenance from TTC website (Sitecore) |
 | db-cleanup             | v1      | ✅     | Database cleanup job (4 AM Toronto time)                |
