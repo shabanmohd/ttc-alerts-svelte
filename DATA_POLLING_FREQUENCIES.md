@@ -22,10 +22,10 @@ All time-related logic in this app uses **Eastern Time (America/Toronto)** for c
 
 ### Cron Jobs (pg_cron in Supabase)
 
-| Type                           | Timezone Handling                                        |
-| ------------------------------ | -------------------------------------------------------- |
-| Interval-based (`*/2 * * * *`) | Timezone-agnostic (runs every N minutes from now)        |
-| Fixed-time (cleanup at 4 AM)   | DST-aware wrapper using `AT TIME ZONE 'America/Toronto'` |
+| Type                         | Timezone Handling                                        |
+| ---------------------------- | -------------------------------------------------------- |
+| Interval-based (`* * * * *`) | Timezone-agnostic (runs every N minutes from now)        |
+| Fixed-time (cleanup at 4 AM) | DST-aware wrapper using `AT TIME ZONE 'America/Toronto'` |
 
 **DST-aware cleanup example:**
 
@@ -221,7 +221,7 @@ IF toronto_hour = 4 THEN ...
 
 | Workflow                   | Schedule                             | EST Equivalent          | Output                                |
 | -------------------------- | ------------------------------------ | ----------------------- | ------------------------------------- |
-| **Alert Polling**          | Every 2 min (pg_cron)                | Every 2 min             | Supabase `alert_cache` table          |
+| **Alert Polling**          | Every 1 min (pg_cron)                | Every 1 min             | Supabase `alert_cache` table          |
 | **Subway Closures Scrape** | Every 6 hours (pg_cron)              | Every 6 hours           | Supabase `planned_maintenance` table  |
 | **Elevator Verification**  | Every 15 min (pg_cron)               | Every 15 min            | Supabase `incident_threads` table     |
 | **RSZ Verification**       | Every 15 min (pg_cron, +7min offset) | Every 15 min            | Supabase `incident_threads` table     |

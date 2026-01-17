@@ -420,7 +420,7 @@ For local development, use `localhost` and `http://localhost:5173`.
 
 | Job Name                 | Schedule           | EST Equivalent        | Function           | Status      |
 | ------------------------ | ------------------ | --------------------- | ------------------ | ----------- |
-| poll-alerts-2min         | `*/2 * * * *`      | Every 2 min           | poll-alerts        | ✅ Active   |
+| poll-alerts-cron         | `* * * * *`        | Every 1 min           | poll-alerts        | ✅ Active   |
 | verify-elevators-15min   | `*/15 * * * *`     | Every 15 min          | verify-elevators   | ✅ Active   |
 | verify-rsz-15min         | `7,22,37,52 * * *` | Every 15 min (offset) | verify-rsz         | ✅ Active   |
 | verify-disruptions-15min | `*/15 * * * *`     | Every 15 min          | verify-disruptions | ✅ Active   |

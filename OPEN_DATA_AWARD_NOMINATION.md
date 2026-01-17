@@ -40,7 +40,7 @@ Raw transit data is messy. rideTO addresses this through:
 
 ### Impact
 
-rideTO serves Toronto's 1.7 million daily TTC riders with real-time alerts polled every 2 minutes, live arrival predictions, and bilingual support (English/French). A comprehensive routes directory displays all TTC routes with their variations and ordered stops—users can save favorites and find nearby stops using location services. No account required. No personal data collected.
+rideTO serves Toronto's 1.7 million daily TTC riders with real-time alerts polled every minute, live arrival predictions, and bilingual support (English/French). A comprehensive routes directory displays all TTC routes with their variations and ordered stops—users can save favorites and find nearby stops using location services. No account required. No personal data collected.
 
 ### Commitment and Representation
 
