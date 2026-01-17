@@ -703,7 +703,6 @@
           label: key, // Cardinal direction: Northbound, Southbound, etc.
         }) as DirectionItem
     );
-    console.log("[DEBUG PAGE] directionItems:", items);
     return items;
   });
 
@@ -764,33 +763,15 @@
    * Load stops for current route
    */
   async function loadRouteStops() {
-    console.log("[DEBUG] loadRouteStops() called for route:", routeId);
     isLoadingStops = true;
     stopsError = null;
 
     try {
       // Initialize stops database
-      console.log("[DEBUG] Calling initStopsDB()...");
       await initStopsDB();
-      console.log("[DEBUG] initStopsDB() complete");
 
       // Get stops grouped by direction
-      console.log("[DEBUG] Calling getStopsByRouteGroupedByDirection()...");
       directionGroups = await getStopsByRouteGroupedByDirection(routeId);
-      console.log(
-        "[DEBUG] getStopsByRouteGroupedByDirection() returned:",
-        directionGroups.length,
-        "groups"
-      );
-      if (directionGroups.length > 0) {
-        console.log(
-          "[DEBUG] First group:",
-          directionGroups[0].direction,
-          "with",
-          directionGroups[0].stops.length,
-          "stops"
-        );
-      }
 
       // Load branch data for this route
       routeBranchData = getRouteBranches(routeId);

@@ -524,11 +524,6 @@
             latestAlert: disruptionAlert || thread.latestAlert,
           };
         });
-      console.log(
-        "=== DEBUG: activeAlerts (disruptions - TTC API) ===",
-        disruptions.length,
-        disruptions.map((t) => t.latestAlert?.alert_id)
-      );
       return disruptions;
     }
 
@@ -544,11 +539,6 @@
     if (selectedCategory !== "delays") return [];
     const rsz = $threadsWithAlerts.filter(
       (t) => !t.is_resolved && !t.is_hidden && isRSZAlert(t)
-    );
-    console.log(
-      "=== DEBUG: rszAlerts ===",
-      rsz.length,
-      rsz.map((t) => t.title)
     );
     return rsz;
   });
@@ -591,20 +581,6 @@
     const active = $threadsWithAlerts.filter(
       (t) => !t.is_resolved && !t.is_hidden
     );
-
-    // Debug: log all active threads to understand categorization
-    console.log("=== DEBUG: Active threads ===");
-    active.forEach((t) => {
-      const categories = (t.categories as string[]) || [];
-      const severity = getSeverityCategory(
-        categories,
-        t.latestAlert?.effect ?? undefined,
-        t.latestAlert?.header_text ?? undefined
-      );
-      console.log(
-        `Thread: ${t.title?.slice(0, 50)}... | Categories: ${categories.join(",")} | Effect: ${t.latestAlert?.effect} | Severity: ${severity}`
-      );
-    });
 
     return {
       // Disruptions: Count TTC API disruption alerts (ttc-alert-*, ttc-scheduled-*)
