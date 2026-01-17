@@ -11,7 +11,7 @@ const corsHeaders = {
 const TTC_LIVE_ALERTS_API = 'https://alerts.ttc.ca/api/alerts/live-alerts';
 
 // Version for debugging
-const VERSION = '212'; // Auto-revert to 2 polls after monitoring period
+const VERSION = '214'; // Revert ID generation, add header_text dedup
 
 // Helper: Generate MD5 hash for thread_hash
 async function generateMd5Hash(input: string): Promise<string> {
@@ -371,14 +371,18 @@ async function fetchTtcData(): Promise<TtcAlertData> {
 }
 
 // Generate a unique alert ID for TTC API alerts
+// Note: IDs can collide for similar alerts (e.g., "not stopping at Bay" vs "Woodbine")
+// The dedup logic in processDisruptionAlerts checks header_text to prevent true duplicates
 function generateTtcAlertId(type: string, route: string, text: string, stopStart?: string, stopEnd?: string): string {
   let idBase = `ttc-${type}-${route}`;
   
   if (stopStart && stopEnd) {
+    // RSZ alerts use stop names for uniqueness
     const cleanStart = stopStart.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 15);
     const cleanEnd = stopEnd.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 15);
     idBase += `-${cleanStart}-${cleanEnd}`;
   } else {
+    // Standard text-based ID
     const cleanText = text.substring(0, 50).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
     idBase += `-${cleanText}`;
   }
@@ -463,20 +467,40 @@ async function processDisruptionAlerts(
     
     console.log(`Processing disruption: route=${route}, alertId=${alertId}`);
     
-    // Check if this alert already exists (use maybeSingle to avoid error on no rows)
-    const { data: existing, error: existingError } = await supabase
+    // Check if this alert already exists by ID
+    const { data: existingById, error: existingByIdError } = await supabase
       .from('alert_cache')
       .select('alert_id')
       .eq('alert_id', alertId)
       .maybeSingle();
     
-    if (existingError) {
-      console.error('Error checking existing disruption alert:', existingError);
+    if (existingByIdError) {
+      console.error('Error checking existing disruption alert by ID:', existingByIdError);
       continue;
     }
     
-    if (existing) {
-      console.log(`Disruption alert ${alertId} already exists, skipping`);
+    if (existingById) {
+      console.log(`Disruption alert ${alertId} already exists (by ID), skipping`);
+      continue;
+    }
+    
+    // v214: Also check by exact header_text to prevent ID collision duplicates
+    // This catches cases like "not stopping at Bay" vs "not stopping at Woodbine"
+    // which would otherwise generate the same truncated ID
+    const { data: existingByText, error: existingByTextError } = await supabase
+      .from('alert_cache')
+      .select('alert_id, header_text')
+      .eq('header_text', headerText.substring(0, 500))
+      .eq('is_latest', true)
+      .maybeSingle();
+    
+    if (existingByTextError) {
+      console.error('Error checking existing disruption alert by text:', existingByTextError);
+      // Don't fail - just proceed with ID-based logic
+    } else if (existingByText) {
+      console.log(`Disruption alert with same header_text already exists as ${existingByText.alert_id}, skipping ${alertId}`);
+      // Add the existing alert ID to current set so it doesn't get marked as resolved
+      currentAlertIds.add(existingByText.alert_id);
       continue;
     }
     
