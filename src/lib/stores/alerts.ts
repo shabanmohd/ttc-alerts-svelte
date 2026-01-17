@@ -225,16 +225,22 @@ export const threadsWithAlerts = derived(
         const date = new Date(thread.latestAlert.created_at);
         if (isNaN(date.getTime())) return false;
         // Exclude planned service disruptions (handled by maintenance widget)
+        // EXCEPTION: SCHEDULED_CLOSURE from TTC API should be shown in disruptions tab
         const categories = extractCategories(thread.categories) || 
                            extractCategories(thread.latestAlert?.categories) || [];
-        if (categories.includes('PLANNED_SERVICE_DISRUPTION')) return false;
-        if (categories.includes('PLANNED')) return false;
-        // Also check effect field for planned alerts
-        const effect = thread.latestAlert?.effect?.toUpperCase() || '';
-        if (effect.includes('PLANNED')) return false;
-        // Check header text for planned maintenance keywords
-        const headerText = thread.latestAlert?.header_text?.toLowerCase() || '';
-        if (headerText.includes('due to planned') || headerText.includes('planned track work')) return false;
+        const isScheduledClosure = categories.includes('SCHEDULED_CLOSURE');
+        
+        // Skip planned exclusions for SCHEDULED_CLOSURE - these should show in disruptions
+        if (!isScheduledClosure) {
+          if (categories.includes('PLANNED_SERVICE_DISRUPTION')) return false;
+          if (categories.includes('PLANNED')) return false;
+          // Also check effect field for planned alerts
+          const effect = thread.latestAlert?.effect?.toUpperCase() || '';
+          if (effect.includes('PLANNED')) return false;
+          // Check header text for planned maintenance keywords
+          const headerText = thread.latestAlert?.header_text?.toLowerCase() || '';
+          if (headerText.includes('due to planned') || headerText.includes('planned track work')) return false;
+        }
         return true;
       })
       .sort((a, b) => 

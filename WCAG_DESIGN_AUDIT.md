@@ -14,58 +14,66 @@ This audit identifies accessibility issues and their resolution status. The ride
 
 ### Overall Assessment: ✅ MOSTLY COMPLIANT (~90% AA)
 
-| Category                   | Status | Score | Notes                                   |
-| -------------------------- | ------ | ----- | --------------------------------------- |
-| **Color Contrast**         | ✅     | 92%   | All status colors meet 4.5:1           |
-| **Animation/Motion**       | ✅     | 95%   | prefers-reduced-motion supported       |
-| **Typography**             | ✅     | 95%   | Lexend font (dyslexic-friendly)        |
-| **Keyboard Navigation**    | ✅     | 90%   | All interactive elements accessible    |
-| **Focus States**           | ✅     | 95%   | Visible focus rings, scroll-padding    |
-| **ARIA/Semantic HTML**     | ✅     | 90%   | Live regions, proper roles             |
-| **Touch Targets**          | ✅     | 95%   | Most targets ≥24px minimum             |
-| **Screen Reader Support**  | ⚠️     | 85%   | Minor improvements needed              |
-| **WCAG 2.2 New Criteria**  | ✅     | 95%   | All new criteria addressed             |
+| Category                  | Status | Score | Notes                               |
+| ------------------------- | ------ | ----- | ----------------------------------- |
+| **Color Contrast**        | ✅     | 92%   | All status colors meet 4.5:1        |
+| **Animation/Motion**      | ✅     | 95%   | prefers-reduced-motion supported    |
+| **Typography**            | ✅     | 95%   | Lexend font (dyslexic-friendly)     |
+| **Keyboard Navigation**   | ✅     | 90%   | All interactive elements accessible |
+| **Focus States**          | ✅     | 95%   | Visible focus rings, scroll-padding |
+| **ARIA/Semantic HTML**    | ✅     | 90%   | Live regions, proper roles          |
+| **Touch Targets**         | ✅     | 95%   | Most targets ≥24px minimum          |
+| **Screen Reader Support** | ⚠️     | 85%   | Minor improvements needed           |
+| **WCAG 2.2 New Criteria** | ✅     | 95%   | All new criteria addressed          |
 
 ---
 
 ## ✅ Accessibility Strengths
 
 ### 1. Skip-to-Content Link ✅
+
 - Implemented as first focusable element
 - Targets `#main-content` with proper `tabindex="-1"`
 - Styled to appear on focus
 
 ### 2. Semantic HTML ✅
+
 - Proper heading hierarchy with visually-hidden `<h1>` on key pages
 - Navigation uses `<nav>` elements
 - Tab interfaces use proper ARIA roles
 
 ### 3. ARIA Implementation ✅
+
 - Tab panels: `role="tablist"`, `role="tab"`, `aria-selected`
 - Live regions: `aria-live="polite"` for dynamic alert counts
 - Icons: `aria-hidden="true"` on decorative elements
 - Buttons/links: `aria-label` where text not visible
 
 ### 4. Focus Management ✅
+
 - Visible focus rings on all interactive elements
 - `scroll-padding-top: 5rem` prevents header obscuring focus
 - `scroll-padding-bottom: 6rem` for bottom nav
 
 ### 5. Color Contrast ✅
+
 - All status colors designed for WCAG AA (4.5:1+)
 - Mobile nav active state: `hsl(217 91% 67%)` passes AA
 - Dark mode colors maintain proper contrast
 
 ### 6. Reduced Motion Support ✅
+
 - CSS: `@media (prefers-reduced-motion: reduce)` implemented
 - JS: Accessibility store respects system preferences
 - User can override via settings page
 
 ### 7. Dyslexic-Friendly Typography ✅
+
 - Lexend variable font (designed for improved readability)
 - Text scale options: normal (1x), medium (1.15x), large (1.3x)
 
 ### 8. Touch Targets ✅
+
 - Navigation items: 48px+ height
 - Dialog close buttons: 36x36px minimum
 - Buttons/links meet WCAG 2.5.8 (24px minimum)
@@ -359,8 +367,8 @@ Note: These are improvements for optimal accessibility, not blocking issues.
 
 **✅ Fixed Locations (aria-hidden present):**
 
-| File                      | Status       |
-| ------------------------- | ------------ |
+| File                      | Status               |
+| ------------------------- | -------------------- |
 | CategoryFilterV3.svelte   | ✅ Has `aria-hidden` |
 | PlannedContent.svelte     | ✅ Has `aria-hidden` |
 | settings/+page.svelte     | ✅ Has `aria-hidden` |
@@ -370,10 +378,10 @@ Note: These are improvements for optimal accessibility, not blocking issues.
 
 **⚠️ Still Needs aria-hidden:**
 
-| File                                                                            | Icons                              |
-| ------------------------------------------------------------------------------- | ---------------------------------- |
+| File                                                                            | Icons                                 |
+| ------------------------------------------------------------------------------- | ------------------------------------- |
 | [MobileBottomNav.svelte](src/lib/components/layout/MobileBottomNav.svelte#L191) | `<Home />`, `<AlertTriangle />`, etc. |
-| [Sidebar.svelte](src/lib/components/layout/Sidebar.svelte#L69-L93)              | All nav icons                      |
+| [Sidebar.svelte](src/lib/components/layout/Sidebar.svelte#L69-L93)              | All nav icons                         |
 
 **Recommended Fix:**
 
@@ -448,6 +456,7 @@ Note: These are improvements for optimal accessibility, not blocking issues.
 ```
 
 **What's Working:**
+
 - ✅ `role="tablist"` on container
 - ✅ `role="tab"` on buttons
 - ✅ `aria-selected` toggles correctly
@@ -487,6 +496,7 @@ Note: These are improvements for optimal accessibility, not blocking issues.
 - [FeatureRequestDialog.svelte](src/lib/components/dialogs/FeatureRequestDialog.svelte)
 
 **Current Implementation:**
+
 - Visual character counts and validation messages work
 - Submit button disabled when invalid (prevents errors)
 
@@ -524,13 +534,13 @@ Note: These are improvements for optimal accessibility, not blocking issues.
 
 **Core Colors (All Pass 4.5:1):**
 
-| Element                   | Contrast | Status |
-| ------------------------- | -------- | ------ |
-| Body text (foreground)    | ~14:1    | ✅     |
-| Card text                 | ~12:1    | ✅     |
-| Link text                 | ~8:1     | ✅     |
-| Button text               | ~7:1     | ✅     |
-| muted-foreground          | ~5.5:1   | ✅     |
+| Element                | Contrast | Status |
+| ---------------------- | -------- | ------ |
+| Body text (foreground) | ~14:1    | ✅     |
+| Card text              | ~12:1    | ✅     |
+| Link text              | ~8:1     | ✅     |
+| Button text            | ~7:1     | ✅     |
+| muted-foreground       | ~5.5:1   | ✅     |
 
 **Lower Priority Patterns:**
 
@@ -665,28 +675,28 @@ The following are **enhancement opportunities** rather than compliance blockers:
 
 ### Lower Priority Enhancements
 
-| File                          | Enhancement         | Effort | Impact |
-| ----------------------------- | ------------------- | ------ | ------ |
-| `MobileBottomNav.svelte`      | Add `aria-current`  | Low    | Minor  |
-| `MobileBottomNav.svelte`      | Add `aria-hidden` to icons | Low | Minor |
-| `Sidebar.svelte`              | Add `aria-current`  | Low    | Minor  |
-| `RouteSearch.svelte`          | Add `aria-activedescendant` | Low | Minor |
-| `alerts/+page.svelte`         | Add `aria-controls` to tabs | Medium | Minor |
-| `ReportIssueDialog.svelte`    | Link error messages | Low    | Minor  |
+| File                       | Enhancement                 | Effort | Impact |
+| -------------------------- | --------------------------- | ------ | ------ |
+| `MobileBottomNav.svelte`   | Add `aria-current`          | Low    | Minor  |
+| `MobileBottomNav.svelte`   | Add `aria-hidden` to icons  | Low    | Minor  |
+| `Sidebar.svelte`           | Add `aria-current`          | Low    | Minor  |
+| `RouteSearch.svelte`       | Add `aria-activedescendant` | Low    | Minor  |
+| `alerts/+page.svelte`      | Add `aria-controls` to tabs | Medium | Minor  |
+| `ReportIssueDialog.svelte` | Link error messages         | Low    | Minor  |
 
 ### Already Well-Implemented ✅
 
-| Feature                      | Status     |
-| ---------------------------- | ---------- |
-| Skip-to-content link         | ✅ Present |
-| Reduced motion support       | ✅ Working |
+| Feature                      | Status           |
+| ---------------------------- | ---------------- |
+| Skip-to-content link         | ✅ Present       |
+| Reduced motion support       | ✅ Working       |
 | Color contrast (main colors) | ✅ Meeting 4.5:1 |
-| Keyboard navigation          | ✅ Functional |
-| ARIA live regions            | ✅ Implemented |
-| Focus management             | ✅ Visible ring |
-| Scroll-padding for focus     | ✅ Configured |
+| Keyboard navigation          | ✅ Functional    |
+| ARIA live regions            | ✅ Implemented   |
+| Focus management             | ✅ Visible ring  |
+| Scroll-padding for focus     | ✅ Configured    |
 | Form accessibility           | ✅ Labels linked |
-| Language support             | ✅ Dynamic lang |
+| Language support             | ✅ Dynamic lang  |
 
 ---
 
@@ -880,7 +890,11 @@ The app has a comprehensive animation library in `layout.css` (lines 1634-1850):
 Lexend (dyslexic-friendly) is consistently used:
 
 ```css
-font-family: "Lexend", system-ui, -apple-system, sans-serif;
+font-family:
+  "Lexend",
+  system-ui,
+  -apple-system,
+  sans-serif;
 ```
 
 ### ✅ COMPLIANT: Text Scaling Support
@@ -1101,27 +1115,27 @@ The following criteria were added in WCAG 2.2 (October 2023). This section docum
 
 ### Level A Criteria
 
-| Criterion | Name | Status | Notes |
-|-----------|------|--------|-------|
-| 3.2.6 | Consistent Help | ✅ PASS | Help link consistent in header menu and /help page |
-| 3.3.7 | Redundant Entry | ✅ N/A | No multi-step forms requiring repeated data entry |
+| Criterion | Name            | Status  | Notes                                              |
+| --------- | --------------- | ------- | -------------------------------------------------- |
+| 3.2.6     | Consistent Help | ✅ PASS | Help link consistent in header menu and /help page |
+| 3.3.7     | Redundant Entry | ✅ N/A  | No multi-step forms requiring repeated data entry  |
 
 ### Level AA Criteria
 
-| Criterion | Name | Status | Notes |
-|-----------|------|--------|-------|
-| 2.4.11 | Focus Not Obscured (Minimum) | ✅ PASS | `scroll-padding-top: 5rem` prevents header obscuring focus |
-| 2.5.7 | Dragging Movements | ✅ PASS | No drag-and-drop interactions; all editing uses buttons |
-| 2.5.8 | Target Size (Minimum) | ✅ PASS | Most targets ≥24px; buttons ≥32px |
-| 3.3.8 | Accessible Authentication (Minimum) | ✅ PASS | Uses Cloudflare Turnstile; no cognitive tests |
+| Criterion | Name                                | Status  | Notes                                                      |
+| --------- | ----------------------------------- | ------- | ---------------------------------------------------------- |
+| 2.4.11    | Focus Not Obscured (Minimum)        | ✅ PASS | `scroll-padding-top: 5rem` prevents header obscuring focus |
+| 2.5.7     | Dragging Movements                  | ✅ PASS | No drag-and-drop interactions; all editing uses buttons    |
+| 2.5.8     | Target Size (Minimum)               | ✅ PASS | Most targets ≥24px; buttons ≥32px                          |
+| 3.3.8     | Accessible Authentication (Minimum) | ✅ PASS | Uses Cloudflare Turnstile; no cognitive tests              |
 
 ### Level AAA Criteria (Not Required, But Documented)
 
-| Criterion | Name | Status | Notes |
-|-----------|------|--------|-------|
-| 2.4.12 | Focus Not Obscured (Enhanced) | ⚠️ PARTIAL | Sticky elements may partially obscure focus |
-| 2.4.13 | Focus Appearance | ✅ PASS | Visible focus rings with 3px ring |
-| 3.3.9 | Accessible Authentication (Enhanced) | ✅ N/A | No cognitive function tests used |
+| Criterion | Name                                 | Status     | Notes                                       |
+| --------- | ------------------------------------ | ---------- | ------------------------------------------- |
+| 2.4.12    | Focus Not Obscured (Enhanced)        | ⚠️ PARTIAL | Sticky elements may partially obscure focus |
+| 2.4.13    | Focus Appearance                     | ✅ PASS    | Visible focus rings with 3px ring           |
+| 3.3.9     | Accessible Authentication (Enhanced) | ✅ N/A     | No cognitive function tests used            |
 
 ---
 
@@ -1129,32 +1143,32 @@ The following criteria were added in WCAG 2.2 (October 2023). This section docum
 
 ### VoiceOver (iOS/macOS) Compatibility
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Navigation announcement | ✅ | Items announce name + role |
-| Current page announcement | ⚠️ | Missing `aria-current="page"` |
-| Tab selection | ✅ | "Selected" state announced |
-| Alert counts | ✅ | Live region announces updates |
-| ETA predictions | ✅ | Times read correctly |
-| Form validation | ⚠️ | Errors not linked via `aria-describedby` |
+| Feature                   | Status | Notes                                    |
+| ------------------------- | ------ | ---------------------------------------- |
+| Navigation announcement   | ✅     | Items announce name + role               |
+| Current page announcement | ⚠️     | Missing `aria-current="page"`            |
+| Tab selection             | ✅     | "Selected" state announced               |
+| Alert counts              | ✅     | Live region announces updates            |
+| ETA predictions           | ✅     | Times read correctly                     |
+| Form validation           | ⚠️     | Errors not linked via `aria-describedby` |
 
 ### TalkBack (Android) Compatibility
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Navigation swipe | ✅ | Linear navigation works |
-| Touch exploration | ✅ | All elements discoverable |
-| Button actions | ✅ | Double-tap activates correctly |
-| Live regions | ✅ | Dynamic content announced |
+| Feature           | Status | Notes                          |
+| ----------------- | ------ | ------------------------------ |
+| Navigation swipe  | ✅     | Linear navigation works        |
+| Touch exploration | ✅     | All elements discoverable      |
+| Button actions    | ✅     | Double-tap activates correctly |
+| Live regions      | ✅     | Dynamic content announced      |
 
 ### NVDA/JAWS (Desktop) Compatibility
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Landmarks | ✅ | Main, nav, header identified |
-| Headings | ✅ | H1-H3 hierarchy correct |
-| Tables | ⚠️ | ETA times not in `<table>` |
-| Forms | ✅ | Labels associated correctly |
+| Feature   | Status | Notes                        |
+| --------- | ------ | ---------------------------- |
+| Landmarks | ✅     | Main, nav, header identified |
+| Headings  | ✅     | H1-H3 hierarchy correct      |
+| Tables    | ⚠️     | ETA times not in `<table>`   |
+| Forms     | ✅     | Labels associated correctly  |
 
 ---
 
