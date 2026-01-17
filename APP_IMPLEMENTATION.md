@@ -21,6 +21,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                           | Change                                                                             | Status       |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | ------------ |
+| **Performance: Lazy-load GTFS**     | Route data (789KB) now lazy-loaded on-demand, bundle reduced from 1.4MB to 972KB   | ✅ Deployed  |
+| **route-data.ts service**           | New service for on-demand fetching of large GTFS JSON files with in-memory caching | ✅ Deployed  |
+| **stops-db.ts async**               | Functions now async to support lazy-loaded route data (getRouteBranches, etc.)     | ✅ Deployed  |
+| **GTFS scripts updated**            | All scripts now read/write from static/data/ only (no src/lib/data duplication)    | ✅ Deployed  |
 | **Performance: Self-hosted font**   | Replaced Google Fonts with self-hosted Lexend woff2 (68KB), eliminates 2 requests  | ✅ Deployed  |
 | **Performance: GA deferred**        | GA4 script now loads after page load (100ms delay) to avoid render blocking        | ✅ Deployed  |
 | **Performance: Bundle analyzer**    | Added rollup-plugin-visualizer for bundle analysis (stats.html)                    | ✅ Deployed  |
@@ -220,6 +224,7 @@ All alerts now come from **TTC API exclusively**. Bluesky integration has been r
 | `services/webauthn.ts`                           | ✅     | WebAuthn browser API wrapper                                  |
 | `services/nextbus.ts`                            | ✅     | NextBus API service                                           |
 | `services/route-changes.ts`                      | ✅     | Route changes API service                                     |
+| `services/route-data.ts`                         | ✅     | Lazy-load GTFS data service (route branches, stop orders)     |
 | `services/schedule-lookup.ts`                    | ✅     | Schedule lookup service                                       |
 | `services/storage.ts`                            | ✅     | Local storage service                                         |
 | `services/subway-eta.ts`                         | ✅     | Subway ETA service                                            |
@@ -295,12 +300,15 @@ All alerts now come from **TTC API exclusively**. Bluesky integration has been r
 
 ### Static (`static/`)
 
-| File                     | Status | Purpose                                          |
-| ------------------------ | ------ | ------------------------------------------------ |
-| `manifest.json`          | ✅     | PWA manifest                                     |
-| `sw.js`                  | ✅     | Service worker                                   |
-| `icons/*`                | ✅     | All PWA icons (72-512px)                         |
-| `test-badge-styles.html` | ✅     | Reference page for all alert badge styles/colors |
+| File                             | Status | Purpose                                                    |
+| -------------------------------- | ------ | ---------------------------------------------------------- |
+| `manifest.json`                  | ✅     | PWA manifest                                               |
+| `sw.js`                          | ✅     | Service worker                                             |
+| `icons/*`                        | ✅     | All PWA icons (72-512px)                                   |
+| `fonts/Lexend.woff2`             | ✅     | Self-hosted Lexend variable font (68KB)                    |
+| `data/ttc-route-branches.json`   | ✅     | Route branch/stop data (512KB, lazy-loaded)                |
+| `data/ttc-route-stop-orders.json`| ✅     | Stop sequence data (277KB, lazy-loaded)                    |
+| `test-badge-styles.html`         | ✅     | Reference page for all alert badge styles/colors           |
 
 ### Configuration (`src/`)
 
