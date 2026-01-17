@@ -440,7 +440,7 @@
               }
               mobileMenuOpen = false;
             }}
-            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 active:scale-[0.98] cursor-pointer {!isDark
+            class="flex-1 h-12 px-3 rounded-xl transition-all font-medium inline-flex items-center gap-1.5 active:scale-[0.98] cursor-pointer {!isDark
               ? 'border-2'
               : 'border border-input hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
             style={!isDark ? "border-color: hsl(var(--foreground));" : ""}
@@ -457,8 +457,8 @@
                 class="h-5 w-5 rounded-full shrink-0 border-2 border-muted-foreground/30"
               ></span>
             {/if}
-            <Sun class="w-4 h-4" aria-hidden="true" />
-            <span class="text-sm">{$_("header.lightMode")}</span>
+            <Sun class="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span class="text-sm whitespace-nowrap">{$_("header.lightMode")}</span>
           </button>
 
           <!-- Dark Mode Button -->
@@ -469,7 +469,7 @@
               }
               mobileMenuOpen = false;
             }}
-            class="flex-1 h-12 px-4 rounded-xl transition-all font-medium inline-flex items-center gap-2 active:scale-[0.98] cursor-pointer {isDark
+            class="flex-1 h-12 px-3 rounded-xl transition-all font-medium inline-flex items-center gap-1.5 active:scale-[0.98] cursor-pointer {isDark
               ? 'border-2'
               : 'border border-input hover:bg-zinc-100 dark:hover:bg-zinc-800'}"
             style={isDark ? "border-color: hsl(var(--foreground));" : ""}
@@ -486,8 +486,8 @@
                 class="h-5 w-5 rounded-full shrink-0 border-2 border-muted-foreground/30"
               ></span>
             {/if}
-            <Moon class="w-4 h-4" aria-hidden="true" />
-            <span class="text-sm">{$_("header.darkMode")}</span>
+            <Moon class="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span class="text-sm whitespace-nowrap">{$_("header.darkMode")}</span>
           </button>
         </div>
       </div>
