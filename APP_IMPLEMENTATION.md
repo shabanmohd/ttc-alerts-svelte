@@ -21,6 +21,10 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                           | Change                                                                             | Status       |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | ------------ |
+| **poll-alerts v216**                | Add auto-cleanup for scheduled closure cancellation alerts when TTC API removes    | ✅ Deployed  |
+| **Cancellation alerts**             | New SCHEDULED_CLOSURE_CANCELLATION category with green "Closure Cancelled" badge   | ✅ Deployed  |
+| **Cancellation detection**          | isClosureCancelled() detects "closure has been cancelled" alerts from TTC API      | ✅ Deployed  |
+| **Cancellation sorting**            | Cancellation alerts appear first in Disruptions list, before scheduled closures    | ✅ Deployed  |
 | **Hamburger menu text fix**         | Fixed Light/Dark mode text wrapping to two lines on narrow Android screens         | ✅ Deployed  |
 | **Square OG image support**         | Added og-image-square.jpg (1200x1200) for WhatsApp, Telegram, iMessage             | ✅ Deployed  |
 | **Admin pages removed**             | Deleted /admin/accuracy, /admin/train-alerts, /api/admin/\* for security           | ✅ Deployed  |

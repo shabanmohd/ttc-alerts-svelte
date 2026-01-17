@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 6.1  
+**Version:** 6.2  
 **Date:** January 17, 2026  
-**poll-alerts Version:** 215  
+**poll-alerts Version:** 216  
 **Frontend Version:** 152 (Elevator threading disabled in UI)  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 2 (Auto-cleanup stale "back in service" alerts)  
@@ -108,13 +108,21 @@ All Bluesky code was removed from the codebase in January 2026.
 
 ### Architectural Overview (v200+ - TTC API-ONLY)
 
-| Alert Type             | Thread Creation | Alert ID Pattern  | UI Section           |
-| ---------------------- | --------------- | ----------------- | -------------------- |
-| **Disruptions**        | ✅ Yes          | `ttc-alert-*`     | Disruptions & Delays |
-| **Scheduled Closures** | ✅ Yes          | `ttc-scheduled-*` | Disruptions & Delays |
-| **RSZ**                | ✅ Yes          | `ttc-rsz-*`       | Slow Zones           |
-| **Elevators**          | ✅ Yes          | `ttc-elev-*`      | Station Alerts       |
-| **Service Resumed**    | Uses existing   | `ttc-alert-sr-*`  | Recently Resolved    |
+| Alert Type                  | Thread Creation | Alert ID Pattern       | UI Section           |
+| --------------------------- | --------------- | ---------------------- | -------------------- |
+| **Disruptions**             | ✅ Yes          | `ttc-alert-*`          | Disruptions & Delays |
+| **Scheduled Closures**      | ✅ Yes          | `ttc-scheduled-*`      | Disruptions & Delays |
+| **Closure Cancellations**   | ✅ Yes          | `ttc-cancellation-*`   | Disruptions & Delays |
+| **RSZ**                     | ✅ Yes          | `ttc-rsz-*`            | Slow Zones           |
+| **Elevators**               | ✅ Yes          | `ttc-elev-*`           | Station Alerts       |
+| **Service Resumed**         | Uses existing   | `ttc-alert-sr-*`       | Recently Resolved    |
+
+**v216 Changes (Jan 17, 2026):**
+
+1. **Scheduled closure cancellation alerts** - Detects alerts like "Tonight's planned early subway closure has been cancelled"
+2. **New category: SCHEDULED_CLOSURE_CANCELLATION** - Green badge "Closure Cancelled"
+3. **Cancellation auto-cleanup** - Uses same missed_polls logic as other alerts
+4. **Cancellation resolves closure** - When cancellation detected, hides the original scheduled closure thread
 
 **v214 Changes (Jan 17, 2026):**
 
@@ -490,6 +498,30 @@ function isScheduledClosure(headerText: string): boolean {
   return scheduledPatterns.some((pattern) => pattern.test(lowerText));
 }
 ```
+
+**Scheduled Closure Cancellation Detection (v216):**
+
+```typescript
+function isClosureCancelled(headerText: string): boolean {
+  const lowerText = (headerText || "").toLowerCase();
+  const cancellationPatterns = [
+    /closure\s+(has\s+been\s+)?cancell?ed/i,
+    /planned\s+(early\s+)?subway\s+closure\s+(has\s+been\s+)?cancell?ed/i,
+    /tonight'?s\s+planned.*cancell?ed/i,
+    /cancell?ing\s+(tonight'?s\s+)?planned\s+closure/i,
+    /scheduled\s+closure.*cancell?ed/i,
+  ];
+  return cancellationPatterns.some((pattern) => pattern.test(lowerText));
+}
+```
+
+**Cancellation Processing Flow (v216):**
+
+1. **Detection:** `isClosureCancelled()` matches cancellation alerts in TTC API
+2. **Alert Creation:** Creates `ttc-cancellation-line-{X}-{hash}` alert with `SCHEDULED_CLOSURE_CANCELLATION` category
+3. **Thread Creation:** Creates `thread-cancellation-{X}-{hash}` thread for the cancellation alert
+4. **Closure Resolution:** Hides the original scheduled closure thread (`thread-scheduled-{X}-%`)
+5. **Auto-Cleanup:** When TTC API removes the cancellation alert, uses same `missed_polls` logic as other alerts
 
 **AlertCard Badge Display (v147+):**
 The `AlertCard` component uses `thread_id` as the primary indicator for scheduled closures. If `thread.thread_id?.includes('scheduled_closure')`, it displays "SCHEDULED CLOSURE" badge (orange) instead of "DISRUPTION" badge. The `isScheduledFutureClosure()` helper (same patterns as backend) is used as a fallback for announcement text matching.
@@ -1706,11 +1738,12 @@ https://www.ttc.ca/sxa/search/results/?s={SCOPE_ID}&itemid={ITEM_ID}&sig=&v={VAR
 
 The `ClosuresView.svelte` component detects closure type based on the data:
 
-| Closure Type        | Badge Label             | Color          | Detection Logic                   |
-| ------------------- | ----------------------- | -------------- | --------------------------------- |
-| `NIGHTLY_CLOSURE`   | "Nightly Early Closure" | Blue           | `start_time` >= 22:00 (10 PM)     |
-| `WEEKEND_CLOSURE`   | "Weekend Closure"       | Purple/Magenta | No `start_time` AND spans Sat-Sun |
-| `SCHEDULED_CLOSURE` | "Scheduled Closure"     | Purple         | Default fallback                  |
+| Closure Type                       | Badge Label               | Color          | Detection Logic                   |
+| ---------------------------------- | ------------------------- | -------------- | --------------------------------- |
+| `NIGHTLY_CLOSURE`                  | "Nightly Early Closure"   | Blue           | `start_time` >= 22:00 (10 PM)     |
+| `WEEKEND_CLOSURE`                  | "Weekend Closure"         | Purple/Magenta | No `start_time` AND spans Sat-Sun |
+| `SCHEDULED_CLOSURE`                | "Scheduled Closure"       | Purple         | Default fallback                  |
+| `SCHEDULED_CLOSURE_CANCELLATION`   | "Closure Cancelled"       | Green          | Cancellation alert detected       |
 
 ```typescript
 // ClosuresView.svelte - getClosureType()

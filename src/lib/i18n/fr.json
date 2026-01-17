@@ -188,6 +188,7 @@
     "shuttle": "Navette",
     "planned": "Planifié",
     "scheduledClosure": "Fermeture planifiée",
+    "closureCancellation": "Fermeture annulée",
     "nightlyClosure": "Fermeture anticipée nocturne",
     "weekendClosure": "Fermeture week-end",
     "active": "Actif",

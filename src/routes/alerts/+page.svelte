@@ -531,10 +531,14 @@
         .sort((a, b) => {
           const aIsCancellation =
             a.thread_id?.includes("cancellation") ||
-            (a.categories as string[])?.includes("SCHEDULED_CLOSURE_CANCELLATION");
+            (a.categories as string[])?.includes(
+              "SCHEDULED_CLOSURE_CANCELLATION"
+            );
           const bIsCancellation =
             b.thread_id?.includes("cancellation") ||
-            (b.categories as string[])?.includes("SCHEDULED_CLOSURE_CANCELLATION");
+            (b.categories as string[])?.includes(
+              "SCHEDULED_CLOSURE_CANCELLATION"
+            );
           const aIsScheduled =
             a.thread_id?.includes("scheduled_closure") ||
             (a.categories as string[])?.includes("SCHEDULED_CLOSURE");
@@ -545,7 +549,7 @@
           // Cancellations come first (important news!)
           if (aIsCancellation && !bIsCancellation) return -1;
           if (!aIsCancellation && bIsCancellation) return 1;
-          
+
           // Then scheduled closures
           if (aIsScheduled && !bIsScheduled) return -1;
           if (!aIsScheduled && bIsScheduled) return 1;

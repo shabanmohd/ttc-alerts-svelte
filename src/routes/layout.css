@@ -268,7 +268,11 @@ html.reduce-motion *::after {
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Lexend", system-ui, -apple-system, sans-serif;
+    font-family:
+      "Lexend",
+      system-ui,
+      -apple-system,
+      sans-serif;
     font-weight: 400; /* Regular for body text - optimal readability */
     font-size: calc(
       0.9375rem * var(--text-scale)
@@ -308,7 +312,11 @@ html.dark {
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: "Lexend", system-ui, -apple-system, sans-serif;
+  font-family:
+    "Lexend",
+    system-ui,
+    -apple-system,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* Some browsers use `body` as the scrolling element; keep gutter stable there too. */
@@ -727,7 +735,8 @@ html.ios-pwa .mobile-bottom-nav::after {
 .mobile-bottom-nav .nav-item span {
   font-size: 0.7rem;
   font-weight: 500;
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+  transition:
+    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     margin-top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
@@ -852,7 +861,9 @@ html.ios-pwa .mobile-bottom-nav::after {
 /* Selectable route badge styles */
 .route-badge.route-badge-selectable {
   cursor: pointer;
-  transition: all 0.15s, transform 0.1s;
+  transition:
+    all 0.15s,
+    transform 0.1s;
   box-shadow: none;
   margin: 3px; /* Add spacing for the border ring */
 }
@@ -871,44 +882,64 @@ html.ios-pwa .mobile-bottom-nav::after {
 
 /* Selected border colors per route type */
 .route-line-1.route-badge-selectable.selected {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #ffc524;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px #ffc524;
 }
 
 .route-line-2.route-badge-selectable.selected {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #00853f;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px #00853f;
 }
 
 .route-line-4.route-badge-selectable.selected {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #a12f7d;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px #a12f7d;
 }
 
 .route-line-5.route-badge-selectable.selected {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #f26522;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px #f26522;
 }
 
 .route-line-6.route-badge-selectable.selected {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #808285;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px #808285;
 }
 
 .route-bus.route-badge-selectable.selected,
 .route-streetcar.route-badge-selectable.selected {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #c8102e;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px #c8102e;
 }
 
 .route-express.route-badge-selectable.selected {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #00853f;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px #00853f;
 }
 
 .route-night.route-badge-selectable.selected {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #003da5;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px #003da5;
 }
 
 .route-limited.route-badge-selectable.selected {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #c8102e;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px #c8102e;
 }
 
 .route-community.route-badge-selectable.selected {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px #6b7280;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px #6b7280;
 }
 
 /* No border variant for inline toggles */
@@ -1216,7 +1247,9 @@ html.ios-pwa .mobile-bottom-nav::after {
 }
 
 .alert-card:hover {
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.1),
+    0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
 
 .alert-card.expanded {
@@ -1386,7 +1419,9 @@ html.ios-pwa .mobile-bottom-nav::after {
   border: none;
   border-top: 1px solid hsl(var(--border));
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 @media (min-width: 640px) {
@@ -1746,7 +1781,9 @@ html.ios-pwa .mobile-bottom-nav::after {
 
 .mode-card:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--ring));
 }
 
 .mode-card[data-selected="true"],
@@ -1800,7 +1837,9 @@ html.ios-pwa .mobile-bottom-nav::after {
   background-color: hsl(var(--muted));
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
   color: hsl(var(--foreground));
 }
 
@@ -2174,7 +2213,9 @@ html.ios-pwa .mobile-bottom-nav::after {
 }
 
 .transition-colors {
-  transition: color 0.15s ease, background-color 0.15s ease,
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
     border-color 0.15s ease;
 }
 

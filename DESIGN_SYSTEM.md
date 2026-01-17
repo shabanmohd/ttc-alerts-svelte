@@ -1049,6 +1049,7 @@ Used alongside AccessibilityBadge to show the station name (e.g., "DUPONT", "DAV
 <StatusBadge category="SHUTTLE" />
 <StatusBadge category="PLANNED_CLOSURE" />
 <StatusBadge category="SCHEDULED_CLOSURE" />
+<StatusBadge category="SCHEDULED_CLOSURE_CANCELLATION" />
 <StatusBadge category="NIGHTLY_CLOSURE" />
 <StatusBadge category="WEEKEND_CLOSURE" />
 ```
@@ -1062,6 +1063,7 @@ Used alongside AccessibilityBadge to show the station name (e.g., "DUPONT", "DAV
 - `.status-badge-shuttle` - Lime/Green (shuttle bus replacements)
 - `.status-badge-planned` - Blue
 - `.status-badge-scheduled` - Orange (scheduled closures - matches SubwayStatusBar)
+- `.status-badge-cancellation` - Green (scheduled closure cancelled - good news!)
 - `.status-badge-nightly` - Blue (nightly early closures starting 10 PM+)
 - `.status-badge-weekend` - Purple/Magenta (full weekend closures)
 

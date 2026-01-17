@@ -206,6 +206,7 @@
     "shuttle": "Shuttle",
     "planned": "Planned",
     "scheduledClosure": "Scheduled Closure",
+    "closureCancellation": "Closure Cancelled",
     "nightlyClosure": "Nightly Early Closure",
     "weekendClosure": "Weekend Closure",
     "active": "Active",
