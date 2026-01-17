@@ -458,7 +458,9 @@
               ></span>
             {/if}
             <Sun class="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span class="text-sm whitespace-nowrap">{$_("header.lightMode")}</span>
+            <span class="text-sm whitespace-nowrap"
+              >{$_("header.lightMode")}</span
+            >
           </button>
 
           <!-- Dark Mode Button -->
@@ -487,7 +489,9 @@
               ></span>
             {/if}
             <Moon class="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span class="text-sm whitespace-nowrap">{$_("header.darkMode")}</span>
+            <span class="text-sm whitespace-nowrap"
+              >{$_("header.darkMode")}</span
+            >
           </button>
         </div>
       </div>
