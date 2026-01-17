@@ -1,8 +1,8 @@
 # Alert Categorization and Threading System
 
-**Version:** 6.0  
+**Version:** 6.1  
 **Date:** January 17, 2026  
-**poll-alerts Version:** 214  
+**poll-alerts Version:** 215  
 **Frontend Version:** 152 (Elevator threading disabled in UI)  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 2 (Auto-cleanup stale "back in service" alerts)  
@@ -807,7 +807,7 @@ let recentlyResolved = $derived.by(() => {
 
 ## Service Resumed Grace Period
 
-### Overview (v209-v212)
+### Overview (v209-v215)
 
 When a disruption alert disappears from the TTC API, the system waits for a **grace period** before hiding the thread, allowing time for a corresponding SERVICE_RESUMED alert to appear.
 
@@ -830,6 +830,39 @@ When a disruption alert disappears from the TTC API, the system waits for a **gr
 ```typescript
 // Grace period: number of polls to wait for service resumed before hiding
 const MAX_MISSED_POLLS = 2;
+```
+
+### Alert Reappearance Handling (v215)
+
+**Problem (discovered Jan 17, 2026):** When alerts temporarily disappear from the TTC API then reappear:
+- The `service_resumed_monitoring` entry was NOT cleaned up
+- This caused false "pending" counts in the monitoring dashboard
+
+**Solution:** When an alert reappears in the TTC API:
+1. Reset `missed_polls` and `pending_since` in `incident_threads` (existing behavior)
+2. **DELETE the pending monitoring entry** from `service_resumed_monitoring` (v215 fix)
+
+```typescript
+} else if (existingThread.missed_polls > 0) {
+  // Alert was briefly missing but came back - reset and cleanup monitoring
+  await supabase
+    .from('incident_threads')
+    .update({ 
+      missed_polls: 0,
+      pending_since: null,
+      updated_at: new Date().toISOString() 
+    })
+    .eq('thread_id', threadId);
+  
+  // Cleanup monitoring entry - alert came back before it resolved
+  await supabase
+    .from('service_resumed_monitoring')
+    .delete()
+    .eq('thread_id', threadId)
+    .is('service_resumed_at', null);
+  
+  console.log(`Thread ${threadId} reappeared - cleaned up monitoring entry`);
+}
 ```
 
 ### Service Resumed ID Generation (v209)
