@@ -16,7 +16,20 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ---
 
-## 🆕 Recent Updates (Jan 16, 2026)
+## 🆕 Recent Updates (Jan 17, 2026)
+
+| Component                                | Change                                                                                 | Status       |
+| ---------------------------------------- | -------------------------------------------------------------------------------------- | ------------ |
+| **poll-alerts v214**                     | Add header_text dedup to prevent alert ID collisions (Woodbine/Bay station fix)        | ✅ Deployed  |
+| **Bluesky code cleanup**                 | Removed ALL Bluesky API code/references from codebase (TTC-API-only architecture)      | ✅ Deployed  |
+| **Debug console.log cleanup**            | Removed DEBUG logs from alerts/+page.svelte and routes/[route]/+page.svelte           | ✅ Deployed  |
+| **isBlueskyRSZ → isTextBasedRSZ**        | Renamed variable in 4 files to reflect TTC-API-only architecture                       | ✅ Deployed  |
+| **Admin page cleanup**                   | Removed "Bluesky" filter option from train-alerts admin page                           | ✅ Deployed  |
+| **Documentation updates**                | Updated APP_IMPLEMENTATION.md and SECURITY_AUDIT.md for v200+ architecture            | ✅ Completed |
+| **Scripts cleanup**                      | Archived validate-ttc-crosscheck.ts, removed cleanup_duplicate_bluesky_rsz.sql        | ✅ Completed |
+| **Backup files removed**                 | Removed poll-alerts/*.backup, *.bak, *.v149.bak (4,300+ lines old Bluesky code)       | ✅ Completed |
+
+### Previous Updates (Jan 16, 2026)
 
 | Component                                | Change                                                                                 | Status       |
 | ---------------------------------------- | -------------------------------------------------------------------------------------- | ------------ |
@@ -46,55 +59,55 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ### Previous Updates (Jan 13, 2026)
 
-| Component                            | Change                                                                             | Status                |
-| ------------------------------------ | ---------------------------------------------------------------------------------- | --------------------- |
-| **Cron Job Auth Fix**                | All invoke functions now use vault-based auth (was failing with anon/hardcoded)    | ✅ Deployed           |
-| **invoke_scrape_maintenance()**      | New wrapper function - scrape-maintenance cron was failing with 401 since deploy   | ✅ Deployed           |
-| **invoke_verify_disruptions()**      | Fixed: was using hardcoded anon key → now uses vault                               | ✅ Deployed           |
-| **invoke_verify_elevators()**        | Fixed: was using current_setting (unreliable) → now uses vault                     | ✅ Deployed           |
-| **invoke_verify_rsz()**              | Fixed: was using current_setting (unreliable) → now uses vault                     | ✅ Deployed           |
-| **SubwayStatusBar v148**             | Use thread visibility (is_hidden) instead of time-based checks for closures        | ✅ Committed          |
-| **hasActiveScheduledClosureThread**  | New function to check active scheduled_closure threads by line                     | ✅ Committed          |
-| **isScheduledClosureActive()**       | Updated to use 4 AM cutoff (was 6 AM) based on TTC API childAlerts                 | ✅ Committed          |
-| **poll-alerts v147**                 | Unhide scheduled closure threads when alert already exists in DB                   | ✅ Deployed           |
-| **poll-alerts v146**                 | Replace "planned" with "nightly early closures" pattern                            | ✅ Deployed           |
-| **poll-alerts v145**                 | Remove overly broad tunnel/track pattern from scheduled closure detection          | ✅ Deployed           |
-| **poll-alerts v144**                 | Add "full weekend closure" and "planned" detection patterns                        | ✅ Deployed           |
-| **AlertCard.svelte**                 | Show SCHEDULED CLOSURE badge for scheduled maintenance alerts                      | ✅ Deployed           |
-| **poll-alerts v143**                 | Skip RSZ alerts from text patterns - TTC API is exclusive source for Slow Zones   | ⚠️ Superseded by v200 |
-| **poll-alerts v142**                 | Create separate threads for scheduled closures vs real-time incidents              | ✅ Deployed           |
-| **poll-alerts v147**                 | Auto-unhide threads when recurring scheduled closure alerts reappear               | ✅ Deployed           |
-| **SubwayStatusBar scheduled**        | Orange styling for scheduled closures, text wraps, icon top-aligned                | ✅ Deployed           |
-| **AlertCard thread_id detection**    | Use thread_id to detect scheduled closures (primary) instead of text pattern       | ✅ Deployed           |
-| **poll-alerts v200+**                | TTC-API-only architecture: all alerts from TTC API (disruptions, RSZ, elevators)   | ✅ Deployed           |
-| **alerts/+page.svelte v200**         | Frontend updated for TTC API alerts: ttc-alert-\*, ttc-scheduled-\* filtering      | ✅ Deployed           |
-| **alerts.ts v151**                   | DELAY category → MAJOR severity (affects subway status cards)                      | ✅ Deployed           |
-| **RSZAlertCard v151**                | Skip SERVICE_RESUMED alerts when extracting RSZ entries                            | ✅ Deployed           |
-| **poll-alerts v146**                 | Scheduled closure patterns: nightly early closures, full weekend closure           | ⚠️ Superseded by v200 |
-| **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading          | ⚠️ Superseded by v200 |
-| **poll-alerts v140**                 | Legacy architecture: TTC API + text pattern matching                               | ⚠️ Superseded by v200 |
-| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new                    | ⚠️ Superseded by v200 |
-| **poll-alerts v138**                 | Support all TTC branch letters (A-Z) not just A-E - includes F, G, S               | ✅ Deployed           |
-| **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)                  | ✅ Deployed           |
-| **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates                                | ✅ Committed          |
-| **alerts/+page.svelte activeAlerts** | Disruptions tab filters to TTC API alerts (ttc-alert-\*, ttc-scheduled-\*)         | ✅ Deployed           |
-| **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 4 AM              | ✅ Deployed           |
-| **getDisruptionAlert()**             | Finds TTC API disruption alerts in threads (ttc-alert-\*, ttc-scheduled-\*)        | ✅ Deployed           |
-| **MobileBottomNav.svelte**           | iOS PWA viewport fix using visualViewport API                                      | ✅ Deployed           |
-| **poll-alerts v136**                 | Scheduled closure filtering - hide alerts not currently active                     | ✅ Deployed           |
-| **verify-disruptions v2**            | Data integrity validation for TTC API disruptions (every 15 min)                   | ✅ Deployed           |
-| **i18n: RSZAlertCard**               | Translate direction badges (NORTHBOUND→DIRECTION NORD, etc.)                       | ✅ Deployed           |
-| **i18n: ETACard**                    | Translate direction labels, "to" connector                                         | ✅ Deployed           |
-| **i18n: ETADirectionSlide**          | Translate directions, "towards", "via" keywords                                    | ✅ Deployed           |
-| **i18n: StopSearch**                 | Translate direction badges in search results                                       | ✅ Deployed           |
-| **i18n: RouteDirectionTabs**         | Translate direction tabs and labels                                                | ✅ Deployed           |
-| **i18n: RouteStopItem**              | Translate "Scheduled" label                                                        | ✅ Deployed           |
-| **i18n: routes/+page**               | Translate "Back to Home" button                                                    | ✅ Deployed           |
-| **i18n: routes/[route]**             | Translate stop counts, direction labels                                            | ✅ Deployed           |
-| **SEO: app.html**                    | Updated meta title/description for Google                                          | ✅ Deployed           |
-| **route-changes.ts**                 | Fix filtering to include end time (was only checking date)                         | ✅ Deployed           |
-| **Timezone Docs**                    | Added comprehensive timezone policy (EST/America/Toronto)                          | ✅ Committed          |
-| **DATA_POLLING_FREQUENCIES.md**      | Updated with EST equivalents for all cron jobs                                     | ✅ Committed          |
+| Component                            | Change                                                                           | Status                |
+| ------------------------------------ | -------------------------------------------------------------------------------- | --------------------- |
+| **Cron Job Auth Fix**                | All invoke functions now use vault-based auth (was failing with anon/hardcoded)  | ✅ Deployed           |
+| **invoke_scrape_maintenance()**      | New wrapper function - scrape-maintenance cron was failing with 401 since deploy | ✅ Deployed           |
+| **invoke_verify_disruptions()**      | Fixed: was using hardcoded anon key → now uses vault                             | ✅ Deployed           |
+| **invoke_verify_elevators()**        | Fixed: was using current_setting (unreliable) → now uses vault                   | ✅ Deployed           |
+| **invoke_verify_rsz()**              | Fixed: was using current_setting (unreliable) → now uses vault                   | ✅ Deployed           |
+| **SubwayStatusBar v148**             | Use thread visibility (is_hidden) instead of time-based checks for closures      | ✅ Committed          |
+| **hasActiveScheduledClosureThread**  | New function to check active scheduled_closure threads by line                   | ✅ Committed          |
+| **isScheduledClosureActive()**       | Updated to use 4 AM cutoff (was 6 AM) based on TTC API childAlerts               | ✅ Committed          |
+| **poll-alerts v147**                 | Unhide scheduled closure threads when alert already exists in DB                 | ✅ Deployed           |
+| **poll-alerts v146**                 | Replace "planned" with "nightly early closures" pattern                          | ✅ Deployed           |
+| **poll-alerts v145**                 | Remove overly broad tunnel/track pattern from scheduled closure detection        | ✅ Deployed           |
+| **poll-alerts v144**                 | Add "full weekend closure" and "planned" detection patterns                      | ✅ Deployed           |
+| **AlertCard.svelte**                 | Show SCHEDULED CLOSURE badge for scheduled maintenance alerts                    | ✅ Deployed           |
+| **poll-alerts v143**                 | Skip RSZ alerts from text patterns - TTC API is exclusive source for Slow Zones  | ⚠️ Superseded by v200 |
+| **poll-alerts v142**                 | Create separate threads for scheduled closures vs real-time incidents            | ✅ Deployed           |
+| **poll-alerts v147**                 | Auto-unhide threads when recurring scheduled closure alerts reappear             | ✅ Deployed           |
+| **SubwayStatusBar scheduled**        | Orange styling for scheduled closures, text wraps, icon top-aligned              | ✅ Deployed           |
+| **AlertCard thread_id detection**    | Use thread_id to detect scheduled closures (primary) instead of text pattern     | ✅ Deployed           |
+| **poll-alerts v200+**                | TTC-API-only architecture: all alerts from TTC API (disruptions, RSZ, elevators) | ✅ Deployed           |
+| **alerts/+page.svelte v200**         | Frontend updated for TTC API alerts: ttc-alert-\*, ttc-scheduled-\* filtering    | ✅ Deployed           |
+| **alerts.ts v151**                   | DELAY category → MAJOR severity (affects subway status cards)                    | ✅ Deployed           |
+| **RSZAlertCard v151**                | Skip SERVICE_RESUMED alerts when extracting RSZ entries                          | ✅ Deployed           |
+| **poll-alerts v146**                 | Scheduled closure patterns: nightly early closures, full weekend closure         | ⚠️ Superseded by v200 |
+| **poll-alerts v141**                 | Use similarity check (≥25%) when matching by route to avoid mis-threading        | ⚠️ Superseded by v200 |
+| **poll-alerts v140**                 | Legacy architecture: TTC API + text pattern matching                             | ⚠️ Superseded by v200 |
+| **poll-alerts v139**                 | TTC API alerts find threads by route number before creating new                  | ⚠️ Superseded by v200 |
+| **poll-alerts v138**                 | Support all TTC branch letters (A-Z) not just A-E - includes F, G, S             | ✅ Deployed           |
+| **poll-alerts v137**                 | Stop route extraction at non-route words (Regular, service, etc.)                | ✅ Deployed           |
+| **alerts.ts deduplicateAlerts**      | TTC API alerts processed first, prevents duplicates                              | ✅ Committed          |
+| **alerts/+page.svelte activeAlerts** | Disruptions tab filters to TTC API alerts (ttc-alert-\*, ttc-scheduled-\*)       | ✅ Deployed           |
+| **isScheduledClosureActive()**       | Time-based check: scheduled closures in Disruptions only 11 PM - 4 AM            | ✅ Deployed           |
+| **getDisruptionAlert()**             | Finds TTC API disruption alerts in threads (ttc-alert-\*, ttc-scheduled-\*)      | ✅ Deployed           |
+| **MobileBottomNav.svelte**           | iOS PWA viewport fix using visualViewport API                                    | ✅ Deployed           |
+| **poll-alerts v136**                 | Scheduled closure filtering - hide alerts not currently active                   | ✅ Deployed           |
+| **verify-disruptions v2**            | Data integrity validation for TTC API disruptions (every 15 min)                 | ✅ Deployed           |
+| **i18n: RSZAlertCard**               | Translate direction badges (NORTHBOUND→DIRECTION NORD, etc.)                     | ✅ Deployed           |
+| **i18n: ETACard**                    | Translate direction labels, "to" connector                                       | ✅ Deployed           |
+| **i18n: ETADirectionSlide**          | Translate directions, "towards", "via" keywords                                  | ✅ Deployed           |
+| **i18n: StopSearch**                 | Translate direction badges in search results                                     | ✅ Deployed           |
+| **i18n: RouteDirectionTabs**         | Translate direction tabs and labels                                              | ✅ Deployed           |
+| **i18n: RouteStopItem**              | Translate "Scheduled" label                                                      | ✅ Deployed           |
+| **i18n: routes/+page**               | Translate "Back to Home" button                                                  | ✅ Deployed           |
+| **i18n: routes/[route]**             | Translate stop counts, direction labels                                          | ✅ Deployed           |
+| **SEO: app.html**                    | Updated meta title/description for Google                                        | ✅ Deployed           |
+| **route-changes.ts**                 | Fix filtering to include end time (was only checking date)                       | ✅ Deployed           |
+| **Timezone Docs**                    | Added comprehensive timezone policy (EST/America/Toronto)                        | ✅ Committed          |
+| **DATA_POLLING_FREQUENCIES.md**      | Updated with EST equivalents for all cron jobs                                   | ✅ Committed          |
 
 ### Previous Updates (Jan 11, 2026)
 
@@ -152,14 +165,14 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 All alerts now come from **TTC API exclusively**. Bluesky integration has been removed.
 
-| UI Tab                         | Data Source         | Edge Function        | Notes                                          |
-| ------------------------------ | ------------------- | -------------------- | ---------------------------------------------- |
-| **Disruptions & Delays**       | TTC API             | `poll-alerts`        | ttc-alert-\* and ttc-scheduled-\* IDs          |
-| **Slow Zones (RSZ)**           | TTC API             | `poll-alerts`        | ttc-rsz-\* IDs from Reduced Speed Zone alerts  |
-| **Station Alerts (Elevators)** | TTC API             | `poll-alerts`        | ttc-elev-\* IDs from accessibility array       |
-| **Scheduled Subway Closures**  | TTC website scraper | `scrape-maintenance` | Stored in `planned_maintenance` table          |
-| **Service/Route Changes**      | TTC Sitecore API    | N/A (client-side)    | Runtime fetch, not stored                      |
-| **Recently Resolved**          | TTC API             | `poll-alerts`        | Threads marked resolved when alerts disappear  |
+| UI Tab                         | Data Source         | Edge Function        | Notes                                         |
+| ------------------------------ | ------------------- | -------------------- | --------------------------------------------- |
+| **Disruptions & Delays**       | TTC API             | `poll-alerts`        | ttc-alert-\* and ttc-scheduled-\* IDs         |
+| **Slow Zones (RSZ)**           | TTC API             | `poll-alerts`        | ttc-rsz-\* IDs from Reduced Speed Zone alerts |
+| **Station Alerts (Elevators)** | TTC API             | `poll-alerts`        | ttc-elev-\* IDs from accessibility array      |
+| **Scheduled Subway Closures**  | TTC website scraper | `scrape-maintenance` | Stored in `planned_maintenance` table         |
+| **Service/Route Changes**      | TTC Sitecore API    | N/A (client-side)    | Runtime fetch, not stored                     |
+| **Recently Resolved**          | TTC API             | `poll-alerts`        | Threads marked resolved when alerts disappear |
 
 > **See [`alert-categorization-and-threading.md`](alert-categorization-and-threading.md) for complete data flow documentation.**
 
@@ -259,17 +272,17 @@ All alerts now come from **TTC API exclusively**. Bluesky integration has been r
 
 ### Database (EXISTING in Supabase)
 
-| Table                    | Rows | Purpose                                                            |
-| ------------------------ | ---- | ------------------------------------------------------------------ |
-| `alert_cache`            | 600+ | Alerts from TTC API (header_text, categories, is_latest)          |
-| `incident_threads`       | 255K | Grouped alert threads (title, is_resolved)                         |
-| `planned_maintenance`    | 9    | Scheduled maintenance                                              |
-| `alert_accuracy_logs`    | -    | Alert accuracy checks (every 5min)                                 |
-| `alert_accuracy_reports` | -    | Daily accuracy summaries                                           |
-| `user_profiles`          | -    | User display_name, linked to auth.users                            |
-| `webauthn_credentials`   | -    | Public keys (credential_id as PK)                                  |
-| `recovery_codes`         | -    | Bcrypt-hashed one-time codes                                       |
-| `user_preferences`       | -    | Routes, modes, notification settings                               |
+| Table                    | Rows | Purpose                                                  |
+| ------------------------ | ---- | -------------------------------------------------------- |
+| `alert_cache`            | 600+ | Alerts from TTC API (header_text, categories, is_latest) |
+| `incident_threads`       | 255K | Grouped alert threads (title, is_resolved)               |
+| `planned_maintenance`    | 9    | Scheduled maintenance                                    |
+| `alert_accuracy_logs`    | -    | Alert accuracy checks (every 5min)                       |
+| `alert_accuracy_reports` | -    | Daily accuracy summaries                                 |
+| `user_profiles`          | -    | User display_name, linked to auth.users                  |
+| `webauthn_credentials`   | -    | Public keys (credential_id as PK)                        |
+| `recovery_codes`         | -    | Bcrypt-hashed one-time codes                             |
+| `user_preferences`       | -    | Routes, modes, notification settings                     |
 
 ### Static (`static/`)
 

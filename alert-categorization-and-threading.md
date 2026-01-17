@@ -1,13 +1,13 @@
 # Alert Categorization and Threading System
 
-**Version:** 5.0  
-**Date:** January 16, 2026  
-**poll-alerts Version:** 212  
+**Version:** 6.0  
+**Date:** January 17, 2026  
+**poll-alerts Version:** 214  
 **Frontend Version:** 152 (Elevator threading disabled in UI)  
 **scrape-maintenance Version:** 3  
 **verify-elevators Version:** 2 (Auto-cleanup stale "back in service" alerts)  
 **verify-rsz Version:** 1  
-**verify-disruptions Version:** 2 (⚠️ May need update - TTC API disruptions removed)  
+**verify-disruptions Version:** 2  
 **Status:** ✅ Implemented and Active  
 **Architecture:** Svelte 5 + Supabase Edge Functions + Cloudflare Pages
 
@@ -33,11 +33,11 @@
 
 This document describes the alert categorization and threading system designed to:
 
-1. **Bluesky-only for disruptions (v150)** - All disruption/delay alerts from Bluesky with native reply threading
-2. **TTC API for RSZ/Elevators only** - Reduced Speed Zones and Elevator alerts still from TTC API
+1. **TTC API-only architecture (v200+)** - All alerts exclusively from TTC API
+2. **No more Bluesky** - Bluesky integration completely removed from codebase
 3. **Multi-category tagging** - Alerts can match multiple non-exclusive categories
 4. **Effect-based categorization** - Focus on service impact, not cause
-5. **Native Bluesky threading** - Use `reply.root.uri` for thread grouping (no Jaccard similarity needed)
+5. **Thread ID-based grouping** - Uses TTC API `routeGroup` + header text hash
 6. **Frontend filtering** - Mutually exclusive category filters in UI
 7. **Planned alert separation** - Maintenance alerts excluded from main feed
 
@@ -49,16 +49,12 @@ This document describes the alert categorization and threading system designed t
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
 │  TTC API        │────▶│  poll-alerts         │────▶│  Supabase DB    │
 │  live-alerts    │     │  (Edge Function)     │     │  alert_cache    │
-│  - RSZ only     │     │                      │     │  incident_      │
-│  - accessibility│     │  1. Fetch TTC API    │     │  threads        │
-└─────────────────┘     │     (RSZ + Elevators)│     └────────┬────────┘
-                        │  2. Fetch Bluesky    │              │
-                        │  3. Process Bluesky  │              │
-┌───────────────┐       │     (ALL disruptions)│              │
-│  Bluesky API  │──────▶│  4. Process RSZ      │              │
-│  @ttcalerts   │       │  5. Process Elevators│              │
-│  (PRIMARY!)   │       │  6. Resolve stale    │              │
-└───────────────┘       └──────────────────────┘              │
+│  (ALL ALERTS)   │     │                      │     │  incident_      │
+│  - disruptions  │     │  1. Fetch TTC API    │     │  threads        │
+│  - RSZ          │     │  2. Process alerts   │     └────────┬────────┘
+│  - accessibility│     │  3. Thread matching  │              │
+└─────────────────┘     │  4. Resolve stale    │              │
+                        └──────────────────────┘              │
                                                                ▼
                         ┌──────────────────────┐
                         │  Svelte Frontend     │◀──────────────┘
@@ -72,129 +68,112 @@ This document describes the alert categorization and threading system designed t
 - **Frontend:** Svelte 5 + TypeScript + Tailwind + shadcn-svelte
 - **Backend:** Supabase (PostgreSQL + Edge Functions + Realtime)
 - **Hosting:** Cloudflare Pages
-- **Data Sources:**
-  - **Bluesky** (PRIMARY for disruptions): `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
-  - **TTC API** (RSZ + Elevators only): `https://alerts.ttc.ca/api/alerts/live-alerts`
+- **Data Source:**
+  - **TTC API** (ONLY source): `https://alerts.ttc.ca/api/alerts/live-alerts`
 
 ---
 
 ## Alert Sources
 
-### Current Implementation (v150 - BLUESKY-ONLY ARCHITECTURE)
+### Current Implementation (v200+ - TTC API-ONLY ARCHITECTURE)
 
-**Primary Source: Bluesky (for ALL Disruptions)**
+**Single Source: TTC API**
 
-- Official TTC account: [@ttcalerts.bsky.social](https://bsky.app/profile/ttcalerts.bsky.social)
-- **API:** Bluesky AT Protocol public API
-- **Endpoint:** `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed`
-- **Polling:** Edge function fetches last 50 posts per invocation
-- **Deduplication:** Uses `bluesky_uri` as unique identifier
-- **Threading:** Uses native Bluesky reply threading (`reply.root.uri`)
-- **Thread ID Format:** `thread-bsky-{postId}` where postId is from `reply.root.uri` or own URI
-- **Alert ID Format:** `bsky-{postId}`
+- Official TTC live alerts API
+- **Endpoint:** `https://alerts.ttc.ca/api/alerts/live-alerts`
+- **Polling:** Every 2 minutes via pg_cron
+- **Data Used:**
+  - `routes` array - Disruption alerts (closures, shuttles, diversions, delays)
+  - `routes` array - RSZ (Reduced Speed Zone) alerts
+  - `accessibility` array - Elevator/escalator outages
+- **Alert ID Formats:**
+  - `ttc-alert-{routeGroup}-{headerHash}` for disruptions
+  - `ttc-scheduled-{routeGroup}-{headerHash}` for scheduled closures
+  - `ttc-rsz-{route}-{start}-{end}` for RSZ
+  - `ttc-elev-{code}` for elevators
 - **Categories Created:**
   - `SERVICE_DISRUPTION` - Subway closures, no service
   - `SHUTTLE` - Bus replacement service
   - `DIVERSION` - Route detours
   - `DELAY` - Significant delays
-  - `SERVICE_RESUMED` - Recently Resolved section
-- **Status:** ✅ PRIMARY source for Disruptions & Delays + Recently Resolved
-
-**Secondary Source: TTC API (for RSZ + Elevators ONLY)**
-
-- Official TTC live alerts API
-- **Endpoint:** `https://alerts.ttc.ca/api/alerts/live-alerts`
-- **Data Used:**
-  - `routes` array - RSZ (Reduced Speed Zone) alerts ONLY
-  - `accessibility` array - Elevator/escalator outages
-- **NOT Used:** `routes` array disruptions (closures, shuttles, diversions) - removed in v150
-- **Alert ID Format:** `ttc-rsz-{route}-{start}-{end}` for RSZ, `ttc-elev-{code}` for elevators
-- **Categories Imported:**
-  - `RSZ` - Reduced Speed Zones (minor severity)
+  - `RSZ` - Reduced Speed Zones
   - `ACCESSIBILITY` - Elevator/escalator outages
-- **Status:** ✅ Source for Slow Zones + Station Alerts ONLY
+  - `SERVICE_RESUMED` - Recently Resolved section
+- **Status:** ✅ ONLY source for ALL alerts
 
-**GTFS-Realtime:** ⏸️ Disabled (all GTFS alerts also appear via Bluesky)
+**Bluesky Integration:** ❌ **REMOVED** (v200+)  
+All Bluesky code was removed from the codebase in January 2026.
 
-### Architectural Separation (v150 - BLUESKY-ONLY)
+**GTFS-Realtime:** ⏸️ Disabled (not needed with TTC API)
 
-| Alert Source | Thread Creation           | Categories                                    | UI Section           |
-| ------------ | ------------------------- | --------------------------------------------- | -------------------- |
-| **Bluesky**  | ✅ Yes (native threading) | SERVICE_DISRUPTION, DELAY, DIVERSION, SHUTTLE | Disruptions & Delays |
-| **Bluesky**  | ✅ Yes (native threading) | SERVICE_RESUMED                               | Recently Resolved    |
-| **TTC API**  | ✅ Yes (exclusive)        | RSZ                                           | Slow Zones           |
-| **TTC API**  | ✅ Yes (exclusive)        | ACCESSIBILITY                                 | Station Alerts       |
+### Architectural Overview (v200+ - TTC API-ONLY)
 
-**v150 Changes:**
+| Alert Type             | Thread Creation | Alert ID Pattern       | UI Section           |
+| ---------------------- | --------------- | ---------------------- | -------------------- |
+| **Disruptions**        | ✅ Yes          | `ttc-alert-*`          | Disruptions & Delays |
+| **Scheduled Closures** | ✅ Yes          | `ttc-scheduled-*`      | Disruptions & Delays |
+| **RSZ**                | ✅ Yes          | `ttc-rsz-*`            | Slow Zones           |
+| **Elevators**          | ✅ Yes          | `ttc-elev-*`           | Station Alerts       |
+| **Service Resumed**    | Uses existing   | `ttc-alert-sr-*`       | Recently Resolved    |
 
-1. **TTC API disruptions REMOVED** - No more `processDisruptionAlerts()`, no `activeRoutes` tracking
-2. **Thread hiding/unhiding REMOVED** - No more reconciliation between TTC API and Bluesky
-3. **Native Bluesky threading** - Uses `reply.root.uri` to group related posts automatically
-4. **No more Jaccard similarity for disruptions** - Bluesky threading handles this natively
-5. **Simpler data flow** - Single source of truth eliminates conflicts
+**v214 Changes (Jan 17, 2026):**
 
-### Why Bluesky-Only? (v150 Rationale)
+1. **Header text deduplication** - Prevents alert ID collisions when similar alerts truncate to same ID
+2. **Fixes Woodbine/Bay station collision** - Different alerts with "Trains are not stopping at X station" 
+   generated same ID because differentiating word was beyond 50-char cutoff
 
-The dual-source architecture (TTC API + Bluesky) caused several issues:
+**v200+ Changes (TTC API-Only):**
 
-1. **Race conditions** - TTC API and Bluesky posts arriving at different times
-2. **Hidden thread bugs** - Threads incorrectly hidden when TTC API had stale data
-3. **SERVICE_RESUMED orphans** - Could not match hidden threads, creating duplicates
-4. **Stale thread linking** - New alerts linked to 22+ hour old resolved threads
-5. **Complex reconciliation** - ~800 lines of code for hiding/unhiding/matching
-
-Bluesky-only solves these because:
-
-1. **Native reply threading** - `@ttcalerts` posts updates as replies to original incident
-2. **Single source of truth** - No reconciliation needed
-3. **Automatic grouping** - All posts with same `replyRoot` belong to same thread
-4. **Simpler code** - Reduced from ~1900 to ~700 lines
-
+1. **Bluesky code REMOVED** - All Bluesky API calls, threading, and references removed
+2. **Single data source** - TTC API is the exclusive source for all alerts
+3. **Simplified threading** - Uses `routeGroup` + header hash, no Bluesky reply chains
+4. **No reconciliation** - No need to match between multiple sources
+5. **Cleaner codebase** - ~4,300 lines of Bluesky code removed
 ### Frontend Data Flow
 
-| UI Section           | Data Source  | Filter Logic                                           |
-| -------------------- | ------------ | ------------------------------------------------------ |
-| Disruptions & Delays | Bluesky      | `alert_id.startsWith('bsky-')` + disruption categories |
-| Slow Zones           | TTC API only | `alert_id.startsWith('ttc-rsz-')`                      |
-| Station Alerts       | TTC API only | `alert_id.startsWith('ttc-elev-')`                     |
-| Recently Resolved    | Bluesky      | `categories.includes('SERVICE_RESUMED')`               |
+| UI Section           | Data Source  | Filter Logic                                                |
+| -------------------- | ------------ | ----------------------------------------------------------- |
+| Disruptions & Delays | TTC API      | `alert_id.startsWith('ttc-alert-')` or `ttc-scheduled-`     |
+| Slow Zones           | TTC API      | `alert_id.startsWith('ttc-rsz-')`                           |
+| Station Alerts       | TTC API      | `alert_id.startsWith('ttc-elev-')`                          |
+| Recently Resolved    | TTC API      | `categories.includes('SERVICE_RESUMED')` + thread resolved  |
 
-### Complete UI Tab Data Sources (v150)
+### Complete UI Tab Data Sources (v200+)
 
 This table documents the **exclusive data source** for each UI tab.
 
-| UI Tab                         | Data Source         | Thread ID Format   | Database Table        | Edge Function        |
-| ------------------------------ | ------------------- | ------------------ | --------------------- | -------------------- |
-| **Disruptions & Delays**       | Bluesky (v150)      | `thread-bsky-{id}` | `alert_cache`         | `poll-alerts`        |
-| **Slow Zones (RSZ)**           | TTC API exclusive   | `thread-rsz-{id}`  | `alert_cache`         | `poll-alerts`        |
-| **Station Alerts (Elevators)** | TTC API exclusive   | `thread-elev-{id}` | `alert_cache`         | `poll-alerts`        |
-| **Scheduled Subway Closures**  | TTC website scraper | N/A                | `planned_maintenance` | `scrape-maintenance` |
-| **Service/Route Changes**      | TTC website scraper | N/A                | Runtime fetch         | N/A (client-side)    |
-| **Recently Resolved**          | Bluesky             | `thread-bsky-{id}` | `alert_cache`         | `poll-alerts`        |
+| UI Tab                         | Data Source         | Thread ID Format       | Database Table        | Edge Function        |
+| ------------------------------ | ------------------- | ---------------------- | --------------------- | -------------------- |
+| **Disruptions & Delays**       | TTC API (v200+)     | `thread-alert-{id}`    | `alert_cache`         | `poll-alerts`        |
+| **Slow Zones (RSZ)**           | TTC API             | `thread-rsz-{id}`      | `alert_cache`         | `poll-alerts`        |
+| **Station Alerts (Elevators)** | TTC API             | `thread-elev-{id}`     | `alert_cache`         | `poll-alerts`        |
+| **Scheduled Subway Closures**  | TTC website scraper | N/A                    | `planned_maintenance` | `scrape-maintenance` |
+| **Service/Route Changes**      | TTC Sitecore API    | N/A                    | Runtime fetch         | N/A (client-side)    |
+| **Recently Resolved**          | TTC API             | `thread-alert-{id}`    | `alert_cache`         | `poll-alerts`        |
 
 **Clarifications:**
 
-1. **Disruptions & Delays**: Bluesky creates ALL threads using native reply threading (v150)
-2. **Slow Zones**: TTC API is the **exclusive** source - uses `routes` array with `effectDesc = 'Reduced Speed Zone'`
-3. **Station Alerts (Elevators)**: TTC API only - uses `accessibility` array from live-alerts endpoint
+1. **Disruptions & Delays**: TTC API creates ALL threads using `routeGroup` + header hash (v200+)
+2. **Slow Zones**: TTC API - uses `routes` array with `effectDesc = 'Reduced Speed Zone'`
+3. **Station Alerts (Elevators)**: TTC API - uses `accessibility` array from live-alerts endpoint
 4. **Scheduled Subway Closures**: Scraped from TTC website by `scrape-maintenance` edge function
 5. **Service/Route Changes**: Fetched at runtime from TTC website Sitecore API
-6. **Recently Resolved**: Bluesky `SERVICE_RESUMED` alerts with native threading
+6. **Recently Resolved**: TTC API `SERVICE_RESUMED` alerts + resolved threads
 
 ### Data Integrity Verification
 
 **verify-disruptions Edge Function (runs every 15 minutes):**
 
-- ⚠️ **May need update for v150** - Currently compares TTC API disruptions with database
-- Should be updated to compare Bluesky posts instead
+- Compares TTC API disruptions with database active threads
+- Auto-resolves threads that are no longer in TTC API
 - Cron schedule: `3,18,33,48 * * * *`
 
-### Key Principles (v150)
+### Key Principles (v200+)
 
-- **Bluesky is Source of Truth for disruptions** - All disruption alerts come from Bluesky
-- **TTC API for RSZ/Elevators only** - These do not appear on Bluesky
-- **Native Bluesky threading** - Uses `reply.root.uri` - no Jaccard similarity needed
-- **No hide/unhide logic for disruptions** - Removed in v150
+- **TTC API is Source of Truth** - All alerts come from TTC API exclusively
+- **No Bluesky** - All Bluesky code was removed from codebase
+- **Thread ID grouping** - Uses `routeGroup` + header text hash for threading
+- **No cross-source reconciliation** - Single source eliminates conflicts
 - **Effect > Cause** - "No service" matters more than "due to security incident"
 - **Non-exclusive categories** - Alert can be `SERVICE_DISRUPTION` + `SUBWAY`
 - **Latest first** - Most recent update at top of thread
@@ -421,17 +400,17 @@ Incident threading groups related alerts over time to:
 
 **Note:** Threading is **disabled in the frontend** for **ACCESSIBILITY** (elevator/escalator) alerts as of v152. Elevator alerts do not show the "earlier updates" link in `AlertCard.svelte`. This prevents confusing UX when elevator status changes (out of service → back in service → out again).
 
-### Thread ID Formats (v142)
+### Thread ID Formats (v200+)
 
 Thread IDs are deterministic based on the alert source and type:
 
 | Source  | Type                 | Thread ID Format                       | Example                                  |
 | ------- | -------------------- | -------------------------------------- | ---------------------------------------- |
-| TTC API | Real-time disruption | `thread-ttc-{route}-{category}`        | `thread-ttc-line1-service_disruption`    |
-| TTC API | Scheduled closure    | `thread-ttc-{route}-scheduled_closure` | `thread-ttc-line1-scheduled_closure`     |
+| TTC API | Real-time disruption | `thread-alert-{route}-{category}`      | `thread-alert-line1-service_disruption`  |
+| TTC API | Scheduled closure    | `thread-alert-{route}-scheduled_closure` | `thread-alert-line1-scheduled_closure` |
 | TTC API | RSZ (slow zone)      | `thread-rsz-{line}-{stations}`         | `thread-rsz-line1-stclairwest-cedarvale` |
 | TTC API | Elevator/Escalator   | `thread-elevator-{location}`           | `thread-elevator-dundas-station`         |
-| Bluesky | SERVICE_RESUMED      | UUID format                            | `6f4a2b3c-8d9e-4f1a-b2c3-d4e5f6a7b8c9`   |
+| TTC API | Service Resumed      | Uses existing thread                   | Same thread as original disruption       |
 
 **Why Scheduled Closures Get Separate Threads (v142):**
 
@@ -441,11 +420,11 @@ Thread IDs are deterministic based on the alert source and type:
 
 ### Threading Algorithm
 
-**Implemented in:** `supabase/functions/poll-alerts/index.ts` (v142)
+**Implemented in:** `supabase/functions/poll-alerts/index.ts` (v214)
 
-**Architectural Rule (v140+):** TTC API is the source of truth for active disruptions. Bluesky alerts can only CREATE threads for `SERVICE_RESUMED` (Recently Resolved tab). All other Bluesky alerts must match an existing TTC API-created thread.
+**Architectural Rule (v200+):** TTC API is the exclusive source of all alerts. Thread creation uses `routeGroup` + header text hash for deterministic grouping.
 
-#### TTC API Alert Thread Matching (v142)
+#### TTC API Alert Thread Matching (v214)
 
 ```typescript
 // STEP 1: Find existing thread by route number match + similarity check
@@ -570,71 +549,24 @@ if (existing) {
 
 **v141 Change:** Added 25% similarity check when matching by route number to prevent grouping unrelated incidents on the same route (e.g., separate "Cedarvale security incident" from "Finch-Eglinton scheduled closure" even though both affect Line 1).
 
+**v214 Change:** Added header_text deduplication to prevent alert ID collisions when similar alerts truncate to same ID.
+
 This approach:
 
-1. First searches for existing threads with matching route NUMBER (handles UUID-format threads created by Bluesky)
+1. Uses deterministic thread IDs based on `routeGroup` + header text hash
 2. Validates similarity (≥25%) to ensure alerts describe the same incident
-3. Falls back to deterministic `thread-ttc-*` format if no match found
-4. Prevents race conditions where Bluesky creates thread before TTC API
-5. Prevents grouping unrelated incidents on the same route
+3. Uses `thread-alert-*` format for disruptions
+4. Checks for existing alerts with same `header_text` before creating new
 
-#### Bluesky Alert Thread Matching
+### Threading Rules (v200+)
 
-```typescript
-// Thread matching logic for Bluesky alerts
-let matchedThread = null;
-
-for (const thread of unresolvedThreads || []) {
-  const threadRoutes = Array.isArray(thread.affected_routes)
-    ? thread.affected_routes
-    : [];
-
-  // Use exact route number matching to prevent 46 matching 996, etc.
-  const hasRouteOverlap = routes.some((alertRoute) =>
-    threadRoutes.some((threadRoute) => routesMatch(alertRoute, threadRoute))
-  );
-
-  if (hasRouteOverlap) {
-    const threadTitle = thread.title || "";
-    const similarity = jaccardSimilarity(text, threadTitle);
-
-    // Low threshold (25%) when routes match
-    if (similarity >= 0.25) {
-      matchedThread = thread;
-      break;
-    }
-
-    // Very low threshold (15%) for SERVICE_RESUMED
-    if (category === "SERVICE_RESUMED" && similarity >= 0.15) {
-      matchedThread = thread;
-      break;
-    }
-  }
-}
-
-// If no match found, only SERVICE_RESUMED can create new threads
-if (!matchedThread) {
-  if (category === 'SERVICE_RESUMED') {
-    // Create thread for Recently Resolved tab
-    const threadResult = await supabase.rpc('find_or_create_thread', {...});
-  } else {
-    // Skip - TTC API is source of truth for active disruptions
-    console.log(`Skipping Bluesky ${category} alert - no matching TTC API thread`);
-    continue;
-  }
-}
-```
-
-### Threading Rules
-
-1. **TTC API is source of truth** - All active disruptions must have TTC API thread first
-2. **Bluesky only creates SERVICE_RESUMED threads** - For "Recently Resolved" tab
-3. **Exact route number match required** - Route NUMBERS must match (e.g., "46" = "46 Martin Grove", but "46" ≠ "996")
-4. **Low similarity (≥25%)** - For general alert matching when routes match
-5. **Very low similarity (≥15%)** - For SERVICE_RESUMED (different vocabulary)
-6. **6-hour window** - Only match unresolved threads updated within 6 hours
-7. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
-8. **Scheduled closures get separate threads (v142)** - Scheduled maintenance uses `scheduled_closure` in thread ID to avoid mixing with real-time incidents
+1. **TTC API is exclusive source** - All alerts come from TTC API
+2. **Deterministic thread IDs** - Based on `routeGroup` + header hash
+3. **Exact route number match required** - Route NUMBERS must match
+4. **Header text dedup (v214)** - Prevents duplicate threads from ID collisions
+5. **6-hour window** - Only match unresolved threads updated within 6 hours
+6. **Auto-resolve** - SERVICE_RESUMED alerts mark thread as resolved
+7. **Scheduled closures get separate threads** - Uses `scheduled_closure` in thread ID
 
 ### Text Similarity Calculation
 
@@ -713,10 +645,10 @@ Resolved threads are displayed in a "Recently Resolved" section under the Disrup
 1. `is_resolved = true` - Thread must be marked resolved
 2. `is_hidden = false` - Thread must not be hidden
 3. `latestAlert.created_at` within 12 hours of current time (uses alert timestamp, not thread.resolved_at)
-4. Thread must have `SERVICE_RESUMED` category (confirmed by Bluesky)
+4. Thread must have `SERVICE_RESUMED` category (from TTC API threading)
 5. Not an RSZ alert (those don't have "resolved" state)
 
-**Note:** Standalone SERVICE_RESUMED threads (without preceding DELAY/DISRUPTION) ARE shown. Bluesky posts these when service genuinely resumes, so they should be displayed.
+**Note:** SERVICE_RESUMED alerts are automatically generated when TTC API removes an alert from live-alerts. This marks the thread as resolved for the "Recently Resolved" section.
 
 **Store Configuration:**
 
@@ -775,9 +707,9 @@ function deduplicateAlerts(alerts: Alert[]): Alert[] {
 }
 ```
 
-### Disruptions Tab: TTC API Only (No Bluesky)
+### Disruptions Tab: TTC API Alerts (v200+)
 
-**Critical Design Decision:** The Disruptions & Delays tab shows **ONLY** TTC API alerts. Bluesky alerts are completely excluded from this tab, including from the "earlier updates" section.
+**Critical Design Decision:** The Disruptions & Delays tab shows TTC API alerts exclusively. All alerts now come from TTC API (no Bluesky).
 
 ```typescript
 // src/routes/alerts/+page.svelte - activeAlerts derived
@@ -785,10 +717,10 @@ if (selectedCategory === "disruptions") {
   const ttcApiDisruptions = $threadsWithAlerts
     .filter((t) => !t.is_resolved && !t.is_hidden && isTTCApiDisruption(t))
     .map((thread) => {
-      // Filter thread.alerts to ONLY include TTC API alerts
-      // This prevents Bluesky alerts from showing in "earlier updates"
+      // Filter thread.alerts to ONLY include TTC API disruption alerts
       const ttcApiAlertsOnly = thread.alerts.filter((a) =>
-        a.alert_id?.startsWith("ttc-alert-")
+        a.alert_id?.startsWith("ttc-alert-") ||
+        a.alert_id?.startsWith("ttc-scheduled-")
       );
 
       const ttcAlert = getTTCApiDisruptionAlert(thread);
@@ -803,12 +735,12 @@ if (selectedCategory === "disruptions") {
 }
 ```
 
-**Why TTC API Only:**
+**Why TTC API Only (v200+ Architecture):**
 
-1. **Data integrity** - TTC API is the official source of truth for active disruptions
-2. **No conflicts** - Bluesky and TTC API often report the same incident with slightly different text
-3. **Prevents duplicates** - Without filtering, both sources would show in "earlier updates"
-4. **Bluesky role is limited** - Bluesky is only used for "Recently Resolved" (SERVICE_RESUMED) alerts
+1. **Data integrity** - TTC API is the official source of truth
+2. **Simplified architecture** - Single data source eliminates conflicts
+3. **No reconciliation** - No need to match between multiple sources
+4. **Cleaner codebase** - All Bluesky code removed (~4,300 lines)
 
 ### Scheduled Closures: Time-Based Display
 
@@ -863,8 +795,7 @@ let recentlyResolved = $derived.by(() => {
     if (!categories.includes("SERVICE_RESUMED")) return false;
     if (isRSZAlert(t)) return false;
 
-    // Show all SERVICE_RESUMED threads, including standalone ones
-    // Bluesky posts them when service genuinely resumes
+    // Show all SERVICE_RESUMED threads (TTC API-sourced)
     return true;
   });
 });
@@ -1143,7 +1074,7 @@ function isRSZAlert(thread: ThreadWithAlerts): boolean {
   // Primary: TTC API RSZ alerts have alert_id starting with "ttc-rsz-"
   if (alert.alert_id?.toLowerCase().startsWith("ttc-rsz-")) return true;
 
-  // Secondary: Bluesky-sourced RSZ detected by text patterns
+  // Secondary: Text-pattern-based RSZ detection for legacy alerts
   const headerText = (alert.header_text || "").toLowerCase();
   return (
     headerText.includes("slower than usual") ||
@@ -1181,26 +1112,28 @@ let categoryCounts = $derived.by(() => {
 
 ### Table: `alert_cache`
 
-Stores all alerts from Bluesky with threading and categorization metadata.
+Stores all alerts from TTC API with threading and categorization metadata.
 
 ```sql
 CREATE TABLE alert_cache (
   id SERIAL PRIMARY KEY,
-  alert_id TEXT UNIQUE NOT NULL,
-  text TEXT NOT NULL,
+  alert_id TEXT UNIQUE NOT NULL,        -- Format: ttc-alert-*, ttc-rsz-*, ttc-elev-*
+  text TEXT NOT NULL,                   -- Alert text/description
+  header_text TEXT,                     -- TTC API headerText (for dedup)
   category TEXT,                        -- Primary category
   affected_routes TEXT[],               -- Array of route names
   thread_id UUID REFERENCES incident_threads(id),
   is_latest BOOLEAN DEFAULT true,       -- Latest in thread?
-  bluesky_uri TEXT,                     -- AT Protocol URI
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  indexed_at TIMESTAMPTZ                -- When indexed by Bluesky
+  source TEXT DEFAULT 'ttc-api'         -- Always 'ttc-api' (v200+)
 );
 
 CREATE INDEX idx_alert_cache_thread ON alert_cache(thread_id);
 CREATE INDEX idx_alert_cache_category ON alert_cache(category);
 CREATE INDEX idx_alert_cache_latest ON alert_cache(is_latest);
 ```
+
+**Note:** The `bluesky_uri` and `indexed_at` columns still exist in the database but are no longer used (v200+). They can be safely dropped.
 
 ### Table: `incident_threads`
 
@@ -1314,12 +1247,11 @@ CREATE TRIGGER validate_alert_thread_routes_trigger
    - Skips RSZ, ACCESSIBILITY, SERVICE_RESUMED threads
 4. **STEP 3:** Unhide threads if routes return to TTC API
    - Re-activates threads if alert comes back
-5. **STEP 4:** Fetch Bluesky posts for context/history
-   - Extract routes, categorize, thread matching
-   - **LAYER 1 (v105):** Skips RSZ/ACCESSIBILITY by categories array
-   - **LAYER 2 (v108):** Skips threads by thread_id pattern (`rsz`, `elev`, `accessibility`)
-   - Never resolves RSZ/ACCESSIBILITY threads even if matched
-   - Create new threads via `find_or_create_thread()` if no match found
+5. **STEP 4:** Process disruption alerts from TTC API (v200+)
+   - Extract routes, categorize, create/update threads
+   - Uses `routeGroup` + header text hash for thread IDs
+   - **v214:** Add header_text dedup to prevent ID collisions
+   - Creates SERVICE_RESUMED alerts when alerts disappear from API
 6. **STEP 5:** Process RSZ alerts from TTC API
    - Normalize route format ("1" → "Line 1")
    - Uses `generateRszThreadId()` function (v112+) for consistent thread IDs

@@ -115,9 +115,7 @@
   let filterMode = $state<"all" | "needs-review" | "validated" | "conflicts">(
     "needs-review"
   );
-  let sourceFilter = $state<"all" | "ttc-api-live" | "database">(
-    "all"
-  );
+  let sourceFilter = $state<"all" | "ttc-api-live" | "database">("all");
 
   // Current alert
   let currentAlert = $derived(alerts[currentIndex] ?? null);

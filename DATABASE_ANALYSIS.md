@@ -47,16 +47,16 @@ See [alert-categorization-and-threading.md](alert-categorization-and-threading.m
 
 ### Current Table Sizes (January 16, 2026)
 
-| Table                         | Total Size  | Rows | Notes |
-| ----------------------------- | ----------- | ---- | ----- |
-| `alert_cache`                 | 3.5 MB      | 196  | Main alerts |
-| `incident_threads`            | 816 kB      | 63   | Threading |
-| `service_resumed_monitoring`  | ~16 kB      | -    | Monitoring (temporary) |
-| `planned_maintenance`         | 96 kB       | 13   | Scheduled closures |
-| `gtfs_routes`                 | 80 kB       | 20   | Route data |
-| `notification_history`        | 72 kB       | 0    | Push notifications |
-| `gtfs_stations`               | 16 kB       | 0    | Station data |
-| **Total App Tables**          | **~4.6 MB** |      | |
+| Table                        | Total Size  | Rows | Notes                  |
+| ---------------------------- | ----------- | ---- | ---------------------- |
+| `alert_cache`                | 3.5 MB      | 196  | Main alerts            |
+| `incident_threads`           | 816 kB      | 63   | Threading              |
+| `service_resumed_monitoring` | ~16 kB      | -    | Monitoring (temporary) |
+| `planned_maintenance`        | 96 kB       | 13   | Scheduled closures     |
+| `gtfs_routes`                | 80 kB       | 20   | Route data             |
+| `notification_history`       | 72 kB       | 0    | Push notifications     |
+| `gtfs_stations`              | 16 kB       | 0    | Station data           |
+| **Total App Tables**         | **~4.6 MB** |      |                        |
 
 ### New Table: service_resumed_monitoring (January 16, 2026)
 
