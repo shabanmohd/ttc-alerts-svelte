@@ -775,7 +775,7 @@
     "subtitle": "En savoir plus sur rideTO et ses sources de données.",
     "tagline": "Alertes de transport en temps réel pour Toronto",
     "aboutProject": "À propos du projet",
-    "projectDescription": "rideTO a commencé comme une solution simple à une frustration quotidienne : consulter plusieurs sources juste pour savoir si votre bus arrive ou si le métro fonctionne normalement. C'est maintenant devenu un compagnon de transport complet qui agrège les alertes des flux officiels du TTC et des réseaux sociaux, fournit des prédictions d'arrivée en temps réel et vous aide à sauvegarder vos arrêts et itinéraires fréquemment utilisés.",
+    "projectDescription": "rideTO a commencé comme une solution simple à une frustration quotidienne : consulter plusieurs sources juste pour savoir si votre bus arrive ou si le métro fonctionne normalement. C'est maintenant devenu un compagnon de transport complet qui agrège les alertes des flux officiels du TTC, fournit des prédictions d'arrivée en temps réel et vous aide à sauvegarder vos arrêts et itinéraires fréquemment utilisés.",
     "projectFeature1": "Alertes de service en temps réel avec catégorisation intelligente",
     "projectFeature2": "Heures d'arrivée en direct via NextBus",
     "projectFeature3": "Horaires de lignes à partir des données GTFS du TTC",

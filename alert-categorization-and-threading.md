@@ -108,18 +108,18 @@ All Bluesky code was removed from the codebase in January 2026.
 
 ### Architectural Overview (v200+ - TTC API-ONLY)
 
-| Alert Type             | Thread Creation | Alert ID Pattern       | UI Section           |
-| ---------------------- | --------------- | ---------------------- | -------------------- |
-| **Disruptions**        | ✅ Yes          | `ttc-alert-*`          | Disruptions & Delays |
-| **Scheduled Closures** | ✅ Yes          | `ttc-scheduled-*`      | Disruptions & Delays |
-| **RSZ**                | ✅ Yes          | `ttc-rsz-*`            | Slow Zones           |
-| **Elevators**          | ✅ Yes          | `ttc-elev-*`           | Station Alerts       |
-| **Service Resumed**    | Uses existing   | `ttc-alert-sr-*`       | Recently Resolved    |
+| Alert Type             | Thread Creation | Alert ID Pattern  | UI Section           |
+| ---------------------- | --------------- | ----------------- | -------------------- |
+| **Disruptions**        | ✅ Yes          | `ttc-alert-*`     | Disruptions & Delays |
+| **Scheduled Closures** | ✅ Yes          | `ttc-scheduled-*` | Disruptions & Delays |
+| **RSZ**                | ✅ Yes          | `ttc-rsz-*`       | Slow Zones           |
+| **Elevators**          | ✅ Yes          | `ttc-elev-*`      | Station Alerts       |
+| **Service Resumed**    | Uses existing   | `ttc-alert-sr-*`  | Recently Resolved    |
 
 **v214 Changes (Jan 17, 2026):**
 
 1. **Header text deduplication** - Prevents alert ID collisions when similar alerts truncate to same ID
-2. **Fixes Woodbine/Bay station collision** - Different alerts with "Trains are not stopping at X station" 
+2. **Fixes Woodbine/Bay station collision** - Different alerts with "Trains are not stopping at X station"
    generated same ID because differentiating word was beyond 50-char cutoff
 
 **v200+ Changes (TTC API-Only):**
@@ -129,27 +129,28 @@ All Bluesky code was removed from the codebase in January 2026.
 3. **Simplified threading** - Uses `routeGroup` + header hash, no Bluesky reply chains
 4. **No reconciliation** - No need to match between multiple sources
 5. **Cleaner codebase** - ~4,300 lines of Bluesky code removed
+
 ### Frontend Data Flow
 
-| UI Section           | Data Source  | Filter Logic                                                |
-| -------------------- | ------------ | ----------------------------------------------------------- |
-| Disruptions & Delays | TTC API      | `alert_id.startsWith('ttc-alert-')` or `ttc-scheduled-`     |
-| Slow Zones           | TTC API      | `alert_id.startsWith('ttc-rsz-')`                           |
-| Station Alerts       | TTC API      | `alert_id.startsWith('ttc-elev-')`                          |
-| Recently Resolved    | TTC API      | `categories.includes('SERVICE_RESUMED')` + thread resolved  |
+| UI Section           | Data Source | Filter Logic                                               |
+| -------------------- | ----------- | ---------------------------------------------------------- |
+| Disruptions & Delays | TTC API     | `alert_id.startsWith('ttc-alert-')` or `ttc-scheduled-`    |
+| Slow Zones           | TTC API     | `alert_id.startsWith('ttc-rsz-')`                          |
+| Station Alerts       | TTC API     | `alert_id.startsWith('ttc-elev-')`                         |
+| Recently Resolved    | TTC API     | `categories.includes('SERVICE_RESUMED')` + thread resolved |
 
 ### Complete UI Tab Data Sources (v200+)
 
 This table documents the **exclusive data source** for each UI tab.
 
-| UI Tab                         | Data Source         | Thread ID Format       | Database Table        | Edge Function        |
-| ------------------------------ | ------------------- | ---------------------- | --------------------- | -------------------- |
-| **Disruptions & Delays**       | TTC API (v200+)     | `thread-alert-{id}`    | `alert_cache`         | `poll-alerts`        |
-| **Slow Zones (RSZ)**           | TTC API             | `thread-rsz-{id}`      | `alert_cache`         | `poll-alerts`        |
-| **Station Alerts (Elevators)** | TTC API             | `thread-elev-{id}`     | `alert_cache`         | `poll-alerts`        |
-| **Scheduled Subway Closures**  | TTC website scraper | N/A                    | `planned_maintenance` | `scrape-maintenance` |
-| **Service/Route Changes**      | TTC Sitecore API    | N/A                    | Runtime fetch         | N/A (client-side)    |
-| **Recently Resolved**          | TTC API             | `thread-alert-{id}`    | `alert_cache`         | `poll-alerts`        |
+| UI Tab                         | Data Source         | Thread ID Format    | Database Table        | Edge Function        |
+| ------------------------------ | ------------------- | ------------------- | --------------------- | -------------------- |
+| **Disruptions & Delays**       | TTC API (v200+)     | `thread-alert-{id}` | `alert_cache`         | `poll-alerts`        |
+| **Slow Zones (RSZ)**           | TTC API             | `thread-rsz-{id}`   | `alert_cache`         | `poll-alerts`        |
+| **Station Alerts (Elevators)** | TTC API             | `thread-elev-{id}`  | `alert_cache`         | `poll-alerts`        |
+| **Scheduled Subway Closures**  | TTC website scraper | N/A                 | `planned_maintenance` | `scrape-maintenance` |
+| **Service/Route Changes**      | TTC Sitecore API    | N/A                 | Runtime fetch         | N/A (client-side)    |
+| **Recently Resolved**          | TTC API             | `thread-alert-{id}` | `alert_cache`         | `poll-alerts`        |
 
 **Clarifications:**
 
@@ -404,13 +405,13 @@ Incident threading groups related alerts over time to:
 
 Thread IDs are deterministic based on the alert source and type:
 
-| Source  | Type                 | Thread ID Format                       | Example                                  |
-| ------- | -------------------- | -------------------------------------- | ---------------------------------------- |
-| TTC API | Real-time disruption | `thread-alert-{route}-{category}`      | `thread-alert-line1-service_disruption`  |
-| TTC API | Scheduled closure    | `thread-alert-{route}-scheduled_closure` | `thread-alert-line1-scheduled_closure` |
-| TTC API | RSZ (slow zone)      | `thread-rsz-{line}-{stations}`         | `thread-rsz-line1-stclairwest-cedarvale` |
-| TTC API | Elevator/Escalator   | `thread-elevator-{location}`           | `thread-elevator-dundas-station`         |
-| TTC API | Service Resumed      | Uses existing thread                   | Same thread as original disruption       |
+| Source  | Type                 | Thread ID Format                         | Example                                  |
+| ------- | -------------------- | ---------------------------------------- | ---------------------------------------- |
+| TTC API | Real-time disruption | `thread-alert-{route}-{category}`        | `thread-alert-line1-service_disruption`  |
+| TTC API | Scheduled closure    | `thread-alert-{route}-scheduled_closure` | `thread-alert-line1-scheduled_closure`   |
+| TTC API | RSZ (slow zone)      | `thread-rsz-{line}-{stations}`           | `thread-rsz-line1-stclairwest-cedarvale` |
+| TTC API | Elevator/Escalator   | `thread-elevator-{location}`             | `thread-elevator-dundas-station`         |
+| TTC API | Service Resumed      | Uses existing thread                     | Same thread as original disruption       |
 
 **Why Scheduled Closures Get Separate Threads (v142):**
 
@@ -718,9 +719,10 @@ if (selectedCategory === "disruptions") {
     .filter((t) => !t.is_resolved && !t.is_hidden && isTTCApiDisruption(t))
     .map((thread) => {
       // Filter thread.alerts to ONLY include TTC API disruption alerts
-      const ttcApiAlertsOnly = thread.alerts.filter((a) =>
-        a.alert_id?.startsWith("ttc-alert-") ||
-        a.alert_id?.startsWith("ttc-scheduled-")
+      const ttcApiAlertsOnly = thread.alerts.filter(
+        (a) =>
+          a.alert_id?.startsWith("ttc-alert-") ||
+          a.alert_id?.startsWith("ttc-scheduled-")
       );
 
       const ttcAlert = getTTCApiDisruptionAlert(thread);

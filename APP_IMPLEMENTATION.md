@@ -18,16 +18,16 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 ## 🆕 Recent Updates (Jan 17, 2026)
 
-| Component                                | Change                                                                                 | Status       |
-| ---------------------------------------- | -------------------------------------------------------------------------------------- | ------------ |
-| **poll-alerts v214**                     | Add header_text dedup to prevent alert ID collisions (Woodbine/Bay station fix)        | ✅ Deployed  |
-| **Bluesky code cleanup**                 | Removed ALL Bluesky API code/references from codebase (TTC-API-only architecture)      | ✅ Deployed  |
-| **Debug console.log cleanup**            | Removed DEBUG logs from alerts/+page.svelte and routes/[route]/+page.svelte           | ✅ Deployed  |
-| **isBlueskyRSZ → isTextBasedRSZ**        | Renamed variable in 4 files to reflect TTC-API-only architecture                       | ✅ Deployed  |
-| **Admin page cleanup**                   | Removed "Bluesky" filter option from train-alerts admin page                           | ✅ Deployed  |
-| **Documentation updates**                | Updated APP_IMPLEMENTATION.md and SECURITY_AUDIT.md for v200+ architecture            | ✅ Completed |
-| **Scripts cleanup**                      | Archived validate-ttc-crosscheck.ts, removed cleanup_duplicate_bluesky_rsz.sql        | ✅ Completed |
-| **Backup files removed**                 | Removed poll-alerts/*.backup, *.bak, *.v149.bak (4,300+ lines old Bluesky code)       | ✅ Completed |
+| Component                         | Change                                                                            | Status       |
+| --------------------------------- | --------------------------------------------------------------------------------- | ------------ |
+| **poll-alerts v214**              | Add header_text dedup to prevent alert ID collisions (Woodbine/Bay station fix)   | ✅ Deployed  |
+| **Bluesky code cleanup**          | Removed ALL Bluesky API code/references from codebase (TTC-API-only architecture) | ✅ Deployed  |
+| **Debug console.log cleanup**     | Removed DEBUG logs from alerts/+page.svelte and routes/[route]/+page.svelte       | ✅ Deployed  |
+| **isBlueskyRSZ → isTextBasedRSZ** | Renamed variable in 4 files to reflect TTC-API-only architecture                  | ✅ Deployed  |
+| **Admin page cleanup**            | Removed "Bluesky" filter option from train-alerts admin page                      | ✅ Deployed  |
+| **Documentation updates**         | Updated APP_IMPLEMENTATION.md and SECURITY_AUDIT.md for v200+ architecture        | ✅ Completed |
+| **Scripts cleanup**               | Archived validate-ttc-crosscheck.ts, removed cleanup_duplicate_bluesky_rsz.sql    | ✅ Completed |
+| **Backup files removed**          | Removed poll-alerts/_.backup, _.bak, \*.v149.bak (4,300+ lines old Bluesky code)  | ✅ Completed |
 
 ### Previous Updates (Jan 16, 2026)
 

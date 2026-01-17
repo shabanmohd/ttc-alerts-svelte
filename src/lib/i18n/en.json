@@ -789,7 +789,7 @@
     "subtitle": "Learn more about rideTO and its data sources.",
     "tagline": "Real-time Toronto Transit Commission (TTC) alerts",
     "aboutProject": "About the Project",
-    "projectDescription": "rideTO started as a simple solution to a daily frustration: checking multiple sources just to know if your bus is coming or if the subway is running smoothly. Now it's grown into a comprehensive transit companion that aggregates alerts from the TTC's official feeds and social media, provides real-time arrival predictions, and helps you save your frequently used stops and routes.",
+    "projectDescription": "rideTO started as a simple solution to a daily frustration: checking multiple sources just to know if your bus is coming or if the subway is running smoothly. Now it's grown into a comprehensive transit companion that aggregates alerts from the TTC's official feeds, provides real-time arrival predictions, and helps you save your frequently used stops and routes.",
     "projectFeature1": "Real-time service alerts with smart categorization",
     "projectFeature2": "Live arrival times via NextBus",
     "projectFeature3": "Route schedules from TTC GTFS data",
