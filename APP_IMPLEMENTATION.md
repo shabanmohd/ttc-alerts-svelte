@@ -21,6 +21,7 @@ Real-time Toronto Transit alerts with biometric authentication.
 
 | Component                           | Change                                                                             | Status       |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | ------------ |
+| **Hamburger menu text fix**         | Fixed Light/Dark mode text wrapping to two lines on narrow Android screens         | ✅ Deployed  |
 | **Square OG image support**         | Added og-image-square.jpg (1200x1200) for WhatsApp, Telegram, iMessage             | ✅ Deployed  |
 | **Admin pages removed**             | Deleted /admin/accuracy, /admin/train-alerts, /api/admin/\* for security           | ✅ Deployed  |
 | **robots.txt improvements**         | Added /test-, /\_app/ disallow, trailing slashes, removed /settings from sitemap   | ✅ Deployed  |
