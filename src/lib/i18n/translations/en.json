@@ -751,6 +751,8 @@
     "installIOS": "Tap the Share button, then 'Add to Home Screen'",
     "installAndroid": "Tap the menu, then 'Install app' or 'Add to Home screen'",
     "installDesktop": "Look for the install icon in your browser's address bar",
+    "iosWarningTitle": "Important for iOS",
+    "iosWarningText": "Your saved stops and routes won't transfer to the installed app. The home screen app uses separate storage from Safari.",
     "dataPrivacy": "Data & Privacy",
     "dataContent1": "Your preferences and bookmarks are stored locally on your device using IndexedDB.",
     "dataContent2": "No account is required. Your data stays on your device and is never sent to our servers.",

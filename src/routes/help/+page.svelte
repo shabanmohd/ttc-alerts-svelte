@@ -287,11 +287,10 @@
                 <p
                   class="text-sm font-medium text-amber-700 dark:text-amber-400"
                 >
-                  ⚠️ Important for iOS
+                  ⚠️ {$_("help.iosWarningTitle")}
                 </p>
                 <p class="text-sm text-amber-600 dark:text-amber-400/90 mt-1">
-                  Your saved stops and routes won't transfer to the installed
-                  app. The home screen app uses separate storage from Safari.
+                  {$_("help.iosWarningText")}
                 </p>
               </div>
             </div>

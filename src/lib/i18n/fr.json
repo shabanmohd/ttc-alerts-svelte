@@ -733,6 +733,8 @@
     "installIOS": "Appuyez sur le bouton Partager, puis « Ajouter à l'écran d'accueil »",
     "installAndroid": "Appuyez sur le menu, puis « Installer l'appli » ou « Ajouter à l'écran d'accueil »",
     "installDesktop": "Cherchez l'icône d'installation dans la barre d'adresse de votre navigateur",
+    "iosWarningTitle": "Important pour iOS",
+    "iosWarningText": "Vos arrêts et lignes enregistrés ne seront pas transférés vers l'application installée. L'application sur l'écran d'accueil utilise un stockage séparé de Safari.",
     "accountSecurity": "Compte et sécurité",
     "accountContent1": "Créer un compte vous permet de synchroniser vos préférences entre appareils.",
     "accountContent2": "Nous utilisons l'authentification biométrique (empreinte digitale, Face ID) pour une connexion sécurisée sans mot de passe.",
